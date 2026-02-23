@@ -62,7 +62,8 @@ use App\Http\Controllers\{
     TraceabilityController,
     RecallController,
     PermissionController,
-    RoleController
+    RoleController,
+    MasterRawMaterialController
 };
 
 require_once __DIR__.'/helpers/routeHelper.php';
@@ -869,55 +870,18 @@ Route::resource('penyimpangan-kualitas', PenyimpanganKualitasController::class)-
    Route::delete('/suhu/{uuid}', [SuhuController::class, 'destroy'])->name('suhu.destroy');
 
 // Kontrol Sanitasi
-   Route::get('/sanitasi', [SanitasiController::class, 'index'])->name('sanitasi.index');
-   Route::get('/sanitasi/create', [SanitasiController::class, 'create'])->name('sanitasi.create');
-   Route::post('/sanitasi', [SanitasiController::class, 'store'])->name('sanitasi.store');
-   Route::get('/sanitasi/update/{uuid}', [SanitasiController::class, 'update'])->name('sanitasi.update.form');
-   Route::put('/sanitasi/update_qc/{uuid}', [SanitasiController::class, 'update_qc'])->name('sanitasi.update_qc');
-   Route::get('/sanitasi/edit/{uuid}', [SanitasiController::class, 'edit'])->name('sanitasi.edit.form');
-   Route::put('/sanitasi/edit_spv/{uuid}', [SanitasiController::class, 'edit_spv'])->name('sanitasi.edit_spv');
-   Route::get('/sanitasi/verification', [SanitasiController::class, 'verification'])->name('sanitasi.verification');
-   Route::put('/sanitasi/verification/{uuid}', [SanitasiController::class, 'updateVerification'])
-   ->name('sanitasi.verification.update');
-   Route::get('/sanitasi/export-pdf', [SanitasiController::class, 'exportPdf'])->name('sanitasi.exportPdf');
-   Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
-
-   $recycleModules = [
-    'area_hygiene' => Area_hygieneController::class,
-    'mincing' => MincingController::class,
-    'checklistmagnettrap' => MagnetTrapController::class,
-    'metal' => MetalController::class,
-    'pvdc' => PvdcController::class,
-    'stuffing' => StuffingController::class,
-    'wire' => WireController::class,
-    'sampling_fg' => Sampling_fgController::class,
-    'pemasakan' => PemasakanController::class,
-    'washing' => WashingController::class,
-    'chamber' => ChamberController::class,
-    'pemusnahan' => PemusnahanController::class,
-    'organoleptik' => OrganoleptikController::class,
-    'packing' => PackingController::class,
-    'sampling' => SamplingController::class,
-    'karton' => KartonController::class,
-    'prepacking' => PrepackingController::class,
-    'release_packing' => Release_packingController::class,
-    'dispositions' => DispositionController::class,
-    'retain_rte' => Retain_rteController::class,
-    'release_packing_rte' => Release_packing_rteController::class,
-    'pemasakan_rte' => Pemasakan_rteController::class,
-    'gmp' => GmpController::class,
-    'suhu' => SuhuController::class,
-    'sanitasi' => SanitasiController::class,
-    'sampel' => SampelController::class,
-    'timbangan' => TimbanganController::class,
-    'thermometer' => ThermometerController::class,
-    'traceability' => TraceabilityController::class,
-    'withdrawl' => WithdrawlController::class,
-    'recall' => RecallController::class,
-    'klorin' => KlorinController::class,
-    'labelisasi_pvdc' => Labelisasi_pvdcController::class,
-];
-
-foreach ($recycleModules as $prefix => $controller) {
-    registerRecycleRoutes($prefix, $controller);
-}
+Route::get('/sanitasi', [SanitasiController::class, 'index'])->name('sanitasi.index');
+Route::get('/sanitasi/create', [SanitasiController::class, 'create'])->name('sanitasi.create');
+Route::post('/sanitasi', [SanitasiController::class, 'store'])->name('sanitasi.store');
+Route::get('/sanitasi/update/{uuid}', [SanitasiController::class, 'update'])->name('sanitasi.update.form');
+Route::put('/sanitasi/update_qc/{uuid}', [SanitasiController::class, 'update_qc'])->name('sanitasi.update_qc');
+Route::get('/sanitasi/edit/{uuid}', [SanitasiController::class, 'edit'])->name('sanitasi.edit.form');
+Route::put('/sanitasi/edit_spv/{uuid}', [SanitasiController::class, 'edit_spv'])->name('sanitasi.edit_spv');
+Route::get('/sanitasi/verification', [SanitasiController::class, 'verification'])->name('sanitasi.verification');
+Route::put('/sanitasi/verification/{uuid}', [SanitasiController::class, 'updateVerification'])
+    ->name('sanitasi.verification.update');
+Route::get('/sanitasi/export-pdf', [SanitasiController::class, 'exportPdf'])->name('sanitasi.exportPdf');
+Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
+Route::middleware(['auth'])->group(function () {
+    Route::resource('raw-material', MasterRawMaterialController::class);
+});

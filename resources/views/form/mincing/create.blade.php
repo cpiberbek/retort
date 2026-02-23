@@ -104,8 +104,14 @@
                                 </thead>
                                 <tbody id="tbodyNonPremix">
                                     <tr>
-                                        <td><input type="text" name="non_premix[0][nama_bahan]"
-                                                class="form-control form-control-sm text-center"></td>
+                                        <td>
+                                            <select name="non_premix[0][nama_bahan]" class="form-control form-select-sm text-center" required>
+                                                <option value="" selected disabled>-- Pilih Bahan --</option>
+                                                @foreach($rawMaterials as $rm)
+                                                    <option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>
+                                                @endforeach
+                                            </select>
+                                        </td>
                                         <td><input type="text" name="non_premix[0][kode_bahan]"
                                                 class="form-control form-control-sm text-center"></td>
                                         <td><input type="number" name="non_premix[0][suhu_bahan]" step="0.01"
@@ -435,10 +441,19 @@
 
         // --- 3. Logic Non Premix ---
         const btnTambahNon = document.getElementById('tambahBarisNonPremix');
-        if(btnTambahNon) {
-            btnTambahNon.addEventListener('click', () => {
+        btnTambahNon.addEventListener('click', () => {
+                // Render data raw material dari PHP ke variabel JavaScript
+                let optionBahan = `<option value="" selected disabled>-- Pilih Bahan --</option>`;
+                @foreach($rawMaterials as $rm)
+                    optionBahan += `<option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>`;
+                @endforeach
+
                 const row = `<tr>
-                    <td><input type="text" name="non_premix[${indexNonPremix}][nama_bahan]" class="form-control form-control-sm text-center"></td>
+                    <td>
+                        <select name="non_premix[${indexNonPremix}][nama_bahan]" class="form-control form-select-sm text-center" required>
+                            ${optionBahan}
+                        </select>
+                    </td>
                     <td><input type="text" name="non_premix[${indexNonPremix}][kode_bahan]" class="form-control form-control-sm text-center"></td>
                     <td><input type="number" name="non_premix[${indexNonPremix}][suhu_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
                     <td><input type="number" name="non_premix[${indexNonPremix}][ph_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>

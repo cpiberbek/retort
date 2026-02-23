@@ -129,19 +129,52 @@
                             
                             <div class="col-12">
                                 <label for="bahan_baku" class="form-label">Bahan Baku</label>
-                                <select class="form-select select2 @error('bahan_baku') is-invalid @enderror" id="bahan_baku" name="bahan_baku" required>
-                                    <option></option>
-                                    <option value="Daging Ayam" {{ old('bahan_baku', $inspection->bahan_baku) == 'Daging Ayam' ? 'selected' : '' }}>Daging Ayam</option>
-                                    <option value="Tepung Tapioka" {{ old('bahan_baku', $inspection->bahan_baku) == 'Tepung Tapioka' ? 'selected' : '' }}>Tepung Tapioka</option>
-                                    <option value="Minyak Goreng" {{ old('bahan_baku', $inspection->bahan_baku) == 'Minyak Goreng' ? 'selected' : '' }}>Minyak Goreng</option>
-                                    <option value="Bumbu ABC" {{ old('bahan_baku', $inspection->bahan_baku) == 'Bumbu ABC' ? 'selected' : '' }}>Bumbu ABC</option>
+                                
+                                {{-- Hapus logika $isBahanBakuFilled dan atribut disabled di sini --}}
+                                <select class="form-select select2 @error('bahan_baku') is-invalid @enderror" 
+                                    id="bahan_baku" 
+                                    name="bahan_baku" 
+                                    required>
+                                    
+                                    <option></option> {{-- Placeholder Select2 --}}
+                                    
+                                    {{-- Looping data dinamis dari controller --}}
+                                    @foreach ($masterBahanBaku as $bahan)
+                                        <option value="{{ $bahan->nama_bahan_baku }}" {{ old('bahan_baku', $inspection->bahan_baku) == $bahan->nama_bahan_baku ? 'selected' : '' }}>
+                                            {{ $bahan->nama_bahan_baku }}
+                                        </option>
+                                    @endforeach
+                                    
                                 </select>
-                                @error('bahan_baku') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                
+                                {{-- Hapus blok @if($isBahanBakuFilled) beserta input hidden-nya di sini --}}
+                                
+                                @error('bahan_baku') 
+                                    <span class="invalid-feedback"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                             <div class="col-md-6">
                                 <label for="supplier" class="form-label">Supplier</label>
-                                <input type="text" class="form-control @error('supplier') is-invalid @enderror" id="supplier" name="supplier" value="{{ old('supplier', $inspection->supplier) }}" required>
-                                @error('supplier') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                
+                                <select class="form-select select2 @error('supplier') is-invalid @enderror" 
+                                    id="supplier" 
+                                    name="supplier" 
+                                    required>
+                                    
+                                    <option></option> {{-- Placeholder untuk Select2 --}}
+                                    
+                                    {{-- Looping data supplier dari controller --}}
+                                    @foreach ($suppliers as $sup)
+                                        <option value="{{ $sup->nama_supplier }}" {{ old('supplier', $inspection->supplier) == $sup->nama_supplier ? 'selected' : '' }}>
+                                            {{ $sup->nama_supplier }}
+                                        </option>
+                                    @endforeach
+                                    
+                                </select>
+                                
+                                @error('supplier') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                         </div>
                     </div>

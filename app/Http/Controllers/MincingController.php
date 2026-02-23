@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Mincing;
 use App\Models\Produk;
 use App\Models\Mesin;
+use App\Models\Master_Raw_Material;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use TCPDF; // Import TCPDF
@@ -127,13 +128,13 @@ class MincingController extends Controller
         exit();
     }
 
-    public function create()
-    {
-        $userPlant = Auth::user()->plant;
-        $produks = Produk::where('plant', $userPlant)->get();
-
-        return view('form.mincing.create', compact('produks'));
-    }
+ public function create()
+ {
+    $userPlant = Auth::user()->plant;
+    $produks = Produk::where('plant', $userPlant)->get();
+    $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
+    return view('form.mincing.create', compact('produks', 'rawMaterials'));
+}
 
 public function store(Request $request)
 {

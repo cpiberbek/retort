@@ -105,13 +105,18 @@
                                     name="bahan_baku" 
                                     required 
                                     {{ $isBahanBakuFilled ? 'disabled' : '' }}>
-                                    <option></option>
-                                    <option value="Daging Ayam" {{ old('bahan_baku', $inspection->bahan_baku) == 'Daging Ayam' ? 'selected' : '' }}>Daging Ayam</option>
-                                    <option value="Tepung Tapioka" {{ old('bahan_baku', $inspection->bahan_baku) == 'Tepung Tapioka' ? 'selected' : '' }}>Tepung Tapioka</option>
-                                    <option value="Minyak Goreng" {{ old('bahan_baku', $inspection->bahan_baku) == 'Minyak Goreng' ? 'selected' : '' }}>Minyak Goreng</option>
-                                    <option value="Bumbu ABC" {{ old('bahan_baku', $inspection->bahan_baku) == 'Bumbu ABC' ? 'selected' : '' }}>Bumbu ABC</option>
+                                    
+                                    <option></option> {{-- Placeholder --}}
+                                    
+                                    {{-- Looping Data Master Bahan Baku --}}
+                                    @foreach ($masterBahanBaku as $bahan)
+                                        <option value="{{ $bahan->nama_bahan_baku }}" {{ old('bahan_baku', $inspection->bahan_baku) == $bahan->nama_bahan_baku ? 'selected' : '' }}>
+                                            {{ $bahan->nama_bahan_baku }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 
+                                {{-- Hidden input agar nilai tetap terkirim saat disubmit meski select disabled --}}
                                 @if($isBahanBakuFilled)
                                     <input type="hidden" name="bahan_baku" value="{{ $inspection->bahan_baku }}">
                                 @endif
@@ -121,14 +126,35 @@
 
                             <div class="col-md-6">
                                 <label for="supplier" class="form-label">Supplier</label>
-                                <input type="text" 
-                                    class="form-control @error('supplier') is-invalid @enderror" 
+                                
+                                {{-- Cek apakah data supplier sudah terisi sebelumnya --}}
+                                @php $isSupplierFilled = !empty($inspection->supplier); @endphp
+                                
+                                <select class="form-select select2 @error('supplier') is-invalid @enderror" 
                                     id="supplier" 
                                     name="supplier" 
-                                    value="{{ old('supplier', $inspection->supplier) }}" 
                                     required
-                                    {{ $inspection->supplier ? 'readonly' : '' }}>
-                                @error('supplier') <span class="invalid-feedback"><strong>{{ $message }}</strong></span> @enderror
+                                    {{ $isSupplierFilled ? 'disabled' : '' }}>
+                                    
+                                    <option></option> {{-- Placeholder untuk Select2 --}}
+                                    
+                                    {{-- Looping data supplier dari controller --}}
+                                    @foreach ($suppliers as $sup)
+                                        <option value="{{ $sup->nama_supplier }}" {{ old('supplier', $inspection->supplier) == $sup->nama_supplier ? 'selected' : '' }}>
+                                            {{ $sup->nama_supplier }}
+                                        </option>
+                                    @endforeach
+                                    
+                                </select>
+                                
+                                {{-- Input hidden wajib ada karena <select> yang didisable tidak akan mengirimkan value ke controller --}}
+                                @if($isSupplierFilled)
+                                    <input type="hidden" name="supplier" value="{{ $inspection->supplier }}">
+                                @endif
+                                
+                                @error('supplier') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                         </div>
                     </div>
