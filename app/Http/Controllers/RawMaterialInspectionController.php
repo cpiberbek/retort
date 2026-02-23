@@ -5,6 +5,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\RawMaterialInspection;
+use App\Models\Master_Raw_Material;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -54,7 +56,18 @@ class RawMaterialInspectionController extends Controller
 
     public function create()
     {
-        return view('raw_material.CreateRawMaterial');
+        // Ambil data master bahan baku sesuai dengan plant user yang login
+        $masterBahanBaku = Master_Raw_Material::where('plant_uuid', Auth::user()->plant)
+                                                ->orderBy('nama_bahan_baku', 'asc')
+                                                ->get();
+
+        // Ambil data supplier berdasarkan plant user yang login
+        $suppliers = Supplier::where('plant', Auth::user()->plant)
+                             ->orderBy('nama_supplier', 'asc')
+                             ->get();
+
+        // Kirim data ($masterBahanBaku dan $suppliers) ke view
+        return view('raw_material.CreateRawMaterial', compact('masterBahanBaku', 'suppliers'));
     }
 
     public function store(Request $request)
@@ -141,12 +154,20 @@ class RawMaterialInspectionController extends Controller
 
     public function edit(RawMaterialInspection $inspection)
     {
-        // Load relasi productDetails agar bisa di-loop di view
-        // $inspection sudah otomatis di-fetch berdasarkan 'uuid'
-        // berkat method getRouteKeyName() di model
+        // Load relasi productDetails
         $inspection->load('productDetails', 'creator');
         
-        return view('raw_material.EditRawMaterial', compact('inspection'));
+        // Ambil data master bahan baku sesuai dengan plant user yang login
+        $masterBahanBaku = Master_Raw_Material::where('plant_uuid', Auth::user()->plant)
+                                                ->orderBy('nama_bahan_baku', 'asc')
+                                                ->get();
+        
+       // Ambil data supplier
+        $suppliers = Supplier::where('plant', Auth::user()->plant)
+                             ->orderBy('nama_supplier', 'asc')
+                             ->get();
+        // Pastikan variabel $masterBahanBaku dan $suppliers ikut dikirim ke dalam fungsi compact()
+        return view('raw_material.EditRawMaterial', compact('inspection', 'masterBahanBaku', 'suppliers'));
     }
 
     /**
@@ -359,8 +380,18 @@ class RawMaterialInspectionController extends Controller
         // Load relasi productDetails agar bisa ditampilkan di JS
         $inspection->load('productDetails');
 
+        // Tambahkan juga data master bahan baku di sini
+        // agar dropdown bisa me-load data jika view ini menggunakannya
+        $masterBahanBaku = Master_Raw_Material::where('plant_uuid', Auth::user()->plant)
+                                                ->orderBy('nama_bahan_baku', 'asc')
+                                                ->get();
+
+        $suppliers = Supplier::where('plant', Auth::user()->plant)
+                             ->orderBy('nama_supplier', 'asc')
+                             ->get();
+
         // Arahkan ke blade baru: resources/views/raw_material/UpdateRawMaterial.blade.php
-        return view('raw_material.UpdateRawMaterial', compact('inspection'));
+        return view('raw_material.UpdateRawMaterial', compact('inspection', 'masterBahanBaku', 'suppliers'));
     }
 
     public function exportPdf(Request $request)
