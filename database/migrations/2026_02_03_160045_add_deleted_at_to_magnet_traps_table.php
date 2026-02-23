@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('magnet_traps', function (Blueprint $table) {
-            $table->softDeletes();
-        });
+        // Tambahkan pengecekan agar tidak error jika kolom sudah ada
+        if (!Schema::hasColumn('magnet_traps', 'deleted_at')) {
+            Schema::table('magnet_traps', function (Blueprint $table) {
+                $table->softDeletes();
+            });
+        }
     }
 
     /**
@@ -21,8 +24,10 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('magnet_traps', function (Blueprint $table) {
-           $table->dropColumn('deleted_at');
-       });
+        if (Schema::hasColumn('magnet_traps', 'deleted_at')) {
+            Schema::table('magnet_traps', function (Blueprint $table) {
+                $table.dropSoftDeletes(); // Menggunakan helper bawaan Laravel
+            });
+        }
     }
 };
