@@ -276,17 +276,18 @@
     }
 
     produkSelect.addEventListener('change', function () {
-        let namaProduk = this.value;
+    let namaProduk = this.value;
 
-        // Jika user mengosongkan nama produk
-        if (!namaProduk) {
-            batchSelect.innerHTML = '<option value="">Pilih Varian Terlebih Dahulu</option>';
-            batchSelect.disabled = true;
-            expDateInput.value = '';
-            return;
-        }
+    if (!namaProduk) {
+        batchSelect.innerHTML = '<option value="">Pilih Varian Terlebih Dahulu</option>';
+        batchSelect.disabled = true;
+        expDateInput.value = '';
+        return;
+    }
 
-        fetch(`/lookup/batch/${namaProduk}`)
+    const url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             batchSelect.disabled = false; 
@@ -304,6 +305,11 @@
             data.forEach(batch => {
                 batchSelect.innerHTML += `<option value="${batch.uuid}">${batch.kode_produksi}</option>`;
             });
+        })
+        .catch(err => {
+            console.error('Fetch error:', err);
+            batchSelect.innerHTML = '<option value="">Gagal memuat data batch</option>';
+            batchSelect.disabled = true;
         });
     });
 

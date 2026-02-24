@@ -239,7 +239,7 @@
             return;
         }
 
-        fetch(`/lookup/batch/${produk}`)
+        fetch("{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk)))
             .then(res => res.json())
             .then(data => {
 

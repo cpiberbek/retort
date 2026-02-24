@@ -389,7 +389,8 @@
             return;
         }
 
-        fetch(`/lookup/batch/${namaProduk}`)
+        const url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
+        fetch(url)
         .then(response => response.json())
         .then(data => {
             batchSelect.disabled = false; 

@@ -167,8 +167,8 @@ Route::resource('area_sanitasi', Area_sanitasiController::class)->parameters([
 ]);
 
 // UMUM
-Route::get('/lookup/batch/{nama_produk}', [LookupController::class, 'getBatchByProduk']);
-Route::get('/lookup/batch-packing/{nama_produk}', [LookupController::class, 'getAllBatchByProduk']);
+Route::get('/lookup/batch/{nama_produk}', [LookupController::class, 'getBatchByProduk'])->name('lookup.batch');
+Route::get('/lookup/batch-packing/{nama_produk}', [LookupController::class, 'getAllBatchByProduk'])->name('lookup.batch_packing');
 
 // Form QC
 Route::resource('list_form', List_formController::class)->parameters([

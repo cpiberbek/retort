@@ -435,7 +435,7 @@
                         }
 
                         return $.ajax({
-                            url: `/lookup/batch-packing/${produk}`,
+                            url: "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk)),
                             data: { q: params.data.term },
                             success,
                             error: failure

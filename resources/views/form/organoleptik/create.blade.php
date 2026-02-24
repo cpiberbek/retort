@@ -282,7 +282,7 @@
                     }
 
                     return $.ajax({
-                        url: `/lookup/batch-packing/${produk}`,
+                        url: "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk)),
                         data: { q: params.data.term },
                         success,
                         error: failure
@@ -311,8 +311,10 @@
         }
     }
 
-    produkSelect.on("change", function () {
-        updateKodeProduksiState();
+        produkSelect.on("change", function () {
+        const kode_produksi_Selects = $(".kode_produksi_Select");
+        kode_produksi_Selects.val(null).trigger('change');
+        kode_produksi_Selects.prop("disabled", !$(this).val());
     });
 
     // ========== Tambah baris baru (HANYA SATU EVENT) ==========

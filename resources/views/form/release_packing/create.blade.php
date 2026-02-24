@@ -168,51 +168,53 @@
     }
 
     produkSelect.addEventListener('change', function () {
-        let namaProduk = this.value;
+    let namaProduk = this.value;
 
-        if (!namaProduk) {
-            batchSelect
-                .prop('disabled', true)
-                .html('<option value="">Pilih Varian Terlebih Dahulu</option>')
-                .trigger('change');
-            return;
-        }
+    if (!namaProduk) {
+        batchSelect
+            .prop('disabled', true)
+            .html('<option value="">Pilih Varian Terlebih Dahulu</option>')
+            .trigger('change');
+        return;
+    }
 
-        fetch(`/lookup/batch-packing/${namaProduk}`)
+    // Bisa diganti pakai Blade route juga kalau mau:
+    // let url = "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}"
+    //             .replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+    let url = "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}"
+                .replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+    fetch(url)
             .then(res => res.json())
             .then(data => {
 
                 batchSelect.prop('disabled', false).html('');
 
-                        if (data.length === 0) {
-            console.log('Tidak ada batch ditemukan untuk produk ini.');
+                if (data.length === 0) {
+                    console.log('Tidak ada batch ditemukan untuk produk ini.');
 
-            batchSelect
-                .html('<option value="">Batch Tidak Ditemukan</option>')
-                .prop('disabled', false)           // wajib di-enable sebentar
-                .select2({
-                    placeholder: "Batch Tidak Ditemukan"
-                })
-                .val("")                           // kosongkan value
-                .trigger('change');
-
-            batchSelect.prop('disabled', true);     // disable lagi setelah refresh
-            return;
-        }
-
+                    batchSelect
+                        .html('<option value="">Batch Tidak Ditemukan</option>')
+                        .prop('disabled', true)
+                        .select2({
+                            placeholder: "Batch Tidak Ditemukan"
+                        })
+                        .val("")
+                        .trigger('change');
+                    return;
+                }
 
                 batchSelect.append('<option value="">-- Pilih Batch --</option>');
 
+                // gunakan key yang sesuai JSON
                 data.forEach(batch => {
-                    batchSelect.append(`
-                        <option value="${batch.uuid}">
-                            ${batch.kode_produksi}
-                        </option>
-                    `);
+                    batchSelect.append(new Option(batch.text, batch.id));
                 });
 
                 batchSelect.trigger('change');
-            });
+            })
+            .catch(err => console.error(err));
     });
 
 

@@ -197,7 +197,7 @@
     $('#kode_produksi').select2({
         theme: 'bootstrap-5',
         width: '100%',
-        placeholder: 'Ketik kode produksi...',
+        placeholder: 'Cari kode produksi...',
         allowClear: true,
         ajax: {
             delay: 300,
@@ -208,7 +208,7 @@
                 }
 
                 return $.ajax({
-                    url: `/lookup/batch-packing/${produk}`,
+                    url: "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk)),
                     data: { q: params.data.term },
                     success,
                     error: failure
