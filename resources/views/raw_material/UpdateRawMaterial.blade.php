@@ -1,4 +1,4 @@
-{{-- resources/views/raw_material/EditRawMaterial.blade.php --}}
+{{-- resources/views/raw_material/UpdateRawMaterial.blade.php --}}
 
 @extends('layouts.app') 
 
@@ -226,15 +226,19 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {{-- K.A / FFA --}}
                             <div class="col-md-3 col-6">
-                                <label class="form-label d-block">K.A / FFA</label>
+                                <label for="analisa_ka_ffa" class="form-label d-block">K.A / FFA</label>
                                 @php $isKaFfaFilled = !is_null($inspection->analisa_ka_ffa); @endphp
-                                <input type="hidden" name="analisa_ka_ffa" id="analisa_ka_ffa" value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') }}">
-                                <div class="btn-group btn-check-group w-100" role="group">
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#analisa_ka_ffa" {{ $isKaFfaFilled ? 'disabled' : '' }}><i class="bi bi-check-lg"></i> OK</button>
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" data-value="0" data-target-input="#analisa_ka_ffa" {{ $isKaFfaFilled ? 'disabled' : '' }}><i class="bi bi-x-lg"></i> Not OK</button>
-                                </div>
+                                <input type="number" step="0.01" 
+                                    class="form-control @error('analisa_ka_ffa') is-invalid @enderror" 
+                                    id="analisa_ka_ffa" 
+                                    name="analisa_ka_ffa" 
+                                    value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" 
+                                    required min="0"
+                                    {{ $isKaFfaFilled ? 'readonly' : '' }}>
+                                @error('analisa_ka_ffa') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
 
                             {{-- Logo Halal --}}
@@ -336,12 +340,18 @@
                                     required
                                     {{ $inspection->nopol_mobil ? 'readonly' : '' }}>
                             </div>
-                             <div class="col-md-4">
+                            <div class="col-md-4">
                                 <label for="suhu_mobil" class="form-label">Suhu Mobil (°C)</label>
-                                <input type="number" class="form-control" id="suhu_mobil" name="suhu_mobil" 
-                                    value="{{ old('suhu_mobil', $inspection->suhu_mobil) }}" 
-                                    required max="50"
+                                <input type="number" step="0.01" 
+                                    class="form-control @error('suhu_mobil') is-invalid @enderror" 
+                                    id="suhu_mobil" 
+                                    name="suhu_mobil" 
+                                    value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" 
+                                    required 
                                     {{ $inspection->suhu_mobil ? 'readonly' : '' }}>
+                                @error('suhu_mobil') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                             <div class="col-md-4">
                                 <label for="kondisi_mobil" class="form-label">Kondisi Mobil</label>

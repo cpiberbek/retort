@@ -1,3 +1,5 @@
+{{-- resources/views/raw_material/EditRawMaterial.blade.php --}}
+
 @extends('layouts.app') {{-- Menggunakan layout utama Anda --}}
 
 {{-- Mendefinisikan bagian style kustom --}}
@@ -129,49 +131,28 @@
                             
                             <div class="col-12">
                                 <label for="bahan_baku" class="form-label">Bahan Baku</label>
-                                
-                                {{-- Hapus logika $isBahanBakuFilled dan atribut disabled di sini --}}
-                                <select class="form-select select2 @error('bahan_baku') is-invalid @enderror" 
-                                    id="bahan_baku" 
-                                    name="bahan_baku" 
-                                    required>
-                                    
-                                    <option></option> {{-- Placeholder Select2 --}}
-                                    
-                                    {{-- Looping data dinamis dari controller --}}
+                                <select class="form-select select2 @error('bahan_baku') is-invalid @enderror" id="bahan_baku" name="bahan_baku" required>
+                                    <option></option>
                                     @foreach ($masterBahanBaku as $bahan)
                                         <option value="{{ $bahan->nama_bahan_baku }}" {{ old('bahan_baku', $inspection->bahan_baku) == $bahan->nama_bahan_baku ? 'selected' : '' }}>
                                             {{ $bahan->nama_bahan_baku }}
                                         </option>
                                     @endforeach
-                                    
                                 </select>
-                                
-                                {{-- Hapus blok @if($isBahanBakuFilled) beserta input hidden-nya di sini --}}
-                                
                                 @error('bahan_baku') 
                                     <span class="invalid-feedback"><strong>{{ $message }}</strong></span> 
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label for="supplier" class="form-label">Supplier</label>
-                                
-                                <select class="form-select select2 @error('supplier') is-invalid @enderror" 
-                                    id="supplier" 
-                                    name="supplier" 
-                                    required>
-                                    
-                                    <option></option> {{-- Placeholder untuk Select2 --}}
-                                    
-                                    {{-- Looping data supplier dari controller --}}
+                                <select class="form-select select2 @error('supplier') is-invalid @enderror" id="supplier" name="supplier" required>
+                                    <option></option>
                                     @foreach ($suppliers as $sup)
                                         <option value="{{ $sup->nama_supplier }}" {{ old('supplier', $inspection->supplier) == $sup->nama_supplier ? 'selected' : '' }}>
                                             {{ $sup->nama_supplier }}
                                         </option>
                                     @endforeach
-                                    
                                 </select>
-                                
                                 @error('supplier') 
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
                                 @enderror
@@ -216,19 +197,10 @@
                                 <input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ old($name, $inspection->$name ? '1' : '0') }}">
                                 
                                 <div class="btn-group btn-check-group w-100" role="group">
-                                    {{-- Tombol OK --}}
-                                    <button type="button" 
-                                        class="btn {{ old($name, $inspection->$name ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" 
-                                        data-value="1" 
-                                        data-target-input="#{{ $name }}">
+                                    <button type="button" class="btn {{ old($name, $inspection->$name ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#{{ $name }}">
                                         <i class="bi bi-check-lg"></i> OK
                                     </button>
-
-                                    {{-- Tombol Not OK --}}
-                                    <button type="button" 
-                                        class="btn {{ old($name, $inspection->$name ? '1' : '0') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" 
-                                        data-value="0" 
-                                        data-target-input="#{{ $name }}">
+                                    <button type="button" class="btn {{ old($name, $inspection->$name ? '1' : '0') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" data-value="0" data-target-input="#{{ $name }}">
                                         <i class="bi bi-x-lg"></i> Not OK
                                     </button>
                                 </div>
@@ -238,21 +210,20 @@
                     </div>
                 </div>
 
-                {{-- CARD ANALISA PRODUK (UPDATED UX) --}}
+                {{-- CARD ANALISA PRODUK (DIPERBAIKI UNTUK DECIMAL K.A / FFA) --}}
                 <div class="card mb-4">
                     <div class="card-header">
                         <strong><i class="bi bi-search"></i> Analisa Produk</strong>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {{-- 1. K.A / FFA --}}
+                            {{-- 1. K.A / FFA (Menjadi Input Number Decimal) --}}
                             <div class="col-md-3 col-6">
-                                <label class="form-label d-block">K.A / FFA</label>
-                                <input type="hidden" name="analisa_ka_ffa" id="analisa_ka_ffa" value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') }}">
-                                <div class="btn-group btn-check-group w-100" role="group">
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#analisa_ka_ffa"><i class="bi bi-check-lg"></i> OK</button>
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" data-value="0" data-target-input="#analisa_ka_ffa"><i class="bi bi-x-lg"></i> Not OK</button>
-                                </div>
+                                <label for="analisa_ka_ffa" class="form-label d-block">K.A / FFA</label>
+                                <input type="number" step="0.01" class="form-control @error('analisa_ka_ffa') is-invalid @enderror" id="analisa_ka_ffa" name="analisa_ka_ffa" value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" required min="0">
+                                @error('analisa_ka_ffa') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                             
                             {{-- 2. Logo Halal --}}
@@ -281,7 +252,7 @@
                     </div>
                 </div>
 
-                {{-- CARD DOKUMEN PENDUKUNG (FIXED: Input COA Naik) --}}
+                {{-- CARD DOKUMEN PENDUKUNG --}}
                 <div class="card mb-4">
                     <div class="card-header">
                         <strong><i class="bi bi-file-earmark-text"></i> Dokumen Pendukung</strong>
@@ -298,16 +269,10 @@
                                     <input type="hidden" name="dokumen_halal_berlaku" id="dokumen_halal_berlaku" value="{{ old('dokumen_halal_berlaku', $inspection->dokumen_halal_berlaku ? '1' : '0') }}">
                                     
                                     <div class="btn-group btn-check-group w-50" role="group">
-                                        <button type="button" 
-                                            class="btn btn-sm {{ old('dokumen_halal_berlaku', $inspection->dokumen_halal_berlaku ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" 
-                                            data-value="1" 
-                                            data-target-input="#dokumen_halal_berlaku">
+                                        <button type="button" class="btn btn-sm {{ old('dokumen_halal_berlaku', $inspection->dokumen_halal_berlaku ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#dokumen_halal_berlaku">
                                             <i class="bi bi-check-lg"></i> Berlaku (OK)
                                         </button>
-                                        <button type="button" 
-                                            class="btn btn-sm {{ old('dokumen_halal_berlaku', $inspection->dokumen_halal_berlaku ? '1' : '0') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" 
-                                            data-value="0" 
-                                            data-target-input="#dokumen_halal_berlaku">
+                                        <button type="button" class="btn btn-sm {{ old('dokumen_halal_berlaku', $inspection->dokumen_halal_berlaku ? '1' : '0') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" data-value="0" data-target-input="#dokumen_halal_berlaku">
                                             <i class="bi bi-x-lg"></i> Tidak (X)
                                         </button>
                                     </div>
@@ -326,11 +291,9 @@
                                 </div>
                             </div>
 
-                            {{-- KOLOM KANAN (DIPERBAIKI: Hapus Spacer) --}}
+                            {{-- KOLOM KANAN --}}
                             <div class="col-md-6">
                                 <label for="dokumen_coa_file" class="form-label">Dokumen COA</label>
-                                
-                                {{-- Input langsung di bawah label, tidak ada spacer/ghost element --}}
                                 <input class="form-control form-control-sm @error('dokumen_coa_file') is-invalid @enderror" type="file" id="dokumen_coa_file" name="dokumen_coa_file">
                                 @error('dokumen_coa_file') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
                                 @if($inspection->dokumen_coa_file)
@@ -355,11 +318,16 @@
                                 <input type="text" class="form-control @error('nopol_mobil') is-invalid @enderror" id="nopol_mobil" name="nopol_mobil" value="{{ old('nopol_mobil', $inspection->nopol_mobil) }}" required>
                                 @error('nopol_mobil') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
                             </div>
+                            
+                            {{-- SUHU MOBIL (Menjadi Input Number Decimal) --}}
                              <div class="col-md-4">
                                 <label for="suhu_mobil" class="form-label">Suhu Mobil (°C)</label>
-                                <input type="number" class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil" name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil) }}" required max="50">
-                                @error('suhu_mobil') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                <input type="number" step="0.01" class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil" name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" required>
+                                @error('suhu_mobil') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
+                            
                             <div class="col-md-4">
                                 <label for="kondisi_mobil" class="form-label">Kondisi Mobil</label>
                                 <select class="form-select select2 @error('kondisi_mobil') is-invalid @enderror" id="kondisi_mobil" name="kondisi_mobil" required>
@@ -420,7 +388,7 @@
     // 3. Initialize Select2
     $(document).ready(function() {
         $('.select2').select2({
-            theme: "bootstrap-5", // Use the Bootstrap 5 theme
+            theme: "bootstrap-5", 
             placeholder: "Ketik untuk mencari...",
             allowClear: true,
             dropdownAutoWidth: true,
@@ -430,11 +398,21 @@
 </script>
 
 <script>
+    // --- Script Validasi Max & Min (DIPERBAIKI MENGGUNAKAN 'change') ---
     document.querySelectorAll('input[type="number"][max]').forEach(function(input) {
-        input.addEventListener('input', function() {
+        input.addEventListener('change', function() {
             const max = parseFloat(this.getAttribute('max'));
-            if (parseFloat(this.value) > max) {
+            if (this.value !== '' && parseFloat(this.value) > max) {
                 this.value = max;
+            }
+        });
+    });
+
+    document.querySelectorAll('input[type="number"][min]').forEach(function(input) {
+        input.addEventListener('change', function() {
+            const min = parseFloat(this.getAttribute('min'));
+            if (this.value !== '' && parseFloat(this.value) < min) {
+                this.value = min;
             }
         });
     });
