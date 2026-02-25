@@ -17,8 +17,7 @@ class RawMaterialInspectionController extends Controller
 {
     // Daftar field boolean (dari tombol OK/Not OK)
     private $booleanFields = [
-        'mobil_check_warna', 'mobil_check_kotoran', 'mobil_check_aroma', 'mobil_check_kemasan',
-        'analisa_ka_ffa', 'analisa_logo_halal', 'dokumen_halal_berlaku'
+        'mobil_check_warna', 'mobil_check_kotoran', 'mobil_check_aroma', 'mobil_check_kemasan', 'analisa_logo_halal', 'dokumen_halal_berlaku'
     ];
 
     public function index(Request $request)
@@ -81,8 +80,9 @@ class RawMaterialInspectionController extends Controller
                                 'bahan_baku' => 'required|string|max:255',
                                 'supplier' => 'required|string|max:255',
                                 'nopol_mobil' => 'required|string|max:255',
-                                'suhu_mobil' => 'required|string|max:50',
+                                'suhu_mobil' => 'required|numeric',
                                 'kondisi_mobil' => 'required|string',
+                                'analisa_ka_ffa' => 'required|numeric',
                                 'no_segel' => 'required|string|max:255',
                                 'suhu_daging' => 'required|numeric',
                                 'analisa_negara_asal' => 'required|string|max:255',
@@ -185,7 +185,8 @@ class RawMaterialInspectionController extends Controller
             'bahan_baku' => 'required|string|max:255',
             'supplier' => 'required|string|max:255',
             'nopol_mobil' => 'required|string|max:255',
-            'suhu_mobil' => 'required|string|max:50',
+            'suhu_mobil' => 'required|numeric',
+            'analisa_ka_ffa' => 'required|numeric',
             'kondisi_mobil' => 'required|string',
             'no_segel' => 'required|string|max:255',
             'suhu_daging' => 'required|numeric',
