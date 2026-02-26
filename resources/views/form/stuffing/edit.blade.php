@@ -38,9 +38,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker @error('nama_produk') is-invalid @enderror" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $stuffing->nama_produk)==$produk->nama_produk ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
@@ -59,7 +59,7 @@
                             <div class="col-md-6 mt-3">
                                 <label class="form-label">Exp. Date</label>
                                 <input type="date" name="exp_date" id="exp_date" class="form-control @error('exp_date') is-invalid @enderror" value="{{ old('exp_date', $stuffing->exp_date) }}">
-                                <small class="text-muted">Dihitung otomatis +7 bulan dari kode produksi</small>
+                                <small class="text-muted">Dihitung otomatis +7 bulan dari kode batch</small>
                                 <small class="text-danger">@error('exp_date') {{ $message }} @enderror</small>
                             </div>
                         </div>
@@ -131,15 +131,6 @@
                             <small class="text-danger">@error('berat_pcs') {{ $message }} @enderror</small>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label">Cek Vakum</label>
-                            <select name="cek_vakum" class="form-control @error('cek_vakum') is-invalid @enderror">
-                                <option value="">-- Pilih --</option>
-                                <option value="OK" {{ old('cek_vakum', $stuffing->cek_vakum)=='OK' ? 'selected' : '' }}>OK</option>
-                                <option value="Tidak OK" {{ old('cek_vakum', $stuffing->cek_vakum)=='Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
-                            </select>
-                            <small class="text-danger">@error('cek_vakum') {{ $message }} @enderror</small>
-                        </div>
 
                         <div class="mb-3">
                             <label class="form-label">Kebersihan Ujung Seal</label>
@@ -247,7 +238,7 @@
         expDateInput.value = '';
 
         if(value.length !== 10){
-            kodeError.textContent = "Kode produksi harus 10 karakter.";
+            kodeError.textContent = "Kode batch harus 10 karakter.";
             return;
         }
         if(!/^[A-Z0-9]+$/.test(value)){

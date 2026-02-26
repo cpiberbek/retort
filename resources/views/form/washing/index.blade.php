@@ -84,7 +84,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -133,8 +133,8 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
-                            <th>Kode Produksi</th>
+                            <th>Nama Varian</th>
+                            <th>Kode Batch</th>
                             <th>Waktu</th>
                             <th>Pemeriksaan</th>
                             <th>QC</th>
@@ -174,8 +174,8 @@
                                                 <h6 class="text-secondary fw-bold mt-2">Identifikasi</h6>
                                                 <table class="table table-bordered table-sm mb-3">
                                                     <tbody>
-                                                        <tr><th style="width: 50%;">Nama Produk</th><td>{{ $dep->nama_produk }}</td></tr>
-                                                        <tr><th>Kode Produksi</th><td>{{ $dep->kode_produksi }}</td></tr>
+                                                        <tr><th style="width: 50%;">Nama Varian</th><td>{{ $dep->nama_produk }}</td></tr>
+                                                        <tr><th>Kode Batch</th><td>{{ $dep->kode_produksi }}</td></tr>
                                                     </tbody>
                                                 </table>
 
@@ -183,14 +183,13 @@
                                                 <h6 class="text-primary fw-bold mt-2"><i class="bi bi-check2-square me-1"></i> Pengecekan</h6>
                                                 <table class="table table-bordered table-sm mb-3">
                                                     <tbody>
-                                                        <tr><th style="width: 50%;">Panjang Produk Akhir (Cm)</th><td>{{ $dep->panjang_produk ?? '-' }}</td></tr>
-                                                        <tr><th>Diameter Produk Akhir (Mm)</th><td>{{ $dep->diameter_produk ?? '-' }}</td></tr>
+                                                        <tr><th style="width: 50%;">Panjang Varian Akhir (Cm)</th><td>{{ $dep->panjang_produk ?? '-' }}</td></tr>
+                                                        <tr><th>Diameter Varian Akhir (Mm)</th><td>{{ $dep->diameter_produk ?? '-' }}</td></tr>
                                                         <tr><th>Airtrap</th><td>{{ $dep->airtrap ?? '-' }}</td></tr>
                                                         <tr><th>Lengket</th><td>{{ $dep->lengket ?? '-' }}</td></tr>
                                                         <tr><th>Sisa Adonan</th><td>{{ $dep->sisa_adonan ?? '-' }}</td></tr>
-                                                        <tr><th>Cek Kebocoran / Vacuum</th><td>{{ $dep->kebocoran ?? '-' }}</td></tr>
                                                         <tr><th>Kekuatan Seal</th><td>{{ $dep->kekuatan_seal ?? '-' }}</td></tr>
-                                                        <tr><th>Print Kode Produksi</th><td>{{ $dep->print_kode ?? '-' }}</td></tr>
+                                                        <tr><th>Print Kode Batch</th><td>{{ $dep->print_kode ?? '-' }}</td></tr>
                                                     </tbody>
                                                 </table>
 

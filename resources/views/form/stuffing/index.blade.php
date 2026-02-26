@@ -80,7 +80,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Area / Produk / Mesin...">
+                    value="{{ request('search') }}" placeholder="Cari Area / Varian / Mesin...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -130,8 +130,8 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
-                            <th>Kode Produksi</th>
+                            <th>Nama Varian</th>
+                            <th>Kode Batch</th>
                             <th>Exp. Date</th>
                             <th>Kode Mesin</th>
                             <th>Jam Mulai</th>
@@ -191,7 +191,6 @@
                                             'key'=>'kecepatan_stuffing'],
                                             ['type'=>'field', 'label'=>'Panjang/pcs (cm)', 'key'=>'panjang_pcs'],
                                             ['type'=>'field', 'label'=>'Berat/pcs (gr)', 'key'=>'berat_pcs'],
-                                            ['type'=>'field', 'label'=>'Cek Vakum', 'key'=>'cek_vakum'],
                                             ['type'=>'field', 'label'=>'Kebersihan Seal', 'key'=>'kebersihan_seal'],
                                             ['type'=>'field', 'label'=>'Kekuatan Seal', 'key'=>'kekuatan_seal'],
                                             ['type'=>'field', 'label'=>'Diameter Klip (mm)',
@@ -213,7 +212,7 @@
                                                 @php
                                                 $value = $dep->{$item['key']} ?? null;
                                                 $display = in_array($item['key'],
-                                                ['sensori','cek_vakum','kebersihan_seal','kekuatan_seal','print_kode'])
+                                                ['sensori','kebersihan_seal','kekuatan_seal','print_kode'])
                                                 ? (!empty($value) ? '✔' : '-')
                                                 : ($value ?? '-');
                                                 @endphp
