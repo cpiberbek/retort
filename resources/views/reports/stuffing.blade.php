@@ -108,8 +108,6 @@
                 <th width="5%">Speed</th>
                 <th width="5%">Pjg<br>(cm)</th>
                 <th width="5%">Berat<br>(gr)</th>
-                
-                <th width="4%">Vakum</th>
                 <th width="4%">Seal</th>
                 <th width="4%">Klip</th>
                 
@@ -140,7 +138,6 @@
                 <td width="5%">{{ $item->berat_pcs ? (float)$item->berat_pcs : '-' }}</td>
                 
                 {{-- Simbol Centang (ZapfDingbats) --}}
-                <td width="4%" >{{ !empty($item->cek_vakum) ? '4' : '-' }}</td>
                 <td width="4%" >{{ !empty($item->kekuatan_seal) ? '4' : '-' }}</td>
                 <td width="4%">{{ $item->diameter_klip ?? '-' }}</td>
                 

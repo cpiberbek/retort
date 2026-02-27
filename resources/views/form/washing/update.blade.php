@@ -43,11 +43,11 @@
 
                     <div class="row mb-3">
                      <div class="col-md-6">
-                        <label class="form-label">Nama Produk</label>
+                        <label class="form-label">Nama Varian</label>
                         <input type="text" name="nama_produk" class="form-control" value="{{ $washing->nama_produk }}" readonly>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Kode Produksi</label>
+                        <label class="form-label">Kode Batch</label>
                         <input type="text" name="kode_produksi" id="kode_produksi" maxlength="10" class="form-control" 
                         value="{{ old('kode_produksi', $washing->kode_produksi) }}"
                         @if($washing->kode_produksi) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif
@@ -79,39 +79,51 @@
                     <table class="table table-bordered align-middle text-center">
                         <tbody>
                             @php
-                            $fields = [
-                            'panjang_produk', 'diameter_produk', 'airtrap', 'lengket', 
-                            'sisa_adonan', 'kebocoran', 'kekuatan_seal', 'print_kode'
-                            ];
+                                $fields = [
+                                    // 'nama_kolom_db' => 'Label Tampilan'
+                                    'panjang_produk'  => 'Panjang Varian', 
+                                    'diameter_produk' => 'Diameter Varian', 
+                                    'airtrap'         => 'Airtrap', 
+                                    'lengket'         => 'Lengket', 
+                                    'sisa_adonan'     => 'Sisa Adonan', 
+                                    'kebocoran'       => 'Kebocoran', 
+                                    'kekuatan_seal'   => 'Kekuatan Seal', 
+                                    'print_kode'      => 'Print Kode'
+                                ];
                             @endphp
-                            @foreach($fields as $field)
+                            @foreach($fields as $column => $label)
                             <tr>
-                                <td class="text-left align-middle">{{ ucwords(str_replace('_',' ',$field)) }}</td>
+                                {{-- Tampilan untuk User menggunakan $label --}}
+                                <td class="text-left align-middle">{{ $label }}</td>
+                                
                                 <td>
-                                    @if(in_array($field,['airtrap','lengket','sisa_adonan','kebocoran','kekuatan_seal','print_kode']))
-                                    <select name="{{ $field }}_display" class="form-control form-control-sm text-center" 
-                                    @if($washing->$field) style="pointer-events:none;background-color:#e9ecef;" @endif>
-                                    @php
-                                    $options = ['Ada','Tidak Ada'];
-                                    if(in_array($field,['kebocoran','kekuatan_seal','print_kode'])){
-                                        $options = ['Ok','Tidak Ok'];
-                                    }
-                                    @endphp
-                                    @foreach($options as $opt)
-                                    <option value="{{ $opt }}" {{ $washing->$field == $opt ? 'selected' : '' }}>{{ $opt }}</option>
-                                    @endforeach
-                                </select>
-                                @if($washing->$field)
-                                <input type="hidden" name="{{ $field }}" value="{{ $washing->$field }}">
-                                @endif
-                                @else
-                                <input type="number" name="{{ $field }}" class="form-control form-control-sm text-center" step="0.01" min="0"
-                                value="{{ old($field, $washing->$field) }}"
-                                @if($washing->$field) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif>
-                                @endif
-                            </td>
-                        </tr>
-                        @endforeach
+                                    {{-- Logika Backend tetap menggunakan $column --}}
+                                    @if(in_array($column, ['airtrap','lengket','sisa_adonan','kebocoran','kekuatan_seal','print_kode']))
+                                        <select name="{{ $column }}_display" class="form-control form-control-sm text-center" 
+                                            @if($washing->$column) style="pointer-events:none;background-color:#e9ecef;" @endif>
+                                            
+                                            @php
+                                            $options = (in_array($column, ['kebocoran','kekuatan_seal','print_kode'])) 
+                                                        ? ['Ok','Tidak Ok'] 
+                                                        : ['Ada','Tidak Ada'];
+                                            @endphp
+
+                                            @foreach($options as $opt)
+                                                <option value="{{ $opt }}" {{ $washing->$column == $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                            @endforeach
+                                        </select>
+
+                                        @if($washing->$column)
+                                            <input type="hidden" name="{{ $column }}" value="{{ $washing->$column }}">
+                                        @endif
+                                    @else
+                                        <input type="number" name="{{ $column }}" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            value="{{ old($column, $washing->$column) }}"
+                                            @if($washing->$column) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
                     </tbody>
                 </table>
             </div>
@@ -275,11 +287,11 @@
             kodeError.text('').addClass('d-none');
 
             if(value.length !== 10) {
-                kodeError.text('Kode produksi harus terdiri dari 10 karakter').removeClass('d-none');
+                kodeError.text('Kode batch harus terdiri dari 10 karakter').removeClass('d-none');
                 return false;
             }
             if(!/^[A-Z0-9]+$/.test(value)) {
-                kodeError.text('Kode produksi hanya boleh huruf besar dan angka').removeClass('d-none');
+                kodeError.text('Kode batch hanya boleh huruf besar dan angka').removeClass('d-none');
                 return false;
             }
             if(!/^[A-L]$/.test(value.charAt(1))) {
@@ -299,7 +311,7 @@
         form.on('submit', function(e){
             if(!validateKode()){
                 e.preventDefault();
-                alert('Kode produksi tidak valid! Periksa kembali sebelum menyimpan.');
+                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
                 kodeInput.focus();
             }
         });

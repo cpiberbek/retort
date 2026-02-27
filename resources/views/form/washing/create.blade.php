@@ -32,11 +32,11 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk"
                                     class="form-control @error('nama_produk') is-invalid @enderror"
                                     data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk')==$produk->
                                         nama_produk ? 'selected' : '' }}>
@@ -76,14 +76,14 @@
                             <table class="table table-bordered align-middle text-center">
                                 <tbody>
                                     <tr>
-                                        <td class="text-left align-middle">Panjang Produk Akhir (Cm)</td>
+                                        <td class="text-left align-middle">Panjang Varian Akhir (Cm)</td>
                                         <td>
                                             <input type="number" name="panjang_produk" id="panjang_produk" 
                                                 class="form-control form-control-sm text-center" step="0.01" min="0">
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-left align-middle">Diameter Produk Akhir (Mm)</td>
+                                        <td class="text-left align-middle">Diameter Varian Akhir (Mm)</td>
                                         <td>
                                             <input type="number" name="diameter_produk" id="diameter_produk"
                                                 class="form-control form-control-sm text-center" step="0.01" min="0">
@@ -120,16 +120,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-left align-middle">Cek Kebocoran / Vacuum</td>
-                                        <td>
-                                            <select name="kebocoran" id="kebocoran"
-                                                class="form-control form-control-sm text-center">
-                                                <option value="Ok">Ok</option>
-                                                <option value="Tidak Ok">Tidak Ok</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
                                         <td class="text-left align-middle">Kekuatan Seal</td>
                                         <td>
                                             <select name="kekuatan_seal" id="kekuatan_seal"
@@ -140,7 +130,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-left align-middle">Print Kode Produksi</td>
+                                        <td class="text-left align-middle">Print Kode Batch</td>
                                         <td>
                                             <select name="print_kode" id="print_kode"
                                                 class="form-control form-control-sm text-center">
