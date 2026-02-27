@@ -19,7 +19,7 @@ class Release_packing extends Model
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'jenis_kemasan',  'nama_produk', 'kode_produksi', 'expired_date', 'no_palet',  'jumlah_box',  'reject', 'release', 'keterangan',
+        'date', 'plant', 'jenis_kemasan',  'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan',
         'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
     ];
 

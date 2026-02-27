@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Spatie\LaravelPdf\Facades\Pdf;
 use App\Http\Controllers\{
     AuthController,
     UserController,
@@ -74,7 +75,7 @@ Route::get('/', function () {
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
 
 Route::middleware('auth')->group(function () {
     Route::resource('user', UserController::class);
@@ -91,19 +92,15 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:can access edit button')
         ->name('roles.saveAccess');
     });
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+Route::get('/logout', function () {
+    // Kembalikan mereka ke dashboard atau halaman sebelumnya
+    return redirect('/dashboard'); 
+    
+    // ATAU: Anda juga bisa menonaktifkannya dengan menampilkan halaman 404
+    // abort(404);
 });
-
-// Route::middleware(['permission:access roles'])->group(function () {
-//         Route::resource('/roles', RoleController::class)->except(['show']);
-//         Route::get('roles/{role}/manage-access', [RoleController::class, 'manageAccess'])->name('roles.manage-access');
-//         Route::put('roles/{role}/manage-access', [RoleController::class, 'updateAccess'])->name('roles.manage-access.update');
-
-//         Route::resource('/permissions', PermissionController::class)->except(['show']);
-//     });
-
-use Spatie\LaravelPdf\Facades\Pdf;
-
-// Dashboard
+    // Dashboard
 Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 Route::post('/set-produksi', [DashboardController::class, 'setProduksi'])->name('set.produksi');
 
@@ -882,6 +879,29 @@ Route::put('/sanitasi/verification/{uuid}', [SanitasiController::class, 'updateV
     ->name('sanitasi.verification.update');
 Route::get('/sanitasi/export-pdf', [SanitasiController::class, 'exportPdf'])->name('sanitasi.exportPdf');
 Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
-Route::middleware(['auth'])->group(function () {
-    Route::resource('raw-material', MasterRawMaterialController::class);
+Route::resource('raw-material', MasterRawMaterialController::class);
+
+
+
+
+
 });
+
+//Biarkan dibawah ini tetap di paling bawah written by Joe
+Route::fallback(function () {
+    return response()->view('errors.404', [], 404);
+});
+
+
+
+
+// Route::middleware(['permission:access roles'])->group(function () {
+//         Route::resource('/roles', RoleController::class)->except(['show']);
+//         Route::get('roles/{role}/manage-access', [RoleController::class, 'manageAccess'])->name('roles.manage-access');
+//         Route::put('roles/{role}/manage-access', [RoleController::class, 'updateAccess'])->name('roles.manage-access.update');
+
+//         Route::resource('/permissions', PermissionController::class)->except(['show']);
+//     });
+
+
+
