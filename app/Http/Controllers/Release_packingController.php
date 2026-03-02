@@ -60,15 +60,12 @@ class Release_packingController extends Controller
             'kode_produksi'          => 'required|string',
             'expired_date'           => 'required',
             'no_palet'               => 'required|string',
-            'jumlah_box'             => 'nullable|integer',
-            'reject'                 => 'nullable|integer',
             'release'                => 'nullable|integer',
             'keterangan'             => 'nullable|string',
         ]);
 
         $data = $request->only([
-            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'jumlah_box',
-            'reject', 'release', 'keterangan'
+            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
         ]);
 
     // Tambahan default
@@ -102,15 +99,12 @@ class Release_packingController extends Controller
             'kode_produksi'          => 'required|string',
             'expired_date'           => 'required',
             'no_palet'               => 'required|string',
-            'jumlah_box'             => 'nullable|integer',
-            'reject'                 => 'nullable|integer',
             'release'                => 'nullable|integer',
             'keterangan'             => 'nullable|string',
         ]);
 
         $data = $request->only([
-            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'jumlah_box',
-            'reject', 'release', 'keterangan'
+            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
         ]);
 
         $data['username_updated'] = $username_updated;
@@ -140,15 +134,12 @@ class Release_packingController extends Controller
             'kode_produksi'          => 'required|string',
             'expired_date'           => 'required',
             'no_palet'               => 'required|string',
-            'jumlah_box'             => 'nullable|integer',
-            'reject'                 => 'nullable|integer',
             'release'                => 'nullable|integer',
             'keterangan'             => 'nullable|string',
         ]);
 
         $data = $request->only([
-            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'jumlah_box',
-            'reject', 'release', 'keterangan'
+            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
         ]);
 
         $release_packing->update($data);

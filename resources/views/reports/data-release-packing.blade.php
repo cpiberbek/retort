@@ -64,13 +64,11 @@
 <table width="100%" class="tbl-main small">
     <tr>
         <th class="center">No.</th>
-        <th class="center">Nama Produk</th>
-        <th class="center">Kode Produk</th>
+        <th class="center">Nama Varian</th>
+        <th class="center">Kode Batch</th>
         <th class="center">Best Before</th>
         <th class="center">No. Palet</th>
-        <th class="center">Jumlah Box</th>
         <th class="center">Jumlah Release</th>
-        <th class="center">Jumlah Reject</th>
         <th class="center">Paraf QC</th>
     </tr>
 
@@ -81,9 +79,7 @@
         <td class="center">{{ $packing->kode_produksi ?? '-' }}</td>
         <td class="center">{{ $packing->expired_date ? \Carbon\Carbon::parse($packing->expired_date)->format('d-m-Y') : '-' }}</td>
         <td class="center">{{ $packing->no_palet ?? '-' }}</td>
-        <td class="center">{{ $packing->jumlah_box ?? '-' }}</td>
         <td class="center">{{ $packing->release ?? '-' }}</td>
-        <td class="center">{{ $packing->reject ?? '-' }}</td>
         <td class="center">{{ $packing->username ?? '-' }}</td>
     </tr>
     @empty
