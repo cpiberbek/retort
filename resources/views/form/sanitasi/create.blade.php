@@ -63,17 +63,25 @@
 
                         {{-- AREA --}}
                         <div class="mb-3">
-                            <label class="form-label">Area</label>
-                            <select name="area" id="areaSelect" class="form-control @error('area') is-invalid @enderror selectpicker" required>
+                            <label class="form-label">Area - Sub Area</label>
+                            <select name="area" id="areaSelect" class="form-control select2" required>
                                 <option value="">-- Pilih Area --</option>
-                                @foreach($areas as $a)
-                                <option value="{{ $a->area }}" data-bagian='@json(json_decode($a->bagian))'>
-                                    {{ $a->area }}
-                                </option>
+                                @foreach($areas as $area)
+                                    @php
+                                        $bagianArray = json_decode($area->bagian, true) ?? [];
+                                    @endphp
+                                    <option 
+                                        value="{{ $area->area }}"
+                                        data-sub_area="{{ $area->sub_area }}"
+                                        data-bagian='@json($bagianArray)'>
+                                        {{ $area->area }} - {{ $area->sub_area }}
+                                    </option>
                                 @endforeach
                             </select>
+                            <input type="hidden" name="sub_area" id="subAreaInput">
+
                             @error('area')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -99,87 +107,90 @@
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    $(document).ready(function(){
-        $('.selectpicker').selectpicker();
+$(document).ready(function() {
+
+    $('#areaSelect').select2({
+        width: '100%',
+        placeholder: "-- Pilih Area --",
+        allowClear: true
     });
 
-    document.addEventListener("DOMContentLoaded", function() {
-    // ===================== SET DEFAULT DATE & SHIFT =====================
-        const dateInput = document.getElementById("dateInput");
-        const shiftInput = document.getElementById("shiftInput");
+    const dateInput = $("#dateInput");
+    const shiftInput = $("#shiftInput");
 
-        let now = new Date();
-        dateInput.value = now.toISOString().split('T')[0];
-        let hour = now.getHours();
-        shiftInput.value = (hour >= 7 && hour < 15) ? "1" :
-        (hour >= 15 && hour < 23) ? "2" : "3";
+    let now = new Date();
+    dateInput.val(now.toISOString().split('T')[0]);
+    let hour = now.getHours();
+    shiftInput.val((hour >= 7 && hour < 15) ? "1" :
+                   (hour >= 15 && hour < 23) ? "2" : "3");
 
-    // ===================== AREA -> PEMERIKSAAN DYNAMIC =====================
-        const areaSelect = document.getElementById('areaSelect');
-        const wrapper = document.getElementById('pemeriksaan-wrapper');
+    const wrapper = $("#pemeriksaan-wrapper");
 
-        function renderPemeriksaan(bagianArray) {
-            wrapper.innerHTML = '';
-            if(!bagianArray || bagianArray.length === 0) return;
+    function renderPemeriksaan(bagianArray) {
+        wrapper.html('');
+        if(!bagianArray || bagianArray.length === 0) return;
 
-    // Ambil jam & menit saat ini
-            const now = new Date();
-            const hh = String(now.getHours()).padStart(2, '0');
-            const mm = String(now.getMinutes()).padStart(2, '0');
-    const currentTime = `${hh}:${mm}`; // format hh:mm
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,'0');
+        const mm = String(now.getMinutes()).padStart(2,'0');
+        const currentTime = `${hh}:${mm}`;
 
-    bagianArray.forEach(b => {
-        const table = document.createElement('table');
-        table.classList.add('table', 'table-bordered', 'mb-3');
-        table.innerHTML = `
-        <thead class="table-secondary">
-            <tr><th colspan="7">${b}</th></tr>
-            <tr>
-                <th>Waktu</th>
-                <th>Kondisi</th>
-                <th>Keterangan</th>
-                <th>Rencana Tindakan</th>
-                <th>Waktu Pengerjaan</th>
-                <th>Dikerjakan Oleh</th>
-                <th>Waktu Verifikasi</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td><input type="time" name="pemeriksaan[${b}][waktu]" class="form-control" value="${currentTime}"></td>
-                <td>
-                    <select name="pemeriksaan[${b}][kondisi]" class="form-control">
-                        <option value="✔">✔</option>
-            ${[...Array(11)].map((_, i) => `<option value="${i+1}">${i+1}</option>`).join('')}
-                    </select>
-                </td>
-                <td><input type="text" name="pemeriksaan[${b}][keterangan]" class="form-control"></td>
-                <td><input type="text" name="pemeriksaan[${b}][tindakan]" class="form-control"></td>
-                <td><input type="time" name="pemeriksaan[${b}][waktu_koreksi]" class="form-control"></td>
-                <td><input type="text" name="pemeriksaan[${b}][dikerjakan_oleh]" class="form-control"></td>
-                <td><input type="time" name="pemeriksaan[${b}][waktu_verifikasi]" class="form-control"></td>
-            </tr>
-        </tbody>
-        `;
-        wrapper.appendChild(table);
+        bagianArray.forEach(b => {
+            const table = $(`
+                <table class="table table-bordered mb-3">
+                    <thead class="table-secondary">
+                        <tr><th colspan="7">${b}</th></tr>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Kondisi</th>
+                            <th>Keterangan</th>
+                            <th>Rencana Tindakan</th>
+                            <th>Waktu Pengerjaan</th>
+                            <th>Dikerjakan Oleh</th>
+                            <th>Waktu Verifikasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="time" name="pemeriksaan[${b}][waktu]" class="form-control" value="${currentTime}"></td>
+                            <td>
+                                <select name="pemeriksaan[${b}][kondisi]" class="form-control">
+                                    <option value="✔">✔</option>
+                                    ${[...Array(11)].map((_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
+                                </select>
+                            </td>
+                            <td><input type="text" name="pemeriksaan[${b}][keterangan]" class="form-control"></td>
+                            <td><input type="text" name="pemeriksaan[${b}][tindakan]" class="form-control"></td>
+                            <td><input type="time" name="pemeriksaan[${b}][waktu_koreksi]" class="form-control"></td>
+                            <td><input type="text" name="pemeriksaan[${b}][dikerjakan_oleh]" class="form-control"></td>
+                            <td><input type="time" name="pemeriksaan[${b}][waktu_verifikasi]" class="form-control"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            `);
+            wrapper.append(table);
+        });
+    }
+
+    let selectedOption = $('#areaSelect').find(':selected');
+    if(selectedOption.val()) {
+        let bagianArray = selectedOption.data('bagian');
+        renderPemeriksaan(bagianArray);
+        $('#subAreaInput').val(selectedOption.data('sub_area') || '');
+    }
+
+    $('#areaSelect').on('change', function() {
+        let selected = $(this).find(':selected');
+        let bagianArray = selected.data('bagian');
+        renderPemeriksaan(bagianArray);
+        $('#subAreaInput').val(selected.data('sub_area') || '');
     });
-}
 
-
-    // Render saat page load jika area sudah terpilih
-if(areaSelect.value) {
-    const selected = areaSelect.selectedOptions[0];
-    renderPemeriksaan(JSON.parse(selected.dataset.bagian || '[]'));
-}
-
-    // Render saat ganti area
-areaSelect.addEventListener('change', function() {
-    const selected = this.selectedOptions[0];
-    renderPemeriksaan(JSON.parse(selected.dataset.bagian || '[]'));
-});
 });
 </script>
 @endpush
