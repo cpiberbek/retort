@@ -68,35 +68,35 @@
                                    $nilai = $matched['nilai'] ?? '';
                                    @endphp
                                    <tr>
-                                    <td class="text-center">{{ $index + 1 }}</td>
-                                    <td>{{ $area->area }}</td>
-                                    <td class="text-center">{{ $area->standar }}</td>
-                                    <td>
-                                        <input 
-                                        type="number"
-                                        step="0.1"
-                                        class="form-control suhu-input"
-                                        name="hasil_suhu[{{ $index }}][nilai]"
-                                        value="{{ $nilai }}"
-                                        data-standar="{{ $area->standar }}"
-                                        placeholder="Masukkan suhu">
+                                        <td class="text-center">{{ $index + 1 }}</td>
+                                        <td>{{ $area->area }}</td>
+                                        <td class="text-center">{{ $area->standar }}</td>
+                                        <td>
+                                            <input 
+                                            type="text"
+                                            inputmode="decimal"
+                                            class="form-control suhu-input"
+                                            name="hasil_suhu[{{ $index }}][nilai]"
+                                            value="{{ $nilai }}"
+                                            data-standar="{{ $area->standar }}"
+                                            placeholder="Isi angka atau '-'">
 
-                                        <input type="hidden"
-                                        name="hasil_suhu[{{ $index }}][area]"
-                                        value="{{ $area->area }}">
+                                            <input type="hidden"
+                                            name="hasil_suhu[{{ $index }}][area]"
+                                            value="{{ $area->area }}">
 
-                                        <small class="text-danger warning-msg d-none">
-                                            ⚠️ Suhu di luar standar!
-                                        </small>
-                                    </td>
-                                </tr>
-                                @endforeach
+                                            <small class="text-danger warning-msg d-none">
+                                                ⚠️ Suhu di luar standar!
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    @endforeach
 
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
-            </div>
 
             {{-- ===================== CATATAN ===================== --}}
             <div class="card mb-4">
@@ -138,7 +138,7 @@
         const numberExtractPattern = /-?\d+(?:\.\d+)?/g;
 
         inputs.forEach(function (input) {
-        // Jalankan validasi awal jika ada nilai lama
+            // Jalankan validasi awal jika ada nilai lama
             if (input.value) validateSuhu(input);
 
             input.addEventListener('input', function () {
@@ -147,22 +147,39 @@
         });
 
         function validateSuhu(input) {
-            const val = parseFloat(input.value);
+            // ==========================================================
+            // FILTER INPUT: Hanya izinkan angka, minus, titik, dan koma
+            // ==========================================================
+            input.value = input.value.replace(/[^0-9.,-]/g, '');
+
+            // Antisipasi koma jadi titik
+            let rawValue = input.value.replace(',', '.').trim();
+            const val = parseFloat(rawValue);
             const standarText = (input.getAttribute('data-standar') || '').trim();
             const warningMsg = input.parentElement.querySelector('.warning-msg');
 
+            // Reset error state
             input.classList.remove('is-invalid');
-            warningMsg.classList.add('d-none');
+            if(warningMsg) warningMsg.classList.add('d-none');
+
+            // ==========================================================
+            // KONDISI INPUT KOSONG ATAU STRIP "-"
+            // ==========================================================
+            if (rawValue === '' || rawValue === '-') return;
+
+            // Jika gagal parse angka
             if (isNaN(val) || !standarText) return;
 
             let min = null, max = null;
 
-        // format "<10"
+            // format "<10"
             if (lessThanPattern.test(standarText)) {
                 const limit = parseFloat(standarText.replace(/[^\d.-]/g, ''));
                 if (!isNaN(limit) && val > limit) {
-                    warningMsg.textContent = `⚠️ Nilai melebihi batas < ${limit}°C`;
-                    warningMsg.classList.remove('d-none');
+                    if(warningMsg) {
+                        warningMsg.textContent = `⚠️ Nilai melebihi batas < ${limit}°C`;
+                        warningMsg.classList.remove('d-none');
+                    }
                     input.classList.add('is-invalid');
                 }
             } else {
@@ -174,8 +191,10 @@
                     if (min > max) [min, max] = [max, min];
 
                     if (val < min || val > max) {
-                        warningMsg.textContent = `⚠️ Nilai di luar standar (${min} – ${max}°C)`;
-                        warningMsg.classList.remove('d-none');
+                        if(warningMsg) {
+                            warningMsg.textContent = `⚠️ Nilai di luar standar (${min} – ${max}°C)`;
+                            warningMsg.classList.remove('d-none');
+                        }
                         input.classList.add('is-invalid');
                     }
                 }

@@ -74,13 +74,13 @@
                                             <td class="text-center">{{ $area->standar }}</td>
                                             <td>
                                                 <input 
-                                                    type="number"
-                                                    step="0.1"
+                                                    type="text"
+                                                    inputmode="decimal"
                                                     class="form-control suhu-input"
                                                     name="hasil_suhu[{{ $index }}][nilai]"
                                                     value="{{ $nilai }}"
                                                     data-standar="{{ $area->standar }}"
-                                                    placeholder="Masukkan suhu"
+                                                    placeholder="Isi angka atau '-'"
                                                     {{ $isReadonly ? 'readonly' : '' }}>
 
                                                 <input type="hidden"
@@ -133,12 +133,14 @@
 @push('scripts')
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    // Pilih input yang tidak readonly
     const inputs = document.querySelectorAll('.suhu-input:not([readonly])');
 
     const lessThanPattern = new RegExp('^<' + '?=?\\s*-?\\d+(?:\\.\\d+)?$');
     const numberExtractPattern = /-?\d+(?:\.\d+)?/g;
 
     inputs.forEach(function (input) {
+        // Jalankan validasi awal
         if (input.value) validateSuhu(input);
 
         input.addEventListener('input', function () {
@@ -147,12 +149,27 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     function validateSuhu(input) {
-        const val = parseFloat(input.value);
+        // ==========================================================
+        // FILTER INPUT: Hanya izinkan angka, minus, titik, dan koma
+        // ==========================================================
+        input.value = input.value.replace(/[^0-9.,-]/g, '');
+
+        // Antisipasi koma jadi titik
+        let rawValue = input.value.replace(',', '.').trim();
+        const val = parseFloat(rawValue);
         const standarText = (input.getAttribute('data-standar') || '').trim();
         const warningMsg = input.parentElement.querySelector('.warning-msg');
 
+        // Reset error state
         input.classList.remove('is-invalid');
-        warningMsg.classList.add('d-none');
+        if(warningMsg) warningMsg.classList.add('d-none');
+
+        // ==========================================================
+        // KONDISI INPUT KOSONG ATAU STRIP "-"
+        // ==========================================================
+        if (rawValue === '' || rawValue === '-') return;
+
+        // Jika gagal parse angka
         if (isNaN(val) || !standarText) return;
 
         let min = null, max = null;
@@ -160,8 +177,10 @@ document.addEventListener("DOMContentLoaded", function () {
         if (lessThanPattern.test(standarText)) {
             const limit = parseFloat(standarText.replace(/[^\d.-]/g, ''));
             if (!isNaN(limit) && val > limit) {
-                warningMsg.textContent = `⚠️ Nilai melebihi batas < ${limit}°C`;
-                warningMsg.classList.remove('d-none');
+                if(warningMsg) {
+                    warningMsg.textContent = `⚠️ Nilai melebihi batas < ${limit}°C`;
+                    warningMsg.classList.remove('d-none');
+                }
                 input.classList.add('is-invalid');
             }
         } else {
@@ -172,8 +191,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 if (min > max) [min, max] = [max, min];
 
                 if (val < min || val > max) {
-                    warningMsg.textContent = `⚠️ Nilai di luar standar (${min} – ${max}°C)`;
-                    warningMsg.classList.remove('d-none');
+                    if(warningMsg) {
+                        warningMsg.textContent = `⚠️ Nilai di luar standar (${min} – ${max}°C)`;
+                        warningMsg.classList.remove('d-none');
+                    }
                     input.classList.add('is-invalid');
                 }
             }

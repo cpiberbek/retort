@@ -1,139 +1,318 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid py-4">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h4 class="mb-4">
-                <i class="bi bi-plus-circle"></i> Form Input Pemeriksaan Suhu dan RH
-            </h4>
 
-            <form id="suhuForm" action="{{ route('suhu.store') }}" method="POST">
-                @csrf
+@push('styles')
+<style>
+    /* Styling khusus untuk form input bergaya modern & premium */
+    .form-control-solid, .form-select-solid {
+        background-color: #f4f6f8;
+        border: 1px solid transparent;
+        color: #3f4254;
+        transition: all 0.2s ease;
+        width: 100%; 
+        /* Menyamakan tinggi antara input date, select, dan time */
+        height: 48px; 
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+    .form-control-solid:focus, .form-select-solid:focus {
+        background-color: #ffffff;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 0.25rem rgba(59, 130, 246, 0.15);
+        outline: none;
+    }
+    
+    /* Styling tabel untuk desktop */
+    .table-modern th {
+        font-size: 0.75rem;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        color: #a1a5b7;
+        font-weight: 600;
+        border-bottom: 1px dashed #e4e6ef;
+        white-space: nowrap; 
+    }
+    .table-modern td {
+        border-bottom: 1px dashed #e4e6ef;
+        vertical-align: middle;
+    }
+    
+    /* Kustomisasi label agar lebih proporsional */
+    .label-premium {
+        font-size: 0.8rem;
+        font-weight: 500;
+        color: #7e8299;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
 
-                {{-- ===================== IDENTITAS DATA ===================== --}}
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <strong>Pemeriksaan Suhu</strong>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Tanggal</label>
-                                <input type="date" name="date" id="dateInput" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Shift</label>
-                                <select name="shift" id="shiftInput" class="form-control" required>
-                                    <option value="">-- Pilih Shift --</option>
-                                    <option value="1">Shift 1</option>
-                                    <option value="2">Shift 2</option>
-                                    <option value="3">Shift 3</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Pukul</label>
-                                <input
-                                type="time"
-                                name="pukul"
-                                id="timeInput"
-                                class="form-control"
-                                step="3600"
-                                required
-                                onkeydown="return false">
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    /* Memperbaiki visibilitas badge batas standar */
+    .badge-standar {
+        background-color: #f1f5f9; 
+        color: #475569; 
+        border: 1px solid #e2e8f0;
+        padding: 0.4rem 1rem;
+        border-radius: 50rem;
+        font-weight: 600;
+        display: inline-block;
+        font-size: 0.85rem;
+    }
 
-                <div class="card mb-4">
-                    <div class="card-header bg-info text-white">
-                        <strong>Input Suhu Area</strong>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle">
-                                <thead class="table-light">
-                                    <tr class="text-center">
-                                        <th style="width: 5%">No</th>
-                                        <th>Area</th>
-                                        <th>Standar Suhu (°C)</th>
-                                        <th>Hasil Suhu (°C)</th>
-                                    </tr>
-                                </thead>
+    /* Efek hover untuk tombol Batalkan */
+    .btn-batalkan {
+        background-color: #f3f4f6;
+        color: #6b7280;
+        transition: all 0.2s ease;
+    }
+    .btn-batalkan:hover {
+        background-color: #e5e7eb;
+        color: #374151;
+    }
 
-                                <tbody>
-                                    @foreach ($area_suhus as $index => $area)
-                                    @php
-                                    // Cari nilai suhu berdasarkan nama area
-                                    $matched = collect($suhuData)->firstWhere('area', $area->area);
-                                    $nilai = $matched['nilai'] ?? '';
-                                    @endphp
+    /* Efek hover untuk tombol Simpan */
+    .btn-simpan {
+        background-color: #4379F2; 
+        border-color: #4379F2;
+        color: white;
+        transition: all 0.2s ease;
+    }
+    .btn-simpan:hover {
+        background-color: #3661c2;
+        border-color: #3661c2;
+        color: white;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px rgba(67, 121, 242, 0.2);
+    }
 
-                                    <tr>
-                                        <td class="text-center">{{ $index + 1 }}</td>
-                                        <td>
-                                            <input type="hidden" name="hasil_suhu[a{{ $index }}][area]" value="{{ $area->area }}">
-                                            {{ $area->area }}
-                                        </td>
-                                        <td class="text-center">{{ $area->standar }}</td>
-                                        <td>
-                                            <input
-                                            type="number"
-                                            step="0.1"
-                                            name="hasil_suhu[a{{ $index }}][nilai]"
-                                            value="{{ $nilai }}"
-                                            class="form-control suhu-input"
-                                            data-standar="{{ $area->standar }}"
-                                            placeholder="Masukkan suhu">
+    /* Mengatur responsivitas tombol aksi */
+    .action-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem; 
+    }
+    .action-buttons .btn {
+        width: 100%;
+    }
 
-                                            <small class="text-danger warning-msg d-none">
-                                                ⚠️ Suhu di luar standar!
-                                            </small>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
+    /* Media query layar besar (Desktop & Tablet landscape) */
+    @media (min-width: 576px) { 
+        .action-buttons {
+            flex-direction: row;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        .action-buttons .btn {
+            width: auto;
+        }
+    }
 
-                            </table>
-                        </div>
-                    </div>
-                </div>
+    /* =======================================================
+       CSS AJAIB: MENGUBAH TABEL MENJADI CARD DI LAYAR HP
+       ======================================================= */
+    @media (max-width: 767.98px) {
+        .table-responsive {
+            border: none;
+            overflow-x: hidden; /* Hilangkan scroll horizontal */
+        }
+        /* Hapus paksaan min-width di HP agar tidak meluber */
+        .table-modern {
+            min-width: 100% !important; 
+        }
+        /* Sembunyikan thead karena kita akan pakai label pseudo */
+        .table-modern thead {
+            display: none; 
+        }
+        /* Ubah setiap baris tabel menjadi kotak Card */
+        .table-modern tbody tr {
+            display: block;
+            border: 1px solid #e4e6ef;
+            border-radius: 0.75rem;
+            margin-bottom: 1rem;
+            padding: 0.5rem 1rem;
+            background-color: #ffffff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        /* Ubah isi kolom menjadi flexbox agar sejajar kiri-kanan */
+        .table-modern tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px dashed #e4e6ef;
+            padding: 0.75rem 0;
+            text-align: right !important; /* Nilai berada di kanan */
+        }
+        /* Styling khusus untuk inputan agar turun ke bawah labelnya */
+        .table-modern tbody td:last-child {
+            border-bottom: none;
+            flex-direction: column;
+            align-items: stretch;
+            text-align: left !important;
+            padding-bottom: 0.25rem;
+        }
+        /* Memunculkan label dari atribut data-label di HTML */
+        .table-modern tbody td::before {
+            content: attr(data-label);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #a1a5b7;
+            text-align: left;
+        }
+        .table-modern tbody td:last-child::before {
+            margin-bottom: 0.5rem;
+        }
+    }
+</style>
+@endpush
 
-                {{-- ===================== CATATAN ===================== --}}
-                <div class="card mb-4">
-                    <div class="card-header bg-light"><strong>Keterangan</strong></div>
-                    <div class="card-body">
-                        <textarea name="keterangan" class="form-control" rows="3" placeholder="Tambahkan keterangan bila ada">{{ old('keterangan') }}</textarea>
-                    </div>
-                </div>
-                <div class="card mb-4">
-                    <div class="card-header bg-light"><strong>Catatan</strong></div>
-                    <div class="card-body">
-                        <textarea name="catatan" class="form-control" rows="3" placeholder="Tambahkan catatan bila ada">{{ old('catatan') }}</textarea>
-                    </div>
-                </div>
-
-                {{-- ===================== TOMBOL ===================== --}}
-                <div class="d-flex justify-content-between mt-3">
-                    <button type="submit" class="btn btn-success">
-                        <i class="bi bi-save"></i> Simpan
-                    </button>
-                    <a href="{{ route('suhu.index') }}" class="btn btn-secondary">
-                        <i class="bi bi-arrow-left"></i> Kembali
-                    </a>
-                </div>
-            </form>
+<div class="container-fluid py-4 max-w-7xl mx-auto">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+        <div>
+            <h4 class="mb-1 fw-bold text-dark">Pemeriksaan Suhu & RH</h4>
+            <p class="text-muted small mb-0">Lengkapi data form di bawah ini dengan akurat.</p>
         </div>
+        <a href="{{ route('suhu.index') }}" class="btn btn-sm btn-light border shadow-sm fw-medium rounded-pill px-3 align-self-start align-self-md-auto btn-batalkan d-inline-block w-auto">
+            <i class="bi bi-arrow-left me-1"></i> Kembali
+        </a>
     </div>
+
+    <form id="suhuForm" action="{{ route('suhu.store') }}" method="POST">
+        @csrf
+
+        {{-- ===================== IDENTITAS DATA ===================== --}}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+                <h6 class="fw-bold mb-4 text-dark d-flex align-items-center">
+                    <i class="bi bi-clock text-primary me-2 fs-5"></i> Identitas Jadwal
+                </h6>
+                
+                <div class="row g-3 g-md-4">
+                    <div class="col-12 col-md-4">
+                        <label class="label-premium">Tanggal Pemeriksaan</label>
+                        <input type="date" name="date" id="dateInput" class="form-control form-control-solid rounded-3" required>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="label-premium">Shift Kerja</label>
+                        <select name="shift" id="shiftInput" class="form-select form-select-solid rounded-3" required>
+                            <option value="" disabled selected>Pilih Shift...</option>
+                            <option value="1">Shift 1 (Pagi)</option>
+                            <option value="2">Shift 2 (Sore)</option>
+                            <option value="3">Shift 3 (Malam)</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="label-premium">Waktu (Pukul)</label>
+                        <input 
+                            type="time" 
+                            name="pukul" 
+                            id="timeInput" 
+                            class="form-control form-control-solid rounded-3" 
+                            step="3600" 
+                            required 
+                            onkeydown="return false">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ===================== INPUT SUHU AREA ===================== --}}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+                <h6 class="fw-bold mb-4 text-dark d-flex align-items-center">
+                    <i class="bi bi-thermometer-half text-info me-2 fs-5"></i> Pencatatan Suhu Ruangan
+                </h6>
+                
+                <div class="table-responsive">
+                    <table class="table table-borderless table-modern mb-0" style="min-width: 600px;">
+                        <thead>
+                            <tr>
+                                <th class="text-center" style="width: 5%">No</th>
+                                <th style="width: 35%">Area Pengukuran</th>
+                                <th class="text-center" style="width: 25%">Batas Standar (°C)</th>
+                                <th style="width: 35%">Hasil Pengukuran (°C)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($area_suhus as $index => $area)
+                            @php
+                                $matched = collect($suhuData)->firstWhere('area', $area->area);
+                                $nilai = $matched['nilai'] ?? '';
+                            @endphp
+                            <tr>
+                                <td data-label="No" class="text-center text-muted fw-bold">{{ $index + 1 }}</td>
+                                
+                                <td data-label="Area Pengukuran">
+                                    <input type="hidden" name="hasil_suhu[a{{ $index }}][area]" value="{{ $area->area }}">
+                                    <span class="fw-medium text-dark">{{ $area->area }}</span>
+                                </td>
+                                
+                                <td data-label="Batas Standar" class="text-center">
+                                    <span class="badge-standar">
+                                        {{ $area->standar }}
+                                    </span>
+                                </td>
+                                
+                                <td data-label="Hasil Pengukuran">
+                                    <div class="position-relative w-100">
+                                        <input 
+                                            type="text" 
+                                            inputmode="decimal" 
+                                            name="hasil_suhu[a{{ $index }}][nilai]" 
+                                            value="{{ $nilai }}" 
+                                            class="form-control form-control-solid suhu-input rounded-3" 
+                                            data-standar="{{ $area->standar }}" 
+                                            placeholder="--">
+                                        
+                                        <div class="text-danger warning-msg d-none mt-1" style="font-size: 0.75rem; font-weight: 500;">
+                                            <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- ===================== CATATAN & KETERANGAN ===================== --}}
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 p-md-4">
+                <h6 class="fw-bold mb-4 text-dark d-flex align-items-center">
+                    <i class="bi bi-journal-text text-secondary me-2 fs-5"></i> Informasi Tambahan
+                </h6>
+                
+                <div class="row g-3 g-md-4">
+                    <div class="col-12 col-md-6">
+                        <label class="label-premium">Keterangan (Opsional)</label>
+                        <textarea name="keterangan" class="form-control form-control-solid rounded-3" rows="3" placeholder="Ketik keterangan di sini...">{{ old('keterangan') }}</textarea>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="label-premium">Catatan Penting (Opsional)</label>
+                        <textarea name="catatan" class="form-control form-control-solid rounded-3" rows="3" placeholder="Ketik catatan di sini...">{{ old('catatan') }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ===================== TOMBOL AKSI ===================== --}}
+        <div class="action-buttons mt-4 mb-5">
+            <button type="button" class="btn btn-batalkan rounded-pill px-4 fw-medium" onclick="window.location.href='{{ route('suhu.index') }}'">
+                Batalkan
+            </button>
+            <button type="submit" class="btn btn-simpan rounded-pill px-5 fw-medium">
+                <i class="bi bi-check-circle me-1"></i> Simpan Data
+            </button>
+        </div>
+    </form>
 </div>
 
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-    // ====== Set tanggal & shift otomatis ======
+        // ====== Set tanggal & shift otomatis ======
         const dateInput = document.getElementById("dateInput");
         const shiftInput = document.getElementById("shiftInput");
         const timeInput = document.getElementById("timeInput");
@@ -144,57 +323,64 @@
         const hh = now.getHours();
         let min = '00';
 
-        dateInput.value = `${yyyy}-${mm}-${dd}`;
-        if (!timeInput.value) {
+        if (dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
+        if (timeInput && !timeInput.value) {
             timeInput.value = `${hh}:${min}`;
         }
-        if (hh >= 7 && hh < 15) shiftInput.value = "1";
-        else if (hh >= 15 && hh < 23) shiftInput.value = "2";
-        else shiftInput.value = "3";
+        if (shiftInput) {
+            if (hh >= 7 && hh < 15) shiftInput.value = "1";
+            else if (hh >= 15 && hh < 23) shiftInput.value = "2";
+            else shiftInput.value = "3";
+        }
 
-    // ====== Validasi Suhu per Area ======
+        // ====== Validasi Suhu per Area ======
         const inputs = document.querySelectorAll('.suhu-input');
 
-    // buat regex via constructor agar Blade tidak salah baca "<?"
         const lessThanPattern = new RegExp('^<' + '?=?\\s*-?\\d+(?:\\.\\d+)?$');
         const numberExtractPattern = /-?\d+(?:\.\d+)?/g;
 
         inputs.forEach(function (input) {
             input.addEventListener('input', function () {
-                const val = parseFloat(this.value);
+                // FILTER INPUT
+                this.value = this.value.replace(/[^0-9.,-]/g, '');
+
+                let rawValue = this.value.replace(',', '.').trim();
+                const val = parseFloat(rawValue);
                 const standarText = (this.getAttribute('data-standar') || '').trim();
                 const warningMsg = this.parentElement.querySelector('.warning-msg');
 
-            // Reset
-                this.classList.remove('is-invalid');
-                warningMsg.classList.add('d-none');
+                this.classList.remove('is-invalid', 'border-danger');
+                if (warningMsg) warningMsg.classList.add('d-none');
+
+                if (rawValue === '' || rawValue === '-') return;
                 if (isNaN(val) || !standarText) return;
 
                 let min = null, max = null;
 
-            // format "<10" atau "≤10"
                 if (lessThanPattern.test(standarText)) {
                     const limit = parseFloat(standarText.replace(/[^\d.-]/g, ''));
                     if (!isNaN(limit) && val > limit) {
-                        warningMsg.textContent = `⚠️ Nilai melebihi batas < ${limit}°C`;
-                        warningMsg.classList.remove('d-none');
-                        this.classList.add('is-invalid');
+                        if (warningMsg) {
+                            warningMsg.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> Melebihi batas < ${limit}°C`;
+                            warningMsg.classList.remove('d-none');
+                        }
+                        this.classList.add('is-invalid', 'border-danger');
                     }
                 }
                 else {
-                // format rentang "(-18) - (-22)" atau "0 - 4" atau "25 - 36"
                     const matches = standarText.replace(/[()]/g, '').match(numberExtractPattern);
                     if (matches && matches.length >= 2) {
                         min = parseFloat(matches[0]);
                         max = parseFloat(matches[1]);
 
-                    // Tukar bila terbalik
                         if (min > max) [min, max] = [max, min];
 
                         if (val < min || val > max) {
-                            warningMsg.textContent = `⚠️ Nilai di luar standar (${min} – ${max}°C)`;
-                            warningMsg.classList.remove('d-none');
-                            this.classList.add('is-invalid');
+                            if (warningMsg) {
+                                warningMsg.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> Di luar standar (${min} – ${max}°C)`;
+                                warningMsg.classList.remove('d-none');
+                            }
+                            this.classList.add('is-invalid', 'border-danger');
                         }
                     }
                 }
@@ -202,7 +388,5 @@
         });
     });
 </script>
-
 @endpush
-
 @endsection
