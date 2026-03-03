@@ -15,6 +15,7 @@ class Area_suhu extends Model
         'username',
         'plant',
         'area',
-        'standar'
+        'standar_min',
+        'standar_max'
     ];
 }
