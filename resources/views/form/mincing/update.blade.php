@@ -205,34 +205,26 @@
 
                         {{-- ===================== PROSES MIXING, GEL, EMULSI ===================== --}}
                         <div class="table-responsive mb-4">
-                            <table class="table table-bordered text-center align-middle mb-4">
+                            <table class="table table-bordered align-middle mb-0">
                                 <tbody>
-                                    {{-- Bagian Suhu Sebelum Grinding (Dinamis) --}}
+                                    {{-- BARIS SUHU SEBELUM GRINDING --}}
                                     <tr>
                                         <td class="text-start fw-semibold bg-light" style="width: 25%;">Suhu (Sebelum Grinding)</td>
                                         <td colspan="3" class="p-0">
                                             <table class="table table-borderless mb-0">
                                                 <tbody id="tbodySuhuGrinding">
-                                                    {{-- FIX 3: Gunakan $suhuData yang dikirim dari controller --}}
-                                                    <!-- @php
-                                                        // Fallback jika $suhuData belum ada (meski harusnya dikirim controller)
-                                                        $suhuDataLocal = $suhuData ?? (is_array($mincing->suhu_sebelum_grinding) 
-                                                            ? $mincing->suhu_sebelum_grinding 
-                                                            : json_decode($mincing->suhu_sebelum_grinding ?? '[]', true));
-                                                    @endphp -->
-
                                                     @php
-    $rawSuhu = $mincing->suhu_sebelum_grinding ?? '[]';
+                                                        $rawSuhu = $mincing->suhu_sebelum_grinding ?? '[]';
 
-    if (is_array($rawSuhu)) {
-        $suhuDataLocal = $rawSuhu;
-    } elseif (is_string($rawSuhu)) {
-        $decoded = json_decode($rawSuhu, true);
-        $suhuDataLocal = is_array($decoded) ? $decoded : [];
-    } else {
-        $suhuDataLocal = [];
-    }
-@endphp
+                                                        if (is_array($rawSuhu)) {
+                                                            $suhuDataLocal = $rawSuhu;
+                                                        } elseif (is_string($rawSuhu)) {
+                                                            $decoded = json_decode($rawSuhu, true);
+                                                            $suhuDataLocal = is_array($decoded) ? $decoded : [];
+                                                        } else {
+                                                            $suhuDataLocal = [];
+                                                        }
+                                                    @endphp
                                                     
                                                     @forelse($suhuDataLocal as $key => $item)
                                                     <tr>
@@ -283,12 +275,15 @@
                                         </td>
                                     </tr>
 
-                                    {{-- Baris Waktu Mixing Premix --}}
+                                    {{-- BARIS WAKTU MIXING PREMIX --}}
                                     <tr>
-                                        <td class="text-start fw-semibold">Waktu Mixing Premix (Menit)</td>
-                                        <td><input type="time" name="waktu_mixing_premix_awal" class="form-control form-control-sm text-center" value="{{ old('waktu_mixing_premix_awal', $mincing->waktu_mixing_premix_awal) }}" {{ $mincing->waktu_mixing_premix_awal ? 'readonly' : '' }}></td>
-                                        <td class="fw-bold">s/d</td>
-                                        <td><input type="time" name="waktu_mixing_premix_akhir" class="form-control form-control-sm text-center" value="{{ old('waktu_mixing_premix_akhir', $mincing->waktu_mixing_premix_akhir) }}" {{ $mincing->waktu_mixing_premix_akhir ? 'readonly' : '' }}></td>
+                                        <td class="text-start fw-semibold bg-light">Waktu Mixing Premix</td>
+                                        <td colspan="3">
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_mixing_premix" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;" value="{{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix) }}" {{ $mincing->waktu_mixing_premix ? 'readonly' : '' }}>
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -300,15 +295,18 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="text-start fw-semibold">Waktu Bowl Cutter (Menit)</td>
-                                        <td><input type="time" name="waktu_bowl_cutter_awal" class="form-control form-control-sm text-center" value="{{ old('waktu_bowl_cutter_awal', $mincing->waktu_bowl_cutter_awal) }}" {{ $mincing->waktu_bowl_cutter_awal ? 'readonly' : '' }}></td>
-                                        <td class="fw-bold">s/d</td>
-                                        <td><input type="time" name="waktu_bowl_cutter_akhir" class="form-control form-control-sm text-center" value="{{ old('waktu_bowl_cutter_akhir', $mincing->waktu_bowl_cutter_akhir) }}" {{ $mincing->waktu_bowl_cutter_akhir ? 'readonly' : '' }}></td>
+                                        <td class="text-start fw-semibold" style="width: 25%;">Waktu Bowl Cutter</td>
+                                        <td colspan="3">
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_bowl_cutter" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;" value="{{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter) }}" {{ $mincing->waktu_bowl_cutter ? 'readonly' : '' }}>
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-semibold">Waktu Aging Emulsi (Menit)</td>
                                         <td><input type="time" name="waktu_aging_emulsi_awal" class="form-control form-control-sm text-center" value="{{ old('waktu_aging_emulsi_awal', $mincing->waktu_aging_emulsi_awal) }}" {{ $mincing->waktu_aging_emulsi_awal ? 'readonly' : '' }}></td>
-                                        <td class="fw-bold">s/d</td>
+                                        <td class="fw-bold" style="width: 5%;">s/d</td>
                                         <td><input type="time" name="waktu_aging_emulsi_akhir" class="form-control form-control-sm text-center" value="{{ old('waktu_aging_emulsi_akhir', $mincing->waktu_aging_emulsi_akhir) }}" {{ $mincing->waktu_aging_emulsi_akhir ? 'readonly' : '' }}></td>
                                     </tr>
                                     <tr>
@@ -318,11 +316,17 @@
                                 </tbody>
                             </table>
 
+                            {{-- Waktu Mixing & Emulsifying --}}
                             <table class="table table-bordered text-center align-middle">
                                 <tbody>
                                     <tr>
-                                        <td class="text-start fw-semibold">Waktu Mixing (Menit)</td>
-                                        <td><input type="time" name="waktu_mixing" class="form-control form-control-sm text-center" value="{{ old('waktu_mixing', $mincing->waktu_mixing) }}" {{ $mincing->waktu_mixing ? 'readonly' : '' }}></td>
+                                        <td class="text-start fw-semibold" style="width: 25%;">Waktu Mixing</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_mixing" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;" value="{{ old('waktu_mixing', $mincing->waktu_mixing) }}" {{ $mincing->waktu_mixing ? 'readonly' : '' }}>
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-semibold">Suhu Akhir Mixing (Std 2–5°C)</td>

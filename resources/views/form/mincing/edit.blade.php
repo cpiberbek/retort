@@ -328,11 +328,131 @@
                             </table>
 
                             {{-- Waktu Mixing & Emulsifying --}}
+<table class="table table-bordered align-middle mb-0">
+                                <tbody>
+                                    {{-- BARIS SUHU SEBELUM GRINDING --}}
+                                    <tr>
+                                        <td class="text-start fw-semibold bg-light" style="width: 25%;">Suhu (Sebelum Grinding)</td>
+                                        <td colspan="3" class="p-0">
+                                            <table class="table table-borderless mb-0">
+                                                <tbody id="tbodySuhuGrinding">
+                                                    @php
+                                                        $rawSuhu = $mincing->suhu_sebelum_grinding ?? '[]';
+
+                                                        if (is_array($rawSuhu)) {
+                                                            $suhuDataLocal = $rawSuhu;
+                                                        } elseif (is_string($rawSuhu)) {
+                                                            $decoded = json_decode($rawSuhu, true);
+                                                            $suhuDataLocal = is_array($decoded) ? $decoded : [];
+                                                        } else {
+                                                            $suhuDataLocal = [];
+                                                        }
+                                                    @endphp
+                                                    
+                                                    @forelse($suhuDataLocal as $key => $item)
+                                                    <tr>
+                                                        <td style="width: 45%;">
+                                                            <select name="suhu_grinding_input[{{$key}}][daging]" class="form-control form-select-sm">
+                                                                <option value="" disabled>Pilih Daging</option>
+                                                                <option value="BEEF" {{ ($item['daging'] ?? '') == 'BEEF' ? 'selected' : '' }}>BEEF</option>
+                                                                <option value="SBB" {{ ($item['daging'] ?? '') == 'SBB' ? 'selected' : '' }}>SBB</option>
+                                                                <option value="SBL" {{ ($item['daging'] ?? '') == 'SBL' ? 'selected' : '' }}>SBL</option>
+                                                                <option value="MDM" {{ ($item['daging'] ?? '') == 'MDM' ? 'selected' : '' }}>MDM</option>
+                                                                <option value="CCM" {{ ($item['daging'] ?? '') == 'CCM' ? 'selected' : '' }}>CCM</option>
+                                                            </select>
+                                                        </td>
+                                                        <td style="width: 45%;">
+                                                            <input type="number" name="suhu_grinding_input[{{$key}}][suhu]" value="{{ $item['suhu'] ?? '' }}" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
+                                                        </td>
+                                                        <td style="width: 10%;">
+                                                            <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    @empty
+                                                    {{-- Baris default jika data kosong --}}
+                                                    <tr>
+                                                        <td style="width: 45%;">
+                                                            <select name="suhu_grinding_input[0][daging]" class="form-control form-select-sm">
+                                                                <option value="" selected disabled>Pilih Daging</option>
+                                                                <option value="BEEF">BEEF</option>
+                                                                <option value="SBB">SBB</option>
+                                                                <option value="SBL">SBL</option>
+                                                                <option value="MDM">MDM</option>
+                                                                <option value="CCM">CCM</option>
+                                                            </select>
+                                                        </td>
+                                                        <td style="width: 45%;">
+                                                            <input type="number" name="suhu_grinding_input[0][suhu]" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
+                                                        </td>
+                                                        <td style="width: 10%;">
+                                                            <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
+                                                        </td>
+                                                    </tr>
+                                                    @endforelse
+                                                </tbody>
+                                            </table>
+                                            <div class="p-2 border-top bg-white">
+                                                <button type="button" class="btn btn-success btn-sm" id="tambahBarisSuhu">
+                                                    <i class="bi bi-plus-circle"></i> Tambah Daging
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    {{-- BARIS WAKTU MIXING PREMIX --}}
+                                    <tr>
+                                        <td class="text-start fw-semibold bg-light">Waktu Mixing Premix</td>
+                                        <td colspan="3">
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_mixing_premix" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;" value="{{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix) }}">
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            {{-- GEL --}}
+                            <table class="table table-bordered text-center align-middle mb-4">
+                                <thead class="table-light">
+                                    <tr><th colspan="4" class="text-start">GEL</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="text-start fw-semibold" style="width: 25%;">Waktu Bowl Cutter</td>
+                                        <td colspan="3">
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_bowl_cutter" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;" value="{{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter) }}">
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="text-start fw-semibold">Waktu Aging Emulsi (Menit)</td>
+                                        <td><input type="time" name="waktu_aging_emulsi_awal" class="form-control form-control-sm text-center" value="{{ old('waktu_aging_emulsi_awal', $mincing->waktu_aging_emulsi_awal) }}"></td>
+                                        <td class="fw-bold" style="width: 5%;">s/d</td>
+                                        <td><input type="time" name="waktu_aging_emulsi_akhir" class="form-control form-control-sm text-center" value="{{ old('waktu_aging_emulsi_akhir', $mincing->waktu_aging_emulsi_akhir) }}"></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="text-start fw-semibold">Suhu Akhir Emulsi Gel (Std &lt;5°C)</td>
+                                        <td colspan="3"><input type="number" name="suhu_akhir_emulsi_gel" step="0.01" class="form-control form-control-sm text-center" value="{{ old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel) }}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            {{-- Waktu Mixing & Emulsifying --}}
                             <table class="table table-bordered text-center align-middle">
                                 <tbody>
                                     <tr>
-                                        <td class="text-start fw-semibold">Waktu Mixing (Menit)</td>
-                                        <td><input type="time" name="waktu_mixing" class="form-control form-control-sm text-center" value="{{ old('waktu_mixing', $mincing->waktu_mixing) }}"></td>
+                                        <td class="text-start fw-semibold" style="width: 25%;">Waktu Mixing</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_mixing" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;" value="{{ old('waktu_mixing', $mincing->waktu_mixing) }}">
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-semibold">Suhu Akhir Mixing (Std 2–5°C)</td>
