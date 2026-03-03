@@ -46,12 +46,24 @@
                         <td class="text-center align-middle">{{ $no++ }}</td>
                         <td class="align-middle">{{ \Carbon\Carbon::parse($dep->created_at)->format('d-m-Y H:i') }}</td>
                         <td class="align-middle">{{ $dep->area }}</td>
-                        <td class="text-center align-middle">{{ $dep->standar }}</td>
+                        <td class="text-center align-middle">
+                            @if(is_null($dep->standar_min) && is_null($dep->standar_max))
+                                <span class="badge bg-warning" style="color: #000;">Data kosong, Tolong lakukan Update</span>
+                            @elseif(is_null($dep->standar_min) || is_null($dep->standar_max))
+                                <span class="badge bg-warning" style="color: #000;">Data kosong, Tolong lakukan Update</span>
+                            @else
+                                <span class="badge bg-success" style="color: #fff;">Min {{ $dep->standar_min }} °C</span>
+                                -
+                                <span class="badge bg-success" style="color: #fff;">Max {{ $dep->standar_max }} °C</span>
+                            @endif
+                        </td>
 
                         <td class="text-center align-middle">
-                            <a href="{{ route('area_suhu.edit', $dep->uuid) }}" class="btn btn-warning btn-sm me-1"
-                                title="Edit">
-                                <i class="bi bi-pencil"></i> Edit
+                            <a href="{{ route('area_suhu.edit', $dep->uuid) }}" 
+                                class="btn btn-warning btn-sm me-1" 
+                                title="Edit" 
+                                style="color: #000 !important;">
+                                    <i class="bi bi-pencil"></i> Edit
                             </a>
                             <form action="{{ route('area_suhu.destroy', $dep->uuid) }}" method="POST" class="d-inline">
                                 @csrf
@@ -98,13 +110,13 @@
     }
 
     /* Baris stripe merah muda */
-    .table-striped tbody tr:nth-of-type(odd) {
+    /* .table-striped tbody tr:nth-of-type(odd) {
         background-color: #f8d7da;
     }
 
     .table-striped tbody tr:nth-of-type(even) {
         background-color: #f5c2c7;
-    }
+    } */
 
     /* Hover baris merah gelap */
     .table tbody tr:hover {

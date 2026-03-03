@@ -71,26 +71,35 @@
                                         <tr>
                                             <td class="text-center">{{ $index + 1 }}</td>
                                             <td>{{ $area->area }}</td>
-                                            <td class="text-center">{{ $area->standar }}</td>
-                                            <td>
-                                                <input 
-                                                    type="number"
-                                                    step="0.1"
-                                                    class="form-control suhu-input"
-                                                    name="hasil_suhu[{{ $index }}][nilai]"
-                                                    value="{{ $nilai }}"
-                                                    data-standar="{{ $area->standar }}"
-                                                    placeholder="Masukkan suhu"
-                                                    {{ $isReadonly ? 'readonly' : '' }}>
+                                            <td class="text-center">
+                                        @if($area->standar_min !== null && $area->standar_max !== null)
+                                            ({{ $area->standar_min }}°C) - ({{ $area->standar_max }}°C)
+                                        @else
+                                            <span class="null-standard text-muted">Standar masih kosong</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <div class="d-flex flex-column">
+                                            <input 
+                                                type="number"
+                                                step="0.1"
+                                                class="form-control suhu-input"
+                                                name="hasil_suhu[{{ $index }}][nilai]"
+                                                value="{{ $nilai }}"
+                                                data-min="{{ $area->standar_min }}"
+                                                data-max="{{ $area->standar_max }}"
+                                                placeholder="Masukkan suhu">
 
-                                                <input type="hidden"
-                                                    name="hasil_suhu[{{ $index }}][area]"
-                                                    value="{{ $area->area }}">
+                                            <input 
+                                                type="hidden"
+                                                name="hasil_suhu[{{ $index }}][area]"
+                                                value="{{ $area->area }}">
 
-                                                <small class="text-danger warning-msg d-none">
-                                                    ⚠️ Suhu di luar standar!
-                                                </small>
-                                            </td>
+                                            <small class="text-danger warning-msg d-none">
+                                                ⚠️ Suhu di luar standar!
+                                            </small>
+                                        </div>
+                                    </td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -132,54 +141,61 @@
 {{-- ===================== SCRIPT VALIDASI ===================== --}}
 @push('scripts')
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const inputs = document.querySelectorAll('.suhu-input:not([readonly])');
+    document.addEventListener("DOMContentLoaded", function () {
 
-    const lessThanPattern = new RegExp('^<' + '?=?\\s*-?\\d+(?:\\.\\d+)?$');
-    const numberExtractPattern = /-?\d+(?:\.\d+)?/g;
+    const pad = (num) => String(num).padStart(2, '0');
 
-    inputs.forEach(function (input) {
-        if (input.value) validateSuhu(input);
+    // Default date, shift, time
+    const dateInput = document.getElementById("dateInput");
+    const shiftInput = document.getElementById("shiftInput");
+    const timeInput = document.getElementById("timeInput");
+    const now = new Date();
 
+    if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+    if (timeInput && !timeInput.value) timeInput.value = `${pad(now.getHours())}:00`;
+    if (shiftInput) {
+        const hh = now.getHours();
+        shiftInput.value = (hh >= 7 && hh < 15) ? "1" : (hh >= 15 && hh < 23) ? "2" : "3";
+    }
+
+    // Validasi suhu
+    const suhuInputs = document.querySelectorAll('.suhu-input');
+    suhuInputs.forEach(input => {
         input.addEventListener('input', function () {
-            validateSuhu(this);
+            const val = parseFloat(this.value);
+            const min = parseFloat(this.dataset.min);
+            const max = parseFloat(this.dataset.max);
+            const warningMsg = this.parentElement.querySelector('.warning-msg');
+
+            // Reset state
+            this.classList.remove('is-invalid');
+            if (warningMsg) warningMsg.classList.add('d-none');
+
+            // Validasi hanya jika min, max, dan val ada
+            if (!isNaN(val) && !isNaN(min) && !isNaN(max)) {
+                if (val < min || val > max) {
+                    this.classList.add('is-invalid');
+                    if (warningMsg) {
+                        warningMsg.textContent = `⚠️ Suhu di luar standar (${min} – ${max}°C)`;
+                        warningMsg.classList.remove('d-none');
+                    }
+                }
+            }
         });
     });
 
-    function validateSuhu(input) {
-        const val = parseFloat(input.value);
-        const standarText = (input.getAttribute('data-standar') || '').trim();
-        const warningMsg = input.parentElement.querySelector('.warning-msg');
-
-        input.classList.remove('is-invalid');
-        warningMsg.classList.add('d-none');
-        if (isNaN(val) || !standarText) return;
-
-        let min = null, max = null;
-
-        if (lessThanPattern.test(standarText)) {
-            const limit = parseFloat(standarText.replace(/[^\d.-]/g, ''));
-            if (!isNaN(limit) && val > limit) {
-                warningMsg.textContent = `⚠️ Nilai melebihi batas < ${limit}°C`;
-                warningMsg.classList.remove('d-none');
-                input.classList.add('is-invalid');
+    // Format waktu selalu HH:00
+    if (timeInput) {
+        timeInput.addEventListener('input', function () {
+            if (this.value) {
+                const hh = this.value.split(':')[0].padStart(2,'0');
+                this.value = `${hh}:00`;
             }
-        } else {
-            const matches = standarText.replace(/[()]/g, '').match(numberExtractPattern);
-            if (matches && matches.length >= 2) {
-                min = parseFloat(matches[0]);
-                max = parseFloat(matches[1]);
-                if (min > max) [min, max] = [max, min];
-
-                if (val < min || val > max) {
-                    warningMsg.textContent = `⚠️ Nilai di luar standar (${min} – ${max}°C)`;
-                    warningMsg.classList.remove('d-none');
-                    input.classList.add('is-invalid');
-                }
-            }
-        }
+        });
     }
 });
 </script>
+
+
 @endpush
 @endsection

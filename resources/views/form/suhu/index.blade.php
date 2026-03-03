@@ -169,39 +169,39 @@
                                                     <tr>
                                                         <td class="fw-bold text-left"><b>Standar (°C)</b></td>
                                                         @foreach($areaList as $area)
-                                                        <td class="text-center" style="font-weight: 700;">{{ $area->standar ?? '-' }}</td>
+                                                            <td class="text-center" style="font-weight: 700;">
+                                                                @if($area->standar_min !== null && $area->standar_max !== null)
+                                                                    ({{ $area->standar_min }}°C) - ({{ $area->standar_max }}°C)
+                                                                @else
+                                                                    <span class="text-muted">-</span>
+                                                                @endif
+                                                            </td>
                                                         @endforeach
                                                     </tr>
 
                                                     {{-- Baris Aktual --}}
-                                                    <tr>
+                                                   <tr>
                                                         <td class="fw-bold text-left"><b>Aktual (°C)</b></td>
                                                         @foreach($areaList as $area)
-                                                        @php
-                                                        // Cocokkan nilai aktual berdasarkan area
-                                                        $matched = collect($hasilSuhu)->firstWhere('area', $area->area);
-                                                        $nilai = floatval($matched['nilai'] ?? 0);
-                                                        $standarStr = trim($area->standar ?? '');
-                                                        $outOfRange = false;
+                                                            @php
+                                                                $matched = collect($hasilSuhu)->firstWhere('area', $area->area);
+                                                                $nilai = isset($matched['nilai']) ? floatval($matched['nilai']) : null;
 
-                                                        if ($standarStr !== '') {
-                                                            if (preg_match('/^<\s*(\d+(\.\d+)?)/', $standarStr, $m)) {
-                                                                $max = floatval($m[1]);
-                                                                $outOfRange = $nilai >= $max;
-                                                            } elseif (preg_match('/^>\s*(\d+(\.\d+)?)/', $standarStr, $m)) {
-                                                                $min = floatval($m[1]);
-                                                                $outOfRange = $nilai <= $min;
-                                                            } elseif (preg_match('/^(\d+(\.\d+)?)\s*-\s*(\d+(\.\d+)?)/', $standarStr, $m)) {
-                                                                $min = floatval($m[1]);
-                                                                $max = floatval($m[3]);
-                                                                $outOfRange = $nilai < $min || $nilai > $max;
-                                                            }
-                                                        }
-                                                        @endphp
+                                                                $min = $area->standar_min;
+                                                                $max = $area->standar_max;
 
-                                                        <td class="fw-bold text-center {{ $outOfRange ? 'text-danger' : 'text-success' }}">
-                                                            {{ $matched['nilai'] ?? '-' }}
-                                                        </td>
+                                                                if ($nilai === null) {
+                                                                    $colorClass = 'text-dark'; 
+                                                                } elseif ($min !== null && $max !== null) {
+                                                                    $colorClass = ($nilai >= $min && $nilai <= $max) ? 'text-success' : 'text-danger';
+                                                                } else {
+                                                                    $colorClass = 'text-dark'; 
+                                                                }
+                                                            @endphp
+
+                                                            <td class="fw-bold text-center {{ $colorClass }}">
+                                                                {{ $nilai ?? '-' }}
+                                                            </td>
                                                         @endforeach
                                                     </tr>
                                                 </tbody>
