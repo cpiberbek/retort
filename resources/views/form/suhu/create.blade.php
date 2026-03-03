@@ -11,7 +11,6 @@
         color: #3f4254;
         transition: all 0.2s ease;
         width: 100%; 
-        /* Menyamakan tinggi antara input date, select, dan time */
         height: 48px; 
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
@@ -84,6 +83,15 @@
         transform: translateY(-1px);
         box-shadow: 0 4px 6px rgba(67, 121, 242, 0.2);
     }
+    
+    /* Tombol disable agar terlihat jelas tidak bisa diklik */
+    .btn-simpan:disabled {
+        background-color: #a0aec0;
+        border-color: #a0aec0;
+        cursor: not-allowed;
+        box-shadow: none;
+        transform: none;
+    }
 
     /* Mengatur responsivitas tombol aksi */
     .action-buttons {
@@ -113,17 +121,14 @@
     @media (max-width: 767.98px) {
         .table-responsive {
             border: none;
-            overflow-x: hidden; /* Hilangkan scroll horizontal */
+            overflow-x: hidden; 
         }
-        /* Hapus paksaan min-width di HP agar tidak meluber */
         .table-modern {
             min-width: 100% !important; 
         }
-        /* Sembunyikan thead karena kita akan pakai label pseudo */
         .table-modern thead {
             display: none; 
         }
-        /* Ubah setiap baris tabel menjadi kotak Card */
         .table-modern tbody tr {
             display: block;
             border: 1px solid #e4e6ef;
@@ -133,16 +138,14 @@
             background-color: #ffffff;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
-        /* Ubah isi kolom menjadi flexbox agar sejajar kiri-kanan */
         .table-modern tbody td {
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px dashed #e4e6ef;
             padding: 0.75rem 0;
-            text-align: right !important; /* Nilai berada di kanan */
+            text-align: right !important; 
         }
-        /* Styling khusus untuk inputan agar turun ke bawah labelnya */
         .table-modern tbody td:last-child {
             border-bottom: none;
             flex-direction: column;
@@ -150,7 +153,6 @@
             text-align: left !important;
             padding-bottom: 0.25rem;
         }
-        /* Memunculkan label dari atribut data-label di HTML */
         .table-modern tbody td::before {
             content: attr(data-label);
             font-size: 0.75rem;
@@ -248,21 +250,27 @@
                                 </td>
                                 
                                 <td data-label="Batas Standar" class="text-center">
-                                    <span class="badge-standar">
-                                        {{ $area->standar }}
-                                    </span>
+                                    @if($area->standar_min !== null && $area->standar_max !== null)
+                                        <span class="badge-standar">
+                                            {{ $area->standar_min }}°C - {{ $area->standar_max }}°C
+                                        </span>
+                                    @else
+                                        <span class="text-muted small fw-medium text-danger"><i class="bi bi-exclamation-triangle"></i> Standar Kosong</span>
+                                    @endif
                                 </td>
                                 
                                 <td data-label="Hasil Pengukuran">
                                     <div class="position-relative w-100">
+                                        {{-- Type diubah ke text agar bisa menerima karakter '-' dengan mulus --}}
                                         <input 
                                             type="text" 
-                                            inputmode="decimal" 
+                                            inputmode="decimal"
                                             name="hasil_suhu[a{{ $index }}][nilai]" 
                                             value="{{ $nilai }}" 
                                             class="form-control form-control-solid suhu-input rounded-3" 
-                                            data-standar="{{ $area->standar }}" 
-                                            placeholder="--">
+                                            data-min="{{ $area->standar_min }}" 
+                                            data-max="{{ $area->standar_max }}" 
+                                            placeholder="Masukkan suhu">
                                         
                                         <div class="text-danger warning-msg d-none mt-1" style="font-size: 0.75rem; font-weight: 500;">
                                             <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
@@ -299,10 +307,21 @@
 
         {{-- ===================== TOMBOL AKSI ===================== --}}
         <div class="action-buttons mt-4 mb-5">
+            @php
+                $hasNullStandard = collect($area_suhus)->contains(function($area) {
+                    return $area->standar_min === null || $area->standar_max === null;
+                });
+            @endphp
+
             <button type="button" class="btn btn-batalkan rounded-pill px-4 fw-medium" onclick="window.location.href='{{ route('suhu.index') }}'">
                 Batalkan
             </button>
-            <button type="submit" class="btn btn-simpan rounded-pill px-5 fw-medium">
+            <button type="submit" class="btn btn-simpan rounded-pill px-5 fw-medium"
+                @if($hasNullStandard)
+                    disabled
+                    title="⚠️ Silahkan cek Master Suhu dan lengkapi Standar Suhu terlebih dahulu"
+                @endif
+            >
                 <i class="bi bi-check-circle me-1"></i> Simpan Data
             </button>
         </div>
@@ -312,80 +331,62 @@
 @push('scripts')
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // ====== Set tanggal & shift otomatis ======
+        // ===== Helper untuk set tanggal & shift =====
+        const pad = (num) => String(num).padStart(2, '0');
+        
         const dateInput = document.getElementById("dateInput");
         const shiftInput = document.getElementById("shiftInput");
         const timeInput = document.getElementById("timeInput");
         const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const hh = now.getHours();
-        let min = '00';
 
-        if (dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
-        if (timeInput && !timeInput.value) {
-            timeInput.value = `${hh}:${min}`;
-        }
-        if (shiftInput) {
-            if (hh >= 7 && hh < 15) shiftInput.value = "1";
-            else if (hh >= 15 && hh < 23) shiftInput.value = "2";
-            else shiftInput.value = "3";
+        if(dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+        if (timeInput && !timeInput.value) timeInput.value = `${pad(now.getHours())}:00`;
+
+        if(shiftInput) {
+            const hh = now.getHours();
+            shiftInput.value = (hh >= 7 && hh < 15) ? "1" : (hh >= 15 && hh < 23) ? "2" : "3";
         }
 
-        // ====== Validasi Suhu per Area ======
+        // ===== Validasi Suhu =====
         const inputs = document.querySelectorAll('.suhu-input');
 
-        const lessThanPattern = new RegExp('^<' + '?=?\\s*-?\\d+(?:\\.\\d+)?$');
-        const numberExtractPattern = /-?\d+(?:\.\d+)?/g;
-
-        inputs.forEach(function (input) {
+        inputs.forEach(input => {
             input.addEventListener('input', function () {
-                // FILTER INPUT
+                
+                // 1. FILTER INPUT: Hanya izinkan angka, minus (-), dan koma/titik (.)
                 this.value = this.value.replace(/[^0-9.,-]/g, '');
 
+                // Antisipasi jika user mengetik koma pada keyboard mobile, ubah jadi titik
                 let rawValue = this.value.replace(',', '.').trim();
-                const val = parseFloat(rawValue);
-                const standarText = (this.getAttribute('data-standar') || '').trim();
+                
                 const warningMsg = this.parentElement.querySelector('.warning-msg');
 
+                // Reset state setiap kali mengetik
                 this.classList.remove('is-invalid', 'border-danger');
                 if (warningMsg) warningMsg.classList.add('d-none');
 
+                // Bypass jika input KOSONG atau HANYA tanda MINUS (-)
                 if (rawValue === '' || rawValue === '-') return;
-                if (isNaN(val) || !standarText) return;
 
-                let min = null, max = null;
+                // 2. LOGIKA VALIDASI DEV: Parse ke Float dan bandingkan dengan data-min/max
+                const val = parseFloat(rawValue);
+                const min = parseFloat(this.dataset.min); 
+                const max = parseFloat(this.dataset.max); 
 
-                if (lessThanPattern.test(standarText)) {
-                    const limit = parseFloat(standarText.replace(/[^\d.-]/g, ''));
-                    if (!isNaN(limit) && val > limit) {
-                        if (warningMsg) {
-                            warningMsg.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> Melebihi batas < ${limit}°C`;
-                            warningMsg.classList.remove('d-none');
-                        }
-                        this.classList.add('is-invalid', 'border-danger');
+                // Jika min/max dari database tidak valid atau val bukan angka → lewati
+                if (isNaN(val) || isNaN(min) || isNaN(max)) return;
+
+                // Alert jika di luar standar
+                if (val < min || val > max) {
+                    if (warningMsg) {
+                        warningMsg.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> Di luar standar (${min} – ${max}°C)`;
+                        warningMsg.classList.remove('d-none');
                     }
-                }
-                else {
-                    const matches = standarText.replace(/[()]/g, '').match(numberExtractPattern);
-                    if (matches && matches.length >= 2) {
-                        min = parseFloat(matches[0]);
-                        max = parseFloat(matches[1]);
-
-                        if (min > max) [min, max] = [max, min];
-
-                        if (val < min || val > max) {
-                            if (warningMsg) {
-                                warningMsg.innerHTML = `<i class="bi bi-exclamation-circle-fill me-1"></i> Di luar standar (${min} – ${max}°C)`;
-                                warningMsg.classList.remove('d-none');
-                            }
-                            this.classList.add('is-invalid', 'border-danger');
-                        }
-                    }
+                    this.classList.add('is-invalid', 'border-danger');
                 }
             });
         });
+
     });
 </script>
 @endpush
