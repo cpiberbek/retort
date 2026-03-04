@@ -80,12 +80,23 @@ public function store(Request $request)
     $hasil_terstruktur = [];
 
     foreach ($hasil_input as $id => $item) {
+        $nilai_mentah = isset($item['nilai']) ? trim($item['nilai']) : '';
+        
+        // --- LOGIKA BARU YANG BENAR ---
+        if ($nilai_mentah === '') {
+            $nilai_final = null; // Jika kosong, simpan null
+        } elseif ($nilai_mentah === '-') {
+            $nilai_final = '-';  // Jika strip, simpan string '-'
+        } else {
+            // Jika angka, ubah koma jadi titik lalu cast ke float
+            $nilai_final = (float) str_replace(',', '.', $nilai_mentah);
+        }
+
         $hasil_terstruktur[] = [
             'area'  => $item['area'] ?? '',
-            'nilai' => $item['nilai'] ?? null,
+            'nilai' => $nilai_final,
         ];
     }
-
     $area_order = Area_suhu::where('plant', $userPlant)
     ->orderBy('area')
     ->pluck('area')
@@ -145,9 +156,21 @@ public function update_qc(Request $request, string $uuid)
     $hasil_terstruktur = [];
 
     foreach ($hasil_input as $id => $item) {
+        $nilai_mentah = isset($item['nilai']) ? trim($item['nilai']) : '';
+        
+        // --- LOGIKA BARU YANG BENAR ---
+        if ($nilai_mentah === '') {
+            $nilai_final = null; // Jika kosong, simpan null
+        } elseif ($nilai_mentah === '-') {
+            $nilai_final = '-';  // Jika strip, simpan string '-'
+        } else {
+            // Jika angka, ubah koma jadi titik lalu cast ke float
+            $nilai_final = (float) str_replace(',', '.', $nilai_mentah);
+        }
+
         $hasil_terstruktur[] = [
             'area'  => $item['area'] ?? '',
-            'nilai' => $item['nilai'] ?? null,
+            'nilai' => $nilai_final,
         ];
     }
 
@@ -210,9 +233,21 @@ public function edit_spv(Request $request, string $uuid)
     $hasil_terstruktur = [];
 
     foreach ($hasil_input as $id => $item) {
+        $nilai_mentah = isset($item['nilai']) ? trim($item['nilai']) : '';
+        
+        // --- LOGIKA BARU YANG BENAR ---
+        if ($nilai_mentah === '') {
+            $nilai_final = null; // Jika kosong, simpan null
+        } elseif ($nilai_mentah === '-') {
+            $nilai_final = '-';  // Jika strip, simpan string '-'
+        } else {
+            // Jika angka, ubah koma jadi titik lalu cast ke float
+            $nilai_final = (float) str_replace(',', '.', $nilai_mentah);
+        }
+
         $hasil_terstruktur[] = [
             'area'  => $item['area'] ?? '',
-            'nilai' => $item['nilai'] ?? null,
+            'nilai' => $nilai_final,
         ];
     }
 
