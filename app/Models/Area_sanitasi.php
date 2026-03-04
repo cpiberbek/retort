@@ -10,7 +10,7 @@ class Area_sanitasi extends Model
 {
     use HasFactory, HasUuid;
     
-    protected $fillable = ['area', 'bagian', 'username', 'plant', 'uuid'];
+    protected $fillable = ['area', 'sub_area', 'bagian', 'username', 'plant', 'uuid'];
 
     protected $casts = [
         'bagian'  => 'array',

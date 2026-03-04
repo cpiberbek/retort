@@ -32,6 +32,7 @@
                         <th style="width: 5%;">No</th>
                         <th style="width: 20%;">Date</th>
                         <th>Nama Area</th>
+                        <th>Sub Area</th>
                         <th>Bagian</th>
                         <th style="width: 20%;">Action</th>
                     </tr>
@@ -45,6 +46,7 @@
                         <td class="text-center align-middle">{{ $no++ }}</td>
                         <td class="align-middle">{{ \Carbon\Carbon::parse($dep->created_at)->format('d-m-Y H:i') }}</td>
                         <td class="align-middle">{{ $dep->area }}</td>
+                        <td class="align-middle">{{ $dep->sub_area ? $dep->sub_area : 'Tolong lengkapi Sub Area' }}</td>
                         <td class="text-center align-middle">
                             @php
                             $bagianList = json_decode($dep->bagian, true);

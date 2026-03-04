@@ -10,36 +10,36 @@ use TCPDF;
 
 class SanitasiController extends Controller 
 {
- public function index(Request $request)
- {
-     $search    = $request->input('search');
-     $date      = $request->input('date');
-     $shift     = $request->input('shift');
-     $userPlant  = Auth::user()->plant;
+public function index(Request $request)
+{
+    $search    = $request->input('search');
+    $date      = $request->input('date');
+    $shift     = $request->input('shift');
+    $userPlant = Auth::user()->plant;
 
-     $data = Sanitasi::query()
-     ->where('plant', $userPlant)
-     ->when($search, function ($query) use ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('username', 'like', "%{$search}%")
-            ->orWhere('area', 'like', "%{$search}%");
-        });
-    })
-     ->when($date, function ($query) use ($date) {
-        $query->whereDate('date', $date);
-    })
-     ->when($shift, function ($query) use ($shift) {
-        $query->where('shift', $shift);
-    })
-     ->orderBy('date', 'desc')
-     ->orderBy('shift', 'desc')
-     ->orderBy('created_at', 'desc')
-     ->paginate(10)
-     ->appends($request->all());
+    $data = Sanitasi::select('sanitasis.*', 'area_table.area as area_name', 'area_table.sub_area', 'area_table.bagian')
+        ->where('sanitasis.plant', $userPlant)
+        ->leftJoin('area_sanitasis as area_table', 'sanitasis.area', '=', 'area_table.uuid')
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('sanitasis.username', 'like', "%{$search}%")
+                  ->orWhere('area_table.area', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('sanitasis.date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('sanitasis.shift', $shift);
+        })
+        ->orderBy('sanitasis.date', 'desc')
+        ->orderBy('sanitasis.shift', 'desc')
+        ->orderBy('sanitasis.created_at', 'desc')
+        ->paginate(10)
+        ->appends($request->all());
 
-     return view('form.sanitasi.index', compact('data', 'search', 'date', 'shift'));
- }
-
+    return view('form.sanitasi.index', compact('data', 'search', 'date', 'shift'));
+}
  public function create()
  {
     $userPlant = Auth::user()->plant;
@@ -51,56 +51,77 @@ class SanitasiController extends Controller
 public function store(Request $request)
 {
     $user = Auth::user();
-    $username = $user->username ?? 'User RTM';
-    $userPlant = $user->plant;
-
-
-    $nama_produksi = session()->has('selected_produksi')
-    ? \App\Models\User::where('uuid', session('selected_produksi'))->first()?->name ?? 'Produksi RTT'
-    : 'Produksi RTT';
 
     $request->validate([
         'date'        => 'required|date',
         'shift'       => 'required|string',
         'area'        => 'required|string',
+        'sub_area'    => 'required|string',
         'pemeriksaan' => 'nullable|array',
     ]);
 
-    $data = $request->only(['date', 'shift', 'area']);
+    $areaSanitasi = \App\Models\Area_sanitasi::where('area', $request->area)
+        ->where('sub_area', $request->sub_area)
+        ->firstOrFail();
 
-    $data['username']            = $username;
-    $data['plant']               = $userPlant;
-    $data['nama_produksi']       = $nama_produksi;
-    $data['status_produksi']     = "1";
-    $data['tgl_update_produksi'] = now()->addHour();
-    $data['status_spv']          = "0";
-    $data['pemeriksaan']         = json_encode($request->input('pemeriksaan', []), JSON_UNESCAPED_UNICODE);
+    $nama_produksi = session()->has('selected_produksi')
+        ? \App\Models\User::where('uuid', session('selected_produksi'))->first()?->name ?? 'Produksi RTT'
+        : 'Produksi RTT';
 
-    Sanitasi::create($data);
+    Sanitasi::create([
+        'date'                 => $request->date,
+        'shift'                => $request->shift,
+        'area'                 => $areaSanitasi->uuid,
+        'username'             => $user->username ?? 'User RTM',
+        'plant'                => $user->plant,
+        'nama_produksi'        => $nama_produksi,
+        'status_produksi'      => "1",
+        'tgl_update_produksi'  => now()->addHour(),
+        'status_spv'           => "0",
+        'pemeriksaan'          => json_encode($request->input('pemeriksaan', []), JSON_UNESCAPED_UNICODE),
+    ]);
 
     return redirect()->route('sanitasi.index')
-    ->with('success', 'Kontrol Sanitasi berhasil disimpan');
+        ->with('success', 'Kontrol Sanitasi berhasil disimpan');
 }
 
 public function update(string $uuid)
 {
-    $sanitasi = Sanitasi::where('uuid', $uuid)->firstOrFail();
     $userPlant = Auth::user()->plant;
-    $areas = Area_sanitasi::where('plant', $userPlant)->get();
-    $sanitasiData = !empty($sanitasi->pemeriksaan)
-    ? json_decode($sanitasi->pemeriksaan, true)
-    : [];
 
-    return view('form.sanitasi.update', compact('sanitasi', 'sanitasiData', 'areas'));
+    $sanitasi = Sanitasi::where('uuid', $uuid)
+        ->where('plant', $userPlant)
+        ->firstOrFail();
+
+    $areas = Area_sanitasi::where('plant', $userPlant)->get();
+
+    $areaRecord = $areas->firstWhere('uuid', $sanitasi->area);
+
+    $sanitasiAreaName = $areaRecord ? $areaRecord->area : null;
+    $sanitasiSubArea  = $areaRecord ? $areaRecord->sub_area : null;
+    $sanitasiBagian   = $areaRecord ? json_decode($areaRecord->bagian, true) : [];
+
+    $sanitasiData = !empty($sanitasi->pemeriksaan)
+        ? json_decode($sanitasi->pemeriksaan, true)
+        : [];
+
+    return view('form.sanitasi.update', compact(
+        'sanitasi', 
+        'sanitasiData', 
+        'areas', 
+        'sanitasiAreaName', 
+        'sanitasiSubArea', 
+        'sanitasiBagian'
+    ));
 }
 
 public function update_qc(Request $request, string $uuid)
 {
     $sanitasi = Sanitasi::where('uuid', $uuid)->firstOrFail();
-
+    
     $username_updated = Auth::user()->username ?? 'User QC';
 
-    // Validasi input
+
     $request->validate([
         'date'        => 'required|date',
         'shift'       => 'required|string',
@@ -114,7 +135,7 @@ public function update_qc(Request $request, string $uuid)
         'area'        => $request->area,
         'pemeriksaan' => json_encode($request->input('pemeriksaan', []), JSON_UNESCAPED_UNICODE),
         'username_updated' => $username_updated,
-        'updated_at'       => now(),
+        'updated_at'  => now(),
     ];
 
     $sanitasi->update($data);
@@ -125,14 +146,32 @@ public function update_qc(Request $request, string $uuid)
 
 public function edit(string $uuid)
 {
- $sanitasi = Sanitasi::where('uuid', $uuid)->firstOrFail();
- $userPlant = Auth::user()->plant;
- $areas = Area_sanitasi::where('plant', $userPlant)->get();
- $sanitasiData = !empty($sanitasi->pemeriksaan)
- ? json_decode($sanitasi->pemeriksaan, true)
- : [];
+    $userPlant = Auth::user()->plant;
 
- return view('form.sanitasi.edit', compact('sanitasi', 'sanitasiData', 'areas'));
+    $sanitasi = Sanitasi::where('uuid', $uuid)
+        ->where('plant', $userPlant)
+        ->firstOrFail();
+
+    $areas = Area_sanitasi::where('plant', $userPlant)->get();
+
+    $areaRecord = $areas->firstWhere('uuid', $sanitasi->area);
+
+    $sanitasiAreaName = $areaRecord ? $areaRecord->area : null;
+    $sanitasiSubArea  = $areaRecord ? $areaRecord->sub_area : null;
+    $sanitasiBagian   = $areaRecord ? json_decode($areaRecord->bagian, true) : [];
+
+    $sanitasiData = !empty($sanitasi->pemeriksaan)
+        ? json_decode($sanitasi->pemeriksaan, true)
+        : [];
+
+    return view('form.sanitasi.edit', compact(
+        'sanitasi', 
+        'sanitasiData', 
+        'areas', 
+        'sanitasiAreaName', 
+        'sanitasiSubArea', 
+        'sanitasiBagian'
+    ));
 }
 
 public function edit_spv(Request $request, string $uuid)

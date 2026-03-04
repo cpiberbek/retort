@@ -117,6 +117,7 @@
                         <th>NO.</th>
                         <th>Date | Shift</th>
                         <th>Area</th>
+                        <th>Sub Area</th>
                         <th>Pemeriksaan</th>
                         <th>QC</th>
                         <th>Produksi</th>
@@ -133,7 +134,18 @@
                     <tr>
                         <td class="text-center align-middle">{{ $no++ }}</td>
                         <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift: {{ $dep->shift }}</td>
-                        <td class="text-center align-middle">{{ $dep->area }}</td>
+                        <td class="text-center align-middle">
+                            @php
+                                $area = \App\Models\Area_sanitasi::where('uuid', $dep->area)->first();
+                            @endphp
+                            {{ $area ? $area->area : $dep->area }}
+                        </td>
+                        <td class="text-center align-middle">
+                            @php
+                                $area = \App\Models\Area_sanitasi::where('uuid', $dep->area)->first();
+                            @endphp
+                            {{ $area ? $area->sub_area : $dep->sub_area }}
+                        </td>
                         <td class="text-center align-middle">
                             @if(!empty($dep->pemeriksaan))
                             <a href="javascript:void(0);" class="btn btn-info btn-sm" data-bs-toggle="modal"

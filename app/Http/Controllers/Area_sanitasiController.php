@@ -20,7 +20,7 @@ class Area_sanitasiController extends Controller
 
         $area_sanitasi = Area_sanitasi::where('plant', $userPlantUuid)
         ->when($search, function($query, $search) {
-            $query->where('area', 'like', "%{$search}%");
+            $query->where('area', 'subarea', 'like', "%{$search}%");
         })
         ->orderBy('created_at', 'desc')
         ->paginate(10)
@@ -29,15 +29,12 @@ class Area_sanitasiController extends Controller
         return view('area_sanitasi.index', compact('area_sanitasi'));
     }
 
-    public function create()
-    {
-        return view('area_sanitasi.create');
-    }
-
+   
     public function store(Request $request)
     {
         $request->validate([
             'area' => 'required|string',
+            'sub_area' => 'required|string',
             'bagian'  => 'nullable|array',
         ]);
 
@@ -47,6 +44,7 @@ class Area_sanitasiController extends Controller
             'username' => $user->username,  
             'plant'    => $user->plant,       
             'area'     => $request->area,
+            'sub_area' => $request->sub_area,
             'bagian'   => json_encode($request->input('bagian', []), JSON_UNESCAPED_UNICODE),
         ]);
 
@@ -69,6 +67,7 @@ class Area_sanitasiController extends Controller
     {
         $request->validate([
             'area' => 'required|string',
+            'sub_area' => 'required|string',
             'bagian' => 'nullable|array',
         ]);
 
@@ -80,6 +79,7 @@ class Area_sanitasiController extends Controller
 
         $area_sanitasi->update([
             'area' => $request->area,
+            'sub_area' => $request->sub_area,
             'bagian' => json_encode($request->input('bagian', []), JSON_UNESCAPED_UNICODE),
         ]);
 
