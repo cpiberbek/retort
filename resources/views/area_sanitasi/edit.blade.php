@@ -42,6 +42,23 @@
                             @enderror
                         </div>
 
+                        {{-- Sub-Area --}}
+                        <div class="mb-3">
+                            <label for="sub_area" class="form-label">Sub-Area</label>
+                            <input
+                                type="text"
+                                name="sub_area"
+                                class="form-control @error('sub_area') is-invalid @enderror"
+                                placeholder="Masukkan Sub-Area dari Area ini"
+                                value="{{ old('sub_area', $area_sanitasi->sub_area) }}"
+                                required>
+                            @error('sub_area')
+                            <div class="invalid-feedback">
+                                {{ $message }}
+                            </div>
+                            @enderror
+                        </div>
+
                         {{-- Bagian --}}
                         <div class="mb-3">
                             <label for="bagian" class="form-label">Bagian</label>

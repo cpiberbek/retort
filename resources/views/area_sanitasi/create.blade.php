@@ -40,6 +40,13 @@
                             @enderror
                         </div>
                         <div class="mb-3">
+                            <label for="sub_area" class="form-label">Sub Area</label>
+                            <input type="text" name="sub_area" class="form-control @error('sub_area') is-invalid @enderror" placeholder="Masukkan sub area dari area yang akan didaftarkan" value="{{ old('sub_area') }}">
+                            @error('sub_area')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+                        <div class="mb-3">
                             <label for="bagian" class="form-label">Bagian</label>
                             <div id="bagian-wrapper">
                                 <div class="input-group mb-2">

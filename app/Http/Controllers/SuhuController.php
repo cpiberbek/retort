@@ -44,7 +44,7 @@ class SuhuController extends Controller
     $userPlant = Auth::user()->plant;
     $area_suhus = Area_suhu::where('plant', $userPlant)
     ->orderBy('area')
-    ->get(['area', 'standar']);
+    ->get(['area', 'standar_min', 'standar_max']);
 
     $today = now()->toDateString();
     $existing = Suhu::where('date', $today)

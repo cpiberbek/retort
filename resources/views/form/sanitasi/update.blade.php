@@ -41,9 +41,22 @@
 
                             {{-- AREA --}}
                             <div class="col-md-4">
-                                <label class="form-label">Area</label>
-                                <input type="text" class="form-control" 
-                                value="{{ $sanitasi->area }}" readonly>
+                                    <label class="form-label">Area - Sub Area</label>
+                                    <select name="area" id="areaSelect" 
+                                            class="form-control select2 @error('area') is-invalid @enderror" 
+                                            required
+                                            disabled>
+                                        <option value="">-- Pilih Area --</option>
+                                        @foreach($areas as $a)
+                                            <option value="{{ $a->uuid }}" data-bagian='@json(json_decode($a->bagian))'
+                                                {{ $sanitasi->area == $a->uuid ? 'selected' : '' }}>
+                                                {{ $a->area }} - {{ $a->sub_area }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('area')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
                                 <input type="hidden" name="area" value="{{ $sanitasi->area }}">
                             </div>
                         </div>
