@@ -34,9 +34,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select id="nama_produk" name="nama_produk" class="form-control selectpicker"
-                                    data-live-search="true" title="Ketik nama produk..." required>
+                                    data-live-search="true" title="Ketik nama varian..." required>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $data->nama_produk
                                         ?? '') == $produk->nama_produk ? 'selected' : '' }}>
@@ -105,7 +105,7 @@
                                     <td>
                                         <select name="data_pvdc[0][detail][0][batch]"
                                             class="form-control form-control-sm batchSelect" required disabled>
-                                            <option value="">Pilih Produk Terlebih Dahulu</option>
+                                            <option value="">Pilih Varian Terlebih Dahulu</option>
                                         </select>
                                     </td>
                                     <td><input type="text" name="data_pvdc[0][detail][0][no_lot]"
@@ -207,7 +207,7 @@
             <td>
                 <select name="data_pvdc[${mesinIndex}][detail][0][batch]"
                     class="form-control form-control-sm batchSelect" required disabled>
-                    <option value="">Pilih Produk Terlebih Dahulu</option>
+                    <option value="">Pilih Varian Terlebih Dahulu</option>
                 </select>
             </td>
             <td><input type="text" name="data_pvdc[${mesinIndex}][detail][0][no_lot]" class="form-control form-control-sm"></td>
@@ -235,7 +235,7 @@
         select.prop("disabled", true);
 
         if (!produk) {
-            select.html('<option value="">Pilih Produk Terlebih Dahulu</option>');
+            select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
             return;
         }
 
@@ -280,7 +280,7 @@
                 <td>
                     <select name="data_pvdc[${mesinIndex}][detail][${batchCount}][batch]"
                         class="form-control form-control-sm batchSelect" required disabled>
-                        <option value="">Pilih Produk Terlebih Dahulu</option>
+                        <option value="">Pilih Varian Terlebih Dahulu</option>
                     </select>
                 </td>
                 <td><input type="text" name="data_pvdc[${mesinIndex}][detail][${batchCount}][no_lot]" class="form-control form-control-sm"></td>

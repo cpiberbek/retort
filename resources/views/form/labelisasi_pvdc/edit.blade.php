@@ -35,9 +35,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ $labelisasi_pvdc->nama_produk==$produk->nama_produk?"selected":"" }}>
                                         {{ $produk->nama_produk }}
@@ -148,12 +148,12 @@ $(document).ready(function(){
         input.removeClass("is-invalid");
 
         if(value.length !== 10){
-            showError(input,"Kode produksi harus terdiri dari 10 karakter.");
+            showError(input,"Kode batch harus terdiri dari 10 karakter.");
             return false;
         }
         const format = /^[A-Z0-9]+$/;
         if(!format.test(value)){
-            showError(input,"Kode produksi hanya boleh huruf besar dan angka.");
+            showError(input,"Kode batch hanya boleh huruf besar dan angka.");
             return false;
         }
         const bulanChar = value.charAt(1);

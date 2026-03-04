@@ -37,10 +37,10 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" id="nama_produk" class="form-control selectpicker"
                                     data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
                                     @endforeach
@@ -99,7 +99,7 @@
                                     <td>
                                         <select name="data_pvdc[0][kode_batch]"
                                             class="form-control form-control-sm batchSelect" required disabled>
-                                            <option value="">Pilih Produk Terlebih Dahulu</option>
+                                            <option value="">Pilih Varian Terlebih Dahulu</option>
                                         </select>
                                     </td>
 
@@ -228,7 +228,7 @@
             select.prop("disabled", true);
 
             if (!produk) {
-                select.html('<option value="">Pilih Produk Terlebih Dahulu</option>');
+                select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
                 return;
             }
 
@@ -295,7 +295,7 @@
             <td>
                 <select name="data_pvdc[${index}][kode_batch]"
                     class="form-control form-control-sm batchSelect" required disabled>
-                    <option value="">Pilih Produk Terlebih Dahulu</option>
+                    <option value="">Pilih Varian Terlebih Dahulu</option>
                 </select>
             </td>
             <td>

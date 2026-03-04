@@ -80,7 +80,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Supplier...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Supplier...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -134,7 +134,7 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
+                            <th>Nama Varian</th>
                             <th>Nama Supplier</th>
                             <th>Data Wire</th>
                             <th>QC</th>
