@@ -37,7 +37,7 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select class="form-control selectpicker" data-live-search="true" disabled>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $pemasakan->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
@@ -64,7 +64,7 @@
                         {{-- Baris 3 --}}
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 @php
                                 $kodeProduksi = old('kode_produksi');
 
@@ -89,7 +89,7 @@
 
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Berat Produk (gram)</label>
+                                <label class="form-label">Berat Varian (gram)</label>
                                 <input type="number" name="berat_produk" class="form-control" step="0.1"
                                 value="{{ old('berat_produk', $pemasakan->berat_produk) }}" 
                                 {{ $pemasakan->berat_produk ? 'readonly' : '' }}>
@@ -99,7 +99,7 @@
                         {{-- Baris 4 --}}
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Suhu Produk (°C)</label>
+                                <label class="form-label">Suhu Varian (°C)</label>
                                 <input type="number" name="suhu_produk" class="form-control" step="0.1"
                                 value="{{ old('suhu_produk', $pemasakan->suhu_produk) }}" 
                                 {{ $pemasakan->suhu_produk ? 'readonly' : '' }}>
@@ -630,7 +630,7 @@
                             </thead>
                             <tbody>
                                 @foreach([
-                                ['field'=>'suhu_produk_akhir','label'=>'Suhu Produk Akhir','satuan'=>'°C','standar'=>'48 ± 2','alternatif'=>'48 ± 2'],
+                                ['field'=>'suhu_produk_akhir','label'=>'Suhu Varian Akhir','satuan'=>'°C','standar'=>'48 ± 2','alternatif'=>'48 ± 2'],
                                 ['field'=>'panjang','label'=>'Panjang','satuan'=>'Cm','standar'=>'14 - 15','alternatif'=>'9 - 10.5'],
                                 ['field'=>'diameter','label'=>'Diameter','satuan'=>'Mm','standar'=>'14.0 - 14.5','alternatif'=>'13.5 - 14.5'],
                                 ['field'=>'rasa','label'=>'Rasa Asin/Manis/Gurih','satuan'=>'','standar'=>'1 - 3','alternatif'=>''],
@@ -730,14 +730,14 @@
 
         for (let kode of kodeList) {
             if (kode.length !== 10) {
-                kodeError.textContent = "Setiap kode produksi harus terdiri dari 10 karakter.";
+                kodeError.textContent = "Setiap kode batch harus terdiri dari 10 karakter.";
                 kodeError.classList.remove('d-none');
                 return false;
             }
 
             const format = /^[A-Z0-9]+$/;
             if (!format.test(kode)) {
-                kodeError.textContent = "Kode produksi hanya boleh huruf besar dan angka.";
+                kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
                 kodeError.classList.remove('d-none');
                 return false;
             }

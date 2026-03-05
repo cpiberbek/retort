@@ -66,7 +66,7 @@
                         </span>
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch">
                 </div>
             </div>
             <div class="col-md-3">
@@ -94,7 +94,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -141,12 +141,12 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
-                            <th>Kode Produksi</th>
+                            <th>Nama Varian</th>
+                            <th>Kode Batch</th>
                             <th>Jumlah Tray</th>
                             <th>No. Chamber</th>
-                            <th>Berat Produk (Gram)</th>
-                            <th>Suhu Produk (°C)</th>
+                            <th>Berat Varian (Gram)</th>
+                            <th>Suhu Varian (°C)</th>
                             <th>Total Reject (Kg)</th>
                             <th>Pengecekan</th>
                             <th>QC</th>
@@ -216,7 +216,7 @@
                                             '3. Pemanasan Awal' => ['Suhu Air Awal' => 'suhu_air_awal', 'Tekanan Awal' => 'tekanan_awal', 'Waktu Mulai' => 'waktu_mulai_awal', 'Waktu Selesai' => 'waktu_selesai_awal'],
                                             '4. Proses Pemanasan' => ['Suhu Air Proses' => 'suhu_air_proses', 'Tekanan Proses' => 'tekanan_proses', 'Waktu Mulai' => 'waktu_mulai_proses', 'Waktu Selesai' => 'waktu_selesai_proses'],
                                             '5. Sterilisasi' => ['Suhu Air Sterilisasi' => 'suhu_air_sterilisasi', 'Thermometer Retort' => 'thermometer_retort', 'Tekanan Sterilisasi' => 'tekanan_sterilisasi'],
-                                            '10. Hasil Pemasakan' => ['Suhu Produk Akhir' => 'suhu_produk_akhir', 'Panjang' => 'panjang', 'Diameter' => 'diameter', 'Rasa' => 'rasa', 'Warna' => 'warna', 'Texture' => 'texture']
+                                            '10. Hasil Pemasakan' => ['Suhu Varian Akhir' => 'suhu_produk_akhir', 'Panjang' => 'panjang', 'Diameter' => 'diameter', 'Rasa' => 'rasa', 'Warna' => 'warna', 'Texture' => 'texture']
                                             ];
                                             @endphp
 
