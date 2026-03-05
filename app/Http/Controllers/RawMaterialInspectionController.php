@@ -81,7 +81,8 @@ class RawMaterialInspectionController extends Controller
                                 'supplier' => 'required|string|max:255',
                                 'nopol_mobil' => 'required|string|max:255',
                                 'suhu_mobil' => 'required|numeric',
-                                'kondisi_mobil' => 'required|string',
+                                'kondisi_mobil' => 'required|array|min:1',
+                                'kondisi_mobil.*' => 'string',
                                 'analisa_ka_ffa' => 'required|numeric',
                                 'no_segel' => 'required|string|max:255',
                                 'suhu_daging' => 'required|numeric',
@@ -109,7 +110,9 @@ class RawMaterialInspectionController extends Controller
                             DB::beginTransaction();
                             try {
                                 $data = $request->except(['_token', 'details', 'dokumen_halal_file', 'dokumen_coa_file']);
-
+                                if ($request->has('kondisi_mobil')) {
+                                    $data['kondisi_mobil'] = implode(',', $request->kondisi_mobil);
+                                }
                                 $user = Auth::user();
             $data['plant_uuid'] = $user->plant; // Ambil dari user yang login
             $data['updated_by'] = $user->uuid;  // Updated pertama = Creator
@@ -187,7 +190,8 @@ class RawMaterialInspectionController extends Controller
             'nopol_mobil' => 'required|string|max:255',
             'suhu_mobil' => 'required|numeric',
             'analisa_ka_ffa' => 'required|numeric',
-            'kondisi_mobil' => 'required|string',
+            'kondisi_mobil' => 'required|array|min:1',
+            'kondisi_mobil.*' => 'string',
             'no_segel' => 'required|string|max:255',
             'suhu_daging' => 'required|numeric',
             'analisa_negara_asal' => 'required|string|max:255',
@@ -226,6 +230,9 @@ class RawMaterialInspectionController extends Controller
                 'dokumen_halal_file', 
                 'dokumen_coa_file'
             ]);
+            if ($request->has('kondisi_mobil')) {
+                $data['kondisi_mobil'] = implode(',', $request->kondisi_mobil);
+            }
             $data['updated_by'] = Auth::user()->uuid;
             // Handle boolean (OK/Not OK) fields
             // Konversi '1' (OK) menjadi true, '0' (Not OK) menjadi false
