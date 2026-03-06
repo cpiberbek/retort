@@ -24,9 +24,9 @@
                                 <input type="date" name="date" id="dateInput" class="form-control" value="{{ old('date', $pemusnahan->date) }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" 
                                         {{ (old('nama_produk', $pemusnahan->nama_produk) == $produk->nama_produk) ? 'selected' : '' }}>
@@ -38,7 +38,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" maxlength="10" 
                                 value="{{ old('kode_produksi', $pemusnahan->kode_produksi) }}" required>
                                 <small id="kodeError" class="text-danger d-none"></small>
@@ -48,7 +48,7 @@
                                 <label class="form-label">Exp. Date</label>
                                 <input type="date" name="expired_date" id="expired_date" class="form-control" 
                                 value="{{ old('expired_date', $pemusnahan->expired_date) }}">
-                                <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode produksi</small>
+                                <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode batch</small>
                             </div>
                         </div>
                     </div>
@@ -123,14 +123,14 @@
         expDateInput.value = '';
 
         if (value.length !== 10) {
-            kodeError.textContent = "Kode produksi harus terdiri dari 10 karakter.";
+            kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
             kodeError.classList.remove('d-none');
             return;
         }
 
         const format = /^[A-Z0-9]+$/;
         if (!format.test(value)) {
-            kodeError.textContent = "Kode produksi hanya boleh huruf besar dan angka.";
+            kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
             kodeError.classList.remove('d-none');
             return;
         }

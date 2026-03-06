@@ -46,11 +46,11 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">
-                                    Nama Produk <span class="text-danger">*</span>
+                                    Nama Varian <span class="text-danger">*</span>
                                 </label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
                                     required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
                                     @endforeach
@@ -75,7 +75,7 @@
                         <div class="row mb-3 batch-row">
 
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi <span class="text-danger">*</span></label>
+                                <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
                                 <select name="kode_produksi[]" id="kode_produksi" class="form-control kode_produksi"
                                     required>
                                     <option value="">Pilih Varian Terlebih Dahulu</option>
@@ -104,14 +104,14 @@
                         {{-- ====== Baris 4: Suhu Produk & Jumlah Tray ====== --}}
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Suhu Produk (°C) <span
+                                <label class="form-label">Suhu Varian (°C) <span
                                         class="text-danger">*</span></label><br>
                                 <input type="number" name="suhu_produk" id="suhu_produk" class="form-control" step="0.1"
                                     required>
                                 <small class="text-danger">Standar: 19 ± 1 °C</small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Berat Produk (gram) <span class="text-danger">*</span></label>
+                                <label class="form-label">Berat Varian (gram) <span class="text-danger">*</span></label>
                                 <input type="number" name="berat_produk" id="berat_produk" class="form-control"
                                     step="0.1" required>
                             </div>
@@ -627,7 +627,7 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="text-start">Suhu Produk Akhir</td>
+                                        <td class="text-start">Suhu Varian Akhir</td>
                                         <td>°C</td>
                                         <td colspan="2">48 ± 2</td>
                                         <td>

@@ -76,7 +76,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Produk / Operator...">
+                    value="{{ request('search') }}" placeholder="Cari Varian / Operator...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -111,7 +111,7 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
+                            <th>Nama Varian</th>
                             <th>Hasil Pemeriksaan</th>
                             <th>QC</th>
                             <th>Operator</th>

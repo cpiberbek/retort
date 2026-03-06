@@ -53,7 +53,7 @@
                         </span>
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch">
                 </div>
             </div>
             <div class="col-md-3">
@@ -82,7 +82,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -133,13 +133,13 @@
                             <th rowspan="2" style="width: 3%;">NO.</th>
                             <th rowspan="2" style="width: 8%;">Tanggal | Shift</th>
                             <th rowspan="2" style="width: 4%;">Palet</th>
-                            <th rowspan="2" style="width: 12%;">Nama Produk</th>
-                            <th rowspan="2" style="width: 6%;">Kode Prod</th>
+                            <th rowspan="2" style="width: 12%;">Nama Varian</th>
+                            <th rowspan="2" style="width: 6%;">Kode Batch</th>
                             <th rowspan="2" style="width: 6%;">Exp. Date</th>
                             <th colspan="4">Pemeriksaan Proses Cartoning</th>
                             <th rowspan="2" style="width: 5%;">Isi<br>/Box</th>
                             <th rowspan="2" style="width: 4%;">Jml<br>Box</th>
-                            <th colspan="3">Status Produk</th>
+                            <th colspan="3">Status Varian</th>
                             <th rowspan="2" style="width: 5%;">Item<br>Mutu</th>
                             <th rowspan="2" style="width: 8%;">Catatan</th>
                             <th rowspan="2" style="width: 4%;">QC</th>

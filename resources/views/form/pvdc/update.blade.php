@@ -34,7 +34,7 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <input type="text" name="nama_produk" class="form-control"
                                     value="{{ old('nama_produk', $pvdc->nama_produk) }}" readonly>
                                 <!-- <select id="nama_produk" name="nama_produk" class="form-control selectpicker" data-live-search="true" title="Ketik nama produk...">
@@ -269,7 +269,7 @@
             select.prop("disabled", true);
 
             if (!produkValue) {
-                select.html('<option value="">Pilih Produk Terlebih Dahulu</option>');
+                select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
                 return;
             }
 
@@ -307,7 +307,7 @@
         document.getElementById('addMesinRow').addEventListener('click', function() {
             const produkValue = "{{ $pvdc->nama_produk }}";
             const disabledAttr = produkValue ? '' : 'disabled';
-            const initialOption = produkValue ? '<option value="">-- Pilih Batch --</option>' : '<option value="">Pilih Produk Terlebih Dahulu</option>';
+            const initialOption = produkValue ? '<option value="">-- Pilih Batch --</option>' : '<option value="">Pilih Varian Terlebih Dahulu</option>';
 
             const newRow = `
             <tr class="mesin-row">

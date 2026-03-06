@@ -210,20 +210,18 @@
                                         </td>
                                     </tr>
 
-                                    {{-- BARIS WAKTU MIXING PREMIX (PERSIS SEPERTI GAMBAR) --}}
+                                    {{-- BARIS WAKTU MIXING PREMIX --}}
                                     <tr>
-                                        <td class="text-start fw-semibold bg-light">Waktu Mixing Premix (Menit)</td>
-                                        <td style="width: 32%;">
-                                            <input type="time" name="waktu_mixing_premix_awal" class="form-control form-control-sm text-center">
-                                        </td>
-                                        <td class="fw-bold text-center" style="width: 6%;">s/d</td>
-                                        <td style="width: 37%;">
-                                            <input type="time" name="waktu_mixing_premix_akhir" class="form-control form-control-sm text-center">
+                                        <td class="text-start fw-semibold bg-light">Waktu Mixing Premix</td>
+                                        <td colspan="3">
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_mixing_premix" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;">
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-
 
                             {{-- GEL --}}
                             <table class="table table-bordered text-center align-middle mb-4">
@@ -234,18 +232,19 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="text-start fw-semibold">Waktu Bowl Cutter (Menit)</td>
-                                        <td><input type="time" name="waktu_bowl_cutter_awal"
-                                                class="form-control form-control-sm text-center"></td>
-                                        <td class="fw-bold">s/d</td>
-                                        <td><input type="time" name="waktu_bowl_cutter_akhir"
-                                                class="form-control form-control-sm text-center"></td>
+                                        <td class="text-start fw-semibold" style="width: 25%;">Waktu Bowl Cutter</td>
+                                        <td colspan="3">
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_bowl_cutter" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;">
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-semibold">Waktu Aging Emulsi (Menit)</td>
                                         <td><input type="time" name="waktu_aging_emulsi_awal"
                                                 class="form-control form-control-sm text-center"></td>
-                                        <td class="fw-bold">s/d</td>
+                                        <td class="fw-bold" style="width: 5%;">s/d</td>
                                         <td><input type="time" name="waktu_aging_emulsi_akhir"
                                                 class="form-control form-control-sm text-center"></td>
                                     </tr>
@@ -261,9 +260,13 @@
                             <table class="table table-bordered text-center align-middle">
                                 <tbody>
                                     <tr>
-                                        <td class="text-start fw-semibold">Waktu Mixing (Menit)</td>
-                                        <td><input type="time" name="waktu_mixing"
-                                                class="form-control form-control-sm text-center"></td>
+                                        <td class="text-start fw-semibold" style="width: 25%;">Waktu Mixing</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="number" name="waktu_mixing" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;">
+                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                            </div>
+                                        </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start fw-semibold">Suhu Akhir Mixing (Std 2–5°C)</td>
@@ -278,8 +281,6 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
 
                 {{-- ===================== CATATAN ===================== --}}
                 <div class="card mb-4 border-0 shadow-sm">

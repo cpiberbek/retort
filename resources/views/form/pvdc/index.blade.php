@@ -52,7 +52,7 @@
                         </span>
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch...">
                 </div>
             </div>
             <div class="col-md-3">
@@ -81,7 +81,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Produk / Supplier / Catatan...">
+                    value="{{ request('search') }}" placeholder="Cari Varian / Supplier / Catatan...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -140,7 +140,7 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
+                            <th>Nama Varian</th>
                             <th>Nama Supplier</th>
                             <th>Tanggal Kedatangan</th>
                             <th>Tanggal Expired</th>

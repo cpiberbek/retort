@@ -39,9 +39,9 @@
                             <input type="number" name="palet" id="palet" class="form-control" value="{{ $sampling_fg->palet }}"required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Nama Produk</label>
+                            <label class="form-label">Nama Varian</label>
                             <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                <option value="">-- Pilih Produk --</option>
+                                <option value="">-- Pilih Varian --</option>
                                 @foreach($produks as $produk)
                                 <option value="{{ $produk->nama_produk }}" {{ $sampling_fg->nama_produk == $produk->nama_produk ? 'selected' : '' }}>
                                     {{ $produk->nama_produk }}
@@ -60,7 +60,7 @@
                         <div class="col-md-6">
                             <label class="form-label">Exp. Date</label>
                             <input type="date" name="exp_date" id="exp_date" value="{{ $sampling_fg->exp_date }}" class="form-control">
-                            <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode produksi</small>
+                            <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode batch</small>
                         </div>
                     </div>
                 </div>
@@ -88,7 +88,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Berat Produk per Box (gr)</label>
+                            <label class="form-label">Berat Varian per Box (gr)</label>
                             <input type="number" name="berat_produk" id="berat_produk" class="form-control" value="{{ $sampling_fg->berat_produk }}">
                         </div>
                         <div class="col-md-6">
@@ -99,7 +99,7 @@
 
                     <div class="row mb-3">
                         <div class="col-md-3">
-                            <label class="form-label">Isi Produk per Box</label>
+                            <label class="form-label">Isi Varian per Box</label>
                             <input type="number" name="isi_per_box" id="isi_per_box" class="form-control" value="{{ $sampling_fg->isi_per_box }}">
                         </div>
                         <div class="col-md-3">
@@ -118,7 +118,7 @@
 
                     <hr>
 
-                    <label class="form-label"><b>Status Produk</b></label>
+                    <label class="form-label"><b>Status Varian</b></label>
                     <div class="row mb-3">
                         <div class="col-md-4">
                             <label class="form-label">Release (Box)</label>
@@ -210,14 +210,14 @@
         expDateInput.value = '';
 
         if (value.length !== 10) {
-            kodeError.textContent = "Kode produksi harus terdiri dari 10 karakter.";
+            kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
             kodeError.classList.remove('d-none');
             return;
         }
 
         const format = /^[A-Z0-9]+$/;
         if (!format.test(value)) {
-            kodeError.textContent = "Kode produksi hanya boleh huruf besar dan angka.";
+            kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
             kodeError.classList.remove('d-none');
             return;
         }

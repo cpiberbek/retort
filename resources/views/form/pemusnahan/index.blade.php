@@ -18,7 +18,7 @@
     @endif
 
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Pemusnahan Barang / Produk</h2>
+        <h2 class="h4">Pemusnahan Barang / Varian</h2>
         <div class="btn-group" role="group">
             @can('can access add button')
             <a href="{{ route('pemusnahan.create') }}" class="btn btn-success">
@@ -51,7 +51,7 @@
                         <i class="bi bi-calendar-date text-muted"></i>
                     </span>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch...">
                 </div>
             </div>
 
@@ -63,7 +63,7 @@
                         <i class="bi bi-search text-muted"></i>
                     </span>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
 
@@ -110,8 +110,8 @@
                     <tr>
                         <th>NO.</th>
                         <th>Date</th> {{-- Tanpa Shift --}}
-                        <th>Nama Produk</th>
-                        <th>Kode Produksi</th>
+                        <th>Nama Varian</th>
+                        <th>Kode Batch</th>
                         <th>Expired Date</th>
                         <th>Analisa</th>
                         <th>Keterangan</th>

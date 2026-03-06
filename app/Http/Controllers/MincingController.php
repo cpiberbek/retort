@@ -155,14 +155,12 @@ public function store(Request $request)
         'non_premix'    => 'nullable|array',
         'daging'        => 'nullable',
         'suhu_sebelum_grinding'      => 'nullable|numeric',
-        'waktu_mixing_premix_awal'   => 'nullable',
-        'waktu_mixing_premix_akhir'  => 'nullable',
-        'waktu_bowl_cutter_awal'     => 'nullable',
-        'waktu_bowl_cutter_akhir'    => 'nullable',
+        'waktu_mixing_premix'        => 'nullable|integer',
+        'waktu_bowl_cutter'          => 'nullable|integer',
         'waktu_aging_emulsi_awal'    => 'nullable',
         'waktu_aging_emulsi_akhir'   => 'nullable',
         'suhu_akhir_emulsi_gel'      => 'nullable|numeric',
-        'waktu_mixing'               => 'nullable',
+        'waktu_mixing'               => 'nullable|integer',
         'suhu_akhir_mixing'          => 'nullable|numeric',
         'suhu_akhir_emulsi'          => 'nullable|numeric',
         'catatan'                    => 'nullable|string',
@@ -171,7 +169,7 @@ public function store(Request $request)
     $data = $request->only([
         'date', 'shift', 'nama_produk', 'kode_produksi',
         'waktu_mulai', 'waktu_selesai', 'daging', 'suhu_sebelum_grinding',
-        'waktu_mixing_premix_awal', 'waktu_mixing_premix_akhir', 'waktu_bowl_cutter_awal', 'waktu_bowl_cutter_akhir', 'waktu_aging_emulsi_awal', 'waktu_aging_emulsi_akhir', 'suhu_akhir_emulsi_gel', 'waktu_mixing', 'suhu_akhir_mixing', 'suhu_akhir_emulsi', 'catatan',
+        'waktu_mixing_premix', 'waktu_bowl_cutter', 'waktu_aging_emulsi_awal', 'waktu_aging_emulsi_akhir', 'suhu_akhir_emulsi_gel', 'waktu_mixing', 'suhu_akhir_mixing', 'suhu_akhir_emulsi', 'catatan',
     ]);
 
     $data['username']            = $username;
@@ -221,14 +219,12 @@ public function store(Request $request)
         'non_premix'    => 'nullable|array',
         'daging'        => 'nullable',
         'suhu_sebelum_grinding'      => 'nullable|numeric',
-        'waktu_mixing_premix_awal'   => 'nullable',
-        'waktu_mixing_premix_akhir'  => 'nullable',
-        'waktu_bowl_cutter_awal'     => 'nullable',
-        'waktu_bowl_cutter_akhir'    => 'nullable',
+        'waktu_mixing_premix'        => 'nullable|integer',
+        'waktu_bowl_cutter'          => 'nullable|integer',
         'waktu_aging_emulsi_awal'    => 'nullable',
         'waktu_aging_emulsi_akhir'   => 'nullable',
         'suhu_akhir_emulsi_gel'      => 'nullable|numeric',
-        'waktu_mixing'               => 'nullable',
+        'waktu_mixing'               => 'nullable|integer',
         'suhu_akhir_mixing'          => 'nullable|numeric',
         'suhu_akhir_emulsi'          => 'nullable|numeric',
         'catatan'                    => 'nullable|string',
@@ -243,10 +239,8 @@ public function store(Request $request)
         'waktu_selesai'    => $request->waktu_selesai,
         'daging'           => $request->daging,
         'suhu_sebelum_grinding'      => $request->suhu_sebelum_grinding,
-        'waktu_mixing_premix_awal'   => $request->waktu_mixing_premix_awal,
-        'waktu_mixing_premix_akhir'  => $request->waktu_mixing_premix_akhir,
-        'waktu_bowl_cutter_awal'     => $request->waktu_bowl_cutter_awal,
-        'waktu_bowl_cutter_akhir'    => $request->waktu_bowl_cutter_akhir,
+        'waktu_mixing_premix'        => $request->waktu_mixing_premix,
+        'waktu_bowl_cutter'          => $request->waktu_bowl_cutter,
         'waktu_aging_emulsi_awal'    => $request->waktu_aging_emulsi_awal,
         'waktu_aging_emulsi_akhir'   => $request->waktu_aging_emulsi_akhir,
         'suhu_akhir_emulsi_gel'      => $request->suhu_akhir_emulsi_gel,
@@ -295,14 +289,12 @@ public function edit_spv(Request $request, string $uuid)
         'non_premix'    => 'nullable|array',
         'daging'        => 'nullable',
         'suhu_sebelum_grinding'      => 'nullable|numeric',
-        'waktu_mixing_premix_awal'   => 'nullable',
-        'waktu_mixing_premix_akhir'  => 'nullable',
-        'waktu_bowl_cutter_awal'     => 'nullable',
-        'waktu_bowl_cutter_akhir'    => 'nullable',
+        'waktu_mixing_premix'        => 'nullable|integer',
+        'waktu_bowl_cutter'          => 'nullable|integer',
         'waktu_aging_emulsi_awal'    => 'nullable',
         'waktu_aging_emulsi_akhir'   => 'nullable',
         'suhu_akhir_emulsi_gel'      => 'nullable|numeric',
-        'waktu_mixing'               => 'nullable',
+        'waktu_mixing'               => 'nullable|integer',
         'suhu_akhir_mixing'          => 'nullable|numeric',
         'suhu_akhir_emulsi'          => 'nullable|numeric',
         'catatan'                    => 'nullable|string',
@@ -333,7 +325,7 @@ public function edit_spv(Request $request, string $uuid)
     ];
     $mincing->update($data);
 
-    return redirect()->route('mincing.verification')->with('success', 'Data SPV berhasil diperbarui');
+    return redirect()->route('mincing.index')->with('success', 'Data SPV berhasil diperbarui');
 }
 
     public function verification(Request $request)
