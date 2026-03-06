@@ -354,19 +354,53 @@
                                 @enderror
                             </div>
                             <div class="col-md-4">
-                                <label for="kondisi_mobil" class="form-label">Kondisi Mobil</label>
-                                @php $isKondisiFilled = !empty($inspection->kondisi_mobil); @endphp
-                                <select class="form-select select2" id="kondisi_mobil" name="kondisi_mobil" required {{ $isKondisiFilled ? 'disabled' : '' }}>
-                                    <option></option>
-                                    <option value="Bersih" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bersih' ? 'selected' : '' }}>Bersih</option>
-                                    <option value="Kotor" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Kotor' ? 'selected' : '' }}>Kotor</option>
-                                    <option value="Bau" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bau' ? 'selected' : '' }}>Bau</option>
-                                    <option value="Bocor" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bocor' ? 'selected' : '' }}>Bocor</option>
-                                    <option value="Basah" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Basah' ? 'selected' : '' }}>Basah</option>
-                                    <option value="Kering" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Kering' ? 'selected' : '' }}>Kering</option>
-                                    <option value="Bebas Hama" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bebas Hama' ? 'selected' : '' }}>Bebas Hama</option>
-                                </select>
-                                @if($isKondisiFilled) <input type="hidden" name="kondisi_mobil" value="{{ $inspection->kondisi_mobil }}"> @endif
+                                <label class="form-label">Kondisi Mobil</label>
+
+                                @php
+                                    $options = [
+                                        'Bersih',
+                                        'Kering',
+                                        'Tidak Bocor',
+                                        'Tidak Berdebu',
+                                        'Tidak Basah',
+                                        'Bebas Hama',
+                                        'Bebas Noda (Karat, cat, tinta)',
+                                        'Bebas Bekas oli di lantai/dinding',
+                                        'Tidak ada produk non halal'
+                                    ];
+
+                                    $selectedKondisi = collect(old('kondisi_mobil', isset($inspection) ? explode(',', $inspection->kondisi_mobil ?? '') : []))
+                                        ->filter()
+                                        ->toArray();
+                                @endphp
+
+                                <div class="row g-2 @error('kondisi_mobil') is-invalid @enderror">
+                                    @foreach ($options as $item)
+                                        @php $id = 'kondisi_' . \Illuminate\Support\Str::slug($item, '_'); @endphp
+
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="checkbox"
+                                                    name="kondisi_mobil[]"
+                                                    value="{{ $item }}"
+                                                    id="{{ $id }}"
+                                                    {{ in_array($item, $selectedKondisi) ? 'checked' : '' }}
+                                                >
+                                                <label class="form-check-label" for="{{ $id }}">
+                                                    {{ $item }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                @error('kondisi_mobil')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
                              <div class="col-md-6">
                                 <label for="do_po" class="form-label">No. DO / PO</label>
