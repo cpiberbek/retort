@@ -71,7 +71,7 @@
 				</div>
 			</div>
 			<div class="col-md-3">
-				<div class="mb-1">Pilih Produk</div>
+				<div class="mb-1">Pilih Varian</div>
 				<div class="input-group mb-2">
 					<div class="input-group-prepend">
 						<span class="input-group-text bg-white border-end-0">
@@ -79,7 +79,7 @@
 						</span>
 					</div>
 					<select name="nama_produk" id="filter_nama_produk" class="form-select border-start-0 form-control">
-						<option value="">Semua Nama Produk</option>
+						<option value="">Semua Nama Varian</option>
 						@foreach(\App\Models\Produk::where('plant', Auth::user()->plant)->pluck('nama_produk')->unique() as $produk)
 						<option value="{{ $produk }}" {{ request('nama_produk') == $produk ? 'selected' : '' }}>{{ $produk }}</option>
 						@endforeach
@@ -131,15 +131,15 @@
 							<th>NO.</th>
 							<th>Tanggal | Shift</th>
 							<th>Jenis Sampling</th>
-							<th>Nama Produk</th>
-							<th>Kode Produksi</th>
+							<th>Nama Varian</th>
+							<th>Kode Batch</th>
 							<th>Jumlah</th>
 							<th>Jamur</th>
 							<th>Lendir</th>
 							<th>Klip Tajam</th>
 							<th>Pin Hole</th>
 							<th>Air Trap PVDC</th>
-							<th>Air Trap Produk</th>
+							<th>Air Trap Varian</th>
 							<th>Keriput</th>
 							<th>Bengkok</th>
 							<th>Non Kode</th>

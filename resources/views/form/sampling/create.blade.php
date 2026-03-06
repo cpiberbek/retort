@@ -51,16 +51,16 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" maxlength="10" required>
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
@@ -89,7 +89,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3"><label class="form-label">Air Trap PVDC</label><input type="number" name="air_trap_pvdc" class="form-control" step="0.01" min="0"></div>
-                            <div class="col-md-3" step="0.01"><label class="form-label">Air Trap Produk</label><input type="number" name="air_trap_produk" class="form-control" min="0"></div>
+                            <div class="col-md-3" step="0.01"><label class="form-label">Air Trap Varian</label><input type="number" name="air_trap_produk" class="form-control" min="0"></div>
                             <div class="col-md-3" step="0.01"><label class="form-label">Keriput</label><input type="number" name="keriput" class="form-control" min="0"></div>
                             <div class="col-md-3" step="0.01"><label class="form-label">Bengkok</label><input type="number" name="bengkok" class="form-control" min="0"></div>
                         </div>
@@ -155,7 +155,7 @@
         form.addEventListener('submit', function(e) {
             if (!validateKode()) {
                 e.preventDefault();
-                alert('Kode produksi tidak valid! Periksa kembali sebelum menyimpan.');
+                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
                 kodeInput.focus();
             }
         });
@@ -167,14 +167,14 @@
             kodeError.classList.add('d-none');
 
             if (value.length !== 10) {
-                kodeError.textContent = "Kode produksi harus terdiri dari 10 karakter.";
+                kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
                 kodeError.classList.remove('d-none');
                 return false;
             }
 
             const format = /^[A-Z0-9]+$/;
             if (!format.test(value)) {
-                kodeError.textContent = "Kode produksi hanya boleh huruf besar dan angka.";
+                kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
                 kodeError.classList.remove('d-none');
                 return false;
             }

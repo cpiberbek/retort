@@ -24,11 +24,11 @@
                         </div>
                         <div class="row mb-3">
                            <div class="col-md-6">
-                            <label class="form-label">Nama Produk</label>
+                            <label class="form-label">Nama Varian</label>
                             <input type="text" name="nama_produk" class="form-control" value="{{ $prepacking->nama_produk }}" readonly>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Kode Produksi</label>
+                            <label class="form-label">Kode Batch</label>
                             <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" value="{{ $prepacking->kode_produksi }}" {{ $prepacking->kode_produksi ? 'readonly' : '' }}>
                             <small id="kodeError" class="text-danger d-none"></small>
                         </div>
@@ -55,7 +55,7 @@
                                 @endphp
                                 <tr>
                                     @if($i==1)
-                                    <td rowspan="3" class="text-center align-middle">Suhu Produk (°C)</td>
+                                    <td rowspan="3" class="text-center align-middle">Suhu Varian (°C)</td>
                                     @endif
                                     <td>
                                         <input type="number" name="suhu_produk[suhu_{{ $i }}]" value="{{ $value }}" id="suhu_{{ $i }}" class="form-control form-control-sm text-center" step="0.01" min="0" {{ $value != '' ? 'readonly' : '' }}>
@@ -70,7 +70,7 @@
 
             {{-- KONDISI PRODUK --}}
             <div class="card mb-4">
-                <div class="card-header bg-info text-white"><strong>Kondisi Produk</strong></div>
+                <div class="card-header bg-info text-white"><strong>Kondisi Varian</strong></div>
                 <div class="card-body">
 
                     {{-- Air --}}
@@ -145,7 +145,7 @@
 
             {{-- BERAT PRODUK --}}
             <div class="card mb-4">
-                <div class="card-header bg-info text-white"><strong>Berat Produk per Pcs/Toples</strong></div>
+                <div class="card-header bg-info text-white"><strong>Berat Varian per Pcs/Toples</strong></div>
                 <div class="card-body">
                     <div class="table-responsive">
                         <table class="table table-bordered align-middle text-center">
@@ -238,7 +238,7 @@
             kodeError.text('').addClass('d-none');
 
             if(value.length !== 10){
-                kodeError.text('Kode produksi harus 10 karakter').removeClass('d-none'); return false;
+                kodeError.text('Kode batch harus 10 karakter').removeClass('d-none'); return false;
             }
             if(!/^[A-Z0-9]+$/.test(value)){
                 kodeError.text('Hanya huruf besar dan angka').removeClass('d-none'); return false;
@@ -258,7 +258,7 @@
         form.on('submit', function(e){
             if(!validateKode()){
                 e.preventDefault();
-                alert('Kode produksi tidak valid!'); 
+                alert('Kode batch tidak valid!'); 
                 kodeInput.focus();
             }
         });

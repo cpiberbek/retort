@@ -29,10 +29,10 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
                                 {{ $karton->nama_produk ? 'disabled' : '' }} required>
-                                <option value="">-- Pilih Produk --</option>
+                                <option value="">-- Pilih Varian --</option>
                                 @foreach($produks as $produk)
                                 <option value="{{ $produk->nama_produk }}"
                                     {{ old('nama_produk', $karton->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
@@ -49,7 +49,7 @@
                         </div>
 
                         <div class="col-md-6">
-                            <label class="form-label">Kode Produksi</label>
+                            <label class="form-label">Kode Batch</label>
                             <input type="text" name="kode_produksi" id="kode_produksi" maxlength="10"
                             class="form-control"
                             value="{{ old('kode_produksi', $karton->kode_produksi) }}"
@@ -142,7 +142,7 @@
                         <small id="kode-karton-error" class="text-danger"></small>
                     </div> -->
                     <div class="col-md-6">
-                        <label class="form-label">Kode Produksi (Karton)</label>
+                        <label class="form-label">Kode Batch (Karton)</label>
 
                         {{-- Jika sudah ada gambar → disable input file --}}
                         <input 
@@ -256,7 +256,7 @@ src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstra
         form.addEventListener('submit', function(e) {
             if (!kodeInput.hasAttribute('readonly') && !validateKode()) {
                 e.preventDefault();
-                alert('Kode produksi tidak valid!');
+                alert('Kode batch tidak valid!');
             }
         });
 
@@ -267,7 +267,7 @@ src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstra
             kodeError.classList.add('d-none');
 
             if (value.length !== 10) {
-                kodeError.textContent = "Kode produksi harus 10 karakter.";
+                kodeError.textContent = "Kode batch harus 10 karakter.";
                 kodeError.classList.remove('d-none');
                 return false;
             }

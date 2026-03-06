@@ -51,11 +51,11 @@
                         </span>
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch">
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="mb-1">Pilih Produk</div>
+                <div class="mb-1">Pilih Varian</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
                         <span class="input-group-text bg-white border-end-0">
@@ -63,7 +63,7 @@
                         </span>
                     </div>
                     <select name="nama_produk" id="filter_nama_produk" class="form-select form-control border-start-0">
-                        <option value="">Semua Nama Produk</option>
+                        <option value="">Semua Nama Varian</option>
                         @foreach(\App\Models\Produk::where('plant', Auth::user()->plant)->pluck('nama_produk')->unique() as $produk)
                         <option value="{{ $produk }}" {{ request('nama_produk') == $produk ? 'selected' : '' }}>{{ $produk }}</option>
                         @endforeach
@@ -79,7 +79,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
         </div>
@@ -113,8 +113,8 @@
                             <th>NO.</th>
                             <th>Tanggal</th>
                             <th>Start - Finish</th>
-                            <th>Nama Produk</th>
-                            <th>Kode Produksi</th>
+                            <th>Nama Varian</th>
+                            <th>Kode Batch</th>
                             <th>Bukti Kode</th>
                             <th>Tgl Kedatangan</th>
                             <th>Jumlah/Tambahan</th>
