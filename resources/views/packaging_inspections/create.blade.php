@@ -251,10 +251,17 @@
                         <input type="text" name="items[${i}][no_pol]" class="form-control" value="${no_pol}" required>
                     </div>
                     <div class="col-md-5">
-                        <label class="form-label">Kondisi Kendaraan</label>
-                        <select name="items[${i}][vehicle_condition]" class="form-select select2-dynamic" required>
-                            <option></option> ${vehicleConditions.map(c => `<option value="${c}" ${vehicle_cond === c ? 'selected' : ''}>${c}</option>`).join('')}
-                        </select>
+                        <label class="form-label d-block">Kondisi Kendaraan</label>
+                        <div class="form-check">
+                            ${vehicleConditions.map(c => {
+                                const isChecked = vehicle_cond?.split(',').includes(c) ? 'checked' : '';
+                                return `
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" name="items[${i}][vehicle_condition][]" value="${c}" id="vehicle_${i}_${c}" ${isChecked}>
+                                    <label class="form-check-label" for="vehicle_${i}_${c}">${c}</label>
+                                </div>`;
+                            }).join('')}
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">PBB / OP</label>
