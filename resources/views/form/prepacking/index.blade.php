@@ -52,7 +52,7 @@
                     </span>
                 </div>
                 <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                value="{{ request('date') }}" placeholder="Tanggal Batch">
             </div>
         </div>
         <div class="col-md-4">
@@ -64,7 +64,7 @@
                     </span>
                 </div>
                 <input type="text" name="search" id="search" class="form-control border-start-0"
-                value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
             </div>
         </div>
         <div class="col-md-4 align-self-end">
@@ -100,13 +100,13 @@
                     <tr>
                         <th rowspan="2">NO.</th>
                         <th rowspan="2">Date</th>
-                        <th rowspan="2">Nama Produk</th>
-                        <th rowspan="2">Kode Produksi</th>
+                        <th rowspan="2">Nama Varian</th>
+                        <th rowspan="2">Kode Batch</th>
                         <th rowspan="2">No. Conveyor</th>
-                        <th rowspan="2">Suhu Produk (°C)</th>
+                        <th rowspan="2">Suhu Varian (°C)</th>
                         <th colspan="2">Air (%)</th>
                         <th colspan="2">Minyak (%)</th>
-                        <th colspan="2">Berat Produk per</th>
+                        <th colspan="2">Berat Varian per</th>
                         <th rowspan="2">Catatan</th>
                         <th rowspan="2">QC</th>
                         <th rowspan="2">SPV</th>

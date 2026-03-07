@@ -28,9 +28,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $karton->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
@@ -39,7 +39,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" maxlength="10"
                                 value="{{ old('kode_produksi', $karton->kode_produksi) }}" required>
                                 <small id="kodeError" class="text-danger d-none"></small>
@@ -100,7 +100,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi (Karton)</label>
+                                <label class="form-label">Kode Batch (Karton)</label>
                                 <input type="file" id="kode_karton" name="kode_karton" class="form-control" accept="image/*">
 
                                 @if ($karton->kode_karton)
@@ -199,7 +199,7 @@
         form.addEventListener('submit', function(e) {
             if (!validateKode()) {
                 e.preventDefault();
-                alert('Kode produksi tidak valid! Periksa kembali sebelum menyimpan.');
+                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
                 kodeInput.focus();
             }
         });
@@ -211,14 +211,14 @@
             kodeError.classList.add('d-none');
 
             if (value.length !== 10) {
-                kodeError.textContent = "Kode produksi harus terdiri dari 10 karakter.";
+                kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
                 kodeError.classList.remove('d-none');
                 return false;
             }
 
             const format = /^[A-Z0-9]+$/;
             if (!format.test(value)) {
-                kodeError.textContent = "Kode produksi hanya boleh huruf besar dan angka.";
+                kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
                 kodeError.classList.remove('d-none');
                 return false;
             }

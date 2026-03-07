@@ -23,16 +23,16 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" maxlength="10" required>
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
@@ -54,7 +54,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td rowspan="3" class="text-center align-middle">Suhu Produk (°C)</td>
+                                        <td rowspan="3" class="text-center align-middle">Suhu Varian (°C)</td>
                                         <td>
                                             <input type="number" name="suhu_produk[suhu_1]" id="suhu_1" class="form-control form-control-sm text-center" step="0.01" min="0">
                                         </td>
@@ -77,7 +77,7 @@
 
                 {{-- KONDISI PRODUK --}}
                 <div class="card mb-4">
-                    <div class="card-header bg-info text-white"><strong>Kondisi Produk</strong></div>
+                    <div class="card-header bg-info text-white"><strong>Kondisi Varian</strong></div>
                     <div class="card-body">
                         {{-- Air --}}
                         <div class="table-responsive mb-3">
@@ -149,7 +149,7 @@
 
                 {{-- BERAT PRODUK --}}
                 <div class="card mb-4">
-                    <div class="card-header bg-info text-white"><strong>Berat Produk per</strong></div>
+                    <div class="card-header bg-info text-white"><strong>Berat Varian per</strong></div>
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-bordered align-middle text-center">
@@ -217,12 +217,12 @@
             kodeError.text('').addClass('d-none');
 
             if(value.length !== 10) {
-                kodeError.text('Kode produksi harus terdiri dari 10 karakter').removeClass('d-none');
+                kodeError.text('Kode batch harus terdiri dari 10 karakter').removeClass('d-none');
                 return false;
             }
 
             if(!/^[A-Z0-9]+$/.test(value)) {
-                kodeError.text('Kode produksi hanya boleh huruf besar dan angka').removeClass('d-none');
+                kodeError.text('Kode batch hanya boleh huruf besar dan angka').removeClass('d-none');
                 return false;
             }
 
@@ -245,7 +245,7 @@
         form.on('submit', function(e){
             if(!validateKode()){
                 e.preventDefault();
-                alert('Kode produksi tidak valid! Periksa kembali sebelum menyimpan.');
+                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
                 kodeInput.focus();
             }
         });
