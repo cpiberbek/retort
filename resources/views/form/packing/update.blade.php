@@ -53,10 +53,10 @@
                         <div class="row mb-3">
                             {{-- Nama Produk --}}
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 @php $hasProduk = !empty($packing->nama_produk); @endphp
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" {{ $hasProduk ? 'disabled' : '' }} required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ $packing->nama_produk == $produk->nama_produk ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
@@ -65,7 +65,7 @@
                                 </select>
                                 @if($hasProduk)
                                 <input type="hidden" name="nama_produk" value="{{ $packing->nama_produk }}">
-                                <small class="text-muted d-block">Produk sudah tercatat dan tidak dapat diubah</small>
+                                <small class="text-muted d-block">Varian sudah tercatat dan tidak dapat diubah</small>
                                 @endif
                             </div>
                         </div>

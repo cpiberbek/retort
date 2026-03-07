@@ -47,9 +47,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" id="nama_produk" class="form-select select2" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
                                     @endforeach
@@ -96,7 +96,7 @@
                             <table class="table table-bordered table-sm text-center align-middle" id="pemeriksaanTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Kode Produksi</th>
+                                        <th>Kode Batch</th>
                                         <th>Penampilan</th>
                                         <th>Aroma</th>
                                         <th>Kekenyalan</th>
@@ -116,7 +116,7 @@
                                             <select name="sensori[0][kode_produksi]" id="kode_produksi"
                                                 class="form-select select2 form-control-sm b kode_produksi_Select"
                                                 required disabled>
-                                                <option value="">pilih nama produk dulu</option>
+                                                <option value="">pilih nama varian dulu</option>
                                             </select>
                                             <small class="kodeError text-danger d-none"></small>
                                         </td>
@@ -261,7 +261,7 @@
     $('#nama_produk').select2({
         theme: 'bootstrap-5',
         width: '100%',
-        placeholder: 'Ketik untuk mencari produk...',
+        placeholder: 'Ketik untuk mencari varian...',
         allowClear: true
     });
 
@@ -271,7 +271,7 @@
         select.select2({
             theme: 'bootstrap-5',
             width: '100%',
-            placeholder: 'ketik kode produksi',
+            placeholder: 'ketik kode batch',
             allowClear: true,
             ajax: {
                 delay: 300,

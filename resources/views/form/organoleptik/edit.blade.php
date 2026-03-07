@@ -40,9 +40,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select id="nama_produk" name="nama_produk" class="form-control selectpicker"
-                                    data-live-search="true" title="Ketik nama produk..." required>
+                                    data-live-search="true" title="Ketik nama varian..." required>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $organoleptik->
                                         nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
@@ -92,7 +92,7 @@
                             <table class="table table-bordered table-sm text-center align-middle" id="pemeriksaanTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Kode Produksi</th>
+                                        <th>Kode Batch</th>
                                         <th>Penampilan</th>
                                         <th>Aroma</th>
                                         <th>Kekenyalan</th>
@@ -243,14 +243,14 @@
 
     // ========== Validasi kode produksi ==========
         function validateKode(value) {
-            if (!value) return { valid: false, message: "Kode produksi wajib diisi." };
+            if (!value) return { valid: false, message: "Kode batch wajib diisi." };
             value = value.toUpperCase().replace(/\s+/g,'');
-            if (value.length !== 10) return { valid:false, message: "Kode produksi harus 10 karakter." };
+            if (value.length !== 10) return { valid:false, message: "Kode batch harus 10 karakter." };
             const format = /^[A-Z0-9]+$/;
-            if (!format.test(value)) return { valid:false, message: "Kode produksi hanya boleh huruf besar dan angka." };
+            if (!format.test(value)) return { valid:false, message: "Kode batch hanya boleh huruf besar dan angka." };
             const pattern = /^[A-Z0-9][A-L](0[1-9]|[12][0-9]|3[01])[A-Z0-9]{6}$/;
             if (!pattern.test(value)) return { valid:false, message: "Format: ke-2 A–L, ke-3/4 tanggal 01–31." };
-            return { valid:true, message:"✔ Kode produksi valid." };
+            return { valid:true, message:"✔ Kode batch valid." };
         }
 
     // ========== Event input kode produksi ==========
@@ -325,7 +325,7 @@
             if (firstInvalid) {
                 e.preventDefault();
                 firstInvalid.focus();
-                alert('Terdapat kode produksi tidak valid. Periksa kembali baris yang berwarna merah.');
+                alert('Terdapat kode batch tidak valid. Periksa kembali baris yang berwarna merah.');
             }
         });
 

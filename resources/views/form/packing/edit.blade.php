@@ -40,9 +40,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}"
                                         {{ $packing->nama_produk == $produk->nama_produk ? 'selected' : '' }}>
