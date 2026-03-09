@@ -207,7 +207,7 @@
                 
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label">Kode Produksi</label>
+                        <label class="form-label">Kode Batch</label>
                         <input type="text" name="items[${i}][kode_produksi]" id="kode_produksi" maxlength="10" class="form-control" value="${kode_produksi}">
                         <small id="kodeError" class="text-danger d-none"></small>
                     </div>
@@ -397,12 +397,12 @@
             kodeError.text('').addClass('d-none');
 
             if (value.length !== 10) {
-                kodeError.text('Kode produksi harus terdiri dari 10 karakter').removeClass('d-none');
+                kodeError.text('Kode batch harus terdiri dari 10 karakter').removeClass('d-none');
                 return false;
             }
 
             if (!/^[A-Z0-9]+$/.test(value)) {
-                kodeError.text('Kode produksi hanya boleh huruf besar dan angka').removeClass('d-none');
+                kodeError.text('Kode batch hanya boleh huruf besar dan angka').removeClass('d-none');
                 return false;
             }
 
@@ -425,7 +425,7 @@
         form.on('submit', function(e) {
             if (!validateKode()) {
                 e.preventDefault();
-                alert('Kode produksi tidak valid! Periksa kembali sebelum menyimpan.');
+                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
                 kodeInput.focus();
             }
         });

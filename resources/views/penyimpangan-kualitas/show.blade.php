@@ -65,10 +65,10 @@
     
     {{-- CARD 2: Detail Produk --}}
     <div class="detail-card">
-        <h2><i class="bi bi-box-seam-fill"></i> Detail Produk</h2>
+        <h2><i class="bi bi-box-seam-fill"></i> Detail Varian</h2>
         <div class="detail-grid">
             <div class="detail-grid-item">
-                <strong>Nama Produk:</strong> <span>{{ $penyimpanganKualitas->nama_produk }}</span>
+                <strong>Nama Varian:</strong> <span>{{ $penyimpanganKualitas->nama_produk }}</span>
             </div>
             <div class="detail-grid-item">
                 <strong>Lot/Kode:</strong> <span>{{ $penyimpanganKualitas->lot_kode ?? '-' }}</span>

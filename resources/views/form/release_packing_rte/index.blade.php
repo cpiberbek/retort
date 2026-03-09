@@ -63,7 +63,7 @@
                     </span>
                 </div>
                 <input type="text" name="search" id="search" class="form-control border-start-0"
-                value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
             </div>
         </div>
         <div class="col-md-4 align-self-end">
@@ -110,8 +110,8 @@
                     <tr>
                         <th rowspan="2">NO.</th>
                         <th rowspan="2">Date</th>
-                        <th rowspan="2">Nama Produk</th>
-                        <th rowspan="2">Kode Produksi</th>
+                        <th rowspan="2">Nama Varian</th>
+                        <th rowspan="2">Kode Batch</th>
                         <th rowspan="2">Expired</th>
                         <th colspan="2">Jumlah</th>
                         <th rowspan="2">Keterangan</th>

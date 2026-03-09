@@ -25,7 +25,7 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <input type="text" name="nama_produk" id="nama_produk" class="form-control" value="{{ old('nama_produk', $retain_rte->nama_produk) }}" readonly>
                             </div>
                             <div class="col-md-6">

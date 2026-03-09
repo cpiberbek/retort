@@ -52,10 +52,10 @@
 
                     <div class="row mb-3">
                         <div class="col-md-6">
-                            <label class="form-label">Nama Produk</label>
+                            <label class="form-label">Nama Varian</label>
                             <input list="produkList" id="nama_produk" name="nama_produk"
                             class="form-control"
-                            placeholder="Ketik atau pilih produk..."
+                            placeholder="Ketik atau pilih varian..."
                             required
                             value="{{ old('nama_produk', $sampel->nama_produk) }}"
                             {{ $sampel->nama_produk ? 'readonly' : '' }}>
@@ -67,7 +67,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 <input type="text" 
                                 name="kode_produksi" 
                                 id="kode_produksi"
@@ -115,7 +115,7 @@
         @if(!$sampel->nama_produk)
         $('#nama_produk').select2({
             tags: true,
-            placeholder: "Ketik atau pilih nama produk...",
+            placeholder: "Ketik atau pilih nama varian...",
             allowClear: true
         });
         @endif
@@ -135,14 +135,14 @@
         kodeError.classList.add('d-none');
 
         if (value.length !== 10) {
-            kodeError.textContent = "Kode produksi harus terdiri dari 10 karakter.";
+            kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
             kodeError.classList.remove('d-none');
             return false;
         }
 
         const format = /^[A-Z0-9]+$/;
         if (!format.test(value)) {
-            kodeError.textContent = "Kode produksi hanya boleh huruf besar dan angka.";
+            kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
             kodeError.classList.remove('d-none');
             return false;
         }
@@ -164,7 +164,7 @@
         }
 
         // Semua valid
-        kodeError.textContent = "✔ Kode produksi valid.";
+        kodeError.textContent = "✔ Kode batch valid.";
         kodeError.classList.remove('text-danger');
         kodeError.classList.add('text-success');
         kodeError.classList.remove('d-none');

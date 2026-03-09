@@ -51,7 +51,7 @@
                             </select>
                         </div> -->
                         <div class="col-md-6">
-                            <label class="form-label">Nama Produk</label>
+                            <label class="form-label">Nama Varian</label>
                             <input 
                             type="text" 
                             name="nama_produk" 
@@ -65,7 +65,7 @@
                     <div class="row mb-3">
                         {{-- Kode Produksi --}}
                         <div class="col-md-6">
-                            <label class="form-label">Kode Produksi</label>
+                            <label class="form-label">Kode Batch</label>
                             <input 
                             type="text" 
                             name="kode_produksi" 
@@ -88,7 +88,7 @@
                             class="form-control"
                             value="{{ old('expired_date', $release_packing_rte->expired_date) }}"
                             {{ !empty($release_packing_rte->expired_date) ? 'readonly' : '' }}>
-                            <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode produksi</small>
+                            <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode batch</small>
                         </div>
                     </div>
                 </div>
@@ -192,14 +192,14 @@ href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootst
             expDateInput.value = '';
 
             if (value.length !== 10) {
-                kodeError.textContent = "Kode produksi harus terdiri dari 10 karakter.";
+                kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
                 kodeError.classList.remove('d-none');
                 return;
             }
 
             const format = /^[A-Z0-9]+$/;
             if (!format.test(value)) {
-                kodeError.textContent = "Kode produksi hanya boleh huruf besar dan angka.";
+                kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
                 kodeError.classList.remove('d-none');
                 return;
             }
