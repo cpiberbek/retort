@@ -72,7 +72,7 @@ class PackagingInspectionController extends Controller
             // Validasi Items
             'items'                       => 'required|array|min:1',
             'items.*.no_pol'              => 'required|string|max:255',
-            'items.*.vehicle_condition'   => 'required|string|max:255',
+            'items.*.vehicle_condition'   => 'required|array|min:1',
             'items.*.pbb_op'              => 'nullable|string|max:255',
             'items.*.packaging_type'      => 'required|string|max:255',
             'items.*.supplier'            => 'required|string|max:255',
@@ -110,6 +110,10 @@ class PackagingInspectionController extends Controller
             
             // 2. Simpan Items
             $itemsData = collect($validatedHeader['items'])->map(function ($item) use ($inspection) {
+                if (isset($item['vehicle_condition']) && is_array($item['vehicle_condition'])) {
+                    $item['vehicle_condition'] = implode(',', $item['vehicle_condition']);
+                }
+
                 $item['packaging_inspection_id'] = $inspection->id;
                 return $item;
             });
@@ -161,7 +165,7 @@ class PackagingInspectionController extends Controller
             'items.*.id'      => 'nullable|integer|exists:packaging_inspection_items,id',
             // ... (copy validasi items lengkap dari store) ...
             'items.*.no_pol'              => 'required|string|max:255',
-            'items.*.vehicle_condition'   => 'required|string|max:255',
+            'items.*.vehicle_condition'   => 'required|array|min:1',
             'items.*.pbb_op'              => 'nullable|string|max:255',
             'items.*.packaging_type'      => 'required|string|max:255',
             'items.*.supplier'            => 'required|string|max:255',
@@ -191,6 +195,11 @@ class PackagingInspectionController extends Controller
             // Logic Update Items (Sama seperti sebelumnya)
             $incomingItemIds = [];
             foreach ($validatedData['items'] as $itemData) {
+                
+                if (isset($itemData['vehicle_condition']) && is_array($itemData['vehicle_condition'])) {
+                    $itemData['vehicle_condition'] = implode(',', $itemData['vehicle_condition']);
+                }
+
                 if (isset($itemData['id']) && $itemData['id']) {
                     $item = $packagingInspection->items()->find($itemData['id']);
                     if ($item) {
