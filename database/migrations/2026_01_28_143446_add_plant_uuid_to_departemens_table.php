@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('departemens', function (Blueprint $table) {
-            $table->uuid('plant_uuid')->after('uuid');
+            // $table->uuid('plant_uuid')->after('uuid');
         });
     }
 
@@ -22,7 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('departemens', function (Blueprint $table) {
-            $table->dropColumn('plant_uuid');
+            // $table->dropColumn('plant_uuid');
         });
     }
 };
