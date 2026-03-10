@@ -68,14 +68,14 @@
                 {{-- CARD 2: DETAIL PENYIMPANGAN (DARI TABEL) --}}
                 <div class="card mb-4">
                     <div class="card-header">
-                        <strong><i class="bi bi-box-seam-fill"></i> Detail Produk Penyimpangan</strong>
+                        <strong><i class="bi bi-box-seam-fill"></i> Detail Varian Penyimpangan</strong>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
                              <div class="col-md-6">
-                                <label for="nama_produk" class="form-label">Nama Produk <span class="text-danger">*</span></label>
+                                <label for="nama_produk" class="form-label">Nama Varian <span class="text-danger">*</span></label>
                                 <input type="text" name="nama_produk" id="nama_produk" class="form-control" 
-                                       placeholder="Nama produk yang menyimpang"
+                                       placeholder="Nama varian yang menyimpang"
                                        value="{{ old('nama_produk') }}" required>
                             </div>
                              <div class="col-md-3">

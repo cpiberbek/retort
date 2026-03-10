@@ -314,11 +314,11 @@
                                 <h6 class="text-muted mb-2">Item Produk #{{ $index + 1 }}</h6>
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <label class="form-label">Nama Produk</label>
+                                        <label class="form-label">Nama Produk (Varian)</label>
                                         <input type="text" name="details[{{$index}}][nama_produk]" class="form-control" value="{{ $detail->nama_produk }}" readonly>
                                     </div>
                                     <div class="col-md-6">
-                                        <label class="form-label">Kode Produksi</label>
+                                        <label class="form-label">Kode Batch</label>
                                         <input type="text" name="details[{{$index}}][kode_produksi]" class="form-control" value="{{ $detail->kode_produksi }}" readonly>
                                     </div>
                                     <div class="col-md-4">
@@ -402,7 +402,7 @@
                         <input type="text" name="details[${i}][nama_produk]" class="form-control" value="${nama_produk}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Kode Produksi <span class="text-danger">*</span></label>
+                        <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
                         <input type="text" name="details[${i}][kode_produksi]" class="form-control" value="${kode_produksi}" required>
                     </div>
                     <div class="col-md-4">

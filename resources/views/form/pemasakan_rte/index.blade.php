@@ -18,7 +18,7 @@
     @endif
 
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Data Release Packing RTE</h2>
+        <h2 class="h4">Data Pemasakan RTE</h2>
 
         <div class="btn-group" role="group">
             @can('can access add button')
@@ -63,7 +63,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
             <div class="col-md-4 align-self-end">
@@ -108,11 +108,11 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
-                            <th>Kode Produksi</th>
+                            <th>Nama Varian</th>
+                            <th>Kode Batch</th>
                             <th>No. Chamber</th>
-                            <th>Berat Produk (Gram)</th>
-                            <th>Suhu Produk (°C)</th>
+                            <th>Berat Varian (Gram)</th>
+                            <th>Suhu Varian (°C)</th>
                             <th>Jumlah Tray</th>
                             <th>Total Reject (Kg)</th>
                             <th>Pengecekan</th>
@@ -204,7 +204,7 @@
                                 'Waktu Selesai Total (WIB)' => 'waktu_selesai_total',
                                 ],
                                 '9. Sensori' => [
-                                'Suhu Produk Akhir (°C)' => 'suhu_produk_akhir',
+                                'Suhu Varian Akhir (°C)' => 'suhu_produk_akhir',
                                 'Sobek Seal' => 'sobek_seal',
                                 ],
                                 ];

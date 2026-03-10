@@ -58,7 +58,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="filter_search" class="form-control border-start-0 ps-0 shadow-none filter-input"
-                    placeholder="Cari Nomor, Produk, Lot..." value="{{ request('search') }}"
+                    placeholder="Cari Nomor, Varian, Lot..." value="{{ request('search') }}"
                     style="border-color: #ced4da; font-size: 0.95rem;">
                 </div>
             </div>
@@ -80,7 +80,7 @@
                             <th style="width: 5%;">No</th>
                             <th style="width: 10%;">Tanggal</th>
                             <th style="width: 15%;">Nomor</th>
-                            <th style="width: 20%;">Nama Produk</th>
+                            <th style="width: 20%;">Nama Varian</th>
                             <th style="width: 15%;">Lot/Kode</th>
                             <th style="width: 10%;">Status Diketahui</th>
                             <th style="width: 10%;">Status Disetujui</th>
