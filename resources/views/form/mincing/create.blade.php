@@ -320,10 +320,8 @@
     $(document).ready(function() {
         $('.selectpicker').selectpicker();
     });
-</script>
 
-{{-- Otomatis Isi Tanggal & Shift --}}
-<script>
+    // Otomatis Isi Tanggal & Shift
     document.addEventListener("DOMContentLoaded", function() {
         const dateInput = document.getElementById("dateInput");
         const shiftInput = document.getElementById("shiftInput");
@@ -337,10 +335,8 @@
         else if (hh >= 15 && hh < 23) shiftInput.value = "2";
         else shiftInput.value = "3";
     });
-</script>
 
-{{-- Validasi Kode Produksi --}}
-<script>
+    // Validasi Kode Produksi
     $(function() {
         const kodeInput = $('#kode_produksi');
         const kodeError = $('#kodeError');
@@ -380,55 +376,8 @@
             }
         });
     });
-</script>
 
-{{-- Tambah & Hapus Baris Non-Premix / Premix --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        let indexNonPremix = 1;
-        let indexPremix = 1;
-        const tbodyNon = document.getElementById('tbodyNonPremix');
-        const tbodyPremix = document.getElementById('tbodyPremix');
-
-        document.getElementById('tambahBarisNonPremix').addEventListener('click', () => {
-            const row = `
-        <tr>
-            <td><input type="text" name="non_premix[${indexNonPremix}][nama_bahan]" class="form-control form-control-sm text-center"></td>
-            <td><input type="text" name="non_premix[${indexNonPremix}][kode_bahan]" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="non_premix[${indexNonPremix}][suhu_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="non_premix[${indexNonPremix}][ph_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="non_premix[${indexNonPremix}][berat_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td><input type="checkbox" name="non_premix[${indexNonPremix}][sensori]" value="Oke" class="form-check-input"></td>
-            <td><button type="button" class="btn btn-danger btn-sm hapusBaris"><i class="bi bi-trash"></i></button></td>
-            </tr>`;
-            tbodyNon.insertAdjacentHTML('beforeend', row);
-            indexNonPremix++;
-        });
-
-        tbodyNon.addEventListener('click', e => {
-            if (e.target.closest('.hapusBaris')) e.target.closest('tr').remove();
-        });
-
-        document.getElementById('tambahBarisPremix').addEventListener('click', () => {
-            const row = `
-        <tr>
-            <td><input type="text" name="premix[${indexPremix}][nama_premix]" class="form-control form-control-sm text-center"></td>
-            <td><input type="text" name="premix[${indexPremix}][kode_premix]" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="premix[${indexPremix}][berat_premix]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td><input type="checkbox" name="premix[${indexPremix}][sensori_premix]" value="Oke" class="form-check-input"></td>
-            <td><button type="button" class="btn btn-danger btn-sm hapusBarisPremix"><i class="bi bi-trash"></i></button></td>
-            </tr>`;
-            tbodyPremix.insertAdjacentHTML('beforeend', row);
-            indexPremix++;
-        });
-
-        tbodyPremix.addEventListener('click', e => {
-            if (e.target.closest('.hapusBarisPremix')) e.target.closest('tr').remove();
-        });
-    });
-</script>
-
-<script>
+    // Tambah & Hapus Baris Dinamis (Non-Premix, Premix, Suhu Grinding)
     document.addEventListener('DOMContentLoaded', function() {
         // --- 1. Definisi Element ---
         const tbodyNon = document.getElementById('tbodyNonPremix');
@@ -442,8 +391,8 @@
 
         // --- 3. Logic Non Premix ---
         const btnTambahNon = document.getElementById('tambahBarisNonPremix');
-        btnTambahNon.addEventListener('click', () => {
-                // Render data raw material dari PHP ke variabel JavaScript
+        if (btnTambahNon) {
+            btnTambahNon.addEventListener('click', () => {
                 let optionBahan = `<option value="" selected disabled>-- Pilih Bahan --</option>`;
                 @foreach($rawMaterials as $rm)
                     optionBahan += `<option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>`;

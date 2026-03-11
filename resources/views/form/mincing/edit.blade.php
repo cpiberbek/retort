@@ -105,43 +105,44 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyNonPremix">
-                                    {{-- FIX: Cek array sebelum decode --}}
                                     @php
-                                        $nonPremix = is_array($mincing->non_premix) 
+                                        $nonPremixData = is_array($mincing->non_premix) 
                                             ? $mincing->non_premix 
                                             : json_decode($mincing->non_premix ?? '[]', true);
                                     @endphp
 
-                                    @if(!empty($nonPremix) && is_array($nonPremix))
-                                        @foreach($nonPremix as $i => $np)
+                                    @if(!empty($nonPremixData) && is_array($nonPremixData))
+                                        @foreach($nonPremixData as $i => $np)
                                             <tr>
                                                 <td>
-                                                    <input type="text" name="non_premix[{{ $i }}][nama_bahan]" value="{{ old("non_premix.$i.nama_bahan", $np['nama_bahan'] ?? '') }}" class="form-control form-control-sm text-center">
+                                                    <select name="non_premix[{{ $i }}][nama_bahan]" class="form-control form-select-sm text-center" required>
+                                                        <option value="" disabled>-- Pilih Bahan --</option>
+                                                        @foreach($rawMaterials as $rm)
+                                                            <option value="{{ $rm->nama_bahan_baku }}" 
+                                                                {{ old("non_premix.$i.nama_bahan", $np['nama_bahan'] ?? '') == $rm->nama_bahan_baku ? 'selected' : '' }}>
+                                                                {{ $rm->nama_bahan_baku }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
                                                 </td>
-                                                <td>
-                                                    <input type="text" name="non_premix[{{ $i }}][kode_bahan]" value="{{ old("non_premix.$i.kode_bahan", $np['kode_bahan'] ?? '') }}" class="form-control form-control-sm text-center">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="non_premix[{{ $i }}][suhu_bahan]" step="0.01" value="{{ old("non_premix.$i.suhu_bahan", $np['suhu_bahan'] ?? '') }}" class="form-control form-control-sm text-center">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="non_premix[{{ $i }}][ph_bahan]" step="0.01" value="{{ old("non_premix.$i.ph_bahan", $np['ph_bahan'] ?? '') }}" class="form-control form-control-sm text-center">
-                                                </td>
-                                                <td>
-                                                    <input type="number" name="non_premix[{{ $i }}][berat_bahan]" step="0.01" value="{{ old("non_premix.$i.berat_bahan", $np['berat_bahan'] ?? '') }}" class="form-control form-control-sm text-center">
-                                                </td>
-                                                <td class="text-center">
-                                                    <input type="checkbox" name="non_premix[{{ $i }}][sensori]" value="Oke" {{ old("non_premix.$i.sensori", $np['sensori'] ?? '') == 'Oke' ? 'checked' : '' }} class="form-check-input">
-                                                </td>
-                                                <td>
-                                                    <button type="button" class="btn btn-danger btn-sm hapusBaris"><i class="bi bi-trash"></i></button>
-                                                </td>
+                                                <td><input type="text" name="non_premix[{{ $i }}][kode_bahan]" value="{{ old("non_premix.$i.kode_bahan", $np['kode_bahan'] ?? '') }}" class="form-control form-control-sm text-center"></td>
+                                                <td><input type="number" name="non_premix[{{ $i }}][suhu_bahan]" step="0.01" value="{{ old("non_premix.$i.suhu_bahan", $np['suhu_bahan'] ?? '') }}" class="form-control form-control-sm text-center"></td>
+                                                <td><input type="number" name="non_premix[{{ $i }}][ph_bahan]" step="0.01" value="{{ old("non_premix.$i.ph_bahan", $np['ph_bahan'] ?? '') }}" class="form-control form-control-sm text-center"></td>
+                                                <td><input type="number" name="non_premix[{{ $i }}][berat_bahan]" step="0.01" value="{{ old("non_premix.$i.berat_bahan", $np['berat_bahan'] ?? '') }}" class="form-control form-control-sm text-center"></td>
+                                                <td class="text-center"><input type="checkbox" name="non_premix[{{ $i }}][sensori]" value="Oke" {{ old("non_premix.$i.sensori", $np['sensori'] ?? '') == 'Oke' ? 'checked' : '' }} class="form-check-input"></td>
+                                                <td><button type="button" class="btn btn-danger btn-sm hapusBaris"><i class="bi bi-trash"></i></button></td>
                                             </tr>
                                         @endforeach
                                     @else
-                                        {{-- Default 1 empty row --}}
                                         <tr>
-                                            <td><input type="text" name="non_premix[0][nama_bahan]" class="form-control form-control-sm text-center"></td>
+                                            <td>
+                                                <select name="non_premix[0][nama_bahan]" class="form-control form-select-sm text-center" required>
+                                                    <option value="" selected disabled>-- Pilih Bahan --</option>
+                                                    @foreach($rawMaterials as $rm)
+                                                        <option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
                                             <td><input type="text" name="non_premix[0][kode_bahan]" class="form-control form-control-sm text-center"></td>
                                             <td><input type="number" name="non_premix[0][suhu_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
                                             <td><input type="number" name="non_premix[0][ph_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
@@ -172,15 +173,14 @@
                                     </tr>
                                 </thead>
                                 <tbody id="tbodyPremix">
-                                    {{-- FIX: Cek array sebelum decode --}}
                                     @php
-                                        $premix = is_array($mincing->premix) 
+                                        $premixData = is_array($mincing->premix) 
                                             ? $mincing->premix 
                                             : json_decode($mincing->premix ?? '[]', true);
                                     @endphp
 
-                                    @if(!empty($premix) && is_array($premix))
-                                        @foreach($premix as $i => $px)
+                                    @if(!empty($premixData) && is_array($premixData))
+                                        @foreach($premixData as $i => $px)
                                             <tr>
                                                 <td><input type="text" name="premix[{{ $i }}][nama_premix]" value="{{ old("premix.$i.nama_premix", $px['nama_premix'] ?? '') }}" class="form-control form-control-sm text-center"></td>
                                                 <td><input type="text" name="premix[{{ $i }}][kode_premix]" value="{{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') }}" class="form-control form-control-sm text-center"></td>
@@ -208,127 +208,7 @@
 
                         {{-- ===================== PROSES MIXING, GEL, EMULSI ===================== --}}
                         <div class="table-responsive mb-4">
-                            {{-- Suhu sebelum grinding & mixing premix --}}
                             <table class="table table-bordered align-middle mb-0">
-                                <tbody>
-                                    {{-- BARIS SUHU SEBELUM GRINDING --}}
-                                    <tr>
-                                        <td class="text-start fw-semibold bg-light" style="width: 25%;">Suhu (Sebelum Grinding)</td>
-                                        <td colspan="3" class="p-0">
-                                            <table class="table table-borderless mb-0">
-                                                <tbody id="tbodySuhuGrinding">
-                                                    {{-- FIX: Gunakan variabel $suhuData yang dikirim controller, atau ambil dari model dengan cek array --}}
-                                                    <!-- @php
-                                                        $suhuDataLocal = $suhuData ?? (is_array($mincing->suhu_sebelum_grinding) 
-                                                            ? $mincing->suhu_sebelum_grinding 
-                                                            : json_decode($mincing->suhu_sebelum_grinding ?? '[]', true));
-                                                    @endphp -->
-                                                    @php
-    $rawSuhu = $mincing->suhu_sebelum_grinding ?? '[]';
-
-    if (is_array($rawSuhu)) {
-        $suhuDataLocal = $rawSuhu;
-    } elseif (is_string($rawSuhu)) {
-        $decoded = json_decode($rawSuhu, true);
-        $suhuDataLocal = is_array($decoded) ? $decoded : [];
-    } else {
-        $suhuDataLocal = [];
-    }
-@endphp
-                                                    
-                                                    @forelse($suhuDataLocal as $key => $item)
-                                                    <tr>
-                                                        <td style="width: 45%;">
-                                                            <select name="suhu_grinding_input[{{$key}}][daging]" class="form-control form-select-sm">
-                                                                <option value="" disabled>Pilih Daging</option>
-                                                                <option value="BEEF" {{ ($item['daging'] ?? '') == 'BEEF' ? 'selected' : '' }}>BEEF</option>
-                                                                <option value="SBB" {{ ($item['daging'] ?? '') == 'SBB' ? 'selected' : '' }}>SBB</option>
-                                                                <option value="SBL" {{ ($item['daging'] ?? '') == 'SBL' ? 'selected' : '' }}>SBL</option>
-                                                                <option value="MDM" {{ ($item['daging'] ?? '') == 'MDM' ? 'selected' : '' }}>MDM</option>
-                                                                <option value="CCM" {{ ($item['daging'] ?? '') == 'CCM' ? 'selected' : '' }}>CCM</option>
-                                                            </select>
-                                                        </td>
-                                                        <td style="width: 45%;">
-                                                            <input type="number" name="suhu_grinding_input[{{$key}}][suhu]" value="{{ $item['suhu'] ?? '' }}" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
-                                                        </td>
-                                                        <td style="width: 10%;">
-                                                            <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
-                                                        </td>
-                                                    </tr>
-                                                    @empty
-                                                    {{-- Baris default jika data kosong --}}
-                                                    <tr>
-                                                        <td style="width: 45%;">
-                                                            <select name="suhu_grinding_input[0][daging]" class="form-control form-select-sm">
-                                                                <option value="" selected disabled>Pilih Daging</option>
-                                                                <option value="BEEF">BEEF</option>
-                                                                <option value="SBB">SBB</option>
-                                                                <option value="SBL">SBL</option>
-                                                                <option value="MDM">MDM</option>
-                                                                <option value="CCM">CCM</option>
-                                                            </select>
-                                                        </td>
-                                                        <td style="width: 45%;">
-                                                            <input type="number" name="suhu_grinding_input[0][suhu]" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
-                                                        </td>
-                                                        <td style="width: 10%;">
-                                                            <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
-                                                        </td>
-                                                    </tr>
-                                                    @endforelse
-                                                </tbody>
-                                            </table>
-                                            <div class="p-2 border-top bg-white">
-                                                <button type="button" class="btn btn-success btn-sm" id="tambahBarisSuhu">
-                                                    <i class="bi bi-plus-circle"></i> Tambah Daging
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-
-                                    {{-- BARIS WAKTU MIXING PREMIX --}}
-                                    <tr>
-                                        <td class="text-start fw-semibold bg-light">Waktu Mixing Premix (Menit)</td>
-                                        <td style="width: 32%;">
-                                            <input type="time" name="waktu_mixing_premix_awal" class="form-control form-control-sm text-center" value="{{ old('waktu_mixing_premix_awal', $mincing->waktu_mixing_premix_awal) }}">
-                                        </td>
-                                        <td class="fw-bold text-center" style="width: 6%;">s/d</td>
-                                        <td style="width: 37%;">
-                                            <input type="time" name="waktu_mixing_premix_akhir" class="form-control form-control-sm text-center" value="{{ old('waktu_mixing_premix_akhir', $mincing->waktu_mixing_premix_akhir) }}">
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            {{-- GEL --}}
-                            <table class="table table-bordered text-center align-middle mb-4">
-                                <thead class="table-light">
-                                    <tr><th colspan="4" class="text-start">GEL</th></tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="text-start fw-semibold">Waktu Bowl Cutter (Menit)</td>
-                                        <td><input type="time" name="waktu_bowl_cutter_awal" class="form-control form-control-sm text-center" value="{{ old('waktu_bowl_cutter_awal', $mincing->waktu_bowl_cutter_awal) }}"></td>
-                                        <td class="fw-bold">s/d</td>
-                                        <td><input type="time" name="waktu_bowl_cutter_akhir" class="form-control form-control-sm text-center" value="{{ old('waktu_bowl_cutter_akhir', $mincing->waktu_bowl_cutter_akhir) }}"></td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="text-start fw-semibold">Waktu Aging Emulsi (Menit)</td>
-                                        <td><input type="time" name="waktu_aging_emulsi_awal" class="form-control form-control-sm text-center" value="{{ old('waktu_aging_emulsi_awal', $mincing->waktu_aging_emulsi_awal) }}"></td>
-                                        <td class="fw-bold">s/d</td>
-                                        <td><input type="time" name="waktu_aging_emulsi_akhir" class="form-control form-control-sm text-center" value="{{ old('waktu_aging_emulsi_akhir', $mincing->waktu_aging_emulsi_akhir) }}"></td>
-                                    </tr>
-
-                                    <tr>
-                                        <td class="text-start fw-semibold">Suhu Akhir Emulsi Gel (Std &lt;5°C)</td>
-                                        <td colspan="3"><input type="number" name="suhu_akhir_emulsi_gel" step="0.01" class="form-control form-control-sm text-center" value="{{ old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel) }}"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            {{-- Waktu Mixing & Emulsifying --}}
-<table class="table table-bordered align-middle mb-0">
                                 <tbody>
                                     {{-- BARIS SUHU SEBELUM GRINDING --}}
                                     <tr>
@@ -338,15 +218,8 @@
                                                 <tbody id="tbodySuhuGrinding">
                                                     @php
                                                         $rawSuhu = $mincing->suhu_sebelum_grinding ?? '[]';
-
-                                                        if (is_array($rawSuhu)) {
-                                                            $suhuDataLocal = $rawSuhu;
-                                                        } elseif (is_string($rawSuhu)) {
-                                                            $decoded = json_decode($rawSuhu, true);
-                                                            $suhuDataLocal = is_array($decoded) ? $decoded : [];
-                                                        } else {
-                                                            $suhuDataLocal = [];
-                                                        }
+                                                        $suhuDataLocal = is_string($rawSuhu) ? json_decode($rawSuhu, true) : $rawSuhu;
+                                                        if (!is_array($suhuDataLocal)) $suhuDataLocal = [];
                                                     @endphp
                                                     
                                                     @forelse($suhuDataLocal as $key => $item)
@@ -369,7 +242,6 @@
                                                         </td>
                                                     </tr>
                                                     @empty
-                                                    {{-- Baris default jika data kosong --}}
                                                     <tr>
                                                         <td style="width: 45%;">
                                                             <select name="suhu_grinding_input[0][daging]" class="form-control form-select-sm">
@@ -401,7 +273,7 @@
 
                                     {{-- BARIS WAKTU MIXING PREMIX --}}
                                     <tr>
-                                        <td class="text-start fw-semibold bg-light">Waktu Mixing Premix</td>
+                                        <td class="text-start fw-semibold bg-light" style="width: 25%;">Waktu Mixing Premix</td>
                                         <td colspan="3">
                                             <div class="input-group">
                                                 <input type="number" name="waktu_mixing_premix" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;" value="{{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix) }}">
@@ -513,7 +385,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const dateInput = document.getElementById('dateInput');
     const shiftInput = document.getElementById('shiftInput');
 
-    // hanya set default jika tidak ada value (edit case: biarkan value existing)
     if (!dateInput.value) {
         const now = new Date();
         const yyyy = now.getFullYear();
@@ -566,70 +437,66 @@ $(function(){
 });
 </script>
 
-{{-- Tambah / Hapus Row untuk Non-Premix & Premix (preserve indices) --}}
+{{-- Tambah / Hapus Row Dinamis --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Definisi Elemen Tabel
     const tbodyNon = document.getElementById('tbodyNonPremix');
     const tbodyPremix = document.getElementById('tbodyPremix');
-
-    // starting indices based on rendered data
-    let indexNon = {{ max( (isset($nonPremix) ? count($nonPremix) : 0), 1 ) }};
-    let indexPremix = {{ max( (isset($premix) ? count($premix) : 0), 1 ) }};
-
-    // Tambah Non-Premix
-    document.getElementById('tambahBarisNonPremix').addEventListener('click', function() {
-        const row = `
-        <tr>
-            <td><input type="text" name="non_premix[${indexNon}][nama_bahan]" class="form-control form-control-sm text-center"></td>
-            <td><input type="text" name="non_premix[${indexNon}][kode_bahan]" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="non_premix[${indexNon}][suhu_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="non_premix[${indexNon}][ph_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="non_premix[${indexNon}][berat_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td class="text-center"><input type="checkbox" name="non_premix[${indexNon}][sensori]" value="Oke" class="form-check-input"></td>
-            <td><button type="button" class="btn btn-danger btn-sm hapusBaris"><i class="bi bi-trash"></i></button></td>
-        </tr>`;
-        tbodyNon.insertAdjacentHTML('beforeend', row);
-        indexNon++;
-    });
-
-    // Hapus Non-Premix (delegation)
-    tbodyNon.addEventListener('click', function(e) {
-        if (e.target.closest('.hapusBaris')) {
-            e.target.closest('tr').remove();
-        }
-    });
-
-    // Tambah Premix
-    document.getElementById('tambahBarisPremix').addEventListener('click', function() {
-        const row = `
-        <tr>
-            <td><input type="text" name="premix[${indexPremix}][nama_premix]" class="form-control form-control-sm text-center"></td>
-            <td><input type="text" name="premix[${indexPremix}][kode_premix]" class="form-control form-control-sm text-center"></td>
-            <td><input type="number" name="premix[${indexPremix}][berat_premix]" step="0.01" class="form-control form-control-sm text-center"></td>
-            <td class="text-center"><input type="checkbox" name="premix[${indexPremix}][sensori_premix]" value="Oke" class="form-check-input"></td>
-            <td><button type="button" class="btn btn-danger btn-sm hapusBarisPremix"><i class="bi bi-trash"></i></button></td>
-        </tr>`;
-        tbodyPremix.insertAdjacentHTML('beforeend', row);
-        indexPremix++;
-    });
-
-    // Hapus Premix (delegation)
-    tbodyPremix.addEventListener('click', function(e) {
-        if (e.target.closest('.hapusBarisPremix')) {
-            e.target.closest('tr').remove();
-        }
-    });
-});
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
     const tbodySuhu = document.getElementById('tbodySuhuGrinding');
-    const btnTambahSuhu = document.getElementById('tambahBarisSuhu');
-    
-    // Gunakan jumlah baris yang dirender PHP sebagai indeks awal
+
+    // Index Counter berdasarkan jumlah baris saat ini
+    let indexNon = tbodyNon ? tbodyNon.querySelectorAll('tr').length : 0;
+    let indexPremix = tbodyPremix ? tbodyPremix.querySelectorAll('tr').length : 0;
     let indexSuhu = tbodySuhu ? tbodySuhu.querySelectorAll('tr').length : 0;
 
+    // 1. Tambah Non-Premix
+    const btnTambahNon = document.getElementById('tambahBarisNonPremix');
+    if (btnTambahNon) {
+        btnTambahNon.addEventListener('click', function() {
+            let optionBahan = `<option value="" selected disabled>-- Pilih Bahan --</option>`;
+            @foreach($rawMaterials as $rm)
+                optionBahan += `<option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>`;
+            @endforeach
+
+            const row = `
+            <tr>
+                <td>
+                    <select name="non_premix[${indexNon}][nama_bahan]" class="form-control form-select-sm text-center" required>
+                        ${optionBahan}
+                    </select>
+                </td>
+                <td><input type="text" name="non_premix[${indexNon}][kode_bahan]" class="form-control form-control-sm text-center"></td>
+                <td><input type="number" name="non_premix[${indexNon}][suhu_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
+                <td><input type="number" name="non_premix[${indexNon}][ph_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
+                <td><input type="number" name="non_premix[${indexNon}][berat_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
+                <td class="text-center"><input type="checkbox" name="non_premix[${indexNon}][sensori]" value="Oke" class="form-check-input"></td>
+                <td><button type="button" class="btn btn-danger btn-sm hapusBaris"><i class="bi bi-trash"></i></button></td>
+            </tr>`;
+            tbodyNon.insertAdjacentHTML('beforeend', row);
+            indexNon++;
+        });
+    }
+
+    // 2. Tambah Premix
+    const btnTambahPremix = document.getElementById('tambahBarisPremix');
+    if (btnTambahPremix) {
+        btnTambahPremix.addEventListener('click', function() {
+            const row = `
+            <tr>
+                <td><input type="text" name="premix[${indexPremix}][nama_premix]" class="form-control form-control-sm text-center"></td>
+                <td><input type="text" name="premix[${indexPremix}][kode_premix]" class="form-control form-control-sm text-center"></td>
+                <td><input type="number" name="premix[${indexPremix}][berat_premix]" step="0.01" class="form-control form-control-sm text-center"></td>
+                <td class="text-center"><input type="checkbox" name="premix[${indexPremix}][sensori_premix]" value="Oke" class="form-check-input"></td>
+                <td><button type="button" class="btn btn-danger btn-sm hapusBarisPremix"><i class="bi bi-trash"></i></button></td>
+            </tr>`;
+            tbodyPremix.insertAdjacentHTML('beforeend', row);
+            indexPremix++;
+        });
+    }
+
+    // 3. Tambah Suhu Grinding
+    const btnTambahSuhu = document.getElementById('tambahBarisSuhu');
     if (btnTambahSuhu) {
         btnTambahSuhu.addEventListener('click', function() {
             const row = `
@@ -651,22 +518,23 @@ document.addEventListener('DOMContentLoaded', function() {
                     <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
                 </td>
             </tr>`;
-            
             tbodySuhu.insertAdjacentHTML('beforeend', row);
             indexSuhu++;
         });
-
-        // Event delegation untuk hapus
-        tbodySuhu.addEventListener('click', function(e) {
-            if (e.target.closest('.hapusBarisSuhu')) {
-                if (tbodySuhu.querySelectorAll('tr').length > 1) {
-                    e.target.closest('tr').remove();
-                } else {
-                    alert("Minimal harus ada satu input suhu.");
-                }
-            }
-        });
     }
+
+    // Event Delegation untuk Semua Tombol Hapus Baris
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.hapusBaris')) e.target.closest('tr').remove();
+        if (e.target.closest('.hapusBarisPremix')) e.target.closest('tr').remove();
+        if (e.target.closest('.hapusBarisSuhu')) {
+            if (tbodySuhu.querySelectorAll('tr').length > 1) {
+                e.target.closest('tr').remove();
+            } else {
+                alert("Minimal harus ada satu input suhu.");
+            }
+        }
+    });
 });
 </script>
 
