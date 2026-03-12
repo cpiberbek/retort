@@ -29,6 +29,11 @@ class Area_sanitasiController extends Controller
         return view('area_sanitasi.index', compact('area_sanitasi'));
     }
 
+    public function create()
+    {
+ 
+        return view('area_sanitasi.create'); 
+    }
    
     public function store(Request $request)
     {
