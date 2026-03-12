@@ -6,6 +6,7 @@ use App\Models\Sampling_fg;
 use App\Models\Produk;
 use App\Models\Operator;
 use App\Models\Release_packing;
+use App\Models\Mincing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -401,15 +402,35 @@ public function getJumlahBox(Request $request)
     $kode_produksi = $request->input('kode_produksi');
 
     if (!$nama_produk || !$kode_produksi) {
-        return response()->json(['total_box' => 0]);
+        return response()->json([
+            'total_box' => 0
+        ]);
     }
 
-    $totalBox = Release_packing::where('nama_produk', $nama_produk)
-    ->where('kode_produksi', $kode_produksi)
-    ->sum('release');
+    // mencari data di tabel mincings soalnya uuid kode produksinya dari sini
+    $mincing = Mincing::where('kode_produksi', $kode_produksi)
+        ->where('nama_produk', $nama_produk)
+        ->first();
 
-    return response()->json(['total_box' => $totalBox]);
+    if (!$mincing) {
+        return response()->json([
+            'total_box' => 0
+        ]);
+    }
+
+    // ambil uuid sebagai kode_produksi di tabel release_packings
+    $uuidProduksi = $mincing->uuid;
+
+    // hitung/count release
+    $totalBox = Release_packing::where('kode_produksi', $uuidProduksi)
+        ->sum('release');
+
+    return response()->json([
+        'nama_produk'   => $nama_produk,
+        'kode_produksi' => $kode_produksi,
+        'uuid'          => $uuidProduksi,
+        'total_box'     => $totalBox
+    ]);
 }
-
 
 }
