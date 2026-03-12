@@ -20,7 +20,7 @@
         <div class="sub-header" style="text-align: left; margin-top: 15px; background-color: #eee;">
             <strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($row->date)->format('d-m-Y') }} | 
             <strong>Shift:</strong> {{ $row->shift }} | 
-            <strong>Produk:</strong> {{ $row->nama_produk }} | 
+            <strong>Varian:</strong> {{ $row->nama_produk }} | 
             <strong>Operator:</strong> {{ $row->nama_operator }}
         </div>
 

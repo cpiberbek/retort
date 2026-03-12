@@ -69,7 +69,7 @@ $date = $firstRetain ? \Carbon\Carbon::parse($firstRetain->tanggal)->format('d-m
 {{-- TABEL UTAMA --}}
 <table width="100%" class="tbl-main small">
     <tr>
-        <th rowspan="2" class="center">Kode Produksi</th>
+        <th rowspan="2" class="center">Kode Batch</th>
         <th rowspan="2" class="center">Varian</th>
         <th rowspan="2" class="center">Panjang<br>(cm)</th>
         <th rowspan="2" class="center">Diameter<br>(cm)</th>

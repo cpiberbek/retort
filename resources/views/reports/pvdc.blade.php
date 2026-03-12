@@ -99,8 +99,8 @@
         <tr>
             <td width="15%"><strong>Tanggal Laporan</strong></td>
             <td width="35%">: {{ $request->date ? \Carbon\Carbon::parse($request->date)->format('d-m-Y') : 'SEMUA TANGGAL' }}</td>
-            <td width="15%"><strong>Filter Produk</strong></td>
-            <td width="35%">: {{ $request->nama_produk ?? 'SEMUA PRODUK' }}</td>
+            <td width="15%"><strong>Filter Varian</strong></td>
+            <td width="35%">: {{ $request->nama_produk ?? 'SEMUA VARIAN' }}</td>
         </tr>
         <tr>
             <td><strong>Shift</strong></td>
@@ -123,7 +123,7 @@
                 <th>No</th>
                 <th>Tgl</th>
                 <th>Shift</th>
-                <th>Produk</th>
+                <th>Varian</th>
                 <th>Mesin</th>
                 <th>Batch</th>
                 <th>No. Lot</th>

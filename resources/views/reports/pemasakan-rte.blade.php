@@ -86,7 +86,7 @@ $cooking = json_decode($produk->cooking, true);
     </tr>
     <tr>
         <td></td>
-        <td>Nama Produk</td>
+        <td>Nama Varian</td>
         <td>-</td>
         <td>-</td>
         <td>{{ $produk->nama_produk }}</td>
@@ -107,14 +107,14 @@ $cooking = json_decode($produk->cooking, true);
     </tr>
     <tr>
         <td></td>
-        <td>Berat Produk</td>
+        <td>Berat Varian</td>
         <td>gram</td>
         <td>-</td>
         <td>{{ $produk->berat_produk }}</td>
     </tr>
     <tr>
         <td></td>
-        <td>Suhu Produk</td>
+        <td>Suhu Varian</td>
         <td>°C</td>
         <td>15 - 18</td>
         <td>{{ $cooking['suhu_air_awal'] ?? '-' }}</td>
@@ -426,7 +426,7 @@ $cooking = json_decode($produk->cooking, true);
     </tr>
     <tr>
         <td></td>
-        <td>Suhu Produk Akhir</td>
+        <td>Suhu Varian Akhir</td>
         <td>°C</td>
         <td>-</td>
         <td>{{ $cooking['suhu_produk_akhir'] ?? '-' }}</td>

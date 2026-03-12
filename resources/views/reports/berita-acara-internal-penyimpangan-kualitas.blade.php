@@ -83,7 +83,7 @@ $ditujukanUntuk = $firstPenyimpangan ? $firstPenyimpangan->ditujukan_untuk : '';
 <table width="100%" class="tbl-main small">
     <tr>
         <th width="5%" class="center">No</th>
-        <th width="25%" class="center">Nama Produk</th>
+        <th width="25%" class="center">Nama Varian</th>
         <th width="15%" class="center">Lot / Kode</th>
         <th width="15%" class="center">Jumlah</th>
         <th width="20%" class="center">Keterangan</th>

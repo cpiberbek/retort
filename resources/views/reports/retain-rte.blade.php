@@ -67,7 +67,7 @@
     <table width="100%" class="tbl-header" style="border: none; border-collapse: collapse;">
         <tr>
             <td width="34.5%" style="border: none;">
-                Nama Produk : {{ $produk->nama_produk }}
+                Nama Varian : {{ $produk->nama_produk }}
             </td>
             <td width="50%" style="border: none;">
                 Kode Batch : {{ $produk->kode_produksi }}
