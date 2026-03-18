@@ -58,7 +58,7 @@
                 <th width="2%" rowspan="2">No</th>
                 <th width="5%" rowspan="2">Tgl</th>
                 <th width="2%" rowspan="2">Shf</th>
-                <th width="8%" rowspan="2">Produk</th>
+                <th width="8%" rowspan="2">Varian</th>
                 <th width="5%" rowspan="2">Kode</th>
                 <th width="3%" rowspan="2">Jam</th>
                 

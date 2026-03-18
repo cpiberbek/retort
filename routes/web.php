@@ -148,7 +148,10 @@ Route::resource('supplier', SupplierController::class)->parameters([
 // Route::resource('area_hygiene', Area_hygieneController::class)->parameters([
 //     'area_hygiene' => 'uuid'
 // ]);
-
+// 1. Daftarkan custom route untuk Recycle Bin DI ATAS Route::resource
+Route::get('area_hygiene/recyclebin', [Area_hygieneController::class, 'recyclebin'])->name('area_hygiene.recyclebin');
+Route::post('area_hygiene/{uuid}/restore', [Area_hygieneController::class, 'restore'])->name('area_hygiene.restore');
+Route::delete('area_hygiene/{uuid}/force-delete', [Area_hygieneController::class, 'deletePermanent'])->name('area_hygiene.deletePermanent');
 Route::resource('area_hygiene', Area_hygieneController::class)
 ->except(['show']);
 

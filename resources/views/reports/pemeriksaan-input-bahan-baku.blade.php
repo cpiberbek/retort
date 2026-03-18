@@ -68,7 +68,7 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
 <table width="100%" class="tbl-main small">
     <tr>
     	<th rowspan="3" class="center">No.</th>
-        <th rowspan="3" class="center">Nama Produk</th>
+        <th rowspan="3" class="center">Nama Varian</th>
         <th rowspan="3" class="center">Supplier</th>
         <th colspan="2" class="center">Tanggal	</th>
         <th rowspan="3" class="center">Jumlah Barang</th>
@@ -77,7 +77,7 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
         <th colspan="4" class="center">Kondisi Fisik*</th>
         <th rowspan="3" class="center">K.A / FFA</th>
         <th rowspan="3" class="center">Logo Halal</th>
-        <th rowspan="3" class="center">Negara Asal Dibuatnya Produk Dan Nama Produsennya</th>
+        <th rowspan="3" class="center">Negara Asal Dibuatnya Varian Dan Nama Produsennya</th>
         <th colspan="3" class="center">Dokumen</th>
         <th colspan="3" class="center">Transporter</th>
         <th rowspan="3" class="center">DO / PO</th>
@@ -149,7 +149,7 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
             * V = sesuai spesifikasi / standar<br>
             ** 1 = bersih &nbsp;&nbsp; 2 = kotor &nbsp;&nbsp; 3 = bau &nbsp;&nbsp; 4 = bocor<br>
             &nbsp;&nbsp;&nbsp;&nbsp;5 = basah &nbsp;&nbsp; 6 = kering &nbsp;&nbsp; 7 = bebas hama<br>
-            *** 1 = Jika raw meat dilakukan pengujian suhu produk<br>
+            *** 1 = Jika raw meat dilakukan pengujian suhu varian<br>
             2 = Pengisian nomor segel<br>
             3 = Pengisian nama supir<br>
             4 = Pengisian bahan baku alergen / non alergen

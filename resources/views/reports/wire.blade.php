@@ -113,7 +113,7 @@
                 <th width="4%">No</th>
                 <th width="8%">Date</th>
                 <th width="4%">Shf</th>
-                <th width="15%">Nama Produk</th>
+                <th width="15%">Nama Varian</th>
                 <th width="15%">Supplier</th>
                 <th width="35%">Detail Wire (Mesin : Start-End / No. Lot)</th>
                 <th width="12%">Catatan</th>

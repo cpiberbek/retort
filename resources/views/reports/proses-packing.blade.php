@@ -54,7 +54,7 @@
     <tr>
         <td>Hari / Tgl : {{ $dateFilter }}</td>
         <td>Shift : {{ $shiftFilter }}</td>
-        <td>Nama Produk : {{ $namaProdukFilter }}</td>
+        <td>Nama Varian : {{ $namaProdukFilter }}</td>
     </tr>
 </table>
 <br>
@@ -67,13 +67,13 @@
         <th rowspan="2" class="center">Kalibrasi</th>
         <th rowspan="2" class="center">QR Code</th>
 
-        <th colspan="3" class="center">Kode Produk</th>
+        <th colspan="3" class="center">Kode Batch</th>
 
         <th colspan="2" class="center">Shrink Tunnel</th>
 
         <th rowspan="2" class="center">Kondisi Segel Toples / Seal Pouch</th>
 
-        <th colspan="2" class="center">Berat Produk Per</th>
+        <th colspan="2" class="center">Berat Varian Per</th>
 
         <th colspan="3" class="center">Data Kemasan</th>
 

@@ -73,8 +73,8 @@
         <thead>
             <tr>
                 <th rowspan="2" style="border:1px solid #000; text-align:center; vertical-align: middle;">No</th>
-                <th rowspan="2" style="border:1px solid #000; text-align:center; vertical-align: middle;">Nama Produk</th>
-                <th rowspan="2" style="border:1px solid #000; text-align:center; vertical-align: middle;">Kode Produksi</th>
+                <th rowspan="2" style="border:1px solid #000; text-align:center; vertical-align: middle;">Nama Varian</th>
+                <th rowspan="2" style="border:1px solid #000; text-align:center; vertical-align: middle;">Kode Batch</th>
                 <th rowspan="2" style="border:1px solid #000; text-align:center; vertical-align: middle;">Expired</th>
                 <th colspan="2" style="border:1px solid #000; text-align:center;">Jumlah</th>
                 <th rowspan="2" style="border:1px solid #000; text-align:center; vertical-align: middle;">Keterangan</th>

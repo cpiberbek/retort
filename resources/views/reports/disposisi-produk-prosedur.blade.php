@@ -48,7 +48,7 @@
         
     </tr>
 </table>
-<h2 class="title">DISPOSISI PRODUK DAN PROSEDUR</h2>
+<h2 class="title">DISPOSISI VARIAN DAN PROSEDUR</h2>
 <br>
 <br>
 
@@ -82,7 +82,7 @@ $catatan = $firstDisposition ? $firstDisposition->catatan : '';
     <tr>
         <td>Disposisi</td>
         <td>
-            <span class="box">{{ $produk }}</span> Produk &nbsp;&nbsp;
+            <span class="box">{{ $produk }}</span> Varian &nbsp;&nbsp;
             <span class="box">{{ $material }}</span> Material &nbsp;&nbsp;
             <span class="box">{{ $prosedur }}</span> Prosedur
         </td>

@@ -154,7 +154,7 @@ public function store(Request $request)
         'premix'        => 'nullable|array',
         'non_premix'    => 'nullable|array',
         'daging'        => 'nullable',
-        'suhu_sebelum_grinding'      => 'nullable|numeric',
+        'suhu_grinding_input' => 'nullable|array',
         'waktu_mixing_premix'        => 'nullable|integer',
         'waktu_bowl_cutter'          => 'nullable|integer',
         'waktu_aging_emulsi_awal'    => 'nullable',
@@ -168,7 +168,7 @@ public function store(Request $request)
 
     $data = $request->only([
         'date', 'shift', 'nama_produk', 'kode_produksi',
-        'waktu_mulai', 'waktu_selesai', 'daging', 'suhu_sebelum_grinding',
+        'waktu_mulai', 'waktu_selesai', 'daging',
         'waktu_mixing_premix', 'waktu_bowl_cutter', 'waktu_aging_emulsi_awal', 'waktu_aging_emulsi_akhir', 'suhu_akhir_emulsi_gel', 'waktu_mixing', 'suhu_akhir_mixing', 'suhu_akhir_emulsi', 'catatan',
     ]);
 
@@ -180,7 +180,7 @@ public function store(Request $request)
     $data['status_spv']          = "0";
     $data['premix']             = json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE);
     $data['non_premix']             = json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE);
-
+    $data['suhu_sebelum_grinding'] = json_encode($request->input('suhu_grinding_input', []), JSON_UNESCAPED_UNICODE);
         Mincing::create($data);
 
         return redirect()->route('mincing.index')->with('success', 'Pengecekan mincing berhasil disimpan');
@@ -189,73 +189,78 @@ public function store(Request $request)
     public function update(string $uuid)
     {
         $mincing = Mincing::where('uuid', $uuid)->firstOrFail();
+        
+        // 1. Definisikan $userPlant terlebih dahulu
         $userPlant = Auth::user()->plant;
+        
+        // 2. Baru gunakan $userPlant untuk query tabel lain
         $produks = Produk::where('plant', $userPlant)->get();
+        $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
 
-    $premixData = !empty($mincing->premix)
-    ? json_decode($mincing->premix, true)
-    : [];
+        $premixData = !empty($mincing->premix)
+        ? json_decode($mincing->premix, true)
+        : [];
 
-    $nonPremixData = !empty($mincing->non_premix)
-    ? json_decode($mincing->non_premix, true)
-    : [];
+        $nonPremixData = !empty($mincing->non_premix)
+        ? json_decode($mincing->non_premix, true)
+        : [];
 
-    return view('form.mincing.update', compact('mincing', 'produks', 'premixData', 'nonPremixData'));
-}
+        return view('form.mincing.update', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials'));
+    }
 
     public function update_qc(Request $request, string $uuid)
     {
         $mincing = Mincing::where('uuid', $uuid)->firstOrFail();
         $username_updated = Auth::user()->username ?? 'User QC';
 
-    $request->validate([
-        'date'          => 'required|date',
-        'shift'         => 'required',
-        'nama_produk'   => 'required',
-        'kode_produksi' => 'required|string',
-        'waktu_mulai'   => 'required',
-        'waktu_selesai' => 'nullable',
-        'premix'        => 'nullable|array',
-        'non_premix'    => 'nullable|array',
-        'daging'        => 'nullable',
-        'suhu_sebelum_grinding'      => 'nullable|numeric',
-        'waktu_mixing_premix'        => 'nullable|integer',
-        'waktu_bowl_cutter'          => 'nullable|integer',
-        'waktu_aging_emulsi_awal'    => 'nullable',
-        'waktu_aging_emulsi_akhir'   => 'nullable',
-        'suhu_akhir_emulsi_gel'      => 'nullable|numeric',
-        'waktu_mixing'               => 'nullable|integer',
-        'suhu_akhir_mixing'          => 'nullable|numeric',
-        'suhu_akhir_emulsi'          => 'nullable|numeric',
-        'catatan'                    => 'nullable|string',
-    ]);
+        $request->validate([
+            'date'          => 'required|date',
+            'shift'         => 'required',
+            'nama_produk'   => 'required',
+            'kode_produksi' => 'required|string',
+            'waktu_mulai'   => 'required',
+            'waktu_selesai' => 'nullable',
+            'premix'        => 'nullable|array',
+            'non_premix'    => 'nullable|array',
+            'daging'        => 'nullable',
+            'suhu_grinding_input'   => 'nullable|array',
+            'waktu_mixing_premix'        => 'nullable|integer',
+            'waktu_bowl_cutter'          => 'nullable|integer',
+            'waktu_aging_emulsi_awal'    => 'nullable',
+            'waktu_aging_emulsi_akhir'   => 'nullable',
+            'suhu_akhir_emulsi_gel'      => 'nullable|numeric',
+            'waktu_mixing'               => 'nullable|integer',
+            'suhu_akhir_mixing'          => 'nullable|numeric',
+            'suhu_akhir_emulsi'          => 'nullable|numeric',
+            'catatan'                    => 'nullable|string',
+        ]);
 
-    $data = [
-        'date'             => $request->date,
-        'shift'            => $request->shift,
-        'nama_produk'      => $request->nama_produk,
-        'kode_produksi'    => $request->kode_produksi,
-        'waktu_mulai'      => $request->waktu_mulai,
-        'waktu_selesai'    => $request->waktu_selesai,
-        'daging'           => $request->daging,
-        'suhu_sebelum_grinding'      => $request->suhu_sebelum_grinding,
-        'waktu_mixing_premix'        => $request->waktu_mixing_premix,
-        'waktu_bowl_cutter'          => $request->waktu_bowl_cutter,
-        'waktu_aging_emulsi_awal'    => $request->waktu_aging_emulsi_awal,
-        'waktu_aging_emulsi_akhir'   => $request->waktu_aging_emulsi_akhir,
-        'suhu_akhir_emulsi_gel'      => $request->suhu_akhir_emulsi_gel,
-        'waktu_mixing'               => $request->waktu_mixing,
-        'suhu_akhir_mixing'          => $request->suhu_akhir_mixing,
-        'suhu_akhir_emulsi'          => $request->suhu_akhir_emulsi,
-        'catatan'                    => $request->catatan,
-        'username_updated'           => $username_updated,
-        'premix'                     => json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE),
-        'non_premix'                 => json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE),
-    ];
+        $data = [
+            'date'             => $request->date,
+            'shift'            => $request->shift,
+            'nama_produk'      => $request->nama_produk,
+            'kode_produksi'    => $request->kode_produksi,
+            'waktu_mulai'      => $request->waktu_mulai,
+            'waktu_selesai'    => $request->waktu_selesai,
+            'daging'           => $request->daging,
+            'suhu_sebelum_grinding'    => json_encode($request->input('suhu_grinding_input', []), JSON_UNESCAPED_UNICODE),
+            'waktu_mixing_premix'        => $request->waktu_mixing_premix,
+            'waktu_bowl_cutter'          => $request->waktu_bowl_cutter,
+            'waktu_aging_emulsi_awal'    => $request->waktu_aging_emulsi_awal,
+            'waktu_aging_emulsi_akhir'   => $request->waktu_aging_emulsi_akhir,
+            'suhu_akhir_emulsi_gel'      => $request->suhu_akhir_emulsi_gel,
+            'waktu_mixing'               => $request->waktu_mixing,
+            'suhu_akhir_mixing'          => $request->suhu_akhir_mixing,
+            'suhu_akhir_emulsi'          => $request->suhu_akhir_emulsi,
+            'catatan'                    => $request->catatan,
+            'username_updated'           => $username_updated,
+            'premix'                     => json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE),
+            'non_premix'                 => json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE),
+        ];
 
-        $mincing->update($data);
+            $mincing->update($data);
 
-        return redirect()->route('mincing.index')->with('success', 'Data QC berhasil diperbarui');
+            return redirect()->route('mincing.index')->with('success', 'Data QC berhasil diperbarui');
     }
 
     public function edit(string $uuid)
@@ -263,7 +268,7 @@ public function store(Request $request)
         $mincing = Mincing::where('uuid', $uuid)->firstOrFail();
         $userPlant = Auth::user()->plant;
         $produks = Produk::where('plant', $userPlant)->get();
-
+    $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
     $premixData = !empty($mincing->premix)
     ? json_decode($mincing->premix, true)
     : [];
@@ -272,61 +277,61 @@ public function store(Request $request)
     ? json_decode($mincing->non_premix, true)
     : [];
 
-    return view('form.mincing.edit', compact('mincing', 'produks', 'premixData', 'nonPremixData'));
+    return view('form.mincing.edit', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials'));
 }
 
 public function edit_spv(Request $request, string $uuid)
-{
-    $mincing = Mincing::where('uuid', $uuid)->firstOrFail();
-    $request->validate([
-        'date'          => 'required|date',
-        'shift'         => 'required',
-        'nama_produk'   => 'required',
-        'kode_produksi' => 'required|string',
-        'waktu_mulai'   => 'required',
-        'waktu_selesai' => 'nullable',
-        'premix'        => 'nullable|array',
-        'non_premix'    => 'nullable|array',
-        'daging'        => 'nullable',
-        'suhu_sebelum_grinding'      => 'nullable|numeric',
-        'waktu_mixing_premix'        => 'nullable|integer',
-        'waktu_bowl_cutter'          => 'nullable|integer',
-        'waktu_aging_emulsi_awal'    => 'nullable',
-        'waktu_aging_emulsi_akhir'   => 'nullable',
-        'suhu_akhir_emulsi_gel'      => 'nullable|numeric',
-        'waktu_mixing'               => 'nullable|integer',
-        'suhu_akhir_mixing'          => 'nullable|numeric',
-        'suhu_akhir_emulsi'          => 'nullable|numeric',
-        'catatan'                    => 'nullable|string',
-    ]);
+    {
+        $mincing = Mincing::where('uuid', $uuid)->firstOrFail();
+        
+        $request->validate([
+            'date'                  => 'required|date',
+            'shift'                 => 'required',
+            'nama_produk'           => 'required',
+            'kode_produksi'         => 'required|string',
+            'waktu_mulai'           => 'required',
+            'waktu_selesai'         => 'nullable',
+            'premix'                => 'nullable|array',
+            'non_premix'            => 'nullable|array',
+            'daging'                => 'nullable',
+            'suhu_grinding_input'   => 'nullable|array',
+            'waktu_mixing_premix'        => 'nullable|integer', 
+            'waktu_bowl_cutter'          => 'nullable|integer', 
+            'waktu_aging_emulsi_awal'    => 'nullable',
+            'waktu_aging_emulsi_akhir'   => 'nullable',
+            'suhu_akhir_emulsi_gel'      => 'nullable|numeric',
+            'waktu_mixing'               => 'nullable|integer',
+            'suhu_akhir_mixing'          => 'nullable|numeric',
+            'suhu_akhir_emulsi'          => 'nullable|numeric',
+            'catatan'                    => 'nullable|string',
+        ]);
 
-    $data = [
-        'date'             => $request->date,
-        'shift'            => $request->shift,
-        'nama_produk'      => $request->nama_produk,
-        'kode_produksi'    => $request->kode_produksi,
-        'waktu_mulai'      => $request->waktu_mulai,
-        'waktu_selesai'    => $request->waktu_selesai,
-        'daging'           => $request->daging,
-        'suhu_sebelum_grinding'      => $request->suhu_sebelum_grinding,
-        'waktu_mixing_premix_awal'   => $request->waktu_mixing_premix_awal,
-        'waktu_mixing_premix_akhir'  => $request->waktu_mixing_premix_akhir,
-        'waktu_bowl_cutter_awal'     => $request->waktu_bowl_cutter_awal,
-        'waktu_bowl_cutter_akhir'    => $request->waktu_bowl_cutter_akhir,
-        'waktu_aging_emulsi_awal'    => $request->waktu_aging_emulsi_awal,
-        'waktu_aging_emulsi_akhir'   => $request->waktu_aging_emulsi_akhir,
-        'suhu_akhir_emulsi_gel'      => $request->suhu_akhir_emulsi_gel,
-        'waktu_mixing'               => $request->waktu_mixing,
-        'suhu_akhir_mixing'          => $request->suhu_akhir_mixing,
-        'suhu_akhir_emulsi'          => $request->suhu_akhir_emulsi,
-        'catatan'                    => $request->catatan,
-        'premix'                     => json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE),
-        'non_premix'                 => json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE),
-    ];
-    $mincing->update($data);
+        $data = [
+            'date'                     => $request->date,
+            'shift'                    => $request->shift,
+            'nama_produk'              => $request->nama_produk,
+            'kode_produksi'            => $request->kode_produksi,
+            'waktu_mulai'              => $request->waktu_mulai,
+            'waktu_selesai'            => $request->waktu_selesai,
+            'daging'                   => $request->daging,
+            'suhu_sebelum_grinding'    => json_encode($request->input('suhu_grinding_input', []), JSON_UNESCAPED_UNICODE),
+            'waktu_mixing_premix'        => $request->waktu_mixing_premix, // Diperbaiki dari _awal dan _akhir
+            'waktu_bowl_cutter'          => $request->waktu_bowl_cutter,   // Diperbaiki dari _awal dan _akhir
+            'waktu_aging_emulsi_awal'    => $request->waktu_aging_emulsi_awal,
+            'waktu_aging_emulsi_akhir'   => $request->waktu_aging_emulsi_akhir,
+            'suhu_akhir_emulsi_gel'      => $request->waktu_aging_emulsi_gel,
+            'waktu_mixing'               => $request->waktu_mixing,
+            'suhu_akhir_mixing'          => $request->suhu_akhir_mixing,
+            'suhu_akhir_emulsi'          => $request->suhu_akhir_emulsi,
+            'catatan'                    => $request->catatan,
+            'premix'                     => json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE),
+            'non_premix'                 => json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE),
+        ];
+        
+        $mincing->update($data);
 
-    return redirect()->route('mincing.index')->with('success', 'Data SPV berhasil diperbarui');
-}
+        return redirect()->route('mincing.index')->with('success', 'Data SPV berhasil diperbarui');
+    }
 
     public function verification(Request $request)
     {

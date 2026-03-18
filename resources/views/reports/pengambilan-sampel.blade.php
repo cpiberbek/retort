@@ -49,8 +49,8 @@
     <tr>
         <th class="center">Tgl Pengambilan</th>
         <th class="center">Jenis Sampel</th>
-        <th class="center">Nama Produk</th>
-        <th class="center">Kode Produksi</th>
+        <th class="center">Nama Varian</th>
+        <th class="center">Kode Batch</th>
         <th class="center">Keterangan</th>
         <th class="center">Paraf SPV</th>
     </tr>

@@ -53,7 +53,7 @@
                 PT Charoen Pokphand Indonesia<br>
                 <span style="font-weight: normal; font-size: 8px;">Food Division</span>
             </td>
-            <td width="40%" class="report-title">PEMUSNAHAN BARANG / PRODUK</td>
+            <td width="40%" class="report-title">PEMUSNAHAN BARANG / VARIAN</td>
             <td width="30%" style="text-align: right; font-size: 8px;">
                 <strong>Dicetak:</strong> {{ date('d-m-Y H:i') }}<br>
                 <strong>Oleh:</strong> {{ Auth::user()->username ?? 'System' }}
@@ -73,8 +73,8 @@
             <tr>
                 <th width="4%">No</th>
                 <th width="8%">Date</th>
-                <th width="15%">Nama Produk</th>
-                <th width="10%">Kode Produksi</th>
+                <th width="15%">Nama Varian</th>
+                <th width="10%">Kode Batch</th>
                 <th width="8%">Expired Date</th>
                 <th width="17%">Analisa</th>
                 <th width="17%">Keterangan</th>

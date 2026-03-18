@@ -106,8 +106,8 @@ $noSegel = $firstLoading ? $firstLoading->no_segel : '';
 <table width="100%" class="tbl-main small">
     <tr>
         <th width="4%" class="center">No</th>
-        <th width="26%" class="center">Nama Produk</th>
-        <th width="18%" class="center">Kode Produksi</th>
+        <th width="26%" class="center">Nama Varian</th>
+        <th width="18%" class="center">Kode Batch</th>
         <th width="18%" class="center">Kode Expired</th>
         <th width="10%" class="center">Jumlah</th>
         <th width="24%" class="center"> Keterangan </th>
@@ -162,7 +162,7 @@ $noSegel = $firstLoading ? $firstLoading->no_segel : '';
         <td>√ OK<br>X Tidak</td>
         <td>1 Bersih<br>2 Bocor<br>3 Debu</td>
         <td>4 Kering<br>5 Basah<br>6 Hama</td>
-        <td>7 Noda (Karat, cat, tinta)<br>8 Bekas oli di lantai, di dinding<br>9 Tidak ada produk non halal</td>
+        <td>7 Noda (Karat, cat, tinta)<br>8 Bekas oli di lantai, di dinding<br>9 Tidak ada varian non halal</td>
     </tr>
 </table>
 
