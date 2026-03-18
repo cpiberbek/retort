@@ -296,6 +296,7 @@
                 fetch(`{{ route('get.jumlah.box') }}?nama_produk=${encodeURIComponent(nama_produk)}&kode_produksi=${encodeURIComponent(kode_produksi)}`)
                 .then(response => response.json())
                 .then(data => {
+                console.log("Response dari getJumlahBox:", data);
                     jumlahBoxInput.value = data.total_box ?? 0;
                 })
                 .catch(err => {
