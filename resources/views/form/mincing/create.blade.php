@@ -22,11 +22,11 @@
                     <div class="card-body bg-light">
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Tanggal</label>
+                                <label class="form-label fw-semibold">Tanggal <span class="text-danger">*</span></label>
                                 <input type="date" name="date" id="dateInput" class="form-control" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Shift</label>
+                                <label class="form-label fw-semibold">Shift <span class="text-danger">*</span></label>
                                 <select name="shift" id="shiftInput" class="form-control" required>
                                     <option value="">-- Pilih Shift --</option>
                                     <option value="1">Shift 1</option>
@@ -37,7 +37,8 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Nama Varian</label>
+                                <label class="form-label fw-semibold">Nama Varian <span
+                                        class="text-danger">*</span></label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
                                     required>
                                     <option value="">-- Pilih Produk --</option>
@@ -47,7 +48,8 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Kode Batch</label>
+                                <label class="form-label fw-semibold">Kode Batch <span
+                                        class="text-danger">*</span></label>
                                 <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
                                     maxlength="10" required>
                                 <small id="kodeError" class="text-danger d-none"></small>
@@ -73,12 +75,18 @@
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td class="text-start fw-semibold">Waktu</td>
-                                        <td><input type="time" name="waktu_mulai"
-                                                class="form-control form-control-sm text-center"></td>
+                                        <td class="text-start fw-semibold">
+                                            Waktu Mulai <span class="text-danger">*</span>
+                                        </td>
+                                        <td>
+                                            <input type="time" name="waktu_mulai"
+                                                class="form-control form-control-sm text-center" required>
+                                        </td>
                                         <td class="fw-bold">s/d</td>
-                                        <td><input type="time" name="waktu_selesai"
-                                                class="form-control form-control-sm text-center"></td>
+                                        <td>
+                                            <input type="time" name="waktu_selesai"
+                                                class="form-control form-control-sm text-center">
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -105,10 +113,12 @@
                                 <tbody id="tbodyNonPremix">
                                     <tr>
                                         <td>
-                                            <select name="non_premix[0][nama_bahan]" class="form-control form-select-sm text-center" required>
+                                            <select name="non_premix[0][nama_bahan]"
+                                                class="form-control form-select-sm text-center">
                                                 <option value="" selected disabled>-- Pilih Bahan --</option>
                                                 @foreach($rawMaterials as $rm)
-                                                    <option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>
+                                                <option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}
+                                                </option>
                                                 @endforeach
                                             </select>
                                         </td>
@@ -174,14 +184,17 @@
                                 <tbody>
                                     {{-- BARIS SUHU SEBELUM GRINDING --}}
                                     <tr>
-                                        <td class="text-start fw-semibold bg-light" style="width: 25%;">Suhu (Sebelum Grinding)</td>
+                                        <td class="text-start fw-semibold bg-light" style="width: 25%;">Suhu (Sebelum
+                                            Grinding)</td>
                                         <td colspan="3" class="p-0">
-                                            {{-- Tabel anak untuk input dinamis agar tidak merusak lebar kolom utama --}}
+                                            {{-- Tabel anak untuk input dinamis agar tidak merusak lebar kolom utama
+                                            --}}
                                             <table class="table table-borderless mb-0">
                                                 <tbody id="tbodySuhuGrinding">
                                                     <tr>
                                                         <td style="width: 45%;">
-                                                            <select name="suhu_grinding_input[0][daging]" class="form-control form-select-sm">
+                                                            <select name="suhu_grinding_input[0][daging]"
+                                                                class="form-control form-select-sm">
                                                                 <option value="" selected disabled>Pilih Daging</option>
                                                                 <option value="BEEF">BEEF</option>
                                                                 <option value="SBB">SBB</option>
@@ -191,10 +204,14 @@
                                                             </select>
                                                         </td>
                                                         <td style="width: 45%;">
-                                                            <input type="number" name="suhu_grinding_input[0][suhu]" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
+                                                            <input type="number" name="suhu_grinding_input[0][suhu]"
+                                                                step="0.01"
+                                                                class="form-control form-control-sm text-center"
+                                                                placeholder="0.00">
                                                         </td>
                                                         <td style="width: 10%;">
-                                                            <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-danger hapusBarisSuhu">
                                                                 <i class="bi bi-trash"></i>
                                                             </button>
                                                         </td>
@@ -203,7 +220,8 @@
                                             </table>
                                             {{-- Tombol tambah diletakkan di bawah baris input --}}
                                             <div class="p-2 border-top bg-white">
-                                                <button type="button" class="btn btn-success btn-sm" id="tambahBarisSuhu">
+                                                <button type="button" class="btn btn-success btn-sm"
+                                                    id="tambahBarisSuhu">
                                                     <i class="bi bi-plus-circle"></i> Tambah Daging
                                                 </button>
                                             </div>
@@ -215,8 +233,12 @@
                                         <td class="text-start fw-semibold bg-light">Waktu Mixing Premix</td>
                                         <td colspan="3">
                                             <div class="input-group">
-                                                <input type="number" name="waktu_mixing_premix" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;">
-                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                                <input type="number" name="waktu_mixing_premix"
+                                                    class="form-control text-center m-0" placeholder="0" min="0"
+                                                    style="height: 31px; min-height: 31px; border-right: 0;">
+                                                <span
+                                                    class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
+                                                    style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -235,8 +257,12 @@
                                         <td class="text-start fw-semibold" style="width: 25%;">Waktu Bowl Cutter</td>
                                         <td colspan="3">
                                             <div class="input-group">
-                                                <input type="number" name="waktu_bowl_cutter" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;">
-                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                                <input type="number" name="waktu_bowl_cutter"
+                                                    class="form-control text-center m-0" placeholder="0" min="0"
+                                                    style="height: 31px; min-height: 31px; border-right: 0;">
+                                                <span
+                                                    class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
+                                                    style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -263,8 +289,12 @@
                                         <td class="text-start fw-semibold" style="width: 25%;">Waktu Mixing</td>
                                         <td>
                                             <div class="input-group">
-                                                <input type="number" name="waktu_mixing" class="form-control text-center m-0" placeholder="0" min="0" style="height: 31px; min-height: 31px; border-right: 0;">
-                                                <span class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center" style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                                <input type="number" name="waktu_mixing"
+                                                    class="form-control text-center m-0" placeholder="0" min="0"
+                                                    style="height: 31px; min-height: 31px; border-right: 0;">
+                                                <span
+                                                    class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
+                                                    style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
                                             </div>
                                         </td>
                                     </tr>
@@ -282,24 +312,24 @@
                             </table>
                         </div>
 
-                {{-- ===================== CATATAN ===================== --}}
-                <div class="card mb-4 border-0 shadow-sm">
-                    <div class="card-header bg-secondary text-white fw-bold">Catatan</div>
-                    <div class="card-body bg-light">
-                        <textarea name="catatan" class="form-control" rows="3"
-                            placeholder="Tambahkan catatan bila ada">{{ old('catatan', $data->catatan ?? '') }}</textarea>
-                    </div>
-                </div>
+                        {{-- ===================== CATATAN ===================== --}}
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-header bg-secondary text-white fw-bold">Catatan</div>
+                            <div class="card-body bg-light">
+                                <textarea name="catatan" class="form-control" rows="3"
+                                    placeholder="Tambahkan catatan bila ada">{{ old('catatan', $data->catatan ?? '') }}</textarea>
+                            </div>
+                        </div>
 
-                {{-- ===================== TOMBOL ===================== --}}
-                <div class="d-flex justify-content-between mt-3">
-                    <button type="submit" class="btn btn-success px-4">
-                        <i class="bi bi-save"></i> Simpan
-                    </button>
-                    <a href="{{ route('mincing.index') }}" class="btn btn-secondary px-4">
-                        <i class="bi bi-arrow-left"></i> Kembali
-                    </a>
-                </div>
+                        {{-- ===================== TOMBOL ===================== --}}
+                        <div class="d-flex justify-content-between mt-3">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-save"></i> Simpan
+                            </button>
+                            <a href="{{ route('mincing.index') }}" class="btn btn-secondary px-4">
+                                <i class="bi bi-arrow-left"></i> Kembali
+                            </a>
+                        </div>
 
             </form>
 
