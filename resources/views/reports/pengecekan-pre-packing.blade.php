@@ -61,13 +61,13 @@
 <table width="100%" class="tbl-main small">
     <tr>
         <th rowspan="2" class="center" style="width: 20px;">No</th>
-        <th colspan="2" class="center">Produk</th>
+        <th colspan="2" class="center">Varian</th>
         <th rowspan="2" class="center">No.<br>Conveyor</th>
-        <th rowspan="2" class="center">Suhu<br>Produk</th>
+        <th rowspan="2" class="center">Suhu<br>Varian</th>
         <th rowspan="2" class="center" style="width: 40px;">Bagian Badan Sosis</th>
         <th colspan="2" class="center">Air (%)</th>
         <th colspan="2" class="center">Minyak (%)</th>
-        <th colspan="2" class="center">Berat Produk per</th>
+        <th colspan="2" class="center">Berat Varian per</th>
         <th rowspan="2" class="center">PARAF<br>QC</th>
     </tr>
     <tr>

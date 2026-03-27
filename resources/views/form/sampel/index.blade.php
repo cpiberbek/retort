@@ -26,9 +26,16 @@
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
             @endcan
+            @can('can access export')
             <a href="{{ route('sampel.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('sampel.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -44,7 +51,7 @@
                         </span>
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch">
                 </div>
             </div>
             <div class="col-md-4">
@@ -56,7 +63,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
             <div class="col-md-4 align-self-end">
@@ -93,8 +100,8 @@
                             <th>NO.</th>
                             <th>Tanggal Pengambilan</th>
                             <th>Jenis Sampel</th>
-                            <th>Nama Produk</th>
-                            <th>Kode Produksi</th>
+                            <th>Nama Varian</th>
+                            <th>Kode Batch</th>
                             <th>Keterangan</th>
                             <th>QC</th>
                             <th>SPV</th>

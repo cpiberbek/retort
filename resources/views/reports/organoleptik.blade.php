@@ -55,7 +55,7 @@
     <tr>
         <td>Tanggal : {{ $dateFilter }}</td>
         <td>Shift : {{ $shiftFilter }}</td>
-        <td>Nama Produk : {{ $namaProdukFilter }}</td>
+        <td>Nama Varian : {{ $namaProdukFilter }}</td>
     </tr>
 </table>
 <br>
@@ -63,7 +63,7 @@
 {{-- TABLE --}}
 <table width="100%" class="tbl-main" cellpadding="1">
     <tr>
-        <th rowspan="2" class="center">Kode Produksi</th>
+        <th rowspan="2" class="center">Kode Batch</th>
         <th colspan="8" class="center">Sensori</th>
         <th rowspan="2" class="center">Hasil Score</th>
         <th rowspan="2" class="center">Release / Tidak Release</th>

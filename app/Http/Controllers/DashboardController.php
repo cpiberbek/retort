@@ -28,7 +28,7 @@ class DashboardController extends Controller
         if (in_array($userType, [4,8]) && !session()->has('selected_produksi')) {
             $produksi = User::where('type_user', 3)
                             ->where('plant', $userPlant)
-                            ->get();
+                            ->get(); 
 
             session(['pop_up_produksi' => $produksi]);
         }

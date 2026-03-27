@@ -63,18 +63,20 @@
 
                         {{-- AREA --}}
                         <div class="mb-3">
-                            <label class="form-label">Area</label>
-                            <select name="area" id="areaSelect" class="form-control @error('area') is-invalid @enderror selectpicker" required>
+                            <label class="form-label">Area - Sub Area</label>
+                            <select name="area" id="areaSelect" 
+                                    class="form-control select2 @error('area') is-invalid @enderror" 
+                                    required>
                                 <option value="">-- Pilih Area --</option>
                                 @foreach($areas as $a)
-                                <option value="{{ $a->area }}" data-bagian='@json(json_decode($a->bagian))'
-                                    {{ $sanitasi->area == $a->area ? 'selected' : '' }}>
-                                    {{ $a->area }}
-                                </option>
+                                    <option value="{{ $a->uuid }}" data-bagian='@json(json_decode($a->bagian))'
+                                        {{ $sanitasi->area == $a->uuid ? 'selected' : '' }}>
+                                        {{ $a->area }} - {{ $a->sub_area }}
+                                    </option>
                                 @endforeach
                             </select>
                             @error('area')
-                            <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
 
@@ -101,6 +103,8 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     $(document).ready(function(){

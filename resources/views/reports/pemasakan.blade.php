@@ -124,7 +124,7 @@
             </tr>
             <tr>
                 <td class="col-no"></td>
-                <td class="col-desc">Nama Produk</td>
+                <td class="col-desc">Nama Varian</td>
                 <td class="col-unit">-</td>
                 <td class="col-std">-</td>
                 <td class="col-res text-blue">{{ $item->nama_produk }}</td>
@@ -145,14 +145,14 @@
             </tr>
             <tr>
                 <td class="col-no"></td>
-                <td class="col-desc">Berat Produk</td>
+                <td class="col-desc">Berat Varian</td>
                 <td class="col-unit">gram</td>
                 <td class="col-std">-</td>
                 <td class="col-res text-blue">{{ $item->berat_produk }}</td>
             </tr>
             <tr>
                 <td class="col-no"></td>
-                <td class="col-desc">Suhu Produk</td>
+                <td class="col-desc">Suhu Varian</td>
                 <td class="col-unit">°C</td>
                 <td class="col-std">-</td>
                 <td class="col-res text-blue">{{ $item->suhu_produk }}</td>
@@ -395,7 +395,7 @@
             </tr>
             <tr>
                 <td class="col-no"></td>
-                <td class="col-desc">Suhu Produk Akhir</td>
+                <td class="col-desc">Suhu Varian Akhir</td>
                 <td class="col-unit">°C</td>
                 <td class="col-std">48 ± 2</td>
                 <td class="col-res text-blue">{{ $show('suhu_produk_akhir') }}</td>

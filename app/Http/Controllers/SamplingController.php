@@ -28,13 +28,13 @@ class SamplingController extends Controller
             ->orWhere('jenis_kemasan', 'like', "%{$search}%");
         });
     })
-    ->when($date, function ($query) use ($date) {
+     ->when($date, function ($query) use ($date) {
         $query->whereDate('date', $date);
     })
-    ->when($shift, function ($query) use ($shift) {
+     ->when($shift, function ($query) use ($shift) {
         $query->where('shift', $shift);
     })
-    ->when($nama_produk, function ($query) use ($nama_produk) {
+     ->when($nama_produk, function ($query) use ($nama_produk) {
         $query->where('nama_produk', $nama_produk);
     })
      ->orderBy('date', 'desc')
@@ -297,7 +297,7 @@ public function verification(Request $request)
     ->paginate(10)
     ->appends($request->all());
 
-    return view('form.sampling.verification', compact('data', 'search', 'date'));
+    return view('form.sampling.index', compact('data', 'search', 'date'));
 }
 
 public function updateVerification(Request $request, $uuid)
@@ -324,9 +324,32 @@ public function destroy($uuid)
 {
     $sampling = Sampling::where('uuid', $uuid)->firstOrFail();
     $sampling->delete();
+    return redirect()->route('sampling.index')->with('success', 'Sampling berhasil dihapus');
+}
 
-    return redirect()->route('sampling.verification')
-    ->with('success', 'Data Sampling Produk berhasil dihapus.');
+public function recyclebin()
+{
+    $sampling = Sampling::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.sampling.recyclebin', compact('sampling'));
+}
+public function restore($uuid)
+{
+    $sampling = Sampling::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $sampling->restore();
+
+    return redirect()->route('sampling.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $sampling = Sampling::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $sampling->forceDelete();
+
+    return redirect()->route('sampling.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 
 public function exportPdf(Request $request)
@@ -337,19 +360,19 @@ public function exportPdf(Request $request)
     $userPlant = Auth::user()->plant;
 
     $samplings = Sampling::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('shift', 'asc')
-        ->get();
+    ->where('plant', $userPlant)
+    ->when($date, function ($query) use ($date) {
+        $query->whereDate('date', $date);
+    })
+    ->when($shift, function ($query) use ($shift) {
+        $query->where('shift', $shift);
+    })
+    ->when($nama_produk, function ($query) use ($nama_produk) {
+        $query->where('nama_produk', $nama_produk);
+    })
+    ->orderBy('date', 'asc')
+    ->orderBy('shift', 'asc')
+    ->get();
 
     // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
     if (ob_get_length()) {

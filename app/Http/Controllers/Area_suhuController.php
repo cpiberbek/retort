@@ -42,6 +42,8 @@ class Area_suhuController extends Controller
             'standar_max' => 'required|numeric|gte:standar_min',
         ]);
 
+        
+
         $user = Auth::user();
 
         Area_suhu::create([
@@ -71,24 +73,28 @@ class Area_suhuController extends Controller
 
     public function update(Request $request, $uuid)
     {
+       
         $request->validate([
-          'area' => 'required|string',
-          'standar' => 'required|string'
-      ]);
+            'area' => 'required|string|max:255',
+            'standar_min' => 'required|numeric',
+            'standar_max' => 'required|numeric|gte:standar_min', 
+        ]);
 
         $userPlantUuid = Auth::user()->plant;
 
         $area_suhu = Area_suhu::where('uuid', $uuid)
-        ->where('plant', $userPlantUuid)
-        ->firstOrFail();
+            ->where('plant', $userPlantUuid)
+            ->firstOrFail();
 
         $area_suhu->update([
             'area' => $request->area,
-            'standar' => $request->standar
+            'standar_min' => $request->standar_min,
+            'standar_max' => $request->standar_max,
         ]);
 
-        return redirect()->route('area_suhu.index')->with('success', 'Area Hygiene berhasil diupdate');
-    }
+        return redirect()->route('area_suhu.index')
+                        ->with('success', 'Area Suhu berhasil diupdate');
+}
 
     public function destroy($uuid)
     {

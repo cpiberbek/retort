@@ -13,7 +13,7 @@ use TCPDF;
 
 class ChamberController extends Controller
 {
-    
+
     public function index(Request $request)
     {
         $search    = $request->input('search');
@@ -52,22 +52,22 @@ class ChamberController extends Controller
 
         // Ambil data tanpa pagination untuk PDF
         $items = Chamber::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('username', 'like', "%{$search}%")
-                      ->orWhere('nama_operator', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                ->orWhere('nama_operator', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -298,8 +298,31 @@ public function destroy($uuid)
 {
     $chamber = Chamber::where('uuid', $uuid)->firstOrFail();
     $chamber->delete();
+    return redirect()->route('chamber.index')->with('success', 'Chamber berhasil dihapus');
+}
 
-    return redirect()->route('chamber.index')
-    ->with('success', 'Verifikasi Timer Chamber  berhasil dihapus');
+public function recyclebin()
+{
+    $chamber = Chamber::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.chamber.recyclebin', compact('chamber'));
+}
+public function restore($uuid)
+{
+    $chamber = Chamber::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $chamber->restore();
+
+    return redirect()->route('chamber.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $chamber = Chamber::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $chamber->forceDelete();
+
+    return redirect()->route('chamber.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 }

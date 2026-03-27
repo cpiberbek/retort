@@ -12,39 +12,39 @@ class SuhuController extends Controller
 {
     public function index(Request $request)
     {
-       $search    = $request->input('search');
-       $date      = $request->input('date');
-       $shift     = $request->input('shift');
-       $userPlant  = Auth::user()->plant;
-       $area_suhus = Area_suhu::where('plant', $userPlant)->get();
+     $search    = $request->input('search');
+     $date      = $request->input('date');
+     $shift     = $request->input('shift');
+     $userPlant  = Auth::user()->plant;
+     $area_suhus = Area_suhu::where('plant', $userPlant)->get();
 
-       $data = Suhu::query()
-       ->where('plant', $userPlant)
-       ->when($search, function ($query) use ($search) {
+     $data = Suhu::query()
+     ->where('plant', $userPlant)
+     ->when($search, function ($query) use ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%");
         });
     })
-       ->when($date, function ($query) use ($date) {
+     ->when($date, function ($query) use ($date) {
         $query->whereDate('date', $date);
     })
-       ->when($shift, function ($query) use ($shift) { 
+     ->when($shift, function ($query) use ($shift) { 
         $query->where('shift', $shift);
     })
-       ->orderBy('date', 'desc')
-       ->orderBy('created_at', 'desc')
-       ->paginate(10)
-       ->appends($request->all());
+     ->orderBy('date', 'desc')
+     ->orderBy('created_at', 'desc')
+     ->paginate(10)
+     ->appends($request->all());
 
-       return view('form.suhu.index', compact('data', 'search', 'date', 'shift', 'area_suhus'));
-   }
+     return view('form.suhu.index', compact('data', 'search', 'date', 'shift', 'area_suhus'));
+ }
 
-   public function create()
-   {
+ public function create()
+ {
     $userPlant = Auth::user()->plant;
     $area_suhus = Area_suhu::where('plant', $userPlant)
     ->orderBy('area')
-    ->get(['area', 'standar']);
+    ->get(['area', 'standar_min', 'standar_max']);
 
     $today = now()->toDateString();
     $existing = Suhu::where('date', $today)
@@ -80,12 +80,23 @@ public function store(Request $request)
     $hasil_terstruktur = [];
 
     foreach ($hasil_input as $id => $item) {
+        $nilai_mentah = isset($item['nilai']) ? trim($item['nilai']) : '';
+        
+        // --- LOGIKA BARU YANG BENAR ---
+        if ($nilai_mentah === '') {
+            $nilai_final = null; // Jika kosong, simpan null
+        } elseif ($nilai_mentah === '-') {
+            $nilai_final = '-';  // Jika strip, simpan string '-'
+        } else {
+            // Jika angka, ubah koma jadi titik lalu cast ke float
+            $nilai_final = (float) str_replace(',', '.', $nilai_mentah);
+        }
+
         $hasil_terstruktur[] = [
             'area'  => $item['area'] ?? '',
-            'nilai' => $item['nilai'] ?? null,
+            'nilai' => $nilai_final,
         ];
     }
-
     $area_order = Area_suhu::where('plant', $userPlant)
     ->orderBy('area')
     ->pluck('area')
@@ -112,19 +123,19 @@ public function store(Request $request)
 
 public function update(string $uuid)
 {
- $suhu = Suhu::where('uuid', $uuid)->firstOrFail();
- $userPlant = Auth::user()->plant;
- $area_suhus = Area_suhu::where('plant', $userPlant)
- ->orderBy('area')
- ->get();
+   $suhu = Suhu::where('uuid', $uuid)->firstOrFail();
+   $userPlant = Auth::user()->plant;
+   $area_suhus = Area_suhu::where('plant', $userPlant)
+   ->orderBy('area')
+   ->get();
 
- $raw = !empty($suhu->hasil_suhu) ? json_decode($suhu->hasil_suhu, true) : [];
- $suhuData = collect($raw)->mapWithKeys(function($item){
+   $raw = !empty($suhu->hasil_suhu) ? json_decode($suhu->hasil_suhu, true) : [];
+   $suhuData = collect($raw)->mapWithKeys(function($item){
     $key = $item['area'] ?? null;
     return [$key => $item];
 })->toArray();
 
- return view('form.suhu.update', compact('suhu', 'suhuData', 'area_suhus'));
+   return view('form.suhu.update', compact('suhu', 'suhuData', 'area_suhus'));
 }
 
 public function update_qc(Request $request, string $uuid)
@@ -145,9 +156,21 @@ public function update_qc(Request $request, string $uuid)
     $hasil_terstruktur = [];
 
     foreach ($hasil_input as $id => $item) {
+        $nilai_mentah = isset($item['nilai']) ? trim($item['nilai']) : '';
+        
+        // --- LOGIKA BARU YANG BENAR ---
+        if ($nilai_mentah === '') {
+            $nilai_final = null; // Jika kosong, simpan null
+        } elseif ($nilai_mentah === '-') {
+            $nilai_final = '-';  // Jika strip, simpan string '-'
+        } else {
+            // Jika angka, ubah koma jadi titik lalu cast ke float
+            $nilai_final = (float) str_replace(',', '.', $nilai_mentah);
+        }
+
         $hasil_terstruktur[] = [
             'area'  => $item['area'] ?? '',
-            'nilai' => $item['nilai'] ?? null,
+            'nilai' => $nilai_final,
         ];
     }
 
@@ -210,9 +233,21 @@ public function edit_spv(Request $request, string $uuid)
     $hasil_terstruktur = [];
 
     foreach ($hasil_input as $id => $item) {
+        $nilai_mentah = isset($item['nilai']) ? trim($item['nilai']) : '';
+        
+        // --- LOGIKA BARU YANG BENAR ---
+        if ($nilai_mentah === '') {
+            $nilai_final = null; // Jika kosong, simpan null
+        } elseif ($nilai_mentah === '-') {
+            $nilai_final = '-';  // Jika strip, simpan string '-'
+        } else {
+            // Jika angka, ubah koma jadi titik lalu cast ke float
+            $nilai_final = (float) str_replace(',', '.', $nilai_mentah);
+        }
+
         $hasil_terstruktur[] = [
             'area'  => $item['area'] ?? '',
-            'nilai' => $item['nilai'] ?? null,
+            'nilai' => $nilai_final,
         ];
     }
 
@@ -285,63 +320,86 @@ public function updateVerification(Request $request, $uuid)
     ->with('success', 'Status Verifikasi Pemeriksaan Suhu dan RH berhasil diperbarui.');
 }
 
-    public function destroy($uuid)
-    {
-        $suhu = Suhu::where('uuid', $uuid)->firstOrFail();
-        $suhu->delete();
+public function destroy($uuid)
+{
+    $suhu = Suhu::where('uuid', $uuid)->firstOrFail();
+    $suhu->delete();
+    return redirect()->route('suhu.index')->with('success', 'Suhu berhasil dihapus');
+}
 
-        return redirect()->route('suhu.index')
-        ->with('success', 'Pemeriksaan Suhu dan RH berhasil dihapus');
-    }
+public function recyclebin()
+{
+    $suhu = Suhu::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
 
-    public function exportPdf(Request $request)
-    {
+    return view('form.suhu.recyclebin', compact('suhu'));
+}
+public function restore($uuid)
+{
+    $suhu = Suhu::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $suhu->restore();
+
+    return redirect()->route('suhu.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $suhu = Suhu::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $suhu->forceDelete();
+
+    return redirect()->route('suhu.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
+}
+
+public function exportPdf(Request $request)
+{
         // 1. Ambil Data
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
-        $userPlant = Auth::user()->plant;
+    $date      = $request->input('date');
+    $shift     = $request->input('shift');
+    $userPlant = Auth::user()->plant;
 
-        $items = Suhu::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('pukul', 'asc')
-            ->get();
+    $items = Suhu::query()
+    ->where('plant', $userPlant)
+    ->when($date, function ($query) use ($date) {
+        $query->whereDate('date', $date);
+    })
+    ->when($shift, function ($query) use ($shift) {
+        $query->where('shift', $shift);
+    })
+    ->orderBy('pukul', 'asc')
+    ->get();
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
 
         // 2. Setup PDF (Landscape, A4)
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+    $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
         // Metadata
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Pemeriksaan Suhu dan RH');
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Pemeriksaan Suhu dan RH');
 
         // Hilangkan Header/Footer Bawaan
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
 
         // Set Margin
-        $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(TRUE, 5);
 
         // Set Font Default
-        $pdf->SetFont('helvetica', '', 7);
+    $pdf->SetFont('helvetica', '', 7);
 
-        $pdf->AddPage();
+    $pdf->AddPage();
 
         // 3. Render
-        $html = view('reports.pemeriksaan-suhu-rh', compact('items', 'request'))->render();
-        $pdf->writeHTML($html, true, false, true, false, '');
+    $html = view('reports.pemeriksaan-suhu-rh', compact('items', 'request'))->render();
+    $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = 'Pemeriksaan_Suhu_RH_' . date('d-m-Y_His') . '.pdf';
-        $pdf->Output($filename, 'I');
-        exit();
-    }
+    $filename = 'Pemeriksaan_Suhu_RH_' . date('d-m-Y_His') . '.pdf';
+    $pdf->Output($filename, 'I');
+    exit();
+}
 }

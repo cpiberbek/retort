@@ -158,7 +158,7 @@
                     <button type="submit" class="btn btn-success">
                         <i class="bi bi-save"></i> Update
                     </button>
-                    <a href="{{ route('chamber.verification') }}" class="btn btn-secondary">
+                    <a href="{{ route('chamber.index') }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Batal
                     </a>
                 </div>

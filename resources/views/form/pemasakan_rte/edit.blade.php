@@ -39,9 +39,9 @@
                         {{-- Baris 2: Produk & Chamber --}}
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}"
                                         {{ old('nama_produk', $pemasakan_rte->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
@@ -75,7 +75,7 @@
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Berat Produk (gram)</label>
+                                <label class="form-label">Berat Varian (gram)</label>
                                 <input type="number" name="berat_produk" id="berat_produk"
                                 class="form-control" step="0.1"
                                 value="{{ old('berat_produk', $pemasakan_rte->berat_produk) }}" required>
@@ -85,7 +85,7 @@
                         {{-- Baris 4: Suhu Produk & Jumlah Tray --}}
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Suhu Produk (°C)</label><br>
+                                <label class="form-label">Suhu Varian (°C)</label><br>
                                 <small class="text-danger">Standar: 19 ± 1 °C</small>
                                 <input type="number" name="suhu_produk" id="suhu_produk"
                                 class="form-control" step="0.1"
@@ -475,7 +475,7 @@
                             </thead>
                             <tbody>
                                 @foreach([
-                                ['field'=>'suhu_produk_akhir','label'=>'Suhu Produk Akhir','satuan'=>'°C'],
+                                ['field'=>'suhu_produk_akhir','label'=>'Suhu Varian Akhir','satuan'=>'°C'],
                                 ['field'=>'sobek_seal','label'=>'Sobek Seal','satuan'=>''],
                                 ] as $item)
                                 <tr>

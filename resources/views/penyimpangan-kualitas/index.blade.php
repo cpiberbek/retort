@@ -16,12 +16,21 @@
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
         <h2 class="h4">Daftar Penyimpangan Kualitas</h2>
         <div class="btn-group" role="group">
+            @can('can access add button')
             <a href="{{ route('penyimpangan-kualitas.create') }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
+            @endcan
+            @can('can access export')
             <a href="{{ route('penyimpangan-kualitas.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('penyimpangan-kualitas.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -49,7 +58,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="filter_search" class="form-control border-start-0 ps-0 shadow-none filter-input"
-                    placeholder="Cari Nomor, Produk, Lot..." value="{{ request('search') }}"
+                    placeholder="Cari Nomor, Varian, Lot..." value="{{ request('search') }}"
                     style="border-color: #ced4da; font-size: 0.95rem;">
                 </div>
             </div>
@@ -71,7 +80,7 @@
                             <th style="width: 5%;">No</th>
                             <th style="width: 10%;">Tanggal</th>
                             <th style="width: 15%;">Nomor</th>
-                            <th style="width: 20%;">Nama Produk</th>
+                            <th style="width: 20%;">Nama Varian</th>
                             <th style="width: 15%;">Lot/Kode</th>
                             <th style="width: 10%;">Status Diketahui</th>
                             <th style="width: 10%;">Status Disetujui</th>
@@ -137,52 +146,52 @@
 
                                 {{-- Detail --}}
                                 <a href="{{ route('penyimpangan-kualitas.show', $item->id) }}"
-                                 class="btn btn-outline-primary btn-sm"
-                                 title="Detail">
-                                 <i class="bi bi-eye me-1"></i> Detail
-                             </a>
+                                   class="btn btn-outline-primary btn-sm"
+                                   title="Detail">
+                                   <i class="bi bi-eye me-1"></i> Detail
+                               </a>
 
-                             {{-- Edit --}}
-                             <a href="{{ route('penyimpangan-kualitas.edit', $item->id) }}"
-                                 class="btn btn-warning btn-sm text-white"
-                                 title="Edit">
-                                 <i class="bi bi-pencil-square me-1"></i> Edit
-                             </a>
+                               {{-- Edit --}}
+                               <a href="{{ route('penyimpangan-kualitas.edit', $item->id) }}"
+                                   class="btn btn-warning btn-sm text-white"
+                                   title="Edit">
+                                   <i class="bi bi-pencil-square me-1"></i> Edit
+                               </a>
 
-                             {{-- Update / Lengkapi --}}
-                             <a href="{{ route('penyimpangan-kualitas.update_form', $item->id) }}"
-                                 class="btn btn-success btn-sm"
-                                 title="Update / Lengkapi Data">
-                                 <i class="bi bi-pencil me-1"></i> Update
-                             </a>
+                               {{-- Update / Lengkapi --}}
+                               <a href="{{ route('penyimpangan-kualitas.update_form', $item->id) }}"
+                                   class="btn btn-success btn-sm"
+                                   title="Update / Lengkapi Data">
+                                   <i class="bi bi-pencil me-1"></i> Update
+                               </a>
 
-                             {{-- Hapus --}}
-                             <form action="{{ route('penyimpangan-kualitas.destroy', $item->id) }}"
-                              method="POST"
-                              onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
-                              @csrf
-                              @method('DELETE')
-                              <button type="submit"
-                              class="btn btn-danger btn-sm"
-                              title="Hapus">
-                              <i class="bi bi-trash me-1"></i> Hapus
-                          </button>
-                      </form>
+                               {{-- Hapus --}}
+                               <form action="{{ route('penyimpangan-kualitas.destroy', $item->id) }}"
+                                  method="POST"
+                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
+                                  @csrf
+                                  @method('DELETE')
+                                  <button type="submit"
+                                  class="btn btn-danger btn-sm"
+                                  title="Hapus">
+                                  <i class="bi bi-trash me-1"></i> Hapus
+                              </button>
+                          </form>
 
-                  </div>
-              </td>
-          </tr>
-          @empty
-          <tr>
-            <td colspan="8" class="text-center py-5 text-muted">
-                <div class="mb-2"><i class="bi bi-clipboard-x display-4 text-secondary opacity-50"></i></div>
-                <h6 class="fw-bold">Data tidak ditemukan</h6>
-                <p class="small mb-0">Silakan tambahkan data baru atau ubah kata kunci pencarian.</p>
-            </td>
-        </tr>
-        @endforelse
-    </tbody>
-</table>
+                      </div>
+                  </td>
+              </tr>
+              @empty
+              <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <div class="mb-2"><i class="bi bi-clipboard-x display-4 text-secondary opacity-50"></i></div>
+                    <h6 class="fw-bold">Data tidak ditemukan</h6>
+                    <p class="small mb-0">Silakan tambahkan data baru atau ubah kata kunci pencarian.</p>
+                </td>
+            </tr>
+            @endforelse
+        </tbody>
+    </table>
 </div>
 </div>
 </div>

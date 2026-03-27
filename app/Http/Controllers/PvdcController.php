@@ -150,9 +150,9 @@ class PvdcController extends Controller
             }
             // Paksa detail jadi array numerik (buang key aneh 1.3333 dst)
             $details = is_array($mesinRow['detail'])
-                ? array_values($mesinRow['detail'])
-                : [];
-                
+            ? array_values($mesinRow['detail'])
+            : [];
+
             foreach ($details as &$detailRow) {
                 if (empty($detailRow['batch'])) {
                     continue;
@@ -262,7 +262,7 @@ class PvdcController extends Controller
 
         $pvdc->update($data);
 
-        return redirect()->route('pvdc.verification')->with('success', 'Data No. Lot PVDC berhasil diperbarui');
+        return redirect()->route('pvdc.index')->with('success', 'Data No. Lot PVDC berhasil diperbarui');
     }
 
     public function verification(Request $request)
@@ -290,7 +290,7 @@ class PvdcController extends Controller
         ->paginate(10)
         ->appends($request->all());
 
-        return view('form.pvdc.verification', compact('data', 'search', 'date'));
+        return view('form.pvdc.index', compact('data', 'search', 'date'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -310,7 +310,7 @@ class PvdcController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('pvdc.verification')
+        return redirect()->route('pvdc.index')
         ->with('success', 'Status Verifikasi Data No. Lot PVDC berhasil diperbarui.');
     }
 
@@ -318,11 +318,33 @@ class PvdcController extends Controller
     {
         $pvdc = Pvdc::where('uuid', $uuid)->firstOrFail();
         $pvdc->delete();
-
-        return redirect()->route('pvdc.verification')
-        ->with('success', 'Data No. Lot PVDC berhasil dihapus');
+        return redirect()->route('pvdc.index')->with('success', 'Pvdc berhasil dihapus');
     }
 
+    public function recyclebin()
+    {
+        $pvdc = Pvdc::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.pvdc.recyclebin', compact('pvdc'));
+    }
+    public function restore($uuid)
+    {
+        $pvdc = Pvdc::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $pvdc->restore();
+
+        return redirect()->route('pvdc.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $pvdc = Pvdc::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $pvdc->forceDelete();
+
+        return redirect()->route('pvdc.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
     public function exportPdf(Request $request)
     {
         // 1. Ambil Parameter Filter
@@ -333,24 +355,24 @@ class PvdcController extends Controller
 
         // 2. Query Data Header
         $headers = Pvdc::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('username', 'like', "%{$search}%")
-                      ->orWhere('nama_produk', 'like', "%{$search}%")
-                      ->orWhere('nama_supplier', 'like', "%{$search}%")
-                      ->orWhere('catatan', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                ->orWhere('nama_produk', 'like', "%{$search}%")
+                ->orWhere('nama_supplier', 'like', "%{$search}%")
+                ->orWhere('catatan', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         // 3. TRANSFORMASI DATA (PENTING!)
         // Karena detail ada di dalam JSON, kita harus "memecah" (flatten) data 
@@ -383,26 +405,26 @@ class PvdcController extends Controller
                     // Cari Kode Batch (Mincing) jika perlu (mirip logic di update)
                     $kodeProduksi = $row['batch'] ?? '-';
                     if (!empty($row['batch'])) {
-                         $mincing = Mincing::where('uuid', $row['batch'])->first();
-                         if ($mincing) {
-                             $kodeProduksi = $mincing->kode_produksi;
-                         }
-                    }
+                       $mincing = Mincing::where('uuid', $row['batch'])->first();
+                       if ($mincing) {
+                           $kodeProduksi = $mincing->kode_produksi;
+                       }
+                   }
 
                     // Push ke collection items sebagai object
-                    $items->push((object) [
+                   $items->push((object) [
                         // Data Header
-                        'date' => $header->date,
-                        'shift' => $header->shift,
-                        'nama_produk' => $header->nama_produk,
-                        'username' => $header->username,
-                        'catatan' => $header->catatan,
-                        'status_spv' => $header->status_spv,
-                        
+                    'date' => $header->date,
+                    'shift' => $header->shift,
+                    'nama_produk' => $header->nama_produk,
+                    'username' => $header->username,
+                    'catatan' => $header->catatan,
+                    'status_spv' => $header->status_spv,
+
                         // Data Detail (Hasil Decode JSON)
-                        'kode_mesin' => $namaMesin,
-                        'kode_produksi' => $kodeProduksi,
-                        'no_lot' => $row['no_lot'] ?? '-',
+                    'kode_mesin' => $namaMesin,
+                    'kode_produksi' => $kodeProduksi,
+                    'no_lot' => $row['no_lot'] ?? '-',
                         'jam_mulai' => $row['waktu'] ?? '-', // Di blade pakai jam_mulai
                         
                         // Data Teknis (Sesuaikan dengan key di JSON Anda jika ada)
@@ -414,14 +436,14 @@ class PvdcController extends Controller
                         'kekuatan_seal' => $row['seal'] ?? null,
                         'diameter_klip' => $row['klip'] ?? null,
                     ]);
-                }
-            }
-        }
+               }
+           }
+       }
 
         // 4. Bersihkan Output Buffer
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
+       if (ob_get_length()) {
+        ob_end_clean();
+    }
 
         // 5. Setup TCPDF
         $pdf = new TCPDF('L', PDF_UNIT, 'LEGAL', true, 'UTF-8', false); // Landscape agar muat banyak kolom
@@ -443,6 +465,6 @@ class PvdcController extends Controller
         $pdf->Output('Laporan_PVDC_' . date('Ymd_His') . '.pdf', 'I');
         exit();
     }
-       
+
 
 }

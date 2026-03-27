@@ -61,8 +61,8 @@
                 <th width="6%" rowspan="2">Tgl</th>
                 <th width="3%" rowspan="2">Shf</th>
                 <th width="4%" rowspan="2">Plt</th>
-                <th width="10%" rowspan="2">Produk</th>
-                <th width="7%" rowspan="2">Kode<br>Prod</th>
+                <th width="10%" rowspan="2">Varian</th>
+                <th width="7%" rowspan="2">Kode<br>Batch</th>
                 <th width="6%" rowspan="2">Exp</th>
                 
                 {{-- Group: Pemeriksaan Cartoning --}}
@@ -71,8 +71,8 @@
                 <th width="5%" rowspan="2">Isi<br>/Box</th>
                 <th width="4%" rowspan="2">Jml<br>Box</th>
                 
-                {{-- Group: Status Produk --}}
-                <th width="12%" colspan="3">Status Produk</th>
+                {{-- Group: Status Varian --}}
+                <th width="12%" colspan="3">Status Varian</th>
                 
                 <th width="6%" rowspan="2">Item<br>Mutu</th>
                 <th width="7%" rowspan="2">Catatan</th>
@@ -115,7 +115,7 @@
                 <td width="5%">{{ $item->isi_per_box }}</td>
                 <td width="4%">{{ $item->jumlah_box }}</td>
                 
-                {{-- Status Produk --}}
+                {{-- Status Varian --}}
                 <td width="4%">{{ $item->release }}</td>
                 <td width="4%">{{ $item->reject }}</td>
                 <td width="4%">{{ $item->hold }}</td>

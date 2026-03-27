@@ -203,7 +203,7 @@ public function verification(Request $request)
     ->paginate(10)
     ->appends($request->all());
 
-    return view('form.prepacking.verification', compact('data', 'search', 'date'));
+    return view('form.prepacking.index', compact('data', 'search', 'date'));
 }
 
 public function updateVerification(Request $request, $uuid)
@@ -230,9 +230,32 @@ public function destroy($uuid)
 {
     $prepacking = Prepacking::where('uuid', $uuid)->firstOrFail();
     $prepacking->delete();
+    return redirect()->route('prepacking.index')->with('success', 'Prepacking berhasil dihapus');
+}
 
-    return redirect()->route('prepacking.verification')
-    ->with('success', 'Pengecekan Pre Packing berhasil dihapus');
+public function recyclebin()
+{
+    $prepacking = Prepacking::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.prepacking.recyclebin', compact('prepacking'));
+}
+public function restore($uuid)
+{
+    $prepacking = Prepacking::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $prepacking->restore();
+
+    return redirect()->route('prepacking.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $prepacking = Prepacking::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $prepacking->forceDelete();
+
+    return redirect()->route('prepacking.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 
 public function exportPdf(Request $request)
@@ -241,13 +264,13 @@ public function exportPdf(Request $request)
     $userPlant = Auth::user()->plant;
 
     $prepackings = Prepacking::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('created_at', 'asc')
-        ->get();
+    ->where('plant', $userPlant)
+    ->when($date, function ($query) use ($date) {
+        $query->whereDate('date', $date);
+    })
+    ->orderBy('date', 'asc')
+    ->orderBy('created_at', 'asc')
+    ->get();
 
     // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
     if (ob_get_length()) {

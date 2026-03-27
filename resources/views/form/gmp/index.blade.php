@@ -21,11 +21,16 @@
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
         <h2 class="h4">Data Pemeriksaan Personal Hygiene dan Kesehatan Karyawan</h2>
         <div class="btn-group" role="group">
-            @if ($type_user == 0  || $type_user == 2)
+            @can('can access add button')
             <a href="{{ route('gmp.create') }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
-            @endif
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('gmp.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -292,7 +297,7 @@
         <div class="mt-3">
             {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
         </div>
-        @if ($type_user == 0 || $type_user == 2)
+        @can('can access export')
         <div class="card shadow-sm mb-3">
             <div class="card-body">
                 <form action="{{ route('gmp.export') }}" method="GET" class="row g-2 align-items-center">
@@ -335,7 +340,7 @@
                 </form>
             </div>
         </div>
-        @endif
+        @endcan
 
     </div>
 </div>

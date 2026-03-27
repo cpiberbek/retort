@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Labelisasi_pvdc extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'labelisasi_pvdcs';
 
@@ -31,9 +32,9 @@ class Labelisasi_pvdc extends Model
 
         $items = $this->labelisasi ?? [];
 
-if (!is_array($items)) {
-    $items = json_decode($items, true) ?: [];
-}
+        if (!is_array($items)) {
+            $items = json_decode($items, true) ?: [];
+        }
 
         return collect($items)->map(function ($item) {
             $mincing = Mincing::where('uuid', $item['kode_batch'] ?? null)->first();
@@ -47,5 +48,7 @@ if (!is_array($items)) {
             ];
         });
     }
+
+    protected $dates = ['deleted_at'];
 
 }

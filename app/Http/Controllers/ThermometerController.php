@@ -214,6 +214,31 @@ class ThermometerController extends Controller
         ->with('success', '🗑️ Peneraan Thermometer berhasil dihapus.');
     }
 
+    public function recyclebin()
+    {
+        $thermometer = Thermometer::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.thermometer.recyclebin', compact('thermometer'));
+    }
+    public function restore($uuid)
+    {
+        $thermometer = Thermometer::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $thermometer->restore();
+
+        return redirect()->route('thermometer.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $thermometer = Thermometer::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $thermometer->forceDelete();
+
+        return redirect()->route('thermometer.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+    
     public function exportPdf(Request $request)
     {
         // 1. Ambil Data
@@ -222,16 +247,16 @@ class ThermometerController extends Controller
         $userPlant = Auth::user()->plant;
 
         $items = Thermometer::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();

@@ -53,23 +53,23 @@ class StuffingController extends Controller
         $userPlant = Auth::user()->plant;
 
         $items = Stuffing::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
-                      ->orWhere('kode_produksi', 'like', "%{$search}%")
-                      ->orWhere('kode_mesin', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                ->orWhere('kode_produksi', 'like', "%{$search}%")
+                ->orWhere('kode_mesin', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -145,7 +145,6 @@ class StuffingController extends Controller
             'kecepatan_stuffing' => 'nullable|numeric',
             'panjang_pcs'     => 'nullable|numeric',
             'berat_pcs'       => 'nullable|numeric',
-            'cek_vakum'       => 'nullable|string',
             'kebersihan_seal' => 'nullable|string',
             'kekuatan_seal'   => 'nullable|string',
             'diameter_klip'   => 'nullable|numeric',
@@ -202,7 +201,6 @@ class StuffingController extends Controller
             'kecepatan_stuffing' => 'nullable|numeric',
             'panjang_pcs'     => 'nullable|numeric',
             'berat_pcs'       => 'nullable|numeric',
-            'cek_vakum'       => 'nullable|string',
             'kebersihan_seal' => 'nullable|string',
             'kekuatan_seal'   => 'nullable|string',
             'diameter_klip'   => 'nullable|numeric',
@@ -224,7 +222,6 @@ class StuffingController extends Controller
             'kecepatan_stuffing' => $request->kecepatan_stuffing,
             'panjang_pcs' => $request->panjang_pcs,
             'berat_pcs' => $request->berat_pcs,
-            'cek_vakum' => $request->cek_vakum,
             'kebersihan_seal' => $request->kebersihan_seal,
             'kekuatan_seal' => $request->kekuatan_seal,
             'diameter_klip' => $request->diameter_klip,
@@ -269,7 +266,6 @@ class StuffingController extends Controller
             'kecepatan_stuffing' => 'nullable|numeric',
             'panjang_pcs'     => 'nullable|numeric',
             'berat_pcs'       => 'nullable|numeric',
-            'cek_vakum'       => 'nullable|string',
             'kebersihan_seal' => 'nullable|string',
             'kekuatan_seal'   => 'nullable|string',
             'diameter_klip'   => 'nullable|numeric',
@@ -291,7 +287,6 @@ class StuffingController extends Controller
             'kecepatan_stuffing' => $request->kecepatan_stuffing,
             'panjang_pcs' => $request->panjang_pcs,
             'berat_pcs' => $request->berat_pcs,
-            'cek_vakum' => $request->cek_vakum,
             'kebersihan_seal' => $request->kebersihan_seal,
             'kekuatan_seal' => $request->kekuatan_seal,
             'diameter_klip' => $request->diameter_klip,
@@ -307,13 +302,13 @@ class StuffingController extends Controller
 
     public function verification(Request $request)
     {
-       $search     = $request->input('search');
-       $date       = $request->input('date');
-       $userPlant  = Auth::user()->plant;
+     $search     = $request->input('search');
+     $date       = $request->input('date');
+     $userPlant  = Auth::user()->plant;
 
-       $data = Stuffing::query()
-       ->where('plant', $userPlant) 
-       ->when($search, function ($query) use ($search) {
+     $data = Stuffing::query()
+     ->where('plant', $userPlant) 
+     ->when($search, function ($query) use ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%")
             ->orWhere('nama_produk', 'like', "%{$search}%")
@@ -321,19 +316,19 @@ class StuffingController extends Controller
             ->orWhere('kode_mesin', 'like', "%{$search}%");
         });
     })
-       ->when($date, function ($query) use ($date) {
+     ->when($date, function ($query) use ($date) {
         $query->whereDate('date', $date);
     })
-       ->orderBy('date', 'desc')
-       ->orderBy('created_at', 'desc')
-       ->paginate(10)
-       ->appends($request->all());
+     ->orderBy('date', 'desc')
+     ->orderBy('created_at', 'desc')
+     ->paginate(10)
+     ->appends($request->all());
 
-       return view('form.stuffing.verification', compact('data', 'search', 'date'));
-   }
+     return view('form.stuffing.index', compact('data', 'search', 'date'));
+ }
 
-   public function updateVerification(Request $request, $uuid)
-   {
+ public function updateVerification(Request $request, $uuid)
+ {
     $request->validate([
         'status_spv'   => 'required|in:1,2', 
         'catatan_spv'  => 'nullable|string|max:255',
@@ -356,7 +351,7 @@ class StuffingController extends Controller
     ]);
 
     return redirect()
-    ->route('stuffing.verification')
+    ->route('stuffing.index')
     ->with('success', 'Verifikasi berhasil disimpan.');
 }
 
@@ -364,8 +359,33 @@ public function destroy($uuid)
 {
     $stuffing = Stuffing::where('uuid', $uuid)->firstOrFail();
     $stuffing->delete();
+    return redirect()->route('stuffing.index')->with('success', 'Stuffing berhasil dihapus');
+}
 
-    return redirect()->route('stuffing.index')
-    ->with('success', 'Pemeriksaan Stuffing Sosis Retort berhasil dihapus');
+public function recyclebin()
+{
+    $stuffing = Stuffing::onlyTrashed()
+    ->with('mincing')
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.stuffing.recyclebin', compact('stuffing'));
+}
+
+public function restore($uuid)
+{
+    $stuffing = Stuffing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $stuffing->restore();
+
+    return redirect()->route('stuffing.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $stuffing = Stuffing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $stuffing->forceDelete();
+
+    return redirect()->route('stuffing.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 }

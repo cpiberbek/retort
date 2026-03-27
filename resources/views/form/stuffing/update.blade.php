@@ -52,9 +52,9 @@
                         </div>
 
                         <div class="row mb-3">
-                            {{-- Nama Produk --}}
+                            {{-- Nama Varian --}}
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 @if($stuffing->nama_produk)
                                 <input type="text" class="form-control" value="{{ $stuffing->nama_produk }}" readonly>
                                 <input type="hidden" name="nama_produk" value="{{ $stuffing->nama_produk }}">
@@ -62,7 +62,7 @@
                                 <select name="nama_produk"
                                     class="form-control selectpicker @error('nama_produk') is-invalid @enderror"
                                     data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $stuffing->
                                         nama_produk)==$produk->nama_produk ? 'selected' : '' }}>
@@ -92,7 +92,7 @@
                                     class="form-control @error('exp_date') is-invalid @enderror"
                                     value="{{ old('exp_date', $stuffing->exp_date) }}" {{ $stuffing->exp_date ?
                                 'readonly' : '' }}>
-                                <small class="text-muted">Dihitung otomatis +7 bulan dari kode produksi</small>
+                                <small class="text-muted">Dihitung otomatis +7 bulan dari kode batch</small>
                                 <small class="text-danger">@error('exp_date') {{ $message }} @enderror</small>
                             </div>
                         </div>
@@ -168,7 +168,7 @@
                         <h6 class="fw-bold text-primary">Parameter Stuffing</h6>
                         @php
                         $stuffingFields = [
-                        'kecepatan_stuffing','panjang_pcs','berat_pcs','cek_vakum',
+                        'kecepatan_stuffing','panjang_pcs','berat_pcs',
                         'kebersihan_seal','kekuatan_seal','diameter_klip','print_kode','lebar_cassing'
                         ];
                         @endphp
@@ -176,7 +176,7 @@
                         @foreach($stuffingFields as $field)
                         <div class="mb-3">
                             <label class="form-label">{{ ucwords(str_replace('_',' ',$field)) }}</label>
-                            @if(in_array($field,['cek_vakum','kebersihan_seal','kekuatan_seal','print_kode']))
+                            @if(in_array($field,['kebersihan_seal','kekuatan_seal','print_kode']))
                             @if($stuffing->$field)
                             <input type="text" class="form-control" value="{{ $stuffing->$field }}" readonly>
                             <input type="hidden" name="{{ $field }}" value="{{ $stuffing->$field }}">
@@ -266,7 +266,7 @@
             expDateInput.value = '';
 
             if(value.length !== 10){
-                kodeError.textContent = "Kode produksi harus 10 karakter.";
+                kodeError.textContent = "Kode batch harus 10 karakter.";
                 return;
             }
             if(!/^[A-Z0-9]+$/.test(value)){

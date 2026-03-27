@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Withdrawl extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'withdrawls';
 
@@ -26,4 +27,5 @@ class Withdrawl extends Model
     protected $casts = [
         'rincian'  => 'array',
     ];
+    protected $dates = ['deleted_at'];
 }

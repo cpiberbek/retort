@@ -113,4 +113,6 @@ class PemeriksaanRetain extends Model
     {
         return 'uuid';
     }
+
+    protected $dates = ['deleted_at'];
 }

@@ -103,7 +103,7 @@
         {{-- Tombol --}}
         <div class="d-flex justify-content-between mt-3">
             <button class="btn btn-success w-auto"><i class="bi bi-save"></i> Perbarui</button>
-            <a href="{{ route('metal.verification') }}" class="btn btn-secondary w-auto"><i class="bi bi-arrow-left"></i> Kembali</a>
+            <a href="{{ route('metal.index') }}" class="btn btn-secondary w-auto"><i class="bi bi-arrow-left"></i> Kembali</a>
         </div>
     </form>
 </div>

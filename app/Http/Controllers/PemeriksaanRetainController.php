@@ -15,8 +15,8 @@ class PemeriksaanRetainController extends Controller
     public function index(Request $request)
     {
         $query = PemeriksaanRetain::withCount('items')
-            ->with('creator')
-            ->latest();
+        ->with('creator')
+        ->latest();
 
         // Optional: Filter otomatis agar user hanya melihat data Plant-nya sendiri
         /*
@@ -88,14 +88,14 @@ class PemeriksaanRetainController extends Controller
             DB::commit();
 
             return redirect()->route('pemeriksaan_retain.index')
-                ->with('success', 'Data pemeriksaan retain berhasil disimpan.');
+            ->with('success', 'Data pemeriksaan retain berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing pemeriksaan retain: ' . $e->getMessage());
 
             return redirect()->back()
-                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
-                ->withInput();
+            ->with('error', 'Terjadi kesalahan: ' . $e->getMessage())
+            ->withInput();
         }
     }
 
@@ -162,7 +162,7 @@ class PemeriksaanRetainController extends Controller
             DB::commit();
 
             return redirect()->route('pemeriksaan_retain.index')
-                ->with('success', 'Data pemeriksaan retain berhasil diperbarui.');
+            ->with('success', 'Data pemeriksaan retain berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating: ' . $e->getMessage());
@@ -173,21 +173,45 @@ class PemeriksaanRetainController extends Controller
     public function destroy(PemeriksaanRetain $pemeriksaanRetain)
     {
         try {
-            $pemeriksaanRetain->items()->delete(); // Hapus items dulu (soft delete)
+            $pemeriksaanRetain->items()->delete();
             $pemeriksaanRetain->delete();
             return redirect()->route('pemeriksaan_retain.index')
-                ->with('success', 'Data berhasil dihapus.');
+            ->with('success', 'Data berhasil dihapus.');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Gagal menghapus: ' . $e->getMessage());
         }
     }
 
+    public function recyclebin()
+    {
+        $pemeriksaanRetain = PemeriksaanRetain::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('pemeriksaan_retain.recyclebin', compact('pemeriksaanRetain'));
+    }
+    public function restore($uuid)
+    {
+        $pemeriksaanRetain = PemeriksaanRetain::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $pemeriksaanRetain->restore();
+
+        return redirect()->route('pemeriksaan_retain.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $pemeriksaanRetain = PemeriksaanRetain::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $pemeriksaanRetain->forceDelete();
+
+        return redirect()->route('pemeriksaan_retain.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
     // --- FITUR VERIFIKASI ---
 
     public function showVerificationPage(Request $request)
     {
         $baseQuery = PemeriksaanRetain::with('creator', 'items', 'verifiedBy')
-            ->latest('tanggal');
+        ->latest('tanggal');
 
         $baseQuery->when($request->start_date, fn($q, $d) => $q->where('tanggal', '>=', $d));
         $baseQuery->when($request->end_date, fn($q, $d) => $q->where('tanggal', '<=', $d));
@@ -195,9 +219,9 @@ class PemeriksaanRetainController extends Controller
         $baseQuery->when($request->search, function ($q, $search) {
             $q->where(function ($sub) use ($search) {
                 $sub->where('hari', 'like', "%{$search}%")
-                    ->orWhereHas('creator', function ($u) use ($search) {
-                        $u->where('name', 'like', "%{$search}%");
-                    });
+                ->orWhereHas('creator', function ($u) use ($search) {
+                    $u->where('name', 'like', "%{$search}%");
+                });
             });
         });
 
@@ -223,7 +247,7 @@ class PemeriksaanRetainController extends Controller
             ]);
 
             return redirect()->route('pemeriksaan_retain.index')
-                ->with('success', 'Data berhasil diverifikasi.');
+            ->with('success', 'Data berhasil diverifikasi.');
         } catch (\Exception $e) {
             Log::error('Verifikasi Error: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Gagal verifikasi.');

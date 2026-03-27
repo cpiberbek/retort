@@ -31,24 +31,24 @@ class DispositionController extends Controller
             // Kita bungkus dalam where(function...) agar logika OR tidak merusak logika AND tanggal
             $query->where(function($q) use ($search) {
                 $q->where('nomor', 'like', "%{$search}%")
-                  ->orWhere('kepada', 'like', "%{$search}%")
-                  
+                ->orWhere('kepada', 'like', "%{$search}%")
+
                   // Sesuai Model Anda: Gunakan 'uraian_disposisi' dan 'catatan'
-                  ->orWhere('uraian_disposisi', 'like', "%{$search}%")
-                  ->orWhere('catatan', 'like', "%{$search}%")
-                  
+                ->orWhere('uraian_disposisi', 'like', "%{$search}%")
+                ->orWhere('catatan', 'like', "%{$search}%")
+
                   // Pencarian Relasi: Mencari berdasarkan nama User (creator)
-                  ->orWhereHas('creator', function($subQuery) use ($search) {
-                      $subQuery->where('name', 'like', "%{$search}%");
-                  });
+                ->orWhereHas('creator', function($subQuery) use ($search) {
+                  $subQuery->where('name', 'like', "%{$search}%");
+              });
             });
         }
 
         // 4. Ambil data, urutkan dari yang terbaru, dan paginasi
         // withQueryString() wajib ada agar filter tidak hilang saat pindah halaman
         $dispositions = $query->latest()
-                              ->paginate(10)
-                              ->withQueryString();
+        ->paginate(10)
+        ->withQueryString();
 
         return view('dispositions.index', compact('dispositions'));
     }
@@ -89,7 +89,7 @@ class DispositionController extends Controller
         Disposition::create($validatedData);
 
         return redirect()->route('dispositions.index')
-                         ->with('success', 'Data disposisi berhasil ditambahkan.');
+        ->with('success', 'Data disposisi berhasil ditambahkan.');
     }
 
     /**
@@ -137,7 +137,7 @@ class DispositionController extends Controller
         $disposition->update($validatedData);
 
         return redirect()->route('dispositions.index')
-                         ->with('success', 'Data disposisi berhasil diperbarui.');
+        ->with('success', 'Data disposisi berhasil diperbarui.');
     }
 
     /**
@@ -149,10 +149,35 @@ class DispositionController extends Controller
         $disposition->delete();
 
         return redirect()->route('dispositions.index')
-                         ->with('success', 'Data disposisi berhasil dihapus.');
+        ->with('success', 'Data disposisi berhasil dihapus.');
     }
 
-        public function verification(Request $request)
+    public function recyclebin()
+    {
+        $disposition = Disposition::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('dispositions.recyclebin', compact('disposition'));
+    }
+    public function restore($uuid)
+    {
+        $disposition = Disposition::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $disposition->restore();
+
+        return redirect()->route('dispositions.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $disposition = Disposition::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $disposition->forceDelete();
+
+        return redirect()->route('dispositions.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+
+    public function verification(Request $request)
     {
         $query = Disposition::query()->latest();
 
@@ -169,14 +194,14 @@ class DispositionController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('nomor', 'like', "%{$search}%")
-                  ->orWhere('kepada', 'like', "%{$search}%");
+                ->orWhere('kepada', 'like', "%{$search}%");
             });
         }
 
         // Load relasi untuk efisiensi
         $dispositions = $query->with('verifiedBy', 'creator') 
-                             ->paginate(15)
-                             ->appends($request->query());
+        ->paginate(15)
+        ->appends($request->query());
 
         return view('dispositions.verification', compact('dispositions'));
     }

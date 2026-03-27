@@ -44,18 +44,18 @@ class Retain_rteController extends Controller
         $userPlant = Auth::user()->plant;
 
         $data = Retain_rte::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
-                    ->orWhere('kode_produksi', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->orderBy('date', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                ->orWhere('kode_produksi', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->orderBy('date', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -205,32 +205,32 @@ class Retain_rteController extends Controller
 
     public function verification(Request $request)
     {
-       $search    = $request->input('search');
-       $date      = $request->input('date');
-       $userPlant = Auth::user()->plant;
+     $search    = $request->input('search');
+     $date      = $request->input('date');
+     $userPlant = Auth::user()->plant;
 
-       $data = Retain_rte::query()
-       ->where('plant', $userPlant)
-       ->when($search, function ($query) use ($search) {
+     $data = Retain_rte::query()
+     ->where('plant', $userPlant)
+     ->when($search, function ($query) use ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%")
             ->orWhere('nama_produk', 'like', "%{$search}%")
             ->orWhere('kode_produksi', 'like', "%{$search}%");
         });
     })
-       ->when($date, function ($query) use ($date) {
+     ->when($date, function ($query) use ($date) {
         $query->whereDate('date', $date);
     })
-       ->orderBy('date', 'desc')
-       ->orderBy('created_at', 'desc')
-       ->paginate(10)
-       ->appends($request->all());
+     ->orderBy('date', 'desc')
+     ->orderBy('created_at', 'desc')
+     ->paginate(10)
+     ->appends($request->all());
 
-       return view('form.retain_rte.index', compact('data', 'search', 'date' ));
-   }
+     return view('form.retain_rte.index', compact('data', 'search', 'date' ));
+ }
 
-   public function updateVerification(Request $request, $uuid)
-   {
+ public function updateVerification(Request $request, $uuid)
+ {
     $request->validate([
         'status_spv'  => 'required|in:1,2',
         'catatan_spv' => 'nullable|string|max:255',
@@ -253,8 +253,31 @@ public function destroy($uuid)
 {
     $retain_rte = Retain_rte::where('uuid', $uuid)->firstOrFail();
     $retain_rte->delete();
+    return redirect()->route('retain_rte.index')->with('success', 'Retain RTE berhasil dihapus');
+}
 
-    return redirect()->route('retain_rte.index')
-    ->with('success', 'Pemeriksaan Sampel Retain RTE berhasil dihapus');
+public function recyclebin()
+{
+    $retain_rte = Retain_rte::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.retain_rte.recyclebin', compact('retain_rte'));
+}
+public function restore($uuid)
+{
+    $retain_rte = Retain_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $retain_rte->restore();
+
+    return redirect()->route('retain_rte.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $retain_rte = Retain_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $retain_rte->forceDelete();
+
+    return redirect()->route('retain_rte.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 }

@@ -81,16 +81,48 @@ class Area_hygieneController extends Controller
         return redirect()->route('area_hygiene.index')->with('success', 'Area Hygiene berhasil diupdate');
     }
 
+    // public function destroy($uuid)
+    // {
+    //     $userPlantUuid = Auth::user()->plant;
+
+    //     $area_hygiene = Area_hygiene::where('uuid', $uuid)
+    //     ->where('plant', $userPlantUuid) 
+    //     ->firstOrFail();
+
+    //     $area_hygiene->delete();
+
+    //     return redirect()->route('area_hygiene.index')->with('success', 'Area Hygiene berhasil dihapus');
+    // }
+
     public function destroy($uuid)
     {
-        $userPlantUuid = Auth::user()->plant;
-
-        $area_hygiene = Area_hygiene::where('uuid', $uuid)
-        ->where('plant', $userPlantUuid) 
-        ->firstOrFail();
-
+        $area_hygiene = Area_hygiene::where('uuid', $uuid)->firstOrFail();
         $area_hygiene->delete();
-
         return redirect()->route('area_hygiene.index')->with('success', 'Area Hygiene berhasil dihapus');
+    }
+
+    public function recyclebin()
+    {
+        $area_hygiene = Area_hygiene::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('area_hygiene.recyclebin', compact('area_hygiene'));
+    }
+    public function restore($uuid)
+    {
+        $area_hygiene = Area_hygiene::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $area_hygiene->restore();
+
+        return redirect()->route('area_hygiene.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $area_hygiene = Area_hygiene::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $area_hygiene->forceDelete();
+
+        return redirect()->route('area_hygiene.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 }

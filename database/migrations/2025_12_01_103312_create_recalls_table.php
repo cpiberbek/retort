@@ -36,7 +36,7 @@ return new class extends Migration
             $table->longText('distribusi')->nullable();
             $table->longText('neraca_penarikan')->nullable();
             $table->longText('simulasi')->nullable();
-            $table->decimal('total_waktu', 8, 2)->nullable();
+            $table->string('total_waktu')->nullable();
             $table->longText('evaluasi')->nullable();
             $table->string('nama_manager')->nullable();
             $table->string('status_manager')->nullable();

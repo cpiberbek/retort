@@ -28,24 +28,24 @@ class Labelisasi_pvdcController extends Controller
         $userPlant = Auth::user()->plant;
 
         $data = Labelisasi_pvdc::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('username', 'like', "%{$search}%")
-                      ->orWhere('nama_produk', 'like', "%{$search}%")
-                      ->orWhere('nama_operator', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->paginate(10)
-            ->appends($request->all());
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                ->orWhere('nama_produk', 'like', "%{$search}%")
+                ->orWhere('nama_operator', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->paginate(10)
+        ->appends($request->all());
         return view('form.labelisasi_pvdc.index', compact('data', 'search', 'date', 'shift'));
     }
 
@@ -353,7 +353,7 @@ class Labelisasi_pvdcController extends Controller
 
             return response()->json([
                 'success' => true,
-                'redirect_url' => route('labelisasi_pvdc.verification'),
+                'redirect_url' => route('labelisasi_pvdc.index'),
                 'message' => 'Data Labelisasi PVDC berhasil diperbarui.'
             ]);
         } catch (\Exception $e) {
@@ -379,7 +379,7 @@ class Labelisasi_pvdcController extends Controller
         ->paginate(10)
         ->appends($request->all());
 
-        return view('form.labelisasi_pvdc.verification', compact('data', 'search', 'date'));
+        return view('form.labelisasi_pvdc.index', compact('data', 'search', 'date'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -398,7 +398,7 @@ class Labelisasi_pvdcController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('labelisasi_pvdc.verification')
+        return redirect()->route('labelisasi_pvdc.index')
         ->with('success', 'Status Verifikasi Labelisasi PVDC berhasil diperbarui.');
     }
 
@@ -407,11 +407,36 @@ class Labelisasi_pvdcController extends Controller
         $labelisasi_pvdc = Labelisasi_pvdc::where('uuid', $uuid)->firstOrFail();
         $labelisasi_pvdc->delete();
 
-        return redirect()->route('labelisasi_pvdc.verification')
-        ->with('success', 'Data Labelisasi PVDC berhasil dihapus.');
+        return redirect()->route('labelisasi_pvdc.index')->with('success', 'Data Labelisasi PVDC berhasil dihapus.');
     }
 
-    // ========================= HELPER KOMPRES GAMBAR =========================
+    public function recyclebin()
+    {
+        $labelisasi_pvdc = Labelisasi_pvdc::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.labelisasi_pvdc.recyclebin', compact('labelisasi_pvdc'));
+    }
+
+    public function restore($uuid)
+    {
+        $labelisasi_pvdc = Labelisasi_pvdc::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $labelisasi_pvdc->restore();
+
+        return redirect()->route('labelisasi_pvdc.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+
+    public function deletePermanent($uuid)
+    {
+        $labelisasi_pvdc = Labelisasi_pvdc::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $labelisasi_pvdc->forceDelete();
+
+        return redirect()->route('labelisasi_pvdc.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+
     private function compressAndStore($file, $path, $filename)
     {
         $manager = new ImageManager(new Driver());
@@ -430,22 +455,22 @@ class Labelisasi_pvdcController extends Controller
         $userPlant = Auth::user()->plant;
 
         // Ambil data (Get Collection)
-        $produks = Labelisasi_pvdc::query() // Variabel dinamakan $produks agar mirip Mincing
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
-                      ->orWhere('username', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->get();
+        $produks = Labelisasi_pvdc::query() 
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                ->orWhere('username', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->get();
 
         if (ob_get_length()) ob_end_clean();
 

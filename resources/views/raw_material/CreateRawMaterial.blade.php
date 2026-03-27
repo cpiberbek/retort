@@ -112,21 +112,40 @@
                                 @error('setup_kedatangan') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
                             </div>
                            
-                           <div class="col-12"> 
+                            <div class="col-12"> 
                                 <label for="bahan_baku" class="form-label">Bahan Baku</label>
                                 <select class="form-select select2 @error('bahan_baku') is-invalid @enderror" id="bahan_baku" name="bahan_baku" required>
-                                    <option></option>
-                                    <option value="Daging Ayam" {{ old('bahan_baku') == 'Daging Ayam' ? 'selected' : '' }}>Daging Ayam</option>
-                                    <option value="Tepung Tapioka" {{ old('bahan_baku') == 'Tepung Tapioka' ? 'selected' : '' }}>Tepung Tapioka</option>
-                                    <option value="Minyak Goreng" {{ old('bahan_baku') == 'Minyak Goreng' ? 'selected' : '' }}>Minyak Goreng</option>
-                                    <option value="Bumbu ABC" {{ old('bahan_baku') == 'Bumbu ABC' ? 'selected' : '' }}>Bumbu ABC</option>
+                                    <option></option> {{-- Biarkan kosong untuk placeholder Select2 --}}
+                                    
+                                    {{-- Looping data dari controller --}}
+                                    @foreach ($masterBahanBaku as $bahan)
+                                        <option value="{{ $bahan->nama_bahan_baku }}" {{ old('bahan_baku') == $bahan->nama_bahan_baku ? 'selected' : '' }}>
+                                            {{ $bahan->nama_bahan_baku }}
+                                        </option>
+                                    @endforeach
+                                    
                                 </select>
-                                @error('bahan_baku') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                @error('bahan_baku') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                             <div class="col-md-6">
                                 <label for="supplier" class="form-label">Supplier</label>
-                                <input type="text" class="form-control @error('supplier') is-invalid @enderror" id="supplier" name="supplier" value="{{ old('supplier') }}" required>
-                                @error('supplier') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                <select class="form-select select2 @error('supplier') is-invalid @enderror" id="supplier" name="supplier" required>
+                                    <option></option> {{-- Placeholder Select2 --}}
+                                    
+                                    {{-- Looping data supplier dari controller --}}
+                                    @foreach ($suppliers as $sup)
+                                        {{-- Gunakan old('supplier', $inspection->supplier ?? '') agar support Create & Edit --}}
+                                        <option value="{{ $sup->nama_supplier }}" {{ old('supplier', $inspection->supplier ?? '') == $sup->nama_supplier ? 'selected' : '' }}>
+                                            {{ $sup->nama_supplier }}
+                                        </option>
+                                    @endforeach
+                                    
+                                </select>
+                                @error('supplier') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                         </div>
                     </div>
@@ -201,12 +220,11 @@
                         <div class="row g-3">
                             {{-- 1. K.A / FFA (FIXED) --}}
                             <div class="col-md-3 col-6">
-                                <label class="form-label d-block">K.A / FFA</label>
-                                <input type="hidden" name="analisa_ka_ffa" id="analisa_ka_ffa" value="{{ old('analisa_ka_ffa') }}">
-                                <div class="btn-group btn-check-group w-100" role="group">
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#analisa_ka_ffa"><i class="bi bi-check-lg"></i> OK</button>
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" data-value="0" data-target-input="#analisa_ka_ffa"><i class="bi bi-x-lg"></i> Not OK</button>
-                                </div>
+                                <label for="analisa_ka_ffa" class="form-label d-block">K.A / FFA</label>
+                                <input type="number" step="0.01" class="form-control @error('analisa_ka_ffa') is-invalid @enderror" id="analisa_ka_ffa" name="analisa_ka_ffa" value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" required min="0">
+                                @error('analisa_ka_ffa') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
 
                             {{-- 2. Logo Halal (FIXED) --}}
@@ -304,24 +322,61 @@
                                 <input type="text" class="form-control @error('nopol_mobil') is-invalid @enderror" id="nopol_mobil" name="nopol_mobil" value="{{ old('nopol_mobil') }}" required>
                                 @error('nopol_mobil') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
                             </div>
-                             <div class="col-md-4">
+                            <div class="col-md-4">
                                 <label for="suhu_mobil" class="form-label">Suhu Mobil (°C)</label>
-                                <input type="number" class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil" name="suhu_mobil" value="{{ old('suhu_mobil') }}" required max="50">
-                                @error('suhu_mobil') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                <input type="number" step="0.01" class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil" name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" required>
+                                @error('suhu_mobil') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                             <div class="col-md-4">
-                                <label for="kondisi_mobil" class="form-label">Kondisi Mobil</label>
-                                <select class="form-select select2 @error('kondisi_mobil') is-invalid @enderror" id="kondisi_mobil" name="kondisi_mobil" required>
-                                    <option></option> {{-- Placeholder untuk Select2 --}}
-                                    <option value="Bersih" {{ old('kondisi_mobil') == 'Bersih' ? 'selected' : '' }}>Bersih</option>
-                                    <option value="Kotor" {{ old('kondisi_mobil') == 'Kotor' ? 'selected' : '' }}>Kotor</option>
-                                    <option value="Bau" {{ old('kondisi_mobil') == 'Bau' ? 'selected' : '' }}>Bau</option>
-                                    <option value="Bocor" {{ old('kondisi_mobil') == 'Bocor' ? 'selected' : '' }}>Bocor</option>
-                                    <option value="Basah" {{ old('kondisi_mobil') == 'Basah' ? 'selected' : '' }}>Basah</option>
-                                    <option value="Kering" {{ old('kondisi_mobil') == 'Kering' ? 'selected' : '' }}>Kering</option>
-                                    <option value="Bebas Hama" {{ old('kondisi_mobil') == 'Bebas Hama' ? 'selected' : '' }}>Bebas Hama</option>
-                                </select>
-                                @error('kondisi_mobil') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
+                                <label class="form-label">Kondisi Mobil</label>
+
+                                @php
+                                    $options = [
+                                        'Bersih',
+                                        'Kering',
+                                        'Tidak Bocor',
+                                        'Tidak Berdebu',
+                                        'Tidak Basah',
+                                        'Bebas Hama',
+                                        'Bebas Noda (Karat, cat, tinta)',
+                                        'Bebas Bekas oli di lantai/dinding',
+                                        'Tidak ada produk non halal'
+                                    ];
+
+                                    $selectedKondisi = collect(old('kondisi_mobil', isset($inspection) ? explode(',', $inspection->kondisi_mobil ?? '') : []))
+                                        ->filter()
+                                        ->toArray();
+                                @endphp
+
+                                <div class="row g-2 @error('kondisi_mobil') is-invalid @enderror">
+                                    @foreach ($options as $item)
+                                        @php $id = 'kondisi_' . \Illuminate\Support\Str::slug($item, '_'); @endphp
+
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="checkbox"
+                                                    name="kondisi_mobil[]"
+                                                    value="{{ $item }}"
+                                                    id="{{ $id }}"
+                                                    {{ in_array($item, $selectedKondisi) ? 'checked' : '' }}
+                                                >
+                                                <label class="form-check-label" for="{{ $id }}">
+                                                    {{ $item }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                @error('kondisi_mobil')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
                              <div class="col-md-6">
                                 <label for="do_po" class="form-label">No. DO / PO</label>
@@ -381,22 +436,25 @@
 
 {{-- 4. Script Asli dari File Input Anda (Sangat Penting) --}}
 <script>
-    document.querySelectorAll('input[type="number"][max]').forEach(function(input) {
-            input.addEventListener('input', function() {
+        // --- Script Validasi Max ---
+        document.querySelectorAll('input[type="number"][max]').forEach(function(input) {
+            // UBAH 'input' menjadi 'change'
+            input.addEventListener('change', function() {
                 // 1. Ambil nilai max (misal: 50)
                 const max = parseFloat(this.getAttribute('max'));
                 
                 // 2. Cek jika nilai yang diketik lebih besar dari max
-                if (parseFloat(this.value) > max) {
+                if (this.value !== '' && parseFloat(this.value) > max) {
                     // 3. Jika ya, paksa nilainya kembali ke max
                     this.value = max;
                 }
             });
         });
 
-        // Script ini melakukan hal yang sama untuk 'min'
+        // --- Script Validasi Min ---
         document.querySelectorAll('input[type="number"][min]').forEach(function(input) {
-            input.addEventListener('input', function() {
+            // UBAH 'input' menjadi 'change'
+            input.addEventListener('change', function() {
                 const min = parseFloat(this.getAttribute('min'));
                 if (this.value !== '' && parseFloat(this.value) < min) {
                     this.value = min;
@@ -410,9 +468,9 @@
         const addBtn = document.getElementById('add-detail-btn');
         let detailIndex = 0;
 
-        function addDetailForm() {
+        // Fungsi yang dimodifikasi untuk menerima data lama (opsional)
+        function addDetailForm(oldData = {}) {
             const newDetail = document.createElement('div');
-            // Menambahkan style dari template referensi
             newDetail.classList.add('product-detail-item', 'border', 'p-3', 'mb-3', 'rounded', 'shadow-sm'); 
             newDetail.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -422,27 +480,27 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Kode Batch</label>
-                        <input type="text" name="details[${detailIndex}][kode_batch]" class="form-control" required>
+                        <input type="text" name="details[${detailIndex}][kode_batch]" class="form-control" required value="${oldData.kode_batch || ''}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Tanggal Produksi</label>
-                        <input type="date" name="details[${detailIndex}][tanggal_produksi]" class="form-control" required>
+                        <input type="date" name="details[${detailIndex}][tanggal_produksi]" class="form-control" required value="${oldData.tanggal_produksi || ''}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">EXP Date</label>
-                        <input type="date" name="details[${detailIndex}][exp]" class="form-control" required>
+                        <input type="date" name="details[${detailIndex}][exp]" class="form-control" required value="${oldData.exp || ''}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Jumlah Barang</label>
-                        <input type="number" step="0.01" name="details[${detailIndex}][jumlah]" class="form-control" required>
+                        <input type="number" step="0.01" name="details[${detailIndex}][jumlah]" class="form-control" required value="${oldData.jumlah || ''}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Jumlah Sampel</label>
-                        <input type="number" step="0.01" name="details[${detailIndex}][jumlah_sampel]" class="form-control" required>
+                        <input type="number" step="0.01" name="details[${detailIndex}][jumlah_sampel]" class="form-control" required value="${oldData.jumlah_sampel || ''}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Jumlah Reject</label>
-                        <input type="number" step="0.01" name="details[${detailIndex}][jumlah_reject]" class="form-control" required>
+                        <input type="number" step="0.01" name="details[${detailIndex}][jumlah_reject]" class="form-control" required value="${oldData.jumlah_reject || ''}">
                     </div>
                 </div>
             `;
@@ -451,20 +509,32 @@
         }
 
         if (addBtn) {
-            addBtn.addEventListener('click', addDetailForm);
+            // Perhatikan ini: Panggil fungsi tanpa parameter saat tombol diklik
+            addBtn.addEventListener('click', () => addDetailForm()); 
         }
         
         if (container) {
             container.addEventListener('click', function(e) {
-                // Selector yang lebih aman untuk tombol hapus
                 const removeBtn = e.target.closest('.remove-detail-btn');
                 if (removeBtn) {
                     removeBtn.closest('.product-detail-item').remove();
                 }
             });
-            // Tambah form pertama kali saat halaman dimuat
-            // (TODO: Anda mungkin ingin menambahkan logika untuk memuat old('details') di sini jika validasi gagal)
-            addDetailForm();
+            
+            // --- LOGIKA UNTUK MEMUAT OLD DATA ---
+            // Ambil data 'details' dari session Laravel menggunakan JSON
+            const oldDetails = @json(old('details', [])); 
+
+            // Cek apakah oldDetails berbentuk array dan ada isinya
+            if (Array.isArray(oldDetails) && oldDetails.length > 0) {
+                // Jika ada error dan ada data lama, looping dan buat form sebanyak data lama
+                oldDetails.forEach(data => {
+                    addDetailForm(data);
+                });
+            } else {
+                // Jika tidak ada data lama (form baru dibuka), tambahkan 1 form kosong
+                addDetailForm();
+            }
         }
 
         // --- Script for OK/Not OK Buttons ---

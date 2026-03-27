@@ -221,7 +221,7 @@ class WithdrawlController extends Controller
     {
         $userPlant = Auth::user()->plant;
 
-        $withdrawl = withdrawl::where('uuid', $uuid)
+        $withdrawl = Withdrawl::where('uuid', $uuid)
         ->where('plant', $userPlant)
         ->firstOrFail();
 
@@ -229,6 +229,31 @@ class WithdrawlController extends Controller
 
         return redirect()->route('withdrawl.index')
         ->with('success', 'Data Laporan Withdrawl berhasil dihapus'); 
+    }
+
+    public function recyclebin()
+    {
+        $withdrawl = Withdrawl::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.withdrawl.recyclebin', compact('withdrawl'));
+    }
+    public function restore($uuid)
+    {
+        $withdrawl = Withdrawl::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $withdrawl->restore();
+
+        return redirect()->route('withdrawl.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $withdrawl = Withdrawl::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $withdrawl->forceDelete();
+
+        return redirect()->route('withdrawl.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 
 }

@@ -125,6 +125,31 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
                          ->with('success', 'Pemeriksaan Kekuatan Magnet Trap berhasil dihapus.');
     }
 
+    public function recyclebin()
+    {
+        $pemeriksaanKekuatanMagnetTrap = PemeriksaanKekuatanMagnetTrap::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('pemeriksaan-kekuatan-magnet-trap.recyclebin', compact('pemeriksaanKekuatanMagnetTrap'));
+    }
+    public function restore($uuid)
+    {
+        $pemeriksaanKekuatanMagnetTrap = PemeriksaanKekuatanMagnetTrap::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $pemeriksaanKekuatanMagnetTrap->restore();
+
+        return redirect()->route('pemeriksaan-kekuatan-magnet-trap.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $pemeriksaanKekuatanMagnetTrap = PemeriksaanKekuatanMagnetTrap::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $pemeriksaanKekuatanMagnetTrap->forceDelete();
+
+        return redirect()->route('pemeriksaan-kekuatan-magnet-trap.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+
     // --- METODE VERIFIKASI (SPV QC) ---
 
     /**

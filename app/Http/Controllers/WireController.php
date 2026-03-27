@@ -52,23 +52,23 @@ class WireController extends Controller
         $userPlant = Auth::user()->plant;
 
         $items = Wire::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
-                      ->orWhere('nama_supplier', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                ->orWhere('nama_supplier', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
                 // Filter Query berdasarkan Shift yang dipilih
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -244,13 +244,13 @@ class WireController extends Controller
 
     public function verification(Request $request)
     {
-     $search     = $request->input('search');
-     $date = $request->input('date');
-     $userPlant  = Auth::user()->plant;
+       $search     = $request->input('search');
+       $date = $request->input('date');
+       $userPlant  = Auth::user()->plant;
 
-     $data = Wire::query()
-     ->where('plant', $userPlant) 
-     ->when($search, function ($query) use ($search) {
+       $data = Wire::query()
+       ->where('plant', $userPlant) 
+       ->when($search, function ($query) use ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%")
             ->orWhere('nama_produk', 'like', "%{$search}%")
@@ -258,19 +258,19 @@ class WireController extends Controller
             ->orWhere('data_wire', 'like', "%{$search}%");
         });
     })
-     ->when($date, function ($query) use ($date) {
+       ->when($date, function ($query) use ($date) {
         $query->whereDate('date', $date);
     })
-     ->orderBy('date', 'desc')
-     ->orderBy('created_at', 'desc')
-     ->paginate(10)
-     ->appends($request->all());
+       ->orderBy('date', 'desc')
+       ->orderBy('created_at', 'desc')
+       ->paginate(10)
+       ->appends($request->all());
 
-     return view('form.wire.verification', compact('data', 'search', 'date'));
- }
+       return view('form.wire.index', compact('data', 'search', 'date'));
+   }
 
- public function updateVerification(Request $request, $uuid)
- {
+   public function updateVerification(Request $request, $uuid)
+   {
     $request->validate([
         'status_spv' => 'required|in:1,2',
         'catatan_spv' => 'nullable|string|max:255',
@@ -286,7 +286,7 @@ class WireController extends Controller
         'tgl_update_spv' => now(),
     ]);
 
-    return redirect()->route('wire.verification')
+    return redirect()->route('wire.index')
     ->with('success', 'Status Verifikasi Data No. Lot Wire berhasil diperbarui.');
 }
 
@@ -294,8 +294,31 @@ public function destroy($uuid)
 {
     $wire = Wire::where('uuid', $uuid)->firstOrFail();
     $wire->delete();
+    return redirect()->route('wire.index')->with('success', 'Wire berhasil dihapus');
+}
 
-    return redirect()->route('wire.verification')
-    ->with('success', 'Data No. Lot Wire berhasil dihapus');
+public function recyclebin()
+{
+    $wire = Wire::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.wire.recyclebin', compact('wire'));
+}
+public function restore($uuid)
+{
+    $wire = Wire::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $wire->restore();
+
+    return redirect()->route('wire.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $wire = Wire::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $wire->forceDelete();
+
+    return redirect()->route('wire.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 }

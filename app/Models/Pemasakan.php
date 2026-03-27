@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Pemasakan extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'pemasakans';
 
@@ -28,4 +29,6 @@ class Pemasakan extends Model
         'kode_produksi'  => 'array',
         'jumlah_tray'  => 'array',
     ];
+
+    protected $dates = ['deleted_at'];
 }

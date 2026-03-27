@@ -97,7 +97,7 @@
                     <button class="btn btn-primary w-auto">
                         <i class="bi bi-save"></i> Update Data
                     </button>
-                    <a href="{{ route('timbangan.verification') }}" class="btn btn-secondary w-auto">
+                    <a href="{{ route('timbangan.index') }}" class="btn btn-secondary w-auto">
                         <i class="bi bi-arrow-left"></i> Batal
                     </a>
                 </div>

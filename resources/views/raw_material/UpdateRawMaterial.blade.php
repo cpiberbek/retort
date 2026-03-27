@@ -1,4 +1,4 @@
-{{-- resources/views/raw_material/EditRawMaterial.blade.php --}}
+{{-- resources/views/raw_material/UpdateRawMaterial.blade.php --}}
 
 @extends('layouts.app') 
 
@@ -105,13 +105,18 @@
                                     name="bahan_baku" 
                                     required 
                                     {{ $isBahanBakuFilled ? 'disabled' : '' }}>
-                                    <option></option>
-                                    <option value="Daging Ayam" {{ old('bahan_baku', $inspection->bahan_baku) == 'Daging Ayam' ? 'selected' : '' }}>Daging Ayam</option>
-                                    <option value="Tepung Tapioka" {{ old('bahan_baku', $inspection->bahan_baku) == 'Tepung Tapioka' ? 'selected' : '' }}>Tepung Tapioka</option>
-                                    <option value="Minyak Goreng" {{ old('bahan_baku', $inspection->bahan_baku) == 'Minyak Goreng' ? 'selected' : '' }}>Minyak Goreng</option>
-                                    <option value="Bumbu ABC" {{ old('bahan_baku', $inspection->bahan_baku) == 'Bumbu ABC' ? 'selected' : '' }}>Bumbu ABC</option>
+                                    
+                                    <option></option> {{-- Placeholder --}}
+                                    
+                                    {{-- Looping Data Master Bahan Baku --}}
+                                    @foreach ($masterBahanBaku as $bahan)
+                                        <option value="{{ $bahan->nama_bahan_baku }}" {{ old('bahan_baku', $inspection->bahan_baku) == $bahan->nama_bahan_baku ? 'selected' : '' }}>
+                                            {{ $bahan->nama_bahan_baku }}
+                                        </option>
+                                    @endforeach
                                 </select>
                                 
+                                {{-- Hidden input agar nilai tetap terkirim saat disubmit meski select disabled --}}
                                 @if($isBahanBakuFilled)
                                     <input type="hidden" name="bahan_baku" value="{{ $inspection->bahan_baku }}">
                                 @endif
@@ -121,14 +126,35 @@
 
                             <div class="col-md-6">
                                 <label for="supplier" class="form-label">Supplier</label>
-                                <input type="text" 
-                                    class="form-control @error('supplier') is-invalid @enderror" 
+                                
+                                {{-- Cek apakah data supplier sudah terisi sebelumnya --}}
+                                @php $isSupplierFilled = !empty($inspection->supplier); @endphp
+                                
+                                <select class="form-select select2 @error('supplier') is-invalid @enderror" 
                                     id="supplier" 
                                     name="supplier" 
-                                    value="{{ old('supplier', $inspection->supplier) }}" 
                                     required
-                                    {{ $inspection->supplier ? 'readonly' : '' }}>
-                                @error('supplier') <span class="invalid-feedback"><strong>{{ $message }}</strong></span> @enderror
+                                    {{ $isSupplierFilled ? 'disabled' : '' }}>
+                                    
+                                    <option></option> {{-- Placeholder untuk Select2 --}}
+                                    
+                                    {{-- Looping data supplier dari controller --}}
+                                    @foreach ($suppliers as $sup)
+                                        <option value="{{ $sup->nama_supplier }}" {{ old('supplier', $inspection->supplier) == $sup->nama_supplier ? 'selected' : '' }}>
+                                            {{ $sup->nama_supplier }}
+                                        </option>
+                                    @endforeach
+                                    
+                                </select>
+                                
+                                {{-- Input hidden wajib ada karena <select> yang didisable tidak akan mengirimkan value ke controller --}}
+                                @if($isSupplierFilled)
+                                    <input type="hidden" name="supplier" value="{{ $inspection->supplier }}">
+                                @endif
+                                
+                                @error('supplier') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                         </div>
                     </div>
@@ -200,15 +226,19 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {{-- K.A / FFA --}}
                             <div class="col-md-3 col-6">
-                                <label class="form-label d-block">K.A / FFA</label>
+                                <label for="analisa_ka_ffa" class="form-label d-block">K.A / FFA</label>
                                 @php $isKaFfaFilled = !is_null($inspection->analisa_ka_ffa); @endphp
-                                <input type="hidden" name="analisa_ka_ffa" id="analisa_ka_ffa" value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') }}">
-                                <div class="btn-group btn-check-group w-100" role="group">
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#analisa_ka_ffa" {{ $isKaFfaFilled ? 'disabled' : '' }}><i class="bi bi-check-lg"></i> OK</button>
-                                    <button type="button" class="btn {{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ? '1' : '0') === '0' ? 'btn-danger' : 'btn-outline-secondary' }}" data-value="0" data-target-input="#analisa_ka_ffa" {{ $isKaFfaFilled ? 'disabled' : '' }}><i class="bi bi-x-lg"></i> Not OK</button>
-                                </div>
+                                <input type="number" step="0.01" 
+                                    class="form-control @error('analisa_ka_ffa') is-invalid @enderror" 
+                                    id="analisa_ka_ffa" 
+                                    name="analisa_ka_ffa" 
+                                    value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" 
+                                    required min="0"
+                                    {{ $isKaFfaFilled ? 'readonly' : '' }}>
+                                @error('analisa_ka_ffa') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
 
                             {{-- Logo Halal --}}
@@ -310,27 +340,67 @@
                                     required
                                     {{ $inspection->nopol_mobil ? 'readonly' : '' }}>
                             </div>
-                             <div class="col-md-4">
+                            <div class="col-md-4">
                                 <label for="suhu_mobil" class="form-label">Suhu Mobil (°C)</label>
-                                <input type="number" class="form-control" id="suhu_mobil" name="suhu_mobil" 
-                                    value="{{ old('suhu_mobil', $inspection->suhu_mobil) }}" 
-                                    required max="50"
+                                <input type="number" step="0.01" 
+                                    class="form-control @error('suhu_mobil') is-invalid @enderror" 
+                                    id="suhu_mobil" 
+                                    name="suhu_mobil" 
+                                    value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" 
+                                    required 
                                     {{ $inspection->suhu_mobil ? 'readonly' : '' }}>
+                                @error('suhu_mobil') 
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @enderror
                             </div>
                             <div class="col-md-4">
-                                <label for="kondisi_mobil" class="form-label">Kondisi Mobil</label>
-                                @php $isKondisiFilled = !empty($inspection->kondisi_mobil); @endphp
-                                <select class="form-select select2" id="kondisi_mobil" name="kondisi_mobil" required {{ $isKondisiFilled ? 'disabled' : '' }}>
-                                    <option></option>
-                                    <option value="Bersih" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bersih' ? 'selected' : '' }}>Bersih</option>
-                                    <option value="Kotor" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Kotor' ? 'selected' : '' }}>Kotor</option>
-                                    <option value="Bau" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bau' ? 'selected' : '' }}>Bau</option>
-                                    <option value="Bocor" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bocor' ? 'selected' : '' }}>Bocor</option>
-                                    <option value="Basah" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Basah' ? 'selected' : '' }}>Basah</option>
-                                    <option value="Kering" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Kering' ? 'selected' : '' }}>Kering</option>
-                                    <option value="Bebas Hama" {{ old('kondisi_mobil', $inspection->kondisi_mobil) == 'Bebas Hama' ? 'selected' : '' }}>Bebas Hama</option>
-                                </select>
-                                @if($isKondisiFilled) <input type="hidden" name="kondisi_mobil" value="{{ $inspection->kondisi_mobil }}"> @endif
+                                <label class="form-label">Kondisi Mobil</label>
+
+                                @php
+                                    $options = [
+                                        'Bersih',
+                                        'Kering',
+                                        'Tidak Bocor',
+                                        'Tidak Berdebu',
+                                        'Tidak Basah',
+                                        'Bebas Hama',
+                                        'Bebas Noda (Karat, cat, tinta)',
+                                        'Bebas Bekas oli di lantai/dinding',
+                                        'Tidak ada produk non halal'
+                                    ];
+
+                                    $selectedKondisi = collect(old('kondisi_mobil', isset($inspection) ? explode(',', $inspection->kondisi_mobil ?? '') : []))
+                                        ->filter()
+                                        ->toArray();
+                                @endphp
+
+                                <div class="row g-2 @error('kondisi_mobil') is-invalid @enderror">
+                                    @foreach ($options as $item)
+                                        @php $id = 'kondisi_' . \Illuminate\Support\Str::slug($item, '_'); @endphp
+
+                                        <div class="col-6 col-md-4">
+                                            <div class="form-check">
+                                                <input
+                                                    class="form-check-input"
+                                                    type="checkbox"
+                                                    name="kondisi_mobil[]"
+                                                    value="{{ $item }}"
+                                                    id="{{ $id }}"
+                                                    {{ in_array($item, $selectedKondisi) ? 'checked' : '' }}
+                                                >
+                                                <label class="form-check-label" for="{{ $id }}">
+                                                    {{ $item }}
+                                                </label>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                @error('kondisi_mobil')
+                                    <span class="invalid-feedback d-block">
+                                        <strong>{{ $message }}</strong>
+                                    </span>
+                                @enderror
                             </div>
                              <div class="col-md-6">
                                 <label for="do_po" class="form-label">No. DO / PO</label>

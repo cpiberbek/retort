@@ -153,6 +153,31 @@ class PenyimpanganKualitasController extends Controller
         ->with('success', 'Laporan Penyimpangan Kualitas berhasil dihapus.');
     }
 
+    public function recyclebin()
+    {
+        $penyimpanganKualitas = PenyimpanganKualitas::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('penyimpangan-kualitas.recyclebin', compact('penyimpanganKualitas'));
+    }
+    public function restore($uuid)
+    {
+        $penyimpanganKualitas = PenyimpanganKualitas::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $penyimpanganKualitas->restore();
+
+        return redirect()->route('penyimpangan-kualitas.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $penyimpanganKualitas = PenyimpanganKualitas::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $penyimpanganKualitas->forceDelete();
+
+        return redirect()->route('penyimpangan-kualitas.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+
     // --- METODE VERIFIKASI (TAHAP 1: DIKETAHUI) ---
 
     public function verificationDiketahui(Request $request)
@@ -238,15 +263,15 @@ class PenyimpanganKualitasController extends Controller
     {
         // Pastikan sudah lolos tahap 1
         if ($penyimpanganKualitas->status_diketahui != 1) {
-         return redirect()->route('penyimpangan-kualitas.verification.disetujui')->with('error', 'Data ini belum lolos verifikasi tahap 1 (Diketahui).');
-     }
+           return redirect()->route('penyimpangan-kualitas.verification.disetujui')->with('error', 'Data ini belum lolos verifikasi tahap 1 (Diketahui).');
+       }
 
-     $validatedData = $request->validate([
+       $validatedData = $request->validate([
         'status_disetujui' => ['required', Rule::in([1, 2])],
         'catatan_disetujui' => ['nullable', 'required_if:status_disetujui,2', 'string'],
     ]);
 
-     try {
+       try {
         $penyimpanganKualitas->status_disetujui = $validatedData['status_disetujui'];
         $penyimpanganKualitas->catatan_disetujui = $validatedData['catatan_disetujui'];
         $penyimpanganKualitas->disetujui_by = Auth::user()->uuid;

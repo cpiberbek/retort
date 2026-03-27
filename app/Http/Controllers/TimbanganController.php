@@ -223,6 +223,31 @@ class TimbanganController extends Controller
         ->with('success', '🗑️ Peneraan Timbangan berhasil dihapus.');
     }
 
+    public function recyclebin()
+    {
+        $timbangan = Timbangan::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.timbangan.recyclebin', compact('timbangan'));
+    }
+    public function restore($uuid)
+    {
+        $timbangan = Timbangan::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $timbangan->restore();
+
+        return redirect()->route('timbangan.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $timbangan = Timbangan::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $timbangan->forceDelete();
+
+        return redirect()->route('timbangan.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+
     public function exportPdf(Request $request)
     {
         // 1. Ambil Data
@@ -231,16 +256,16 @@ class TimbanganController extends Controller
         $userPlant = Auth::user()->plant;
 
         $items = Timbangan::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();

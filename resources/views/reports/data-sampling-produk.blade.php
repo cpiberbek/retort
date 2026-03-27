@@ -42,7 +42,7 @@
         
     </tr>
 </table>
-<h2 class="title">DATA SAMPLING PRODUK</h2>
+<h2 class="title">DATA SAMPLING VARIAN</h2>
 <br>
 <br>
 
@@ -65,8 +65,8 @@
     <tr>
         <th rowspan="2" class="center">No.</th>
         <th rowspan="2" class="center">Jenis Sampling</th>
-        <th rowspan="2" class="center">Nama Produk</th>
-        <th rowspan="2" class="center">Kode Produksi</th>
+        <th rowspan="2" class="center">Nama Varian</th>
+        <th rowspan="2" class="center">Kode Batch</th>
         <th rowspan="2" class="center">Jumlah</th>
         <th colspan="16" class="center">Item Sortir</th>
         <th rowspan="2" class="center">Paraf QC</th>
@@ -77,7 +77,7 @@
         <th class="center">Klip Tajam</th>
         <th class="center">Pin hole</th>
         <th class="center">Air Trap PVDC</th>
-        <th class="center">Air Trap Produk</th>
+        <th class="center">Air Trap Varian</th>
         <th class="center">Keriput</th>
         <th class="center">Bengkok</th>
         <th class="center">Non Kode</th>

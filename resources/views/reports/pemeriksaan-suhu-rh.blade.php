@@ -43,7 +43,6 @@
             PT Charoen Pokphand Indonesia<br>
             Food Division
         </td>
-        
     </tr>
 </table>
 <h2 class="title">PEMERIKSAAN SUHU DAN RH</h2>
@@ -70,14 +69,14 @@ $shift = $firstItem ? $firstItem->shift : '';
 {{-- TABEL UTAMA --}}
 <table width="100%" class="tbl-main small">
     <tr>
-    	<td rowspan="3" class="center">Pukul</td>
+        <td rowspan="3" class="center">Pukul</td>
         <td colspan="18" class="center">Ruangan (oC)</td>
         <td rowspan="3" class="center">Keterangan</td>
         <td colspan="2" class="center">PARAF</td>
     </tr>
     <tr>
-    	<td colspan="2" class="center">Chill Room</td>
-        <td colspan="2" class="center">Cold Storage Meat	</td>
+        <td colspan="2" class="center">Chill Room</td>
+        <td colspan="2" class="center">Cold Storage Meat    </td>
         <td rowspan="2" class="center">Seasoning </td>
         <td rowspan="2" class="center">Meat Preparation</td>
         <td rowspan="2" class="center">Hopper</td>
@@ -85,15 +84,15 @@ $shift = $firstItem ? $firstItem->shift : '';
         <td rowspan="2" class="center">Susun</td>
         <td rowspan="2" class="center">Retort Chamber</td>
         <td rowspan="2" class="center">PVDC</td>
-        <td colspan="2" class="center">Drying	</td>
-        <td colspan="2" class="center">Packing	</td>
+        <td colspan="2" class="center">Drying   </td>
+        <td colspan="2" class="center">Packing  </td>
         <td rowspan="2" class="center">Dry Store</td>
-        <td colspan="2" class="center">FG	</td>
+        <td colspan="2" class="center">FG   </td>
         <td rowspan="2" class="center">QC</td>
         <td rowspan="2" class="center">PROD.</td>
     </tr>
     <tr>
-    	<td class="center">Ruang</td>
+        <td class="center">Ruang</td>
         <td class="center">Meat</td>
         <td class="center">Ruang</td>
         <td class="center">Meat</td>
@@ -135,58 +134,46 @@ $shift = $firstItem ? $firstItem->shift : '';
         $hour = \Carbon\Carbon::parse($item->pukul)->format('H');
         $dataByHour[$hour] = $item;
     }
-
-    // Define area mapping to columns
-    $areaMapping = [
-        'Chill Room Ruang' => 0,
-        'Chill Room Meat' => 1,
-        'Cold Storage Meat Ruang' => 2,
-        'Cold Storage Meat Meat' => 3,
-        'Seasoning' => 4,
-        'Meat Preparation' => 5,
-        'Hopper' => 6,
-        'Stuffer' => 7,
-        'Susun' => 8,
-        'Retort Chamber' => 9,
-        'PVDC' => 10,
-        'Drying Suhu' => 11,
-        'Drying RH' => 12,
-        'Packing Suhu' => 13,
-        'Packing RH' => 14,
-        'Dry Store' => 15,
-        'FG Suhu' => 16,
-        'FG RH' => 17,
-    ];
+    // ARRAY $areaMapping SUDAH DIHAPUS KARENA TIDAK PERLU
     @endphp
 
     @for($i=0; $i<=23; $i++)
     @php
     $hourStr = str_pad($i, 2, '0', STR_PAD_LEFT);
     $item = $dataByHour[$hourStr] ?? null;
-    $hasilSuhu = $item && $item->hasil_suhu ? json_decode($item->hasil_suhu, true) : [];
+    
+    // Pastikan decode JSON berjalan dengan baik (karena di database tipenya text/json)
+    $hasilSuhu = [];
+    if ($item && !empty($item->hasil_suhu)) {
+        $hasilSuhu = is_string($item->hasil_suhu) ? json_decode($item->hasil_suhu, true) : $item->hasil_suhu;
+    }
+    
+    // Jadikan array dengan key berdasarkan NAMA AREA PERSIS DI DATABASE
     $suhuByArea = collect($hasilSuhu)->keyBy('area');
     @endphp
     <tr>
         <td class="center">{{ $hourStr }}:00</td>
-        <td>{{ $suhuByArea['Chill Room Ruang']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Chill Room Meat']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Cold Storage Meat Ruang']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Cold Storage Meat Meat']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Seasoning']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Meat Preparation']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Hopper']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Stuffer']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Susun']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Retort Chamber']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['PVDC']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Drying Suhu']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Drying RH']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Packing Suhu']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Packing RH']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['Dry Store']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['FG Suhu']['nilai'] ?? '' }}</td>
-        <td>{{ $suhuByArea['FG RH']['nilai'] ?? '' }}</td>
-        <td>{{ $item ? $item->keterangan : '' }}</td>
+        
+        {{-- PASTIKAN STRING DI DALAM KURUNG SIKU SAMA PERSIS DENGAN DATABASE --}}
+        <td class="center">{{ $suhuByArea['Chillroom (Ruang)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Chillroom (Meat)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Cold Storage Meat (Ruang)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Cold Storage Meat (Meat)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Seasoning']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Meat Preparation']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Hopper']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Stuffer']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Susun']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Retort Chamber']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['PVDC']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Drying (Suhu)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Drying (RH)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Packing (Suhu)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Packing (RH)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Dry Store']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['FG (Suhu)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['FG (RH)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $item ? $item->keterangan : '' }}</td>
         <td></td>
         <td></td>
     </tr>

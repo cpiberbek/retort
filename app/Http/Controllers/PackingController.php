@@ -351,7 +351,7 @@ class PackingController extends Controller
         ->paginate(10)
         ->appends($request->all());
 
-        return view('form.packing.verification', compact('data', 'search', 'date'));
+        return view('form.packing.index', compact('data', 'search', 'date'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -391,8 +391,33 @@ class PackingController extends Controller
 
         $packing->delete();
 
-        return redirect()->route('packing.verification')
-        ->with('success', 'Pemeriksaan Proses Cartoning berhasil dihapus');
+        return redirect()->route('packing.index')
+        ->with('success', 'Pemeriksaan Proses Packing berhasil dihapus');
+    }
+
+    public function recyclebin()
+    {
+        $packing = Packing::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.packing.recyclebin', compact('packing'));
+    }
+    public function restore($uuid)
+    {
+        $packing = Packing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $packing->restore();
+
+        return redirect()->route('packing.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $packing = Packing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $packing->forceDelete();
+
+        return redirect()->route('packing.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function exportPdf(Request $request)
@@ -403,19 +428,19 @@ class PackingController extends Controller
         $userPlant = Auth::user()->plant;
 
         $packings = Packing::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->when($nama_produk, function ($query) use ($nama_produk) {
-                $query->where('nama_produk', $nama_produk);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->when($nama_produk, function ($query) use ($nama_produk) {
+            $query->where('nama_produk', $nama_produk);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {

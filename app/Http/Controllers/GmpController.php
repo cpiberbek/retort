@@ -296,7 +296,7 @@ public function update(Request $request, string $uuid)
     return redirect()->route('gmp.index')->with('success', 'Data GMP berhasil diperbarui.');
 }
 
-public function destroy(string $uuid)
+public function destroy($uuid)
 {
     $userPlant = Auth::user()->plant;
 
@@ -308,6 +308,47 @@ public function destroy(string $uuid)
 
     return redirect()->route('gmp.index')
     ->with('success', 'Data GMP Karyawan berhasil dihapus'); 
+}
+
+public function recyclebin()
+{
+    $gmp = Gmp::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+    // Transform data dari $gmp
+    $gmp->getCollection()->transform(function($item) {
+
+        $decoded = json_decode($item->pemeriksaan, true) ?: [];
+        $item->pemeriksaan = $decoded;
+
+        $areasFromJson = array_unique(
+            array_map(fn($row) => $row['area'] ?? 'Unknown', $decoded)
+        );
+
+        $item->areas = $areasFromJson;
+
+        return $item;
+    });
+
+    return view('form.gmp.recyclebin', compact('gmp'));
+}
+
+public function restore($uuid)
+{
+    $gmp = Gmp::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $gmp->restore();
+
+    return redirect()->route('gmp.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $gmp = Gmp::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $gmp->forceDelete();
+
+    return redirect()->route('gmp.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 
     // EXPORT EXCEL

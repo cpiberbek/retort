@@ -49,9 +49,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select id="nama_produk" name="nama_produk" class="form-control selectpicker"
-                                    data-live-search="true" title="Ketik nama produk..." {{ $isLocked ? 'disabled' : ''
+                                    data-live-search="true" title="Ketik nama varian..." {{ $isLocked ? 'disabled' : ''
                                     }} required>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $organoleptik->
@@ -105,7 +105,7 @@
                             <table class="table table-bordered table-sm text-center align-middle" id="pemeriksaanTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Kode Produksi</th>
+                                        <th>Kode Batch</th>
                                         <th>Penampilan</th>
                                         <th>Aroma</th>
                                         <th>Kekenyalan</th>
@@ -135,7 +135,7 @@
                                                 class="form-control form-control-sm b kode_produksi_Select" required
                                                 data-should-disabled="{{ !empty($sensori['kode_produksi']) ? 'true' : 'false' }}"
                                                 {{ !empty($sensori['kode_produksi']) ? 'disabled' : '' }}>
-                                                <option value="">Pilih Kode Produksi</option>
+                                                <option value="">Pilih Kode Batch</option>
                                                 @if(!empty($sensori['kode_produksi']))
                                                 <option value="{{ $sensori['kode_produksi'] }}" selected>{{
                                                     $sensori['kode_produksi_text'] ?? $sensori['kode_produksi'] }}
@@ -276,7 +276,7 @@
             $select.select2({
                 theme: 'bootstrap-5',
                 width: '100%',
-                placeholder: 'Ketik kode produksi...',
+                placeholder: 'Ketik kode batch...',
                 allowClear: true,
                 ajax: {
                     delay: 300,
@@ -354,7 +354,7 @@
             const $err = row.find('.kodeError');
 
             if (!val) {
-                $err.text('Kode produksi wajib dipilih.').removeClass('d-none text-success').addClass('text-danger');
+                $err.text('Kode batch wajib dipilih.').removeClass('d-none text-success').addClass('text-danger');
                 $this.addClass('is-invalid').removeClass('is-valid');
             } else {
                 $err.text('').addClass('d-none').removeClass('text-success text-danger');
@@ -373,7 +373,7 @@
                         <select name="sensori[${index}][kode_produksi]"
                             class="form-control form-control-sm b kode_produksi_Select" required
                             data-should-disabled="false">
-                            <option value="">Pilih Kode Produksi</option>
+                            <option value="">Pilih Kode Batch</option>
                         </select>
                         <small class="kodeError text-danger d-none"></small>
                     </td>
@@ -424,7 +424,7 @@
             newSelect.select2({
                 theme: 'bootstrap-5',
                 width: '100%',
-                placeholder: 'Ketik kode produksi...',
+                placeholder: 'Ketik kode batch...',
                 allowClear: true,
                 ajax: {
                     delay: 300,
@@ -435,7 +435,7 @@
                         }
 
                         return $.ajax({
-                            url: `/lookup/batch-packing/${produk}`,
+                            url: "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk)),
                             data: { q: params.data.term },
                             success,
                             error: failure

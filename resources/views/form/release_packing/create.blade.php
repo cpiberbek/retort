@@ -34,11 +34,11 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" id="nama_produk"
                                     class="form-control @error('nama_produk') is-invalid @enderror"
                                     data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk')==$produk->
                                         nama_produk ? 'selected' : '' }}>
@@ -70,7 +70,7 @@
                                 <label class="form-label">Exp. Date</label>
                                 <input type="date" name="expired_date" id="expired_date" class="form-control">
                                 <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode
-                                    produksi</small>
+                                    batch</small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">No. Palet</label>
@@ -82,20 +82,9 @@
 
                 {{-- PEMERIKSAAN --}}
                 <div class="card mb-4">
-                    <div class="card-header bg-info text-white"><strong>Jumlah Pemeriksaan</strong></div>
+                    <div class="card-header bg-info text-white"><strong>Jumlah Release</strong></div>
                     <div class="card-body">
                         <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Jumlah Box</label>
-                                <input type="number" name="jumlah_box" id="jumlah_box" class="form-control" min="0">
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Reject</label>
-                                <input type="number" name="reject" id="reject" class="form-control" min="0">
-                            </div>
-
                             <div class="col-md-6">
                                 <label class="form-label">Release</label>
                                 <input type="number" name="release" id="release" class="form-control" min="0">
@@ -168,51 +157,53 @@
     }
 
     produkSelect.addEventListener('change', function () {
-        let namaProduk = this.value;
+    let namaProduk = this.value;
 
-        if (!namaProduk) {
-            batchSelect
-                .prop('disabled', true)
-                .html('<option value="">Pilih Varian Terlebih Dahulu</option>')
-                .trigger('change');
-            return;
-        }
+    if (!namaProduk) {
+        batchSelect
+            .prop('disabled', true)
+            .html('<option value="">Pilih Varian Terlebih Dahulu</option>')
+            .trigger('change');
+        return;
+    }
 
-        fetch(`/lookup/batch-packing/${namaProduk}`)
+    // Bisa diganti pakai Blade route juga kalau mau:
+    // let url = "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}"
+    //             .replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+    let url = "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}"
+                .replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+    fetch(url)
             .then(res => res.json())
             .then(data => {
 
                 batchSelect.prop('disabled', false).html('');
 
-                        if (data.length === 0) {
-            console.log('Tidak ada batch ditemukan untuk produk ini.');
+                if (data.length === 0) {
+                    console.log('Tidak ada batch ditemukan untuk varian ini.');
 
-            batchSelect
-                .html('<option value="">Batch Tidak Ditemukan</option>')
-                .prop('disabled', false)           // wajib di-enable sebentar
-                .select2({
-                    placeholder: "Batch Tidak Ditemukan"
-                })
-                .val("")                           // kosongkan value
-                .trigger('change');
-
-            batchSelect.prop('disabled', true);     // disable lagi setelah refresh
-            return;
-        }
-
+                    batchSelect
+                        .html('<option value="">Batch Tidak Ditemukan</option>')
+                        .prop('disabled', true)
+                        .select2({
+                            placeholder: "Batch Tidak Ditemukan"
+                        })
+                        .val("")
+                        .trigger('change');
+                    return;
+                }
 
                 batchSelect.append('<option value="">-- Pilih Batch --</option>');
 
+                // gunakan key yang sesuai JSON
                 data.forEach(batch => {
-                    batchSelect.append(`
-                        <option value="${batch.uuid}">
-                            ${batch.kode_produksi}
-                        </option>
-                    `);
+                    batchSelect.append(new Option(batch.text, batch.id));
                 });
 
                 batchSelect.trigger('change');
-            });
+            })
+            .catch(err => console.error(err));
     });
 
 

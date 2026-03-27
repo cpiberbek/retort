@@ -174,7 +174,7 @@ class MetalController extends Controller
 
         $metal->update($updateData);
 
-        return redirect()->route('metal.verification')
+        return redirect()->route('metal.index')
         ->with('success', 'Pengecekan Metal Detector berhasil diperbarui');
     }
 
@@ -197,7 +197,7 @@ class MetalController extends Controller
         ->paginate(10)
         ->appends($request->all());
 
-        return view('form.metal.verification', compact('data', 'search', 'date'));
+        return view('form.metal.index', compact('data', 'search', 'date'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -216,7 +216,7 @@ class MetalController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('metal.verification')
+        return redirect()->route('metal.index')
         ->with('success', 'Status Verifikasi Pengecekan Metal Detector berhasil diperbarui.');
     }
 
@@ -224,9 +224,32 @@ class MetalController extends Controller
     {
         $metal = Metal::where('uuid', $uuid)->firstOrFail();
         $metal->delete();
+        return redirect()->route('metal.index')->with('success', 'Metal Detector berhasil dihapus');
+    }
 
-        return redirect()->route('metal.verification')
-        ->with('success', 'Data Pengecekan Metal Detector berhasil dihapus');
+    public function recyclebin()
+    {
+        $metal = Metal::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.metal.recyclebin', compact('metal'));
+    }
+    public function restore($uuid)
+    {
+        $metal = Metal::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $metal->restore();
+
+        return redirect()->route('metal.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $metal = Metal::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $metal->forceDelete();
+
+        return redirect()->route('metal.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function exportPdf(Request $request)
@@ -235,13 +258,13 @@ class MetalController extends Controller
         $userPlant = Auth::user()->plant;
 
         $metals = Metal::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('pukul', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('pukul', 'asc')
+        ->get();
 
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {

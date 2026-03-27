@@ -216,7 +216,7 @@
 
                 <div class="row g-3">
                     <div class="col-md-3">
-                        <label class="form-label">Kode Produksi</label>
+                        <label class="form-label">Kode Batch</label>
                        <input type="text"
                             name="items[${i}][kode_produksi]"
                             maxlength="10"
@@ -412,7 +412,7 @@ function renderCheckbox(index, name, label, isChecked) {
                 kodeError.text('').addClass('d-none');
 
                 if (value.length !== 10) {
-                    kodeError.text('Kode produksi harus 10 karakter').removeClass('d-none');
+                    kodeError.text('Kode batch harus 10 karakter').removeClass('d-none');
                     return false;
                 }
 
@@ -455,7 +455,7 @@ function renderCheckbox(index, name, label, isChecked) {
 
                 if (!valid) {
                     e.preventDefault();
-                    alert('Ada kode produksi tidak valid!');
+                    alert('Ada kode batch tidak valid!');
                 }
 
             });

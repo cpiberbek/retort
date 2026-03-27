@@ -40,11 +40,11 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk"
                                     class="form-control @error('nama_produk') is-invalid @enderror"
                                     data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk')==$produk->
                                         nama_produk ? 'selected' : '' }}>
@@ -70,7 +70,7 @@
                                 <input type="date" name="exp_date" id="exp_date"
                                     class="form-control @error('exp_date') is-invalid @enderror"
                                     value="{{ old('exp_date') }}">
-                                <small class="text-muted">Dihitung otomatis +7 bulan dari kode produksi</small>
+                                <small class="text-muted">Dihitung otomatis +7 bulan dari kode batchall>
                                 <small class="text-danger">@error('exp_date') {{ $message }} @enderror</small>
                             </div>
                         </div>
@@ -152,17 +152,6 @@
                                 class="form-control @error('berat_pcs') is-invalid @enderror"
                                 value="{{ old('berat_pcs') }}">
                             <small class="text-danger">@error('berat_pcs') {{ $message }} @enderror</small>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label">Cek Vakum</label>
-                            <select name="cek_vakum" class="form-control @error('cek_vakum') is-invalid @enderror">
-                                <option value="">-- Pilih --</option>
-                                <option value="OK" {{ old('cek_vakum')=='OK' ? 'selected' : '' }}>OK</option>
-                                <option value="Tidak OK" {{ old('cek_vakum')=='Tidak OK' ? 'selected' : '' }}>Tidak OK
-                                </option>
-                            </select>
-                            <small class="text-danger">@error('cek_vakum') {{ $message }} @enderror</small>
                         </div>
 
                         <div class="mb-3">
@@ -276,17 +265,18 @@
     }
 
     produkSelect.addEventListener('change', function () {
-        let namaProduk = this.value;
+    let namaProduk = this.value;
 
-        // Jika user mengosongkan nama produk
-        if (!namaProduk) {
-            batchSelect.innerHTML = '<option value="">Pilih Varian Terlebih Dahulu</option>';
-            batchSelect.disabled = true;
-            expDateInput.value = '';
-            return;
-        }
+    if (!namaProduk) {
+        batchSelect.innerHTML = '<option value="">Pilih Varian Terlebih Dahulu</option>';
+        batchSelect.disabled = true;
+        expDateInput.value = '';
+        return;
+    }
 
-        fetch(`/lookup/batch/${namaProduk}`)
+    const url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+    fetch(url)
         .then(response => response.json())
         .then(data => {
             batchSelect.disabled = false; 
@@ -304,6 +294,11 @@
             data.forEach(batch => {
                 batchSelect.innerHTML += `<option value="${batch.uuid}">${batch.kode_produksi}</option>`;
             });
+        })
+        .catch(err => {
+            console.error('Fetch error:', err);
+            batchSelect.innerHTML = '<option value="">Gagal memuat data batch</option>';
+            batchSelect.disabled = true;
         });
     });
 

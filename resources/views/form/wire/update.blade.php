@@ -36,7 +36,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
                                 {{ $wire->nama_produk ? 'disabled' : '' }} required>
                                 @foreach($produks as $produk)

@@ -188,10 +188,6 @@ class BeritaAcaraController extends Controller
         ->with('success', 'Berita Acara berhasil diperbarui.');
     }
 
-
-    /**
-     * Menghapus data (Soft Delete).
-     */
     public function destroy(BeritaAcara $beritaAcara)
     {
         $beritaAcara->delete();
@@ -199,6 +195,30 @@ class BeritaAcaraController extends Controller
         ->with('success', 'Berita Acara berhasil dihapus.');
     }
 
+    public function recyclebin()
+    {
+        $beritaAcara = BeritaAcara::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('berita-acara.recyclebin', compact('beritaAcara'));
+    }
+    public function restore($uuid)
+    {
+        $beritaAcara = BeritaAcara::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $beritaAcara->restore();
+
+        return redirect()->route('berita-acara.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $beritaAcara = BeritaAcara::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $beritaAcara->forceDelete();
+
+        return redirect()->route('berita-acara.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
     // --- METODE VERIFIKASI (SESUAI CONTOH ANDA) ---
 
     /**

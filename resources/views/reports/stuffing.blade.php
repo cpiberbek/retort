@@ -99,8 +99,8 @@
                 <th width="3%">No</th>
                 <th width="7%">Date</th>
                 <th width="3%">Shift</th>
-                <th width="16%">Nama Produk</th> {{-- Lebar diperbesar agar muat --}}
-                <th width="9%">Kode<br>Produksi</th>
+                <th width="16%">Nama Varian</th> {{-- Lebar diperbesar agar muat --}}
+                <th width="9%">Kode<br>Batch</th>
                 <th width="6%">Mesin</th>
                 <th width="5%">Jam</th>
                 
@@ -108,8 +108,6 @@
                 <th width="5%">Speed</th>
                 <th width="5%">Pjg<br>(cm)</th>
                 <th width="5%">Berat<br>(gr)</th>
-                
-                <th width="4%">Vakum</th>
                 <th width="4%">Seal</th>
                 <th width="4%">Klip</th>
                 
@@ -126,7 +124,7 @@
                 <td width="7%">{{ \Carbon\Carbon::parse($item->date)->format('d-m-y') }}</td>
                 <td width="3%">{{ $item->shift }}</td>
                 
-                {{-- Text align Left untuk Produk --}}
+                {{-- Text align Left untuk Varian --}}
                 <td width="16%" class="text-left">{{ $item->nama_produk }}</td>
                 
                 <td width="9%">{{ $item->kode_produksi }}</td>
@@ -140,7 +138,6 @@
                 <td width="5%">{{ $item->berat_pcs ? (float)$item->berat_pcs : '-' }}</td>
                 
                 {{-- Simbol Centang (ZapfDingbats) --}}
-                <td width="4%" >{{ !empty($item->cek_vakum) ? '4' : '-' }}</td>
                 <td width="4%" >{{ !empty($item->kekuatan_seal) ? '4' : '-' }}</td>
                 <td width="4%">{{ $item->diameter_klip ?? '-' }}</td>
                 

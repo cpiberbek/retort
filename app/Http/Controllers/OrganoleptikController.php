@@ -96,7 +96,7 @@ class OrganoleptikController extends Controller
         $sensoris = $validated['sensori']; 
         
         foreach ($sensoris as $index => $item) {
-            
+
             $sensoris[$index]['kode_produksi']      = $item['kode_produksi'];
             $sensoris[$index]['penampilan']         = $item['penampilan'] ?? null;
             $sensoris[$index]['aroma']              = $item['aroma'] ?? null;
@@ -306,7 +306,7 @@ class OrganoleptikController extends Controller
         ->paginate(10)
         ->appends($request->all());
 
-        return view('form.organoleptik.verification', compact('data', 'search', 'start_date', 'end_date'));
+        return view('form.organoleptik.index', compact('data', 'search', 'start_date', 'end_date'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -333,11 +333,34 @@ class OrganoleptikController extends Controller
     {
         $organoleptik = Organoleptik::where('uuid', $uuid)->firstOrFail();
         $organoleptik->delete();
-
-        return redirect()->route('organoleptik.verification')
-        ->with('success', '🗑️ Pemeriksaan Organoleptik berhasil dihapus.');
+        return redirect()->route('organoleptik.index')->with('success', 'Pemeriksaan Organoleptik berhasil dihapus');
     }
 
+    public function recyclebin()
+    {
+        $organoleptik = Organoleptik::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.organoleptik.recyclebin', compact('organoleptik'));
+    }
+    public function restore($uuid)
+    {
+        $organoleptik = Organoleptik::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $organoleptik->restore();
+
+        return redirect()->route('organoleptik.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $organoleptik = Organoleptik::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $organoleptik->forceDelete();
+
+        return redirect()->route('organoleptik.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+    
     public function exportPdf(Request $request)
     {
         $date = $request->input('date');
@@ -346,19 +369,19 @@ class OrganoleptikController extends Controller
         $userPlant = Auth::user()->plant;
 
         $organoleptiks = Organoleptik::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->when($nama_produk, function ($query) use ($nama_produk) {
-                $query->where('nama_produk', $nama_produk);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->when($nama_produk, function ($query) use ($nama_produk) {
+            $query->where('nama_produk', $nama_produk);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {

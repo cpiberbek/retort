@@ -49,9 +49,9 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ old('nama_produk') == $produk->nama_produk ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
@@ -71,11 +71,11 @@
 
                     <div class="card-body">
 
-                        <div class="alert alert-danger py-2 px-3 mb-4" style="font-size: 0.9rem;">
+                        <!-- <div class="alert alert-danger py-2 px-3 mb-4" style="font-size: 0.9rem;">
                             <i class="bi bi-info-circle"></i>
                             <strong>Catatan:</strong>
                             <i class="bi bi-check-circle text-success"></i> Centang = <b>OK</b>, Kosong = <b>Tidak OK</b>.
-                        </div>
+                        </div> -->
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Waktu</label>

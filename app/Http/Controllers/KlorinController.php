@@ -239,6 +239,33 @@ class KlorinController extends Controller
         return redirect()->route('klorin.index')->with('success', 'Data Pengecekan Klorin berhasil dihapus.');
     }
 
+    public function recyclebin()
+    {
+        $klorin = Klorin::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.klorin.recyclebin', compact('klorin'));
+    }
+
+    public function restore($uuid)
+    {
+        $klorin = Klorin::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $klorin->restore();
+
+        return redirect()->route('klorin.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    
+    public function deletePermanent($uuid)
+    {
+        $klorin = Klorin::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $klorin->forceDelete();
+
+        return redirect()->route('klorin.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+
     public function exportPdf(Request $request)
     {
         // 1. Ambil Data

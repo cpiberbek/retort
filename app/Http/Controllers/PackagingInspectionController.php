@@ -28,7 +28,7 @@ class PackagingInspectionController extends Controller
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('shift', 'LIKE', "%{$searchTerm}%") // Pencarian shift
                   ->orWhere('uuid', 'LIKE', "%{$searchTerm}%"); // Opsional: Cari UUID juga
-            });
+              });
         }
 
         // 3. Terapkan filter tanggal
@@ -47,8 +47,8 @@ class PackagingInspectionController extends Controller
                              ->paginate(10)
                              ->withQueryString();
 
-        return view('packaging_inspections.index', compact('inspections'));
-    }
+                             return view('packaging_inspections.index', compact('inspections'));
+                         }
 
     /**
      * Menampilkan form untuk membuat inspeksi baru.
@@ -72,7 +72,7 @@ class PackagingInspectionController extends Controller
             // Validasi Items
             'items'                       => 'required|array|min:1',
             'items.*.no_pol'              => 'required|string|max:255',
-            'items.*.vehicle_condition'   => 'required|string|max:255',
+            'items.*.vehicle_condition'   => 'required|array|min:1',
             'items.*.pbb_op'              => 'nullable|string|max:255',
             'items.*.packaging_type'      => 'required|string|max:255',
             'items.*.supplier'            => 'required|string|max:255',
@@ -110,6 +110,10 @@ class PackagingInspectionController extends Controller
             
             // 2. Simpan Items
             $itemsData = collect($validatedHeader['items'])->map(function ($item) use ($inspection) {
+                if (isset($item['vehicle_condition']) && is_array($item['vehicle_condition'])) {
+                    $item['vehicle_condition'] = implode(',', $item['vehicle_condition']);
+                }
+
                 $item['packaging_inspection_id'] = $inspection->id;
                 return $item;
             });
@@ -119,7 +123,7 @@ class PackagingInspectionController extends Controller
             DB::commit();
             
             return redirect()->route('packaging-inspections.index')
-                             ->with('success', 'Inspeksi packaging berhasil disimpan.');
+            ->with('success', 'Inspeksi packaging berhasil disimpan.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -161,7 +165,7 @@ class PackagingInspectionController extends Controller
             'items.*.id'      => 'nullable|integer|exists:packaging_inspection_items,id',
             // ... (copy validasi items lengkap dari store) ...
             'items.*.no_pol'              => 'required|string|max:255',
-            'items.*.vehicle_condition'   => 'required|string|max:255',
+            'items.*.vehicle_condition'   => 'required|array|min:1',
             'items.*.pbb_op'              => 'nullable|string|max:255',
             'items.*.packaging_type'      => 'required|string|max:255',
             'items.*.supplier'            => 'required|string|max:255',
@@ -191,6 +195,11 @@ class PackagingInspectionController extends Controller
             // Logic Update Items (Sama seperti sebelumnya)
             $incomingItemIds = [];
             foreach ($validatedData['items'] as $itemData) {
+                
+                if (isset($itemData['vehicle_condition']) && is_array($itemData['vehicle_condition'])) {
+                    $itemData['vehicle_condition'] = implode(',', $itemData['vehicle_condition']);
+                }
+
                 if (isset($itemData['id']) && $itemData['id']) {
                     $item = $packagingInspection->items()->find($itemData['id']);
                     if ($item) {
@@ -207,7 +216,7 @@ class PackagingInspectionController extends Controller
             DB::commit();
 
             return redirect()->route('packaging-inspections.index')
-                             ->with('success', 'Inspeksi packaging berhasil diperbarui.');
+            ->with('success', 'Inspeksi packaging berhasil diperbarui.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -228,11 +237,36 @@ class PackagingInspectionController extends Controller
             $packagingInspection->delete(); // Soft delete induk
 
             return redirect()->route('packaging-inspections.index')
-                             ->with('success', 'Inspeksi packaging berhasil dihapus.');
+            ->with('success', 'Inspeksi packaging berhasil dihapus.');
         } catch (\Exception $e) {
             Log::error('Error deleting packaging inspection: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
         }
+    }
+
+    public function recyclebin()
+    {
+        $packagingInspection = PackagingInspection::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('packaging_inspections.recyclebin', compact('packagingInspection'));
+    }
+    public function restore($uuid)
+    {
+        $packagingInspection = PackagingInspection::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $packagingInspection->restore();
+
+        return redirect()->route('packaging_inspections.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $packagingInspection = PackagingInspection::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $packagingInspection->forceDelete();
+
+        return redirect()->route('packaging_inspections.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function showVerificationList(Request $request): View
@@ -251,11 +285,11 @@ class PackagingInspectionController extends Controller
                 // Mencari di tabel header (packaging_inspections)
                 $q->where('shift', 'like', "%{$search}%")
                   // Mencari di tabel relasi (packaging_inspection_items)
-                  ->orWhereHas('items', function ($itemQuery) use ($search) {
-                      $itemQuery->where('no_pol', 'like', "%{$search}%")
-                                ->orWhere('supplier', 'like', "%{$search}%")
-                                ->orWhere('packaging_type', 'like', "%{$search}%");
-                  });
+                ->orWhereHas('items', function ($itemQuery) use ($search) {
+                  $itemQuery->where('no_pol', 'like', "%{$search}%")
+                  ->orWhere('supplier', 'like', "%{$search}%")
+                  ->orWhere('packaging_type', 'like', "%{$search}%");
+              });
             });
         }
 

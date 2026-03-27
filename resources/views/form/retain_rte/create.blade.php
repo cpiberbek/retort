@@ -23,8 +23,8 @@
 
                         <div class="row mb-3">
                           <div class="col-md-6">
-                            <label class="form-label">Nama Produk</label>
-                            <select id="nama_produk" name="nama_produk" class="form-control selectpicker" data-live-search="true" title="Ketik nama produk..." required>
+                            <label class="form-label">Nama Varian</label>
+                            <select id="nama_produk" name="nama_produk" class="form-control selectpicker" data-live-search="true" title="Ketik nama varian..." required>
                                 @foreach($produks as $produk)
                                 <option value="{{ $produk->nama_produk }}"
                                     {{ old('nama_produk', $data->nama_produk ?? '') == $produk->nama_produk ? 'selected' : '' }}>
@@ -211,12 +211,12 @@
             kodeError.text('').addClass('d-none');
 
             if(value.length !== 10) {
-                kodeError.text('Kode produksi harus terdiri dari 10 karakter').removeClass('d-none');
+                kodeError.text('Kode batch harus terdiri dari 10 karakter').removeClass('d-none');
                 return false;
             }
 
             if(!/^[A-Z0-9]+$/.test(value)) {
-                kodeError.text('Kode produksi hanya boleh huruf besar dan angka').removeClass('d-none');
+                kodeError.text('Kode batch hanya boleh huruf besar dan angka').removeClass('d-none');
                 return false;
             }
 
@@ -239,7 +239,7 @@
         form.on('submit', function(e){
             if(!validateKode()){
                 e.preventDefault();
-                alert('Kode produksi tidak valid! Periksa kembali sebelum menyimpan.');
+                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
                 kodeInput.focus();
             }
         });

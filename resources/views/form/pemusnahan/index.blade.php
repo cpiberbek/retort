@@ -18,25 +18,31 @@
     @endif
 
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Pemusnahan Barang / Produk</h2>
+        <h2 class="h4">Pemusnahan Barang / Varian</h2>
         <div class="btn-group" role="group">
             @can('can access add button')
             <a href="{{ route('pemusnahan.create') }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
             @endcan
-            
+            @can('can access export')
             {{-- Tombol Export --}}
             <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('pemusnahan.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('pemusnahan.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
         <div class="row w-100">
-            
+
             {{-- Filter Tanggal --}}
             <div class="col-md-4">
                 <div class="mb-1 fw-bold">Pilih Tanggal</div>
@@ -45,7 +51,7 @@
                         <i class="bi bi-calendar-date text-muted"></i>
                     </span>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch...">
                 </div>
             </div>
 
@@ -57,7 +63,7 @@
                         <i class="bi bi-search text-muted"></i>
                     </span>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
 
@@ -99,13 +105,13 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <div class="table-responsive">
-               <table class="table">
+             <table class="table">
                 <thead class="table-secondary text-center">
                     <tr>
                         <th>NO.</th>
                         <th>Date</th> {{-- Tanpa Shift --}}
-                        <th>Nama Produk</th>
-                        <th>Kode Produksi</th>
+                        <th>Nama Varian</th>
+                        <th>Kode Batch</th>
                         <th>Expired Date</th>
                         <th>Analisa</th>
                         <th>Keterangan</th>
@@ -135,10 +141,10 @@
                             <span class="fw-bold text-success">Verified</span>
                             @elseif ($dep->status_spv == 2)
                             <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#revisionModal{{ $dep->uuid }}" 
-                               class="text-danger fw-bold text-decoration-none" style="cursor: pointer;">Revision</a>
-                               @endif
-                           </td>
-                           <td class="text-center align-middle">
+                             class="text-danger fw-bold text-decoration-none" style="cursor: pointer;">Revision</a>
+                             @endif
+                         </td>
+                         <td class="text-center align-middle">
                             @can('can access verification button')
                             <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
                                 <i class="bi bi-shield-check me-1"></i> Verifikasi
@@ -163,7 +169,7 @@
                                 <i class="bi bi-trash"></i> Hapus
                             </button>
                         </form>
-                            @endcan
+                        @endcan
                         <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-centered modal-md">
                                 <form action="{{ route('pemusnahan.verification.update', $dep->uuid) }}" method="POST">
@@ -223,31 +229,31 @@
                                                         placeholder="Masukkan catatan, misalnya alasan revisi..." 
                                                         style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
 
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div class="modal-footer justify-content-end p-4 border-top" style="background-color: #9E3419; border-color: #00ffc4 !important;">
-                                            <button type="button" class="btn btn-outline-light fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
-                                                Batal
-                                            </button>
-                                            <button type="submit" class="btn fw-bolder rounded-pill px-5" style="background-color: #E39581; color: #2c3e50;">
-                                                <i class="bi bi-save-fill me-1"></i> SUBMIT
-                                            </button>
+                                            <div class="modal-footer justify-content-end p-4 border-top" style="background-color: #9E3419; border-color: #00ffc4 !important;">
+                                                <button type="button" class="btn btn-outline-light fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
+                                                    Batal
+                                                </button>
+                                                <button type="submit" class="btn fw-bolder rounded-pill px-5" style="background-color: #E39581; color: #2c3e50;">
+                                                    <i class="bi bi-save-fill me-1"></i> SUBMIT
+                                                </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </form>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="10" class="text-center">Belum ada data pemusnahan.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="10" class="text-center">Belum ada data pemusnahan.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -255,7 +261,7 @@
         {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
     </div>
 </div>
-
+</div>
 <script>
     setTimeout(() => {
         const alert = document.querySelector('.alert');

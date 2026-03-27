@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-0">
-    
+
     {{-- Alert --}}
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -17,7 +17,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     @endif
-            
+
     {{-- HEADER: Menggunakan Versi Anda (Ada Export PDF) --}}
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
         <h2 class="h4">Pemeriksaan Proses Sampling Finish Good</h2>
@@ -27,10 +27,17 @@
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
             @endcan
+            @can('can access export')
             {{-- Tombol Export PDF --}}
             <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('sampling_fg.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -46,7 +53,7 @@
                         </span>
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    value="{{ request('date') }}" placeholder="Tanggal Batch">
                 </div>
             </div>
             <div class="col-md-3">
@@ -75,7 +82,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -102,7 +109,7 @@
             });
 
 
-    
+
             date.addEventListener('change', () => form.submit());
             if(shift) shift.addEventListener('change', () => form.submit());
 
@@ -126,13 +133,13 @@
                             <th rowspan="2" style="width: 3%;">NO.</th>
                             <th rowspan="2" style="width: 8%;">Tanggal | Shift</th>
                             <th rowspan="2" style="width: 4%;">Palet</th>
-                            <th rowspan="2" style="width: 12%;">Nama Produk</th>
-                            <th rowspan="2" style="width: 6%;">Kode Prod</th>
+                            <th rowspan="2" style="width: 12%;">Nama Varian</th>
+                            <th rowspan="2" style="width: 6%;">Kode Batch</th>
                             <th rowspan="2" style="width: 6%;">Exp. Date</th>
                             <th colspan="4">Pemeriksaan Proses Cartoning</th>
                             <th rowspan="2" style="width: 5%;">Isi<br>/Box</th>
                             <th rowspan="2" style="width: 4%;">Jml<br>Box</th>
-                            <th colspan="3">Status Produk</th>
+                            <th colspan="3">Status Varian</th>
                             <th rowspan="2" style="width: 5%;">Item<br>Mutu</th>
                             <th rowspan="2" style="width: 8%;">Catatan</th>
                             <th rowspan="2" style="width: 4%;">QC</th>
@@ -159,7 +166,7 @@
                             <td class="text-center">{{ $no++ }}</td>
                             <td class="text-center">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | {{ $dep->shift }}</td>
                             <td class="text-center">{{ $dep->palet }}</td>
-                            <td>{{ $dep->nama_produk }}</td>
+                            <td class="text-center">{{ $dep->nama_produk }}</td>
                             <td class="text-center">{{ $dep->kode_produksi }}</td>
                             <td class="text-center">{{ \Carbon\Carbon::parse($dep->exp_date)->format('d-m-Y') }}</td>
                             <td class="text-center">{{ \Carbon\Carbon::parse($dep->pukul)->format('H:i') }}</td>

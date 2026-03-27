@@ -42,11 +42,11 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" {{
                                     $labelisasi_pvdc->nama_produk ? 'disabled' : '' }}
                                     required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" {{ $labelisasi_pvdc->
                                         nama_produk==$produk->nama_produk?"selected":"" }}>
@@ -127,7 +127,7 @@
                                         @else
                                         <select name="data_pvdc[{{ $i }}][kode_batch]"
                                             class="form-control form-control-sm batchSelect" required disabled>
-                                            <option value="">Pilih Produk Terlebih Dahulu</option>
+                                            <option value="">Pilih Varian Terlebih Dahulu</option>
                                         </select>
                                         @endif
                                     </td>
@@ -258,11 +258,12 @@
             select.prop("disabled", true);
 
             if (!produk) {
-                select.html('<option value="">Pilih Produk Terlebih Dahulu</option>');
+                select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
                 return;
             }
 
-            fetch(`/lookup/batch/${produk}`)
+            const url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk));
+                fetch(url)
                 .then(res => res.json())
                 .then(data => {
 

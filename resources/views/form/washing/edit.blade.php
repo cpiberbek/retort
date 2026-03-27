@@ -34,9 +34,9 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}" 
                                         {{ (old('nama_produk', $washing->nama_produk ?? '') == $produk->nama_produk) ? 'selected' : '' }}>
@@ -46,7 +46,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" maxlength="10" 
                                 value="{{ old('kode_produksi', $washing->kode_produksi ?? '') }}" required>
                                 <small id="kodeError" class="text-danger d-none"></small>
@@ -70,14 +70,14 @@
                             <table class="table table-bordered align-middle text-center">
                                 <tbody>
                                     <tr>
-                                        <td class="text-left align-middle">Panjang Produk Akhir (Cm)</td>
+                                        <td class="text-left align-middle">Panjang Varian Akhir (Cm)</td>
                                         <td>
                                             <input type="number" name="panjang_produk" id="panjang_produk" class="form-control form-control-sm text-center" step="0.01 " min="0"
                                             value="{{ old('panjang_produk', $washing->panjang_produk ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-left align-middle">Diameter Produk Akhir (Mm)</td>
+                                        <td class="text-left align-middle">Diameter Varian Akhir (Mm)</td>
                                         <td>
                                             <input type="number" name="diameter_produk" id="diameter_produk" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('diameter_produk', $washing->diameter_produk ?? '') }}">
@@ -111,15 +111,6 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-left align-middle">Cek Kebocoran / Vacuum</td>
-                                        <td>
-                                            <select name="kebocoran" id="kebocoran" class="form-control form-control-sm text-center">
-                                                <option value="Ok" {{ (old('kebocoran', $washing->kebocoran ?? '') == 'Ok') ? 'selected' : '' }}>Ok</option>
-                                                <option value="Tidak Ok" {{ (old('kebocoran', $washing->kebocoran ?? '') == 'Tidak Ok') ? 'selected' : '' }}>Tidak Ok</option>
-                                            </select>
-                                        </td>
-                                    </tr>
-                                    <tr>
                                         <td class="text-left align-middle">Kekuatan Seal</td>
                                         <td>
                                             <select name="kekuatan_seal" id="kekuatan_seal" class="form-control form-control-sm text-center">
@@ -129,7 +120,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-left align-middle">Print Kode Produksi</td>
+                                        <td class="text-left align-middle">Print Kode Batch</td>
                                         <td>
                                             <select name="print_kode" id="print_kode" class="form-control form-control-sm text-center">
                                                 <option value="Ok" {{ (old('print_kode', $washing->print_kode ?? '') == 'Ok') ? 'selected' : '' }}>Ok</option>
@@ -317,7 +308,7 @@
                 {{-- TOMBOL --}}
                 <div class="d-flex justify-content-between mt-3">
                     <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Simpan</button>
-                    <a href="{{ route('washing.verification') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
+                    <a href="{{ route('washing.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
                 </div>
             </form>
 
@@ -345,12 +336,12 @@
             kodeError.text('').addClass('d-none');
 
             if(value.length !== 10) {
-                kodeError.text('Kode produksi harus terdiri dari 10 karakter').removeClass('d-none');
+                kodeError.text('Kode batch harus terdiri dari 10 karakter').removeClass('d-none');
                 return false;
             }
 
             if(!/^[A-Z0-9]+$/.test(value)) {
-                kodeError.text('Kode produksi hanya boleh huruf besar dan angka').removeClass('d-none');
+                kodeError.text('Kode batch hanya boleh huruf besar dan angka').removeClass('d-none');
                 return false;
             }
 
@@ -373,7 +364,7 @@
         form.on('submit', function(e){
             if(!validateKode()){
                 e.preventDefault();
-                alert('Kode produksi tidak valid! Periksa kembali sebelum menyimpan.');
+                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
                 kodeInput.focus();
             }
         });

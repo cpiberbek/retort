@@ -25,15 +25,22 @@
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
             @endcan
+            @can('can access export')
             <a href="{{ route('suhu.exportPdf', ['date' => request('date'), 'shift' => request('shift')]) }}" target="_blank" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('suhu.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('suhu.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
+        <div class="row w-100">
             <div class="col-md-4">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
@@ -55,6 +62,7 @@
                         </span>
                     </div>
                     <select name="shift" id="filter_shift" class="form-select form-control border-start-0">
+                        <option value="">Semua Shift</option>
                         <option value="1" {{ request('shift') == '1' ? 'selected' : '' }}>Shift 1</option>
                         <option value="2" {{ request('shift') == '2' ? 'selected' : '' }}>Shift 2</option>
                         <option value="3" {{ request('shift') == '3' ? 'selected' : '' }}>Shift 3</option>
@@ -71,16 +79,9 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const search = document.getElementById('search');
             const date = document.getElementById('filter_date');
             const shift = document.getElementById('filter_shift');
             const form = document.getElementById('filterForm');
-            let timer;
-
-            search.addEventListener('input', () => {
-                clearTimeout(timer);
-                timer = setTimeout(() => form.submit(), 500);
-            });
 
             date.addEventListener('change', () => form.submit());
             shift.addEventListener('change', () => form.submit());
@@ -89,7 +90,6 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            {{-- Tambahkan table-responsive agar tabel tidak keluar border --}}
             <div class="table-responsive">
                 <table class="table">
                     <thead class="table-secondary text-center">
@@ -116,107 +116,103 @@
                             <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->pukul)->format('H:i') }}</td>
                             <td class="text-center align-middle">
                                 @php
-                                // Decode JSON hasil suhu dari database
-                                $hasilSuhu = is_string($dep->hasil_suhu)
-                                ? json_decode($dep->hasil_suhu, true)
-                                : ($dep->hasil_suhu ?? []);
-
+                                $hasilSuhu = is_string($dep->hasil_suhu) ? json_decode($dep->hasil_suhu, true) : ($dep->hasil_suhu ?? []);
                                 if (!$hasilSuhu) $hasilSuhu = [];
-
-                                // Ambil daftar area & standar dari tabel area_suhu
                                 $areaList = $area_suhus ?? [];
                                 @endphp
 
                                 @if(!empty($hasilSuhu))
-                                <a href="javascript:void(0);" class="btn btn-info btn-sm" data-bs-toggle="modal"
-                                    data-bs-target="#peneraanModal{{ $dep->uuid }}">
-                                    Lihat Hasil Pemeriksaan
+                                <a href="javascript:void(0);" class="btn btn-info btn-sm text-white" data-bs-toggle="modal" data-bs-target="#peneraanModal{{ $dep->uuid }}">
+                                    <i class="bi bi-eye"></i> Lihat Hasil
                                 </a>
-                                {{-- Modal --}}
-                                <div class="modal fade" id="peneraanModal{{ $dep->uuid }}" tabindex="-1"
-                                    aria-labelledby="peneraanModalLabel{{ $dep->uuid }}" aria-hidden="true">
+
+                                {{-- Modal Hasil Pemeriksaan --}}
+                                <div class="modal fade" id="peneraanModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="peneraanModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
                                         <div class="modal-content">
                                             <div class="modal-header bg-primary text-white">
                                                 <h5 class="modal-title" id="peneraanModalLabel{{ $dep->uuid }}">
-                                                    Tanggal : 
-                                                    {{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift:
-                                                    {{ $dep->shift }}
+                                                    Tanggal : {{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift: {{ $dep->shift }}
                                                 </h5>
-                                                <button type="button" class="btn-close btn-close-white"
-                                                    data-bs-dismiss="modal"></button>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
-                                            <div class="modal-body">
-                                                @if(!empty($hasilSuhu))
+                                            <div class="modal-body p-0">
+                                                <div class="table-responsive">
                                                     <table class="table table-bordered table-sm mb-0 text-center align-middle">
                                                         <thead class="table-light">
                                                             <tr>
-                                                                <th style="width: 50%" class="text-left">Area</th>
+                                                                <th style="width: 20%" class="text-start ps-3">Detail</th>
                                                                 @foreach($areaList as $area)
                                                                 <th>{{ $area->area }}</th>
                                                                 @endforeach
                                                             </tr>
                                                         </thead>
                                                         <tbody>
-                                                            {{-- Baris Standar --}}
+                                                            {{-- Baris Standar Suhu --}}
                                                             <tr>
-                                                                <td class="fw-bold text-left"><b>Standar (°C)</b></td>
+                                                                <td class="fw-bold text-start ps-3 bg-light">Standar (°C)</td>
                                                                 @foreach($areaList as $area)
-                                                                <td class="text-center" style="font-weight: 700;">{{ $area->standar ?? '-' }}</td>
+                                                                <td class="text-center bg-light" style="font-weight: 600; font-size: 0.8rem;">
+                                                                    @if($area->standar_min !== null && $area->standar_max !== null)
+                                                                        ({{ $area->standar_min }}) - ({{ $area->standar_max }})
+                                                                    @else
+                                                                        <span class="text-muted">-</span>
+                                                                    @endif
+                                                                </td>
                                                                 @endforeach
                                                             </tr>
 
-                                                            {{-- Baris Aktual --}}
+                                                            {{-- Baris Aktual (Hasil Pemeriksaan) --}}
                                                             <tr>
-                                                                <td class="fw-bold text-left"><b>Aktual (°C)</b></td>
+                                                                <td class="fw-bold text-start ps-3">Aktual (°C)</td>
                                                                 @foreach($areaList as $area)
                                                                 @php
-                                                                // Cocokkan nilai aktual berdasarkan area
-                                                                $matched = collect($hasilSuhu)->firstWhere('area', $area->area);
-                                                                $nilai = floatval($matched['nilai'] ?? 0);
-                                                                $standarStr = trim($area->standar ?? '');
-                                                                $outOfRange = false;
+                                                                    $matched = collect($hasilSuhu)->firstWhere('area', $area->area);
+                                                                    $nilai = isset($matched['nilai']) ? floatval($matched['nilai']) : null;
+                                                                    $min = $area->standar_min;
+                                                                    $max = $area->standar_max;
 
-                                                                if ($standarStr !== '') {
-                                                                    if (preg_match('/^<\s*(\d+(\.\d+)?)/', $standarStr, $m)) {
-                                                                        $max = floatval($m[1]);
-                                                                        $outOfRange = $nilai >= $max;
-                                                                    } elseif (preg_match('/^>\s*(\d+(\.\d+)?)/', $standarStr, $m)) {
-                                                                        $min = floatval($m[1]);
-                                                                        $outOfRange = $nilai <= $min;
-                                                                    } elseif (preg_match('/^(\d+(\.\d+)?)\s*-\s*(\d+(\.\d+)?)/', $standarStr, $m)) {
-                                                                        $min = floatval($m[1]);
-                                                                        $max = floatval($m[3]);
-                                                                        $outOfRange = $nilai < $min || $nilai > $max;
+                                                                    // Logika Penentuan Warna
+                                                                    if ($nilai === null || is_nan($nilai)) {
+                                                                        $colorClass = 'text-dark';
+                                                                        $displayNilai = '-';
+                                                                    } elseif ($min !== null && $max !== null) {
+                                                                        // Asumsikan standar_min bisa lebih besar dari max (seperti case dev sebelumnya)
+                                                                        $actualMin = min($min, $max);
+                                                                        $actualMax = max($min, $max);
+                                                                        
+                                                                        if ($nilai >= $actualMin && $nilai <= $actualMax) {
+                                                                            $colorClass = 'text-success'; // Masuk standar
+                                                                        } else {
+                                                                            $colorClass = 'text-danger'; // Keluar standar
+                                                                        }
+                                                                        $displayNilai = $nilai;
+                                                                    } else {
+                                                                        $colorClass = 'text-dark'; 
+                                                                        $displayNilai = $nilai;
                                                                     }
-                                                                }
                                                                 @endphp
-
-                                                                <td class="fw-bold text-center {{ $outOfRange ? 'text-danger' : 'text-success' }}">
-                                                                    {{ $matched['nilai'] ?? '-' }}
+                                                                <td class="fw-bold text-center {{ $colorClass }}" style="font-size: 0.9rem;">
+                                                                    {{ $displayNilai }}
                                                                 </td>
                                                                 @endforeach
                                                             </tr>
                                                         </tbody>
                                                     </table>
-                                                @else
-                                                    <p class="text-muted">Belum ada pemeriksaan</p>
-                                                @endif
+                                                </div>
                                             </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary btn-sm"
-                                                    data-bs-dismiss="modal">Tutup</button>
+                                            <div class="modal-footer bg-light">
+                                                <button type="button" class="btn btn-secondary btn-sm px-4 rounded-pill" data-bs-dismiss="modal">Tutup</button>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                    
                                 @else
-                                <span>-</span>
+                                <span class="text-muted fst-italic">Belum ada data</span>
                                 @endif
                             </td>
                             <td class="text-center align-middle">{{ !empty($dep->keterangan) ? $dep->keterangan : '-' }}</td>
-                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center align-middle fw-medium">{{ $dep->username }}</td>
                             <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
                             <td class="text-center align-middle">
                                 @if ($dep->status_spv == 0)
@@ -225,35 +221,35 @@
                                 <span class="fw-bold text-success">Verified</span>
                                 @elseif ($dep->status_spv == 2)
                                 <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#revisionModal{{ $dep->uuid }}" 
-                                class="text-danger fw-bold text-decoration-none" style="cursor: pointer;">Revision</a>
-                                @endif
+                                    class="text-danger fw-bold text-decoration-none" style="cursor: pointer;">Revision</a>
+                                    @endif
                             </td>
 
                             <td class="text-center align-middle">
-                                @can('can access verification button')
+                                    @can('can access verification button')
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
                                         <i class="bi bi-shield-check me-1"></i> Verifikasi
                                     </button>
-                                @endcan
-                                @can('can access edit button')
+                                    @endcan
+                                    @can('can access edit button')
                                     <a href="{{ route('suhu.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm me-1">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
-                                @endcan
-                                @can('can access update button')
+                                    @endcan
+                                    @can('can access update button')
                                     <a href="{{ route('suhu.update.form', $dep->uuid) }}" class="btn btn-info btn-sm me-1">
                                         <i class="bi bi-pencil"></i> Update
                                     </a>
-                                @endcan
-                                @can('can access delete button')
+                                    @endcan
+                                    @can('can access delete button')
                                     <form action="{{ route('suhu.destroy', $dep->uuid) }}" method="POST" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Yakin ingin menghapus?')">
-                                            <i class="bi bi-trash"></i> Hapus
-                                        </button>
-                                    </form>
+                                        onclick="return confirm('Yakin ingin menghapus?')">
+                                        <i class="bi bi-trash"></i> Hapus
+                                    </button>
+                                </form>
                                 @endcan
                                 <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered modal-md">
@@ -335,33 +331,38 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="19" class="text-center">Belum ada data suhu.</td>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="text-muted d-flex flex-column align-items-center justify-content-center">
+                                    <i class="bi bi-inbox fs-1 mb-2"></i>
+                                    <span>Belum ada data pemeriksaan suhu.</span>
+                                </div>
+                            </td>
                         </tr>
                         @endforelse
                     </tbody>
                 </table>
+            </div>
 
-                {{-- Pagination --}}
-                <div class="mt-3">
-                    {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
-                </div>
+            {{-- Pagination --}}
+            <div class="d-flex justify-content-end mt-3">
+                {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
             </div>
         </div>
     </div>
 </div>
 
-{{-- Auto-hide alert setelah 3 detik --}}
 <script>
+    // Auto-hide alert setelah 3 detik
     setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if(alert){
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
             alert.classList.remove('show');
             alert.classList.add('fade');
-        }
+            setTimeout(() => alert.remove(), 500); // Hapus elemen dari DOM
+        });
     }, 3000);
 </script>
 
-{{-- CSS tambahan agar tabel lebih rapi --}}
 <style>
     .table td, .table th {
         font-size: 0.85rem;
@@ -370,13 +371,37 @@
     .text-danger {
         font-weight: bold;
     }
+    .text-success {
+        font-weight: bold;
+    }
     .text-muted.fst-italic {
         color: #6c757d !important;
         font-style: italic !important;
     }
-    .container {
-        padding-left: 2px !important;
-        padding-right: 2px !important;
+    .container-fluid {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+    
+    /* Perbaikan tampilan tombol action agar rapi sejajar */
+    .btn-group .btn {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    
+    /* Mengubah modal tabel agar mengisi penuh modal body */
+    .modal-body.p-0 .table {
+        margin-bottom: 0;
+        border-radius: 0;
+    }
+    .modal-body.p-0 .table th:first-child,
+    .modal-body.p-0 .table td:first-child {
+        border-left: none;
+    }
+    .modal-body.p-0 .table th:last-child,
+    .modal-body.p-0 .table td:last-child {
+        border-right: none;
     }
 </style>
 @endsection

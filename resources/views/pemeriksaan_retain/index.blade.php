@@ -1,49 +1,49 @@
 @extends('layouts.app')
 
 @push('styles')
-    {{-- Library Icons --}}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    
-    <style>
-        /* --- 1. Style Global & Tabel --- */
-        body { background-color: #f8f9fa; }
-        .table td, .table th { font-size: 0.85rem; white-space: nowrap; vertical-align: middle; }
-        .card-custom { border: none; border-radius: 0.75rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
-        .input-group:focus-within { box-shadow: none; }
-        .form-control:focus, .input-group-text:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); border-color: #86b7fe; }
-        
-        /* Status Badge Style */
-        .badge-status { padding: 0.5em 0.75em; font-size: 0.75rem; font-weight: 600; border-radius: 50rem; }
-        .status-pending { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
-        .status-verified { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
-        .status-revision { background-color: rgba(220, 53, 69, 0.1); color: #DC3545; }
+{{-- Library Icons --}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
-        /* --- 2. Style Khusus Modal Verifikasi --- */
-        :root {
-            --primary-brand-dark: #7a1f12;
-            --primary-brand-light: #9E3419;
-            --accent-color-1: #E39581;
-            --accent-color-2: #FFE5DE;
-            --text-on-dark: #FFFFFF;
-            --text-on-light: #2c3e50;
-        }
-        .modal-verification .modal-content { 
-            border: none; border-radius: 1rem; 
-            background: linear-gradient(145deg, var(--primary-brand-dark), var(--primary-brand-light)); 
-            box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
-            color: var(--text-on-dark); overflow: hidden; 
-        }
-        .modal-verification .modal-header { border-bottom: 2px solid rgba(255, 255, 255, 0.2); padding: 1.5rem; }
-        .modal-verification .modal-body { padding: 2rem; }
-        .modal-verification .modal-footer { background-color: var(--primary-brand-light); border-top: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 1.5rem; }
-        .modal-verification .form-select-custom { 
-            background: linear-gradient(135deg, #fff1f0, var(--accent-color-2)); 
-            border: 2px solid #dc3545; border-radius: 12px; color: #7a1f12; font-size: 1.1rem; 
-            box-shadow: 0 6px 12px rgba(0,0,0,0.1); transition: all 0.3s ease; 
-        }
-        .modal-verification .textarea-custom { background-color: var(--accent-color-2); color: var(--text-on-light); border: none; border-radius: 0.5rem; height: 120px; }
-    </style>
+<style>
+    /* --- 1. Style Global & Tabel --- */
+    body { background-color: #f8f9fa; }
+    .table td, .table th { font-size: 0.85rem; white-space: nowrap; vertical-align: middle; }
+    .card-custom { border: none; border-radius: 0.75rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); }
+    .input-group:focus-within { box-shadow: none; }
+    .form-control:focus, .input-group-text:focus { box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); border-color: #86b7fe; }
+
+    /* Status Badge Style */
+    .badge-status { padding: 0.5em 0.75em; font-size: 0.75rem; font-weight: 600; border-radius: 50rem; }
+    .status-pending { background-color: rgba(108, 117, 125, 0.1); color: #6c757d; }
+    .status-verified { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
+    .status-revision { background-color: rgba(220, 53, 69, 0.1); color: #DC3545; }
+
+    /* --- 2. Style Khusus Modal Verifikasi --- */
+    :root {
+        --primary-brand-dark: #7a1f12;
+        --primary-brand-light: #9E3419;
+        --accent-color-1: #E39581;
+        --accent-color-2: #FFE5DE;
+        --text-on-dark: #FFFFFF;
+        --text-on-light: #2c3e50;
+    }
+    .modal-verification .modal-content { 
+        border: none; border-radius: 1rem; 
+        background: linear-gradient(145deg, var(--primary-brand-dark), var(--primary-brand-light)); 
+        box-shadow: 0 15px 40px rgba(0,0,0,0.5); 
+        color: var(--text-on-dark); overflow: hidden; 
+    }
+    .modal-verification .modal-header { border-bottom: 2px solid rgba(255, 255, 255, 0.2); padding: 1.5rem; }
+    .modal-verification .modal-body { padding: 2rem; }
+    .modal-verification .modal-footer { background-color: var(--primary-brand-light); border-top: 1px solid rgba(255, 255, 255, 0.2); padding: 1rem 1.5rem; }
+    .modal-verification .form-select-custom { 
+        background: linear-gradient(135deg, #fff1f0, var(--accent-color-2)); 
+        border: 2px solid #dc3545; border-radius: 12px; color: #7a1f12; font-size: 1.1rem; 
+        box-shadow: 0 6px 12px rgba(0,0,0,0.1); transition: all 0.3s ease; 
+    }
+    .modal-verification .textarea-custom { background-color: var(--accent-color-2); color: var(--text-on-light); border: none; border-radius: 0.5rem; height: 120px; }
+</style>
 @endpush
 
 @section('content')
@@ -67,12 +67,21 @@
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
         <h2 class="h4">Data Pemeriksaan Retain</h2>
         <div class="btn-group" role="group">
+            @can('can access add button')
             <a href="{{ route('pemeriksaan_retain.create') }}" class="btn btn-success">
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
+            @endcan
+            @can('can access export')
             <a href="{{ route('pemeriksaan_retain.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('pemeriksaan_retain.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -129,7 +138,7 @@
                         <tr>
                             {{-- Penomoran Halaman --}}
                             <td class="text-center">{{ $loop->iteration + ($pemeriksaanRetains->currentPage() - 1) * $pemeriksaanRetains->perPage() }}</td>
-                            
+
                             {{-- Tanggal --}}
                             <td class="text-center align-middle">
                                 {{ \Carbon\Carbon::parse($p->tanggal)->format('d-m-Y') }}
@@ -152,18 +161,18 @@
                             {{-- Kolom Status (Diambil dari logika referensi) --}}
                             <td class="text-center align-middle">
                                 @if(isset($p->status_spv))
-                                    @if($p->status_spv == 1)
-                                        <span class="badge-status status-verified"><i class="fas fa-check-circle me-1"></i>Verified</span>
-                                    @elseif($p->status_spv == 2)
-                                        <span class="badge-status status-revision"><i class="fas fa-exclamation-circle me-1"></i>Revision</span>
-                                    @else
-                                        <span class="badge-status status-pending"><i class="fas fa-clock me-1"></i>Pending</span>
-                                    @endif
+                                @if($p->status_spv == 1)
+                                <span class="badge-status status-verified"><i class="fas fa-check-circle me-1"></i>Verified</span>
+                                @elseif($p->status_spv == 2)
+                                <span class="badge-status status-revision"><i class="fas fa-exclamation-circle me-1"></i>Revision</span>
                                 @else
-                                    <span class="badge-status status-pending">-</span>
+                                <span class="badge-status status-pending"><i class="fas fa-clock me-1"></i>Pending</span>
+                                @endif
+                                @else
+                                <span class="badge-status status-pending">-</span>
                                 @endif
                             </td>
-                            
+
                             {{-- Aksi --}}
                             <td class="text-center align-middle">
                                 <div class="d-flex justify-content-center align-items-center">
@@ -220,9 +229,9 @@
 </div>
 
 {{-- 
-    =======================================================
-    MODAL VERIFIKASI (LOOPING)
-    =======================================================
+=======================================================
+MODAL VERIFIKASI (LOOPING)
+=======================================================
 --}}
 @foreach ($pemeriksaanRetains as $p)
 <div class="modal fade modal-verification" id="verifyModal{{ $p->uuid }}" tabindex="-1" aria-labelledby="verifyModalLabel{{ $p->uuid }}" aria-hidden="true">
@@ -257,42 +266,42 @@
                         <textarea name="catatan_spv" id="catatan_spv_{{ $p->uuid }}" rows="4"
                             class="form-control shadow-none textarea-custom"
                             placeholder="Tuliskan catatan perbaikan...">{{ old('catatan_spv', $p->catatan_spv ?? '') }}</textarea>
+                        </div>
                     </div>
-                </div>
-                <div class="modal-footer justify-content-end">
-                    <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Batal</button>
-                    <button type="submit" class="btn rounded-pill px-5 fw-bolder" style="background-color: var(--accent-color-1); color: var(--text-on-light);"><i class="bi bi-save-fill me-1"></i> SUBMIT</button>
-                </div>
-            </form>
+                    <div class="modal-footer justify-content-end">
+                        <button type="button" class="btn btn-outline-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn rounded-pill px-5 fw-bolder" style="background-color: var(--accent-color-1); color: var(--text-on-light);"><i class="bi bi-save-fill me-1"></i> SUBMIT</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
-</div>
-@endforeach
+    @endforeach
 
-{{-- Scripts --}}
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
+    {{-- Scripts --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
         // Auto hide alert
-        setTimeout(() => {
-            const alert = document.querySelector('.alert');
-            if(alert){
-                alert.classList.remove('show');
-                alert.classList.add('fade');
-            }
-        }, 3000);
+            setTimeout(() => {
+                const alert = document.querySelector('.alert');
+                if(alert){
+                    alert.classList.remove('show');
+                    alert.classList.add('fade');
+                }
+            }, 3000);
 
         // Search & Filter Logic
-        const search = document.getElementById('search');
-        const date = document.getElementById('filter_date');
-        const form = document.getElementById('filterForm');
-        let timer;
+            const search = document.getElementById('search');
+            const date = document.getElementById('filter_date');
+            const form = document.getElementById('filterForm');
+            let timer;
 
-        search.addEventListener('input', () => {
-            clearTimeout(timer);
-            timer = setTimeout(() => form.submit(), 500);
+            search.addEventListener('input', () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => form.submit(), 500);
+            });
+
+            date.addEventListener('change', () => form.submit());
         });
-
-        date.addEventListener('change', () => form.submit());
-    });
-</script>
-@endsection
+    </script>
+    @endsection

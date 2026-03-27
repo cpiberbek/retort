@@ -26,10 +26,17 @@
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
             @endcan
+            @can('can access export')
             {{-- Tombol Export PDF --}}
             <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
+            @endcan
+            @can('can access recycle')
+            <a href="{{ route('wire.recyclebin') }}" class="btn btn-secondary">
+                <i class="bi bi-trash"></i> Recycle Bin
+            </a>
+            @endcan
         </div>
     </div>
 
@@ -73,7 +80,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Produk / Supplier...">
+                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Supplier...">
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
@@ -127,7 +134,7 @@
                         <tr>
                             <th>NO.</th>
                             <th>Date | Shift</th>
-                            <th>Nama Produk</th>
+                            <th>Nama Varian</th>
                             <th>Nama Supplier</th>
                             <th>Data Wire</th>
                             <th>QC</th>
@@ -210,7 +217,7 @@
                                 @can('can access edit button')
                                 <a href="{{ route('wire.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm mb-1"><i class="bi bi-pencil-square"></i> Edit</a>
                                 @endcan
-                                                                @can('can access update button')
+                                @can('can access update button')
                                 <a href="{{ route('wire.update.form', $dep->uuid) }}" class="btn btn-info btn-sm me-1 mb-1">
                                     <i class="bi bi-pencil"></i> Update
                                 </a>

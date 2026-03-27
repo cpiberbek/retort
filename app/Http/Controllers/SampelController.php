@@ -167,13 +167,13 @@ class SampelController extends Controller
 
     public function verification(Request $request)
     {
-       $search     = $request->input('search');
-       $date = $request->input('date');
-       $userPlant  = Auth::user()->plant;
+     $search     = $request->input('search');
+     $date = $request->input('date');
+     $userPlant  = Auth::user()->plant;
 
-       $data = Sampel::query()
-       ->where('plant', $userPlant)
-       ->when($search, function ($query) use ($search) { 
+     $data = Sampel::query()
+     ->where('plant', $userPlant)
+     ->when($search, function ($query) use ($search) { 
         $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%")
             ->orWhere('nama_produk', 'like', "%{$search}%")
@@ -181,19 +181,19 @@ class SampelController extends Controller
             ->orWhere('jenis_sampel', 'like', "%{$search}%");
         });
     })
-       ->when($date, function ($query) use ($date) {
+     ->when($date, function ($query) use ($date) {
         $query->whereDate('date', $date);
     })
-       ->orderBy('date', 'desc')
-       ->orderBy('created_at', 'desc')
-       ->paginate(10)
-       ->appends($request->all());
+     ->orderBy('date', 'desc')
+     ->orderBy('created_at', 'desc')
+     ->paginate(10)
+     ->appends($request->all());
 
-       return view('form.sampel.index', compact('data', 'search', 'date'));
-   }
+     return view('form.sampel.index', compact('data', 'search', 'date'));
+ }
 
-   public function updateVerification(Request $request, $uuid)
-   {
+ public function updateVerification(Request $request, $uuid)
+ {
     $request->validate([
         'status_spv'  => 'required|in:1,2',
         'catatan_spv' => 'nullable|string|max:255',
@@ -216,9 +216,32 @@ public function destroy($uuid)
 {
     $sampel = Sampel::where('uuid', $uuid)->firstOrFail();
     $sampel->delete();
+    return redirect()->route('sampel.index')->with('success', 'Sampel berhasil dihapus');
+}
 
-    return redirect()->route('sampel.index')
-    ->with('success', 'Data Pengambilan Sampel berhasil dihapus.');
+public function recyclebin()
+{
+    $sampel = Sampel::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.sampel.recyclebin', compact('sampel'));
+}
+public function restore($uuid)
+{
+    $sampel = Sampel::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $sampel->restore();
+
+    return redirect()->route('sampel.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $sampel = Sampel::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $sampel->forceDelete();
+
+    return redirect()->route('sampel.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
 }
 
 public function exportPdf(Request $request)
@@ -228,12 +251,12 @@ public function exportPdf(Request $request)
     $userPlant = Auth::user()->plant;
 
     $items = Sampel::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'asc')
-        ->get();
+    ->where('plant', $userPlant)
+    ->when($date, function ($query) use ($date) {
+        $query->whereDate('date', $date);
+    })
+    ->orderBy('date', 'asc')
+    ->get();
 
     if (ob_get_length()) {
         ob_end_clean();

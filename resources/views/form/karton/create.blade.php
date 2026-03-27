@@ -25,16 +25,16 @@
 
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" id="nama_produk" class="form-select select2" required>
-                                    <option value="">-- Pilih Produk --</option>
+                                    <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi</label>
+                                <label class="form-label">Kode Batch</label>
                                 <select name="kode_produksi" id="kode_produksi"
                                     class="form-select select2 @error('kode_produksi') is-invalid @enderror" disabled
                                     required>
@@ -97,7 +97,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Kode Produksi (Karton)</label>
+                                <label class="form-label">Kode Batch (Karton)</label>
                                 <input type="file" id="kode_karton" name="kode_karton" class="form-control"
                                     accept="image/*">
                                 <small id="kode-karton-error" class="text-danger"></small>
@@ -189,7 +189,7 @@
     $('#nama_produk').select2({
         theme: 'bootstrap-5',
         width: '100%',
-        placeholder: 'Ketik untuk mencari produk...',
+        placeholder: 'Ketik untuk mencari varian...',
         allowClear: true
     });
 
@@ -197,7 +197,7 @@
     $('#kode_produksi').select2({
         theme: 'bootstrap-5',
         width: '100%',
-        placeholder: 'Ketik kode produksi...',
+        placeholder: 'Cari kode batch...',
         allowClear: true,
         ajax: {
             delay: 300,
@@ -208,7 +208,7 @@
                 }
 
                 return $.ajax({
-                    url: `/lookup/batch-packing/${produk}`,
+                    url: "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk)),
                     data: { q: params.data.term },
                     success,
                     error: failure

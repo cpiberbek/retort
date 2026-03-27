@@ -13,8 +13,6 @@ use Throwable;
 
 class ApiController extends Controller
 {
-
-
     public function syncUser(Request $request)
     {
         $data = $request->json()->all();

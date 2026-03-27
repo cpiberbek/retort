@@ -50,23 +50,23 @@ class WashingController extends Controller
 
         // Ambil data tanpa pagination
         $items = Washing::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
-                      ->orWhere('kode_produksi', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->orderBy('pukul', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                ->orWhere('kode_produksi', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->orderBy('pukul', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -321,7 +321,7 @@ class WashingController extends Controller
         ->paginate(10)
         ->appends($request->all());
 
-        return view('form.washing.verification', compact('data', 'search', 'date'));
+        return view('form.washing.index', compact('data', 'search', 'date'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -348,8 +348,31 @@ class WashingController extends Controller
     {
         $washing = Washing::where('uuid', $uuid)->firstOrFail();
         $washing->delete();
+        return redirect()->route('washing.index')->with('success', 'Washing berhasil dihapus');
+    }
 
-        return redirect()->route('washing.verification')
-        ->with('success', 'Pemeriksaan Washing - Drying berhasil dihapus');
+    public function recyclebin()
+    {
+        $washing = Washing::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.washing.recyclebin', compact('washing'));
+    }
+    public function restore($uuid)
+    {
+        $washing = Washing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $washing->restore();
+
+        return redirect()->route('washing.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $washing = Washing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $washing->forceDelete();
+
+        return redirect()->route('washing.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 }

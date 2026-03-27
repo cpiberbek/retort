@@ -299,7 +299,7 @@
                         <input type="text" name="details[${i}][nama_produk]" class="form-control" value="${nama_produk}" required>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label">Kode Produksi <span class="text-danger">*</span></label>
+                        <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
                         <input type="text" name="details[${i}][kode_produksi]" class="form-control" value="${kode_produksi}" required>
                     </div>
                     <div class="col-md-4">

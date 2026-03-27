@@ -12,13 +12,21 @@
 
     <div class="card shadow-sm">
         <div class="card-body table-responsive">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                
+                <h3><i class="bi bi-list-check"></i> Data Area Hygiene</h3>
 
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <h3><i class="bi bi-list-check"></i> Data Area Hygiene</h3>
-            <a href="{{ route('area_hygiene.create') }}" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Tambah
-            </a>
-        </div>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ route('area_hygiene.create') }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-circle"></i> Tambah
+                    </a>
+                    <a href="{{ route('area_hygiene.recyclebin') }}" class="btn btn-secondary btn-sm">
+                        <i class="bi bi-trash"></i> Recycle Bin 
+                    </a> 
+                </div>
+
+            </div>
+       
 
         {{-- Search Form --}}
         <form method="GET" class="mb-3 d-flex justify-content-end">

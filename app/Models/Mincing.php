@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Mincing extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'mincings';
 
@@ -23,10 +24,11 @@ class Mincing extends Model
         'premix', 'non_premix', 
         'daging', 
         'suhu_sebelum_grinding', 
-        'waktu_mixing_premix_awal', 'waktu_mixing_premix_akhir', 
-        'waktu_bowl_cutter_awal', 'waktu_bowl_cutter_akhir', 
+        'waktu_mixing_premix',
+        'waktu_bowl_cutter',  
         'waktu_aging_emulsi_awal', 'waktu_aging_emulsi_akhir', 
-        'suhu_akhir_emulsi_gel', 'waktu_mixing', 
+        'suhu_akhir_emulsi_gel', 
+        'waktu_mixing',      
         'suhu_akhir_mixing', 'suhu_akhir_emulsi', 'catatan',
         'nama_produksi', 'status_produksi', 'tgl_update_produksi',
         'username', 'username_updated', 'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
@@ -53,4 +55,6 @@ class Mincing extends Model
     {
         return $this->hasMany(Wire::class);
     }
+
+    protected $dates = ['deleted_at'];
 }

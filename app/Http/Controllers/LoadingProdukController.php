@@ -33,8 +33,8 @@ class LoadingProdukController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('no_pol_mobil', 'like', "%{$search}%")
-                  ->orWhere('nama_supir', 'like', "%{$search}%")
-                  ->orWhere('ekspedisi', 'like', "%{$search}%");
+                ->orWhere('nama_supir', 'like', "%{$search}%")
+                ->orWhere('ekspedisi', 'like', "%{$search}%");
             });
         }
 
@@ -96,7 +96,7 @@ class LoadingProdukController extends Controller
             DB::commit();
 
             return redirect()->route('loading-produks.index')
-                ->with('success', 'Data pemeriksaan loading berhasil disimpan.');
+            ->with('success', 'Data pemeriksaan loading berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error saving loading check: ' . $e->getMessage());
@@ -170,7 +170,7 @@ class LoadingProdukController extends Controller
             // --- PERBAIKAN DI SINI ---
             // Arahkan redirect ke route 'show' menggunakan UUID, bukan ID.
             return redirect()->route('loading-produks.show', $loadingProduk->uuid)
-                ->with('success', 'Data pemeriksaan loading berhasil diperbarui.');
+            ->with('success', 'Data pemeriksaan loading berhasil diperbarui.');
             // --- BATAS PERBAIKAN ---
 
         } catch (\Exception $e) {
@@ -189,10 +189,37 @@ class LoadingProdukController extends Controller
         try {
             $loadingProduk->delete(); 
             return redirect()->route('loading-produks.index')
-                ->with('success', 'Data pemeriksaan loading berhasil dihapus.');
+            ->with('success', 'Data pemeriksaan loading berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus data.');
         }
+    }
+
+    public function recyclebin()
+    {
+        $loadingProduk = LoadingProduk::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('loading-produks.recyclebin', compact('loadingProduk'));
+    }
+
+    public function restore($uuid)
+    {
+        $loadingProduk = LoadingProduk::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $loadingProduk->restore();
+
+        return redirect()->route('loading-produks.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+
+    public function deletePermanent($uuid)
+    {
+        $loadingProduk = LoadingProduk::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $loadingProduk->forceDelete();
+
+        return redirect()->route('loading-produks.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function showVerification(Request $request)
@@ -210,23 +237,20 @@ class LoadingProdukController extends Controller
             $search = $request->search;
             $query->where(function($q) use ($search) {
                 $q->where('no_pol_mobil', 'like', "%{$search}%")
-                  ->orWhere('nama_supir', 'like', "%{$search}%")
-                  ->orWhere('ekspedisi', 'like', "%{$search}%");
+                ->orWhere('nama_supir', 'like', "%{$search}%")
+                ->orWhere('ekspedisi', 'like', "%{$search}%");
             });
         }
 
         $produks = $query->orderByRaw('status_spv = 0 DESC, status_spv = 2 DESC, tanggal DESC')
-                         ->paginate(15)
-                         ->withQueryString();
+        ->paginate(15)
+        ->withQueryString();
 
         return view('loading-produks.verification', [
             'data' => $produks
         ]);
     }
 
-    /**
-     * INI FUNGSI YANG DIPERBAIKI (MENIRU LOGIKA MAGNET TRAP)
-     */
     public function verify(Request $request, $uuid)
     {
         $validated = $request->validate([
@@ -264,8 +288,6 @@ class LoadingProdukController extends Controller
     {
         // Pastikan relasi details dimuat
         $loadingProduk->load('details');
-
-        // Return ke view dengan nama 'update-details'
         return view('loading-produks.update-details', compact('loadingProduk'));
     }
 

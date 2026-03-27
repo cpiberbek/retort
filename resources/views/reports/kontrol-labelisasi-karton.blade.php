@@ -64,8 +64,8 @@
         <th width="5%">No.</th>
         <th width="10%">Tanggal</th>
         <th width="10%">Start - Finish</th>
-        <th width="15%">Nama Produk</th>
-        <th width="15%">Kode Produksi</th>
+        <th width="15%">Nama Varian</th>
+        <th width="15%">Kode Batch</th>
         <th width="15%">Nama Supplier</th>
         <th width="10%">No. Lot Karton</th>
         <th width="5%">Operator</th>

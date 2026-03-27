@@ -279,12 +279,18 @@
                         <input type="text" name="items[${i}][no_pol]" class="form-control" value="${no_pol}" ${getReadonlyAttr(no_pol)} required>
                     </div>
                     <div class="col-md-5">
-                        <label class="form-label">Kondisi Kendaraan</label>
-                        <select name="items[${i}][vehicle_condition]" class="form-select select2-dynamic" ${lockVehicle ? 'disabled' : ''} required>
-                            <option></option> 
-                            ${vehicleConditions.map(c => `<option value="${c}" ${vehicle_cond === c ? 'selected' : ''}>${c}</option>`).join('')}
-                        </select>
-                        ${lockVehicle ? `<input type="hidden" name="items[${i}][vehicle_condition]" value="${vehicle_cond}">` : ''}
+                        <label class="form-label d-block">Kondisi Kendaraan</label>
+                        <div class="form-check">
+                            ${vehicleConditions.map((c, index) => {
+                                const isChecked = vehicle_cond?.split(',').includes(c);
+                                return `
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" value="${c}" id="vehicle_${i}_${index}" ${isChecked ? 'checked' : ''} disabled>
+                                    ${isChecked ? `<input type="hidden" name="items[${i}][vehicle_condition][]" value="${c}">` : ''}
+                                    <label class="form-check-label" for="vehicle_${i}_${index}">${c}</label>
+                                </div>`;
+                            }).join('')}
+                        </div>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">PBB / OP</label>

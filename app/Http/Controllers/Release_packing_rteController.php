@@ -43,18 +43,18 @@ class Release_packing_rteController extends Controller
         $userPlant = Auth::user()->plant;
 
         $data = Release_packing_rte::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
-                    ->orWhere('kode_produksi', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->orderBy('date', 'asc')
-            ->get();
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                ->orWhere('kode_produksi', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->orderBy('date', 'asc')
+        ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -250,8 +250,31 @@ class Release_packing_rteController extends Controller
     {
         $release_packing_rte = Release_packing_rte::where('uuid', $uuid)->firstOrFail();
         $release_packing_rte->delete();
+        return redirect()->route('release_packing_rte.index')->with('success', 'Mincing berhasil dihapus');
+    }
 
-        return redirect()->route('release_packing_rte.index')
-        ->with('success', 'Data Release Packing RTE berhasil dihapus');
+    public function recyclebin()
+    {
+        $release_packing_rte = Release_packing_rte::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.release_packing_rte.recyclebin', compact('release_packing_rte'));
+    }
+    public function restore($uuid)
+    {
+        $release_packing_rte = Release_packing_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $release_packing_rte->restore();
+
+        return redirect()->route('release_packing_rte.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $release_packing_rte = Release_packing_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $release_packing_rte->forceDelete();
+
+        return redirect()->route('release_packing_rte.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
     }
 }

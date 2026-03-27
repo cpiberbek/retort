@@ -2,6 +2,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MagnetTrapModel;
+use App\Models\Mincing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Produk;
@@ -32,7 +33,7 @@ class MagnetTrapController extends Controller
         // 1. Filter Pencarian
         $query->when($request->search, function ($q, $search) {
             return $q->where('nama_produk', 'like', "%{$search}%")
-                     ->orWhere('kode_batch', 'like', "%{$search}%");
+            ->orWhere('kode_batch', 'like', "%{$search}%");
         });
 
         // 2. Filter Tanggal
@@ -51,6 +52,19 @@ class MagnetTrapController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
+   //  public function create()
+   //  {
+   //     $userPlant = Auth::user()->plant;
+   //     $produks = Produk::where('plant', $userPlant)->get();
+   //     $produks = Produk::orderBy('nama_produk', 'asc')->get();
+   //     $operators = Operator::where('bagian', 'Operator')
+   //     ->orderBy('nama_karyawan', 'asc')
+   //     ->get();
+   //     $engineers = Operator::where('bagian', 'Engineer')
+   //     ->orderBy('nama_karyawan', 'asc')->get();
+   //     return view('magnet_trap.CreateMagnetTrap ', compact('produks', 'operators', 'engineers'));
+   // }
+
     public function create()
     {
         // Ganti 'magnet_trap.create' jika nama file view Anda berbeda
@@ -67,6 +81,7 @@ class MagnetTrapController extends Controller
                          ->orderBy('nama_karyawan', 'asc')->get();
         return view('magnet_trap.CreateMagnetTrap ', compact('produks', 'operators', 'engineers'));
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -95,7 +110,7 @@ class MagnetTrapController extends Controller
 
         // 2. Set User & Plant Info
         $validatedData['created_by'] = $user->uuid;
-        $validatedData['updated_by'] = $user->uuid; // Awal pembuatan, updated_by = created_by
+        $validatedData['updated_by'] = $user->uuid; 
         
         // Ambil plant dari user yg login (pastikan kolom 'plant' ada di tabel users)
         $validatedData['plant_uuid'] = $user->plant; 
@@ -104,7 +119,7 @@ class MagnetTrapController extends Controller
         MagnetTrapModel::create($validatedData);
 
         return redirect()->route('checklistmagnettrap.index')
-                         ->with('success', 'Data berhasil ditambahkan.');
+        ->with('success', 'Data berhasil ditambahkan.');
     }
     /**
      * Display the specified resource.
@@ -123,6 +138,17 @@ class MagnetTrapController extends Controller
      * @param  \App\Models\MagnetTrapModel  $checklistmagnettrap
      * @return \Illuminate\Http\Response
      */
+    // public function edit(MagnetTrapModel $checklistmagnettrap)
+    // {
+    //     $produks = Produk::orderBy('nama_produk', 'asc')->get();
+    //     $operators = Operator::where('bagian', 'Operator')
+    //     ->orderBy('nama_karyawan', 'asc')
+    //     ->get();
+    //     $engineers = Operator::where('bagian', 'Engineer')
+    //     ->orderBy('nama_karyawan', 'asc')->get();
+    //     return view('magnet_trap.EditMagnetTrap', compact('checklistmagnettrap', 'produks', 'operators', 'engineers'));
+    // }
+
     public function edit(MagnetTrapModel $checklistmagnettrap)
     {
         $userPlant = Auth::user()->plant; 
@@ -137,7 +163,11 @@ class MagnetTrapController extends Controller
         $engineers = Operator::where('bagian', 'Engineer')
                          ->where('plant', $userPlant)
                          ->orderBy('nama_karyawan', 'asc')->get();
-        return view('magnet_trap.EditMagnetTrap', compact('checklistmagnettrap', 'produks', 'operators', 'engineers'));
+                         
+        $mincings = Mincing::where('uuid', $userPlant)
+        ->orderBy('kode_produksi', 'asc')
+        ->get();
+        return view('magnet_trap.EditMagnetTrap', compact('checklistmagnettrap', 'produks', 'operators', 'engineers', 'mincings'));
     }
 
     /**
@@ -149,30 +179,30 @@ class MagnetTrapController extends Controller
      */
     public function update(Request $request, MagnetTrapModel $checklistmagnettrap)
     {
-         $request->validate([
-            'nama_produk' => 'required',
-            'kode_batch' => 'required|string|max:10',
-            'pukul' => 'required',
-            'jumlah_temuan' => 'required|integer|min:0',
-            'status' => 'required|in:v,x',
-            'keterangan' => 'nullable|string',
-            'produksi_id' => 'required|integer',
-            'engineer_id' => 'required|integer',
-        ]);
+       $request->validate([
+        'nama_produk' => 'required',
+        'kode_batch' => 'required|string|max:10',
+        'pukul' => 'required',
+        'jumlah_temuan' => 'required|integer|min:0',
+        'status' => 'required|in:v,x',
+        'keterangan' => 'nullable|string',
+        'produksi_id' => 'required|integer',
+        'engineer_id' => 'required|integer',
+    ]);
 
-        $dataToUpdate = $request->all();
+       $dataToUpdate = $request->all();
 
         // Update updated_by dengan user yang login sekarang
-        $dataToUpdate['updated_by'] = Auth::user()->uuid;
+       $dataToUpdate['updated_by'] = Auth::user()->uuid;
 
         // Plant UUID biasanya TIDAK diupdate agar history asalnya tetap terjaga
         // Kecuali ada requirement khusus untuk memindahkan data antar plant
 
-        $checklistmagnettrap->update($dataToUpdate);
+       $checklistmagnettrap->update($dataToUpdate);
 
-        return redirect()->route('checklistmagnettrap.index')
-                         ->with('success', 'Data berhasil diperbarui.');
-    }
+       return redirect()->route('checklistmagnettrap.index')
+       ->with('success', 'Data berhasil diperbarui.');
+   }
 
     /**
      * Remove the specified resource from storage.
@@ -180,14 +210,40 @@ class MagnetTrapController extends Controller
      * @param  \App\Models\MagnetTrapModel  $checklistmagnettrap
      * @return \Illuminate\Http\Response
      */
-    public function destroy(MagnetTrapModel $checklistmagnettrap)
+    public function destroy($uuid)
     {
-        $checklistmagnettrap->delete();
+        $magnettrap = MagnetTrapModel::where('uuid', $uuid)->firstOrFail();
+        $magnettrap->delete();
 
         return redirect()->route('checklistmagnettrap.index')
-                         ->with('success', 'Data berhasil dihapus.');
+        ->with('success', 'Magnet Trap berhasil dihapus');
     }
 
+    public function recyclebin()
+    {
+        $magnettrap = MagnetTrapModel::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('magnet_trap.recyclebin', compact('magnettrap'));
+    }
+
+    public function restore($uuid)
+    {
+        $magnettrap = MagnetTrapModel::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $magnettrap->restore();
+
+        return redirect()->route('checklistmagnettrap.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $magnettrap = MagnetTrapModel::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $magnettrap->forceDelete();
+
+        return redirect()->route('checklistmagnettrap.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
     /**
      * Menampilkan halaman verifikasi untuk SPV.
      */
@@ -205,7 +261,7 @@ class MagnetTrapController extends Controller
             // Ganti 'nama_produk' dan 'kode_batch' dengan nama kolom yang sesuai di database Anda
             $query->where(function($q) use ($searchTerm) {
                 $q->where('nama_produk', 'like', '%' . $searchTerm . '%')
-                  ->orWhere('kode_batch', 'like', '%' . $searchTerm . '%');
+                ->orWhere('kode_batch', 'like', '%' . $searchTerm . '%');
                 // Tambahkan ->orWhere() lain jika ingin mencari di kolom lain
             });
         }
@@ -228,8 +284,8 @@ class MagnetTrapController extends Controller
                        ->appends($request->all()); // <-- Ini penting agar filter tetap aktif saat pindah halaman
 
         // 6. Kirim data ke view
-        return view('magnet_trap.verification', compact('data'));
-    }
+                       return view('magnet_trap.verification', compact('data'));
+                   }
 
     /**
      * Handle the SPV verification update.
@@ -311,12 +367,12 @@ class MagnetTrapController extends Controller
         $userPlant = Auth::user()->plant;
 
         $magnetTraps = MagnetTrapModel::query()
-            ->where('plant_uuid', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('created_at', $date);
-            })
-            ->orderBy('created_at', 'asc')
-            ->get();
+        ->where('plant_uuid', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('created_at', $date);
+        })
+        ->orderBy('created_at', 'asc')
+        ->get();
 
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {

@@ -32,7 +32,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Nama Produk</label>
+                                <label class="form-label">Nama Varian</label>
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                     @foreach($produks as $produk)
                                         <option value="{{ $produk->nama_produk }}"
@@ -129,7 +129,7 @@
                 {{-- Tombol --}}
                 <div class="d-flex justify-content-between mt-3">
                     <button class="btn btn-success w-auto"><i class="bi bi-save"></i> Update</button>
-                    <a href="{{ route('wire.verification') }}" class="btn btn-secondary w-auto"><i class="bi bi-arrow-left"></i> Kembali</a>
+                    <a href="{{ route('wire.index') }}" class="btn btn-secondary w-auto"><i class="bi bi-arrow-left"></i> Kembali</a>
                 </div>
 
             </form>

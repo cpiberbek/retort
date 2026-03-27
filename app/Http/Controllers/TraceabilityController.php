@@ -233,4 +233,29 @@ class TraceabilityController extends Controller
         ->with('success', 'Data Laporan Traceability berhasil dihapus'); 
     }
 
+    public function recyclebin()
+    {
+        $traceability = Traceability::onlyTrashed()
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.traceability.recyclebin', compact('traceability'));
+    }
+    public function restore($uuid)
+    {
+        $traceability = Traceability::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $traceability->restore();
+
+        return redirect()->route('traceability.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $traceability = Traceability::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $traceability->forceDelete();
+
+        return redirect()->route('traceability.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
+
 }

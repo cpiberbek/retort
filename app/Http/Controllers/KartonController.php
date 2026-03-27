@@ -287,13 +287,13 @@ class KartonController extends Controller
 
     public function verification(Request $request)
     {
-       $search     = $request->input('search');
-       $date = $request->input('date');
-       $userPlant  = Auth::user()->plant;
+     $search     = $request->input('search');
+     $date = $request->input('date');
+     $userPlant  = Auth::user()->plant;
 
-       $data = Karton::query()
-       ->where('plant', $userPlant)
-       ->when($search, function ($query) use ($search) {
+     $data = Karton::query()
+     ->where('plant', $userPlant)
+     ->when($search, function ($query) use ($search) {
         $query->where(function ($q) use ($search) {
             $q->where('username', 'like', "%{$search}%")
             ->orWhere('nama_produk', 'like', "%{$search}%")
@@ -302,19 +302,19 @@ class KartonController extends Controller
             ->orWhere('nama_supplier', 'like', "%{$search}%");
         });
     })
-       ->when($date, function ($query) use ($date) {
+     ->when($date, function ($query) use ($date) {
         $query->whereDate('date', $date);
     })
-       ->orderBy('date', 'desc')
-       ->orderBy('created_at', 'desc')
-       ->paginate(10)
-       ->appends($request->all());
+     ->orderBy('date', 'desc')
+     ->orderBy('created_at', 'desc')
+     ->paginate(10)
+     ->appends($request->all());
 
-       return view('form.karton.verification', compact('data', 'search', 'date'));
-   }
+     return view('form.karton.index', compact('data', 'search', 'date'));
+ }
 
-   public function updateVerification(Request $request, $uuid)
-   {
+ public function updateVerification(Request $request, $uuid)
+ {
     $request->validate([
         'status_spv'  => 'required|in:1,2',
         'catatan_spv' => 'nullable|string|max:255',
@@ -348,6 +348,31 @@ public function destroy($uuid)
     return redirect()->route('karton.index')->with('success', 'Data Kontrol Labelisasi Karton berhasil dihapus.');
 }
 
+public function recyclebin()
+{
+    $karton = Karton::onlyTrashed()
+    ->orderBy('deleted_at', 'desc')
+    ->paginate(10);
+
+    return view('form.karton.recyclebin', compact('karton'));
+}
+public function restore($uuid)
+{
+    $karton = Karton::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $karton->restore();
+
+    return redirect()->route('karton.recyclebin')
+    ->with('success', 'Data berhasil direstore.');
+}
+public function deletePermanent($uuid)
+{
+    $karton = Karton::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+    $karton->forceDelete();
+
+    return redirect()->route('karton.recyclebin')
+    ->with('success', 'Data berhasil dihapus permanen.');
+}
+
 public function exportPdf(Request $request)
 {
     $date = $request->input('date');
@@ -355,16 +380,16 @@ public function exportPdf(Request $request)
     $userPlant = Auth::user()->plant;
 
     $kartons = Karton::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('created_at', 'asc')
-        ->get();
+    ->where('plant', $userPlant)
+    ->when($date, function ($query) use ($date) {
+        $query->whereDate('date', $date);
+    })
+    ->when($nama_produk, function ($query) use ($nama_produk) {
+        $query->where('nama_produk', $nama_produk);
+    })
+    ->orderBy('date', 'asc')
+    ->orderBy('created_at', 'asc')
+    ->get();
 
     // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
     if (ob_get_length()) {
