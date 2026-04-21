@@ -28,7 +28,7 @@
     .form-control, .form-select {
         border-radius: 8px;
     }
-    
+
     /* Ensure Select2 takes full width and height */
     .select2-container .select2-selection--single {
         height: calc(2.25rem + 2px); /* Match Bootstrap's input height */
@@ -43,7 +43,7 @@
         border-color: #86b7fe;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
-    
+
     /* Style untuk tombol OK/Not OK (Updated UX: Netral by default) */
     .btn-check-group .btn {
         display: flex;
@@ -53,7 +53,7 @@
         transition: all 0.2s ease;
         border-width: 1px;
     }
-    
+
     /* Saat tombol aktif/solid */
     .btn-check-group .btn-success,
     .btn-check-group .btn-danger {
@@ -80,10 +80,10 @@
     }
 
     .select2-container .select2-selection--single .select2-selection__rendered {
-        padding-right: 30px !important; 
-        white-space: nowrap; 
-        overflow: hidden; 
-        text-overflow: ellipsis; 
+        padding-right: 30px !important;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 </style>
 @endpush
@@ -107,7 +107,7 @@
                     </ul>
                 </div>
             @endif
-            
+
             @if(session('error'))
                 <div class="alert alert-danger">{{ session('error') }}</div>
             @endif
@@ -128,7 +128,7 @@
                                 <input type="datetime-local" class="form-control @error('setup_kedatangan') is-invalid @enderror" id="setup_kedatangan" name="setup_kedatangan" value="{{ old('setup_kedatangan', $inspection->setup_kedatangan ? $inspection->setup_kedatangan->format('Y-m-d\TH:i') : '') }}" required>
                                 @error('setup_kedatangan') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
                             </div>
-                            
+
                             <div class="col-12">
                                 <label for="bahan_baku" class="form-label">Bahan Baku</label>
                                 <select class="form-select select2 @error('bahan_baku') is-invalid @enderror" id="bahan_baku" name="bahan_baku" required>
@@ -139,8 +139,8 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('bahan_baku') 
-                                    <span class="invalid-feedback"><strong>{{ $message }}</strong></span> 
+                                @error('bahan_baku')
+                                    <span class="invalid-feedback"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
                             <div class="col-md-6">
@@ -153,8 +153,8 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                @error('supplier') 
-                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @error('supplier')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
                         </div>
@@ -175,7 +175,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 {{-- CARD KONDISI FISIK (UPDATED UX) --}}
                 <div class="card mb-4">
                     <div class="card-header">
@@ -185,9 +185,9 @@
                         <div class="row">
                             @php
                                 $kondisiFisikFields = [
-                                    'mobil_check_warna' => 'Warna', 
-                                    'mobil_check_kotoran' => 'Kotoran', 
-                                    'mobil_check_aroma' => 'Aroma', 
+                                    'mobil_check_warna' => 'Warna',
+                                    'mobil_check_kotoran' => 'Kotoran',
+                                    'mobil_check_aroma' => 'Aroma',
                                     'mobil_check_kemasan' => 'Kemasan'
                                 ];
                             @endphp
@@ -195,7 +195,7 @@
                             <div class="col-md-3 col-6 mb-3">
                                 <label class="form-label d-block">{{ $label }}</label>
                                 <input type="hidden" name="{{ $name }}" id="{{ $name }}" value="{{ old($name, $inspection->$name ? '1' : '0') }}">
-                                
+
                                 <div class="btn-group btn-check-group w-100" role="group">
                                     <button type="button" class="btn {{ old($name, $inspection->$name ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#{{ $name }}">
                                         <i class="bi bi-check-lg"></i> OK
@@ -221,11 +221,11 @@
                             <div class="col-md-3 col-6">
                                 <label for="analisa_ka_ffa" class="form-label d-block">K.A / FFA</label>
                                 <input type="number" step="0.01" class="form-control @error('analisa_ka_ffa') is-invalid @enderror" id="analisa_ka_ffa" name="analisa_ka_ffa" value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" required min="0">
-                                @error('analisa_ka_ffa') 
-                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                @error('analisa_ka_ffa')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-                            
+
                             {{-- 2. Logo Halal --}}
                             <div class="col-md-3 col-6">
                                 <label class="form-label d-block">Logo Halal</label>
@@ -262,12 +262,12 @@
                             {{-- KOLOM KIRI --}}
                             <div class="col-md-6">
                                 <label class="form-label">Dokumen Halal</label>
-                                
+
                                 {{-- Block 1: Status Berlaku --}}
                                 <div class="mb-2">
                                     <label class="form-label d-block small mb-1" for="dokumen_halal_berlaku">Status Berlaku?</label>
                                     <input type="hidden" name="dokumen_halal_berlaku" id="dokumen_halal_berlaku" value="{{ old('dokumen_halal_berlaku', $inspection->dokumen_halal_berlaku ? '1' : '0') }}">
-                                    
+
                                     <div class="btn-group btn-check-group w-50" role="group">
                                         <button type="button" class="btn btn-sm {{ old('dokumen_halal_berlaku', $inspection->dokumen_halal_berlaku ? '1' : '0') === '1' ? 'btn-success' : 'btn-outline-secondary' }}" data-value="1" data-target-input="#dokumen_halal_berlaku">
                                             <i class="bi bi-check-lg"></i> Berlaku (OK)
@@ -305,7 +305,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 {{-- CARD TRANSPORTER --}}
                 <div class="card mb-4">
                     <div class="card-header">
@@ -318,16 +318,16 @@
                                 <input type="text" class="form-control @error('nopol_mobil') is-invalid @enderror" id="nopol_mobil" name="nopol_mobil" value="{{ old('nopol_mobil', $inspection->nopol_mobil) }}" required>
                                 @error('nopol_mobil') <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> @enderror
                             </div>
-                            
+
                             {{-- SUHU MOBIL (Menjadi Input Number Decimal) --}}
                              <div class="col-md-4">
                                 <label for="suhu_mobil" class="form-label">Suhu Mobil (°C)</label>
-                                <input type="number" step="0.01" class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil" name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" required>
-                                @error('suhu_mobil') 
-                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
+                                <input type="number" step="0.01" class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil" name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}">
+                                @error('suhu_mobil')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <label class="form-label">Kondisi Mobil</label>
 
@@ -423,7 +423,7 @@
     // 3. Initialize Select2
     $(document).ready(function() {
         $('.select2').select2({
-            theme: "bootstrap-5", 
+            theme: "bootstrap-5",
             placeholder: "Ketik untuk mencari...",
             allowClear: true,
             dropdownAutoWidth: true,
@@ -456,14 +456,14 @@
         // --- Script for Dynamic Product Details (MODIFIED FOR EDIT) ---
         const container = document.getElementById('product-details-container');
         const addBtn = document.getElementById('add-detail-btn');
-        let detailIndex = 0; 
+        let detailIndex = 0;
 
         function renderDetailForm(data = null) {
-            const i = detailIndex; 
-            
+            const i = detailIndex;
+
             const newDetail = document.createElement('div');
             newDetail.classList.add('product-detail-item', 'border', 'p-3', 'mb-3', 'rounded', 'shadow-sm');
-            
+
             const kodeBatch = data ? (data.kode_batch || '') : '';
             const tglProduksi = data ? (data.tanggal_produksi || '') : '';
             const exp = data ? (data.exp || '') : '';
@@ -504,13 +504,13 @@
                 </div>
             `;
             container.appendChild(newDetail);
-            detailIndex++; 
+            detailIndex++;
         }
 
         if (addBtn) {
             addBtn.addEventListener('click', () => renderDetailForm(null));
         }
-        
+
         if (container) {
             container.addEventListener('click', function(e) {
                 const removeBtn = e.target.closest('.remove-detail-btn');
@@ -541,13 +541,13 @@
         buttonGroups.forEach(group => {
             group.addEventListener('click', function(e) {
                 const button = e.target.closest('.btn');
-                
+
                 if (button) {
-                    const value = button.dataset.value; 
-                    const targetInputId = button.dataset.targetInput; 
-                    
-                    if (!targetInputId) return; 
-                    
+                    const value = button.dataset.value;
+                    const targetInputId = button.dataset.targetInput;
+
+                    if (!targetInputId) return;
+
                     const targetInput = document.querySelector(targetInputId);
 
                     // 1. Update nilai input hidden
@@ -560,7 +560,7 @@
                     buttonsInGroup.forEach(btn => {
                         btn.classList.remove('btn-success', 'btn-danger'); // Hapus warna solid
                         btn.classList.add('btn-outline-secondary'); // Tambah outline abu-abu
-                        btn.style.opacity = '0.6'; 
+                        btn.style.opacity = '0.6';
                     });
 
                     // 3. SET warna Solid pada tombol yang DIKLIK
@@ -568,9 +568,9 @@
                     button.style.opacity = '1'; // Pastikan opacity penuh
 
                     if (value === '1') {
-                        button.classList.add('btn-success'); 
+                        button.classList.add('btn-success');
                     } else {
-                        button.classList.add('btn-danger'); 
+                        button.classList.add('btn-danger');
                     }
                 }
             });

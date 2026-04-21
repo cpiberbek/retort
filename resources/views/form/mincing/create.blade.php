@@ -201,6 +201,7 @@
                                                                 <option value="SBL">SBL</option>
                                                                 <option value="MDM">MDM</option>
                                                                 <option value="CCM">CCM</option>
+                                                                <option value="SURIMI">SURIMI</option>
                                                             </select>
                                                         </td>
                                                         <td style="width: 45%;">

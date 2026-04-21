@@ -13,13 +13,13 @@ class Suhu extends Model
 
     protected $table = 'suhus';
 
-    protected $primaryKey = 'uuid';  
+    protected $primaryKey = 'uuid';
 
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'shift', 'pukul', 'hasil_suhu', 'keterangan', 'catatan', 
+        'date', 'plant', 'shift', 'pukul', 'hasil_suhu', 'keterangan', 'catatan',
         'nama_produksi', 'status_produksi', 'tgl_update_produksi',
         'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
     ];

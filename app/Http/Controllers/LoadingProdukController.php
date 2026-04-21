@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Arr;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 
@@ -31,10 +32,10 @@ class LoadingProdukController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('no_pol_mobil', 'like', "%{$search}%")
-                ->orWhere('nama_supir', 'like', "%{$search}%")
-                ->orWhere('ekspedisi', 'like', "%{$search}%");
+                    ->orWhere('nama_supir', 'like', "%{$search}%")
+                    ->orWhere('ekspedisi', 'like', "%{$search}%");
             });
         }
 
@@ -63,7 +64,7 @@ class LoadingProdukController extends Controller
             'shift' => 'required|in:Pagi,Malam',
             'jenis_aktivitas' => 'required|string|max:255',
             'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
+            'jam_selesai' => 'required|date_format:H:i',
             'no_pol_mobil' => 'required|string|max:20',
             'nama_supir' => 'required|string|max:255',
             'ekspedisi' => 'required|string|max:255',
@@ -84,6 +85,22 @@ class LoadingProdukController extends Controller
             'details.*.keterangan' => 'nullable|string|max:255',
         ]);
 
+        // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
+        $mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
+        $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
+
+        // Jika shift malam dan jam selesai < jam mulai → berarti lewat tengah malam
+        if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
+            $selesai->addDay();
+        }
+
+        // Validasi final
+        if ($selesai->lte($mulai)) {
+            return back()->withErrors([
+                'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
+            ])->withInput();
+        }
+
         DB::beginTransaction();
         try {
             $loadingProdukData = Arr::except($validatedData, ['details']);
@@ -96,7 +113,7 @@ class LoadingProdukController extends Controller
             DB::commit();
 
             return redirect()->route('loading-produks.index')
-            ->with('success', 'Data pemeriksaan loading berhasil disimpan.');
+                ->with('success', 'Data pemeriksaan loading berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error saving loading check: ' . $e->getMessage());
@@ -135,7 +152,7 @@ class LoadingProdukController extends Controller
             'shift' => 'required|in:Pagi,Malam',
             'jenis_aktivitas' => 'required|string|max:255',
             'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
+            'jam_selesai' => 'required|date_format:H:i',
             'no_pol_mobil' => 'required|string|max:20',
             'nama_supir' => 'required|string|max:255',
             'ekspedisi' => 'required|string|max:255',
@@ -156,11 +173,27 @@ class LoadingProdukController extends Controller
             'details.*.keterangan' => 'nullable|string|max:255',
         ]);
 
+        // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
+        $mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
+        $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
+
+        // Jika shift malam dan jam selesai < jam mulai → berarti lewat tengah malam
+        if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
+            $selesai->addDay();
+        }
+
+        // Validasi final
+        if ($selesai->lte($mulai)) {
+            return back()->withErrors([
+                'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
+            ])->withInput();
+        }
+
         DB::beginTransaction();
         try {
             $loadingProduk->update(Arr::except($validatedData, ['details']));
 
-            $loadingProduk->details()->delete(); 
+            $loadingProduk->details()->delete();
             foreach ($validatedData['details'] as $detail) {
                 $loadingProduk->details()->create($detail);
             }
@@ -170,7 +203,7 @@ class LoadingProdukController extends Controller
             // --- PERBAIKAN DI SINI ---
             // Arahkan redirect ke route 'show' menggunakan UUID, bukan ID.
             return redirect()->route('loading-produks.show', $loadingProduk->uuid)
-            ->with('success', 'Data pemeriksaan loading berhasil diperbarui.');
+                ->with('success', 'Data pemeriksaan loading berhasil diperbarui.');
             // --- BATAS PERBAIKAN ---
 
         } catch (\Exception $e) {
@@ -187,9 +220,9 @@ class LoadingProdukController extends Controller
     public function destroy(LoadingProduk $loadingProduk)
     {
         try {
-            $loadingProduk->delete(); 
+            $loadingProduk->delete();
             return redirect()->route('loading-produks.index')
-            ->with('success', 'Data pemeriksaan loading berhasil dihapus.');
+                ->with('success', 'Data pemeriksaan loading berhasil dihapus.');
         } catch (\Exception $e) {
             return back()->with('error', 'Gagal menghapus data.');
         }
@@ -198,8 +231,8 @@ class LoadingProdukController extends Controller
     public function recyclebin()
     {
         $loadingProduk = LoadingProduk::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('loading-produks.recyclebin', compact('loadingProduk'));
     }
@@ -210,7 +243,7 @@ class LoadingProdukController extends Controller
         $loadingProduk->restore();
 
         return redirect()->route('loading-produks.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
 
     public function deletePermanent($uuid)
@@ -219,7 +252,7 @@ class LoadingProdukController extends Controller
         $loadingProduk->forceDelete();
 
         return redirect()->route('loading-produks.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function showVerification(Request $request)
@@ -235,16 +268,16 @@ class LoadingProdukController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('no_pol_mobil', 'like', "%{$search}%")
-                ->orWhere('nama_supir', 'like', "%{$search}%")
-                ->orWhere('ekspedisi', 'like', "%{$search}%");
+                    ->orWhere('nama_supir', 'like', "%{$search}%")
+                    ->orWhere('ekspedisi', 'like', "%{$search}%");
             });
         }
 
         $produks = $query->orderByRaw('status_spv = 0 DESC, status_spv = 2 DESC, tanggal DESC')
-        ->paginate(15)
-        ->withQueryString();
+            ->paginate(15)
+            ->withQueryString();
 
         return view('loading-produks.verification', [
             'data' => $produks
@@ -255,7 +288,7 @@ class LoadingProdukController extends Controller
     {
         $validated = $request->validate([
             'status_spv' => 'required|in:1,2',
-            'catatan_spv' => 'nullable|string|max:1000', 
+            'catatan_spv' => 'nullable|string|max:1000',
         ]);
 
         try {
@@ -264,20 +297,19 @@ class LoadingProdukController extends Controller
 
             // 2. Set status
             $loadingProduk->status_spv = $validated['status_spv'];
-            
+
             // 3. Set catatan (kosongkan jika 'Verified')
             $loadingProduk->catatan_spv = ($validated['status_spv'] == 2) ? $validated['catatan_spv'] : null;
 
             // 4. Menyimpan ke kolom yang benar (sesuai gambar Anda)
             // Asumsi Auth::id() mengembalikan UUID user (d63c...)
-            $loadingProduk->verified_by = Auth::id(); 
+            $loadingProduk->verified_by = Auth::id();
             $loadingProduk->verified_at = now();
-            
+
             // 5. Simpan ke database
             $loadingProduk->save();
 
             return redirect()->back()->with('success', "Data (Nopol: {$loadingProduk->no_pol_mobil}) berhasil diverifikasi.");
-
         } catch (\Exception $e) {
             Log::error('Gagal verifikasi Loading Produk: ' . $e->getMessage());
             return back()->with('error', 'Gagal memverifikasi data. Error: ' . $e->getMessage());

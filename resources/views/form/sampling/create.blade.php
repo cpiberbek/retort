@@ -89,7 +89,7 @@
                         </div>
                         <div class="row mb-3">
                             <div class="col-md-3"><label class="form-label">Air Trap PVDC</label><input type="number" name="air_trap_pvdc" class="form-control" step="0.01" min="0"></div>
-                            <div class="col-md-3" step="0.01"><label class="form-label">Air Trap Varian</label><input type="number" name="air_trap_produk" class="form-control" min="0"></div>
+                            <div class="col-md-3" step="0.01"><label class="form-label">Air Trap Produk</label><input type="number" name="air_trap_produk" class="form-control" min="0"></div>
                             <div class="col-md-3" step="0.01"><label class="form-label">Keriput</label><input type="number" name="keriput" class="form-control" min="0"></div>
                             <div class="col-md-3" step="0.01"><label class="form-label">Bengkok</label><input type="number" name="bengkok" class="form-control" min="0"></div>
                         </div>
@@ -216,7 +216,7 @@
         } else if (hour >= 15 && hour < 23) {
             shiftInput.value = "2";
         } else {
-            shiftInput.value = "3"; 
+            shiftInput.value = "3";
         }
     });
 </script>
