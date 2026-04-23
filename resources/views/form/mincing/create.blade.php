@@ -123,8 +123,17 @@
                                                     @endforeach
                                                 </select>
                                             </td>
-                                            <td><input type="text" name="non_premix[0][kode_bahan]"
-                                                    class="form-control form-control-sm text-center"></td>
+                                            <td><select name="non_premix[0][inspection_uuid]"
+                                                    class="form-control form-select-sm text-center">
+
+                                                    <option value="" disabled selected>-- Pilih Batch --</option>
+
+                                                    @foreach ($inspections as $insp)
+                                                        <option value="{{ $insp->uuid }}">
+                                                            {{ $insp->kode_batch }}
+                                                        </option>
+                                                    @endforeach
+                                                </select></td>
                                             <td>
                                                 <input type="text" name="non_premix[0][suhu_bahan]"
                                                     class="form-control form-control-sm text-center">

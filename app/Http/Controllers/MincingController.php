@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\InspectionProductDetail;
 use App\Models\Mincing;
 use App\Models\Produk;
 use App\Models\Mesin;
 use App\Models\Master_Raw_Material;
+use App\Models\RawMaterialInspection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use TCPDF; // Import TCPDF
 
 class MincingController extends Controller
@@ -130,9 +133,12 @@ class MincingController extends Controller
     public function create()
     {
         $userPlant = Auth::user()->plant;
+
         $produks = Produk::where('plant', $userPlant)->get();
         $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
-        return view('form.mincing.create', compact('produks', 'rawMaterials'));
+        $inspections = InspectionProductDetail::all();
+
+        return view('form.mincing.create', compact('produks', 'rawMaterials', 'inspections'));
     }
 
     public function store(Request $request)
@@ -421,5 +427,24 @@ class MincingController extends Controller
 
         return redirect()->route('mincing.recyclebin')
             ->with('success', 'Data berhasil dihapus permanen.');
+    }
+    public function getInspections(Request $request)
+    {
+        $bahan = $request->bahan;
+
+        $data = DB::table('raw_material_inspections as rmi')
+            ->join('raw_material_inspection_details as d', 'rmi.uuid', '=', 'd.raw_material_inspection_uuid')
+            ->where('rmi.bahan_baku', $bahan)
+            ->select(
+                'd.uuid',
+                'd.kode_batch',
+                'd.tanggal_produksi',
+                'd.exp',
+                'd.jumlah',
+                'rmi.supplier'
+            )
+            ->get();
+
+        return response()->json($data);
     }
 }

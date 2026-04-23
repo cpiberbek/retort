@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -16,7 +17,8 @@ class Master_Raw_Material extends Model
 
     protected $fillable = ['nama_bahan_baku', 'plant_uuid', 'created_by', 'deleted_by', 'kode_internal', 'satuan'];
 
-    public function getRouteKeyName() {
+    public function getRouteKeyName()
+    {
         return 'uuid';
     }
 
@@ -35,7 +37,12 @@ class Master_Raw_Material extends Model
         // Mengikuti standar: foreign_key 'plant_uuid', owner_key 'uuid'
         return $this->belongsTo(Plant::class, 'plant_uuid', 'uuid');
     }
-    public function creator() {
+    public function creator()
+    {
         return $this->belongsTo(User::class, 'created_by', 'uuid');
+    }
+    public function inspections()
+    {
+        return $this->hasMany(RawMaterialInspection::class, 'raw_material_uuid', 'uuid');
     }
 }

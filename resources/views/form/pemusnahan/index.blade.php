@@ -121,15 +121,15 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @php 
-                    $no = ($data->currentPage() - 1) * $data->perPage() + 1; 
+                    @php
+                    $no = ($data->currentPage() - 1) * $data->perPage() + 1;
                     @endphp
                     @forelse ($data as $dep)
                     <tr>
                         <td class="text-center align-middle">{{ $no++ }}</td>
-                        <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }}</td>   
+                        <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }}</td>
                         <td class="text-center align-middle">{{ $dep->nama_produk }}</td>
-                        <td class="text-center align-middle">{{ $dep->kode_produksi }}</td>
+                        <td class="text-center align-middle">{{ $dep->batch->kode_produksi ?? '-' }}</td>
                         <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->expired_date)->format('d-m-Y') }}</td>
                         <td class="text-center align-middle">{{ $dep->analisa }}</td>
                         <td class="text-center align-middle">{{ $dep->keterangan }}</td>
@@ -140,7 +140,7 @@
                             @elseif ($dep->status_spv == 1)
                             <span class="fw-bold text-success">Verified</span>
                             @elseif ($dep->status_spv == 2)
-                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#revisionModal{{ $dep->uuid }}" 
+                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#revisionModal{{ $dep->uuid }}"
                              class="text-danger fw-bold text-decoration-none" style="cursor: pointer;">Revision</a>
                              @endif
                          </td>
@@ -175,8 +175,8 @@
                                 <form action="{{ route('pemusnahan.verification.update', $dep->uuid) }}" method="POST">
                                     @csrf
                                     @method('PUT')
-                                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" 
-                                    style="background: linear-gradient(145deg, #7a1f12, #9E3419); 
+                                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
+                                    style="background: linear-gradient(145deg, #7a1f12, #9E3419);
                                     box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
                                     <div class="modal-header border-bottom border-light-subtle p-4" style="border-bottom-width: 3px !important;">
                                         <h5 class="modal-title fw-bolder fs-3 text-uppercase" id="verifyModalLabel{{ $dep->uuid }}" style="color: #00ffc4;">
@@ -191,14 +191,14 @@
                                         </p>
                                         <div class="row g-4">
                                             <div class="col-md-12">
-                                                <label for="status_spv_{{ $dep->uuid }}" class="form-label fw-bold mb-2 text-center d-block" 
+                                                <label for="status_spv_{{ $dep->uuid }}" class="form-label fw-bold mb-2 text-center d-block"
                                                     style="color: #FFE5DE; font-size: 0.95rem;">
                                                     Pilih Status Verifikasi
                                                 </label>
 
-                                                <select 
-                                                name="status_spv" 
-                                                id="status_spv_{{ $dep->uuid }}" 
+                                                <select
+                                                name="status_spv"
+                                                id="status_spv_{{ $dep->uuid }}"
                                                 class="form-select form-select-lg fw-bold text-center mx-auto"
                                                 style="
                                                 background: linear-gradient(135deg, #fff1f0, #ffe5de);
@@ -213,9 +213,9 @@
                                                 "
                                                 required
                                                 >
-                                                <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} 
+                                                <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }}
                                                     style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
-                                                    <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} 
+                                                    <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }}
                                                         style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
                                                     </select>
                                                 </div>
@@ -224,9 +224,9 @@
                                                     <label for="catatan_spv_{{ $dep->uuid }}" class="form-label fw-bold text-light mb-2">
                                                         Catatan Tambahan (Opsional)
                                                     </label>
-                                                    <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4" 
-                                                        class="form-control text-dark border-0 shadow-none" 
-                                                        placeholder="Masukkan catatan, misalnya alasan revisi..." 
+                                                    <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4"
+                                                        class="form-control text-dark border-0 shadow-none"
+                                                        placeholder="Masukkan catatan, misalnya alasan revisi..."
                                                         style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
 
                                                     </div>

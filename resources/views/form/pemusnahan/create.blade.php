@@ -35,10 +35,11 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Kode Batch</label>
-                                    <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
-                                        maxlength="10" required>
-                                    <small id="kodeError" class="text-danger d-none"></small>
+                                    <label class="form-label">Kode Batch </label>
+                                    <select name="kode_produksi" id="kode_produksi" class="form-control batchSelect"
+                                        required disabled>
+                                        <option value="">Pilih Varian Terlebih Dahulu</option>
+                                    </select>
                                 </div>
 
                                 <div class="col-md-6">
@@ -105,72 +106,46 @@
                 timeInput.value = `${hh}:${min}`;
             });
 
-            // Validasi kode produksi dan generate Exp Date otomatis
-            const kodeInput = document.getElementById('kode_produksi');
-            const expDateInput = document.getElementById('expired_date');
-            const kodeError = document.getElementById('kodeError');
+            const produkSelect = $('select[name="nama_produk"]');
+            const batchSelect = $('#kode_produksi');
 
-            kodeInput.addEventListener('input', function() {
-                let value = this.value.toUpperCase().replace(/\s+/g, '');
-                this.value = value;
-                kodeError.textContent = '';
-                kodeError.classList.add('d-none');
-                expDateInput.value = '';
-
-                if (value.length !== 10) {
-                    kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
-
-                const format = /^[A-Z0-9]+$/;
-                if (!format.test(value)) {
-                    kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
-
-                const bulanChar = value.charAt(1);
-                const validBulan = /^[A-L]$/;
-                if (!validBulan.test(bulanChar)) {
-                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
-
-                const hariStr = value.substr(2, 2);
-                const hari = parseInt(hariStr, 10);
-                if (isNaN(hari) || hari < 1 || hari > 31) {
-                    kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
-
-                const bulanMap = {
-                    A: 0,
-                    B: 1,
-                    C: 2,
-                    D: 3,
-                    E: 4,
-                    F: 5,
-                    G: 6,
-                    H: 7,
-                    I: 8,
-                    J: 9,
-                    K: 10,
-                    L: 11
-                };
-                const bulanIndex = bulanMap[bulanChar];
-                const tahun = new Date().getFullYear();
-
-                let expDate = new Date(tahun, bulanIndex, hari);
-                expDate.setMonth(expDate.getMonth() + 7);
-
-                const yyyy = expDate.getFullYear();
-                const mm = String(expDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(expDate.getDate()).padStart(2, '0');
-                expDateInput.value = `${yyyy}-${mm}-${dd}`;
+            produkSelect.on('change', function() {
+                loadBatch();
             });
+
+            function loadBatch() {
+                let produk = produkSelect.val();
+
+                batchSelect.html('');
+                batchSelect.prop('disabled', true);
+
+                if (!produk) {
+                    batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    return;
+                }
+
+                fetch("{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}"
+                        .replace('__PRODUK__', encodeURIComponent(produk)))
+                    .then(res => res.json())
+                    .then(data => {
+
+                        if (data.length === 0) {
+                            batchSelect.html('<option value="">Batch Tidak Ditemukan</option>');
+                            return;
+                        }
+
+                        batchSelect.prop('disabled', false);
+                        batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+                        data.forEach(batch => {
+                            batchSelect.append(`
+                    <option value="${batch.uuid}" data-kode="${batch.kode_produksi}">
+                        ${batch.kode_produksi}
+                    </option>
+                `);
+                        });
+                    });
+            }
         </script>
     @endpush
 @endsection
