@@ -181,7 +181,6 @@
                                                 class="form-control form-control-sm sensori"
                                                 value="{{ $sensori['rasa_keseluruhan'] ?? '' }}" min="0" max="3" {{
                                                 !empty($sensori['rasa_keseluruhan']) ? 'readonly' : '' }}></td>
-
                                         <td>
                                             <input type="number" step="0.1" name="sensori[{{ $i }}][rata_score]"
                                                 class="form-control form-control-sm rata_score"
@@ -322,7 +321,7 @@
 
     $(function() {
         function hitungRata(row) {
-            const nilai = $(row).find('.sensori').map(function(){ 
+            const nilai = $(row).find('.sensori').map(function(){
                 return parseFloat($(this).val()) || 0;
             }).get();
             const isi = nilai.filter(v => v > 0).length;

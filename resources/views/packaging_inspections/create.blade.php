@@ -9,22 +9,22 @@
     body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
     .form-label { font-weight: 600; color: #495057; }
     .form-control, .form-select { border-radius: 8px; }
-    
+
     /* Memastikan Select2 Full Width dan Rapi */
-    .select2-container { width: 100% !important; } 
+    .select2-container { width: 100% !important; }
     .select2-container .select2-selection--single {
         height: calc(2.25rem + 2px);
         padding: .375rem .75rem;
         border: 1px solid #ced4da;
     }
     .select2-container--bootstrap-5 .select2-selection { border-radius: 8px !important; }
-    
+
     /* Style Tombol Check Group */
-    .btn-check-group .btn { 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        gap: 0.5rem; 
+    .btn-check-group .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         font-weight: 500;
         transition: all 0.2s;
     }
@@ -45,7 +45,7 @@
                     <ul>@foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach</ul>
                 </div>
             @endif
-            
+
             <form action="{{ route('packaging-inspections.store') }}" method="POST">
                 @csrf
 
@@ -82,7 +82,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="d-flex justify-content-between mt-4">
                     <button type="submit" class="btn btn-success btn-lg"><i class="bi bi-save"></i> Simpan Inspeksi</button>
                     <a href="{{ route('packaging-inspections.index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-arrow-left"></i> Kembali</a>
@@ -101,14 +101,14 @@
 <script>
     // --- 1. Logic Button OK/Not OK (Event Delegation) ---
     $(document).ready(function() {
-        
+
         $(document).on('click', '.btn-check-group .btn', function(e) {
-            e.preventDefault(); 
-            
+            e.preventDefault();
+
             const button = $(this);
             const value = button.data('value'); // 'OK' or 'Not OK'
             const targetInputId = button.data('target-input');
-            
+
             // 1. Update Input Hidden
             if (targetInputId) {
                 $(targetInputId).val(value);
@@ -116,7 +116,7 @@
 
             // 2. Visual Toggle Logic (Outline Secondary vs Solid Color)
             const group = button.closest('.btn-check-group');
-            
+
             // Reset semua tombol jadi abu-abu (outline-secondary)
             group.find('.btn').each(function() {
                 $(this).removeClass('btn-success btn-danger').addClass('btn-outline-secondary');
@@ -141,12 +141,12 @@
         const container = document.getElementById('details-container');
         const addBtn = document.getElementById('add-detail-btn');
         let detailIndex = 0;
-        
-        const vehicleConditions = @json($vehicleConditions ?? []); 
+
+        const vehicleConditions = @json($vehicleConditions ?? []);
 
         function renderDetailForm(data = null) {
             const i = detailIndex;
-            
+
             // Definisi Field Checkbox (Looping Array)
             const checkList = [
                 { key: 'condition_design', label: 'Kondisi Design' },
@@ -172,21 +172,21 @@
             let checksHtml = '';
             checkList.forEach(item => {
                 const val = data?.[item.key] || ''; // Default OK
-                
+
                 checksHtml += `
                 <div class="col-lg-3 col-md-6">
                     <label class="form-label d-block">${item.label}</label>
                     <input type="hidden" name="items[${i}][${item.key}]" id="${item.key}_${i}" value="${val}">
-                    
+
                     <div class="btn-group btn-check-group w-100" role="group">
-                        <button type="button" class="btn ${val === 'OK' ? 'btn-success' : 'btn-outline-secondary'} w-50" 
-                            data-value="OK" 
+                        <button type="button" class="btn ${val === 'OK' ? 'btn-success' : 'btn-outline-secondary'} w-50"
+                            data-value="OK"
                             data-target-input="#${item.key}_${i}">
                             <i class="bi bi-check-lg"></i> OK
                         </button>
-                        
-                        <button type="button" class="btn ${val === 'Not OK' ? 'btn-danger' : 'btn-outline-secondary'} w-50" 
-                            data-value="Not OK" 
+
+                        <button type="button" class="btn ${val === 'Not OK' ? 'btn-danger' : 'btn-outline-secondary'} w-50"
+                            data-value="Not OK"
                             data-target-input="#${item.key}_${i}">
                             <i class="bi bi-x-lg"></i> Not OK
                         </button>
@@ -196,22 +196,29 @@
             });
 
             const newDetail = document.createElement('div');
-            newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded', 'shadow-sm'); 
-            
+            newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded', 'shadow-sm');
+
             newDetail.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">Item #${i + 1}</h5>
                     <button type="button" class="btn btn-danger btn-sm remove-detail-btn"><i class="bi bi-trash"></i> Hapus</button>
                 </div>
-                
+
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label">Jenis Packaging</label>
                         <input type="text" name="items[${i}][packaging_type]" class="form-control" value="${packaging_type}" required>
                     </div>
-                    <div class="col-md-4">
+                   <div class="col-md-4">
                         <label class="form-label">Supplier</label>
-                        <input type="text" name="items[${i}][supplier]" class="form-control" value="${supplier}" required>
+                        <select name="items[${i}][supplier]" class="form-control" required>
+                            <option value="">-- Pilih Supplier --</option>
+                            @foreach($suppliers as $s)
+                                <option value="{{ $s->nama_supplier }}">
+                                    {{ $s->nama_supplier }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Lot Batch</label>
@@ -237,7 +244,7 @@
                         <label class="form-label">Qty Reject</label>
                         <input type="number" name="items[${i}][quantity_reject]" class="form-control" value="${qty_reject}" min="0" required>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <label class="form-label">Penerimaan</label>
                         <select name="items[${i}][acceptance_status]" class="form-select select2-dynamic" required>
@@ -267,7 +274,7 @@
                         <label class="form-label">PBB / OP</label>
                         <input type="text" name="items[${i}][pbb_op]" class="form-control" value="${pbb_op}">
                     </div>
-                    
+
                     <div class="col-12">
                         <label class="form-label">Keterangan (Optional)</label>
                         <textarea name="items[${i}][notes]" class="form-control" rows="2">${notes}</textarea>
@@ -279,7 +286,7 @@
             `;
 
             container.appendChild(newDetail);
-            
+
             $(newDetail).find('.select2-dynamic').select2({
                 theme: "bootstrap-5",
                 placeholder: "Pilih...",

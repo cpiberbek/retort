@@ -25,7 +25,7 @@
                 {{-- ===================== IDENTITAS ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
-                        <strong>Identitas Data Stuffing</strong>
+                        <strong>Pengecekan Data Klorin</strong>
                     </div>
                     <div class="card-body">
                         <div class="row mb-3">
