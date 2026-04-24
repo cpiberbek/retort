@@ -76,6 +76,7 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/get-inspections', [MincingController::class, 'getInspections']);
+Route::get('/lookup/batch/{nama_produk}', [MagnetTrapController::class, 'getBatch']);
 
 Route::middleware('auth')->group(function () {
     Route::resource('user', UserController::class);

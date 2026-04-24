@@ -23,20 +23,31 @@
                             </div>
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Nama Varian</label>
-                                    <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
-                                        required>
+                                    <label for="nama_produk" class="form-label fw-semibold">
+                                        Nama Varian <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="nama_produk" class="form-control" required>
                                         <option value="">-- Pilih Varian --</option>
                                         @foreach ($produks as $produk)
-                                            <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
+                                            <option value="{{ $produk->nama_produk }}">
+                                                {{ $produk->nama_produk }}
+                                            </option>
                                         @endforeach
                                     </select>
+                                    <small class="text-muted">
+                                        Pilih varian produk terlebih dahulu
+                                    </small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Kode Batch</label>
-                                    <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
-                                        maxlength="10" required>
-                                    <small id="kodeError" class="text-danger d-none"></small>
+                                    <label for="kode_batch" class="form-label fw-semibold">
+                                        Kode Batch <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="kode_batch" class="form-control" disabled required>
+                                        <option value="">Pilih Varian terlebih dahulu</option>
+                                    </select>
+                                    <small class="text-muted">
+                                        Batch akan muncul otomatis
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -327,6 +338,36 @@
                 $(`#basah_${type}_ujung, #basah_${type}_seal`).on('input', function() {
                     hitungTotalAirMinyak(type);
                 });
+            });
+
+        });
+    </script>
+    <script>
+        $('#nama_produk').on('change', function() {
+
+            let namaProduk = $(this).val();
+            let batchSelect = $('#kode_batch');
+
+            if (!namaProduk) {
+                batchSelect.html('<option>Pilih Varian dulu</option>');
+                batchSelect.prop('disabled', true);
+                return;
+            }
+
+            $.ajax({
+                url: '/lookup/batch/' + namaProduk,
+                type: 'GET',
+                success: function(data) {
+
+                    batchSelect.prop('disabled', false);
+                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+                    data.forEach(function(item) {
+                        batchSelect.append(
+                            `<option value="${item.uuid}">${item.kode_produksi}</option>`
+                        );
+                    });
+                }
             });
 
         });

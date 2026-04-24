@@ -1,55 +1,67 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid py-4">
-    <div class="card shadow-sm">
-        <div class="card-body">
-            <h4 class="mb-4">
-                <i class="bi bi-plus-circle"></i> Form Input Pengambilan Sampel
-            </h4>
+    <div class="container-fluid py-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h4 class="mb-4">
+                    <i class="bi bi-plus-circle"></i> Form Input Pengambilan Sampel
+                </h4>
 
-            <form id="pvdcForm" action="{{ route('sampel.store') }}" method="POST">
-                @csrf
+                <form id="pvdcForm" action="{{ route('sampel.store') }}" method="POST">
+                    @csrf
 
-                {{-- ===================== IDENTITAS ===================== --}}
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <strong>Identitas Data Sampel</strong>
-                    </div>
-                    <div class="card-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Tanggal</label>
-                                <input type="date" name="date" id="dateInput" class="form-control" required>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Jenis Sampel</label>
-                                <select name="jenis_sampel" id="jenis_sampel" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Sampel --</option>
-                                    <option value="Retain QC">Retain QC</option>
-                                    <option value="Lab Internal">Lab Internal</option>
-                                    <option value="Lab Eksternal">Lab Eksternal</option>
-                                    <option value="RND">RND</option>
-                                </select>
-                            </div>
+                    {{-- ===================== IDENTITAS ===================== --}}
+                    <div class="card mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <strong>Identitas Data Sampel</strong>
                         </div>
-
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Nama Varian</label>
-                                <input list="produkList" id="nama_produk" name="nama_produk" 
-                                class="form-control" placeholder="Ketik atau pilih Varian..." required
-                                value="{{ old('nama_produk', $data->nama_produk ?? '') }}">
-                                <datalist id="produkList">
-                                    @foreach($produks as $produk)
-                                    <option value="{{ $produk->nama_produk }}">
-                                        @endforeach
-                                    </datalist>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Tanggal</label>
+                                    <input type="date" name="date" id="dateInput" class="form-control" required>
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Kode Batch</label>
-                                    <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" maxlength="10" required>
-                                    <small id="kodeError" class="text-danger d-none"></small>
+                                    <label class="form-label">Jenis Sampel</label>
+                                    <select name="jenis_sampel" id="jenis_sampel" class="form-control selectpicker"
+                                        data-live-search="true" required>
+                                        <option value="">-- Pilih Sampel --</option>
+                                        <option value="Retain QC">Retain QC</option>
+                                        <option value="Lab Internal">Lab Internal</option>
+                                        <option value="Lab Eksternal">Lab Eksternal</option>
+                                        <option value="RND">RND</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label for="nama_produk" class="form-label fw-semibold">
+                                        Nama Varian <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="nama_produk" class="form-control" required>
+                                        <option value="">-- Pilih Varian --</option>
+                                        @foreach ($produks as $produk)
+                                            <option value="{{ $produk->nama_produk }}">
+                                                {{ $produk->nama_produk }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted">
+                                        Pilih varian produk terlebih dahulu
+                                    </small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="kode_batch" class="form-label fw-semibold">
+                                        Kode Batch <span class="text-danger">*</span>
+                                    </label>
+                                    <select id="kode_batch" class="form-control" disabled required>
+                                        <option value="">Pilih Varian terlebih dahulu</option>
+                                    </select>
+                                    <small class="text-muted">
+                                        Batch akan muncul otomatis
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -82,12 +94,13 @@
 
     {{-- ===================== SCRIPT ===================== --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
     <script>
         $(document).ready(function() {
             $('#nama_produk').select2({
-                tags: true, 
+                tags: true,
                 placeholder: "Ketik atau pilih nama varian...",
                 allowClear: true
             });
@@ -95,7 +108,7 @@
     </script>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function() {
             const dateInput = document.getElementById("dateInput");
 
             let now = new Date();
@@ -109,7 +122,7 @@
     </script>
 
     <script>
-    // ✅ Validasi kode produksi tanpa fungsi expired
+        // ✅ Validasi kode produksi tanpa fungsi expired
         const kodeInput = document.getElementById('kode_produksi');
         const kodeError = document.getElementById('kodeError');
 
@@ -140,19 +153,49 @@
                 return false;
             }
 
-            const hariStr = value.substr(2,2);
-            const hari = parseInt(hariStr,10);
+            const hariStr = value.substr(2, 2);
+            const hari = parseInt(hariStr, 10);
             if (isNaN(hari) || hari < 1 || hari > 31) {
                 kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
                 kodeError.classList.remove('d-none');
                 return false;
             }
 
-        // ✅ Jika semua valid, tampilkan sukses
+            // ✅ Jika semua valid, tampilkan sukses
             kodeError.textContent = "✔ Kode batch valid.";
             kodeError.classList.remove('d-none');
             kodeError.classList.remove('text-danger');
             kodeError.classList.add('text-success');
         });
     </script>
-    @endsection
+    <script>
+        $('#nama_produk').on('change', function() {
+
+            let namaProduk = $(this).val();
+            let batchSelect = $('#kode_batch');
+
+            if (!namaProduk) {
+                batchSelect.html('<option>Pilih Varian dulu</option>');
+                batchSelect.prop('disabled', true);
+                return;
+            }
+
+            $.ajax({
+                url: '/lookup/batch/' + namaProduk,
+                type: 'GET',
+                success: function(data) {
+
+                    batchSelect.prop('disabled', false);
+                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+                    data.forEach(function(item) {
+                        batchSelect.append(
+                            `<option value="${item.uuid}">${item.kode_produksi}</option>`
+                        );
+                    });
+                }
+            });
+
+        });
+    </script>
+@endsection

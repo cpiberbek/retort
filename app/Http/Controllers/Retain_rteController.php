@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Retain_rte;
 use App\Models\Produk;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use TCPDF;
 
@@ -18,21 +19,21 @@ class Retain_rteController extends Controller
         $userPlant = Auth::user()->plant;
 
         $data = Retain_rte::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.retain_rte.index', compact('data', 'search', 'date'));
     }
@@ -44,18 +45,18 @@ class Retain_rteController extends Controller
         $userPlant = Auth::user()->plant;
 
         $data = Retain_rte::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'asc')
-        ->get();
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'asc')
+            ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -78,13 +79,13 @@ class Retain_rteController extends Controller
         $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
+        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
+            require_once(dirname(__FILE__) . '/lang/eng.php');
             $pdf->setLanguageArray($l);
         }
 
         $pdf->SetFont('helvetica', '', 10);
-        $pdf->AddPage('L', 'A4'); 
+        $pdf->AddPage('L', 'A4');
 
         $html = view('reports.retain-rte', compact('data', 'request'))->render();
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
@@ -115,7 +116,9 @@ class Retain_rteController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'nama_produk', 'kode_produksi'
+            'date',
+            'nama_produk',
+            'kode_produksi'
         ]);
 
         $data['username']            = $username;
@@ -135,8 +138,8 @@ class Retain_rteController extends Controller
         $produks = Produk::where('plant', $userPlant)->get();
 
         $retainData = !empty($retain_rte->analisa)
-        ? json_decode($retain_rte->analisa, true)
-        : [];
+            ? json_decode($retain_rte->analisa, true)
+            : [];
 
         return view('form.retain_rte.update', compact('retain_rte', 'produks', 'retainData'));
     }
@@ -174,8 +177,8 @@ class Retain_rteController extends Controller
         $produks = Produk::where('plant', $userPlant)->get();
 
         $retainData = !empty($retain_rte->analisa)
-        ? json_decode($retain_rte->analisa, true)
-        : [];
+            ? json_decode($retain_rte->analisa, true)
+            : [];
 
         return view('form.retain_rte.edit', compact('retain_rte', 'produks', 'retainData'));
     }
@@ -205,79 +208,88 @@ class Retain_rteController extends Controller
 
     public function verification(Request $request)
     {
-     $search    = $request->input('search');
-     $date      = $request->input('date');
-     $userPlant = Auth::user()->plant;
+        $search    = $request->input('search');
+        $date      = $request->input('date');
+        $userPlant = Auth::user()->plant;
 
-     $data = Retain_rte::query()
-     ->where('plant', $userPlant)
-     ->when($search, function ($query) use ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('username', 'like', "%{$search}%")
-            ->orWhere('nama_produk', 'like', "%{$search}%")
-            ->orWhere('kode_produksi', 'like', "%{$search}%");
-        });
-    })
-     ->when($date, function ($query) use ($date) {
-        $query->whereDate('date', $date);
-    })
-     ->orderBy('date', 'desc')
-     ->orderBy('created_at', 'desc')
-     ->paginate(10)
-     ->appends($request->all());
+        $data = Retain_rte::query()
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
-     return view('form.retain_rte.index', compact('data', 'search', 'date' ));
- }
+        return view('form.retain_rte.index', compact('data', 'search', 'date'));
+    }
 
- public function updateVerification(Request $request, $uuid)
- {
-    $request->validate([
-        'status_spv'  => 'required|in:1,2',
-        'catatan_spv' => 'nullable|string|max:255',
-    ]);
+    public function updateVerification(Request $request, $uuid)
+    {
+        $request->validate([
+            'status_spv'  => 'required|in:1,2',
+            'catatan_spv' => 'nullable|string|max:255',
+        ]);
 
-    $retain_rte = Retain_rte::where('uuid', $uuid)->firstOrFail();
+        $retain_rte = Retain_rte::where('uuid', $uuid)->firstOrFail();
 
-    $retain_rte->update([
-        'status_spv'      => $request->status_spv,
-        'catatan_spv'     => $request->catatan_spv,
-        'nama_spv'        => Auth::user()->username,
-        'tgl_update_spv'  => now(),
-    ]);
+        $retain_rte->update([
+            'status_spv'      => $request->status_spv,
+            'catatan_spv'     => $request->catatan_spv,
+            'nama_spv'        => Auth::user()->username,
+            'tgl_update_spv'  => now(),
+        ]);
 
-    return redirect()->route('retain_rte.index')
-    ->with('success', 'Status Verifikasi Pemeriksaan Sampel Retain RTE berhasil diperbarui.');
-}
+        return redirect()->route('retain_rte.index')
+            ->with('success', 'Status Verifikasi Pemeriksaan Sampel Retain RTE berhasil diperbarui.');
+    }
 
-public function destroy($uuid)
-{
-    $retain_rte = Retain_rte::where('uuid', $uuid)->firstOrFail();
-    $retain_rte->delete();
-    return redirect()->route('retain_rte.index')->with('success', 'Retain RTE berhasil dihapus');
-}
+    public function destroy($uuid)
+    {
+        $retain_rte = Retain_rte::where('uuid', $uuid)->firstOrFail();
+        $retain_rte->delete();
+        return redirect()->route('retain_rte.index')->with('success', 'Retain RTE berhasil dihapus');
+    }
 
-public function recyclebin()
-{
-    $retain_rte = Retain_rte::onlyTrashed()
-    ->orderBy('deleted_at', 'desc')
-    ->paginate(10);
+    public function recyclebin()
+    {
+        $retain_rte = Retain_rte::onlyTrashed()
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
-    return view('form.retain_rte.recyclebin', compact('retain_rte'));
-}
-public function restore($uuid)
-{
-    $retain_rte = Retain_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $retain_rte->restore();
+        return view('form.retain_rte.recyclebin', compact('retain_rte'));
+    }
+    public function restore($uuid)
+    {
+        $retain_rte = Retain_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $retain_rte->restore();
 
-    return redirect()->route('retain_rte.recyclebin')
-    ->with('success', 'Data berhasil direstore.');
-}
-public function deletePermanent($uuid)
-{
-    $retain_rte = Retain_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $retain_rte->forceDelete();
+        return redirect()->route('retain_rte.recyclebin')
+            ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $retain_rte = Retain_rte::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $retain_rte->forceDelete();
 
-    return redirect()->route('retain_rte.recyclebin')
-    ->with('success', 'Data berhasil dihapus permanen.');
-}
+        return redirect()->route('retain_rte.recyclebin')
+            ->with('success', 'Data berhasil dihapus permanen.');
+    }
+    public function getBatch($nama_produk)
+    {
+        $data = DB::table('mincings')
+            ->where('nama_produk', $nama_produk)
+            ->select('uuid', 'kode_produksi')
+            ->get();
+
+        return response()->json($data);
+    }
 }
