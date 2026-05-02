@@ -447,6 +447,28 @@
                 </div>
             </div>
         </li>
+
+        @php
+            $searchActive = request()->routeIs('retort.*');
+        @endphp
+
+        <li class="nav-item {{ $searchActive ? 'active' : '' }}">
+            <a class="nav-link {{ $searchActive ? '' : 'collapsed' }}" href="#" data-bs-toggle="collapse"
+                data-bs-target="#collapseSearch" aria-expanded="{{ $searchActive ? 'true' : 'false' }}">
+
+                <i class="fas fa-search"></i>
+                <span>Traceability</span>
+            </a>
+
+            <div id="collapseSearch" class="collapse {{ $searchActive ? 'show' : '' }}">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <a class="collapse-item {{ request()->routeIs('retort.index') ? 'active' : '' }}"
+                        href="{{ route('retort.index') }}">
+                        Cari Data
+                    </a>
+                </div>
+            </div>
+        </li>
     @endcan
     @php
         $traceRoutes = ['traceability.*', 'withdrawl.*', 'recall.*'];

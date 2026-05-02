@@ -64,7 +64,8 @@ use App\Http\Controllers\{
     RecallController,
     PermissionController,
     RoleController,
-    MasterRawMaterialController
+    MasterRawMaterialController,
+    RetortController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
@@ -77,6 +78,8 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/get-inspections', [MincingController::class, 'getInspections']);
 Route::get('/lookup/batch/{nama_produk}', [MagnetTrapController::class, 'getBatch']);
+Route::get('/retort', [RetortController::class, 'index'])->name('retort.index');
+Route::post('/retort/cari', [RetortController::class, 'cari'])->name('retort.cari');
 
 Route::middleware('auth')->group(function () {
     Route::resource('user', UserController::class);

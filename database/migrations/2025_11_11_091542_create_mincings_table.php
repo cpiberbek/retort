@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('mincings', function (Blueprint $table) {
             $table->id();
-            $table->uuid('uuid')->unique(); 
+            $table->uuid('uuid')->unique();
             $table->string('username');
             $table->string('username_updated')->nullable();
             $table->date('date');
@@ -35,6 +35,8 @@ return new class extends Migration
             $table->time('waktu_aging_emulsi_akhir')->nullable();
             $table->decimal('suhu_akhir_emulsi_gel', 8, 2)->nullable();
             $table->time('waktu_mixing')->nullable();
+            $table->time('waktu_mixing_start')->nullable();
+            $table->time('waktu_mixing_end')->nullable();
             $table->decimal('suhu_akhir_mixing', 8, 2)->nullable();
             $table->decimal('suhu_akhir_emulsi', 8, 2)->nullable();
             $table->string('catatan')->nullable();

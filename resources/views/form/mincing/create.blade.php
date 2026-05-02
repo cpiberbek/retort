@@ -42,7 +42,7 @@
                                     <label for="nama_produk" class="form-label fw-semibold">
                                         Nama Varian <span class="text-danger">*</span>
                                     </label>
-                                    <select id="nama_produk" class="form-control" required>
+                                    <select name="nama_produk" id="nama_produk" class="form-control" required>
                                         <option value="">-- Pilih Varian --</option>
                                         @foreach ($produks as $produk)
                                             <option value="{{ $produk->nama_produk }}">
@@ -57,10 +57,10 @@
 
                                 <!-- Kode Batch -->
                                 <div class="col-md-6">
-                                    <label for="kode_batch" class="form-label fw-semibold">
-                                        Kode Batch <span class="text-danger">*</span>
+                                    <label for="kode_produksi" class="form-label fw-semibold">
+                                        Kode Produksi <span class="text-danger">*</span>
                                     </label>
-                                    <select id="kode_batch" class="form-control" disabled required>
+                                    <select name="kode_produksi" id="kode_produksi" class="form-control" disabled required>
                                         <option value="">Pilih Varian terlebih dahulu</option>
                                     </select>
                                     <small class="text-muted">
@@ -262,15 +262,25 @@
                                         <tr>
                                             <td class="text-start fw-semibold bg-light">Waktu Mixing Premix</td>
                                             <td colspan="3">
-                                                <div class="input-group">
-                                                    <input type="number" name="waktu_mixing_premix"
-                                                        class="form-control text-center m-0" placeholder="0"
-                                                        min="0"
-                                                        style="height: 31px; min-height: 31px; border-right: 0;">
-                                                    <span
-                                                        class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
-                                                        style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                                <div class="d-flex align-items-center gap-2">
+
+                                                    <input type="time" id="premix_start"
+                                                        class="form-control form-control-sm">
+                                                    <span>-</span>
+                                                    <input type="time" id="premix_end"
+                                                        class="form-control form-control-sm">
+
+                                                    <span id="premix_result" class="badge bg-light text-dark">(0)
+                                                        Menit</span>
+
                                                 </div>
+
+                                                <!-- hidden -->
+                                                <input type="hidden" name="waktu_mixing_premix" id="premix_menit">
+                                                <input type="hidden" name="waktu_mixing_premix_start"
+                                                    id="premix_start_hidden">
+                                                <input type="hidden" name="waktu_mixing_premix_end"
+                                                    id="premix_end_hidden">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -287,15 +297,24 @@
                                         <tr>
                                             <td class="text-start fw-semibold" style="width: 25%;">Waktu Bowl Cutter</td>
                                             <td colspan="3">
-                                                <div class="input-group">
-                                                    <input type="number" name="waktu_bowl_cutter"
-                                                        class="form-control text-center m-0" placeholder="0"
-                                                        min="0"
-                                                        style="height: 31px; min-height: 31px; border-right: 0;">
-                                                    <span
-                                                        class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
-                                                        style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="time" id="bowl_start"
+                                                        class="form-control form-control-sm">
+                                                    <span>-</span>
+                                                    <input type="time" id="bowl_end"
+                                                        class="form-control form-control-sm">
+
+                                                    <span id="bowl_result" class="badge bg-light text-dark">(0)
+                                                        Menit</span>
                                                 </div>
+
+                                                <!-- hidden -->
+                                                <input type="hidden" name="waktu_bowl_cutter" id="bowl_menit">
+                                                <input type="hidden" name="waktu_bowl_cutter_start"
+                                                    id="bowl_start_hidden">
+                                                <input type="hidden" name="waktu_bowl_cutter_end" id="bowl_end_hidden">
+
                                             </td>
                                         </tr>
                                         <tr>
@@ -320,15 +339,23 @@
                                         <tr>
                                             <td class="text-start fw-semibold" style="width: 25%;">Waktu Mixing</td>
                                             <td>
-                                                <div class="input-group">
-                                                    <input type="number" name="waktu_mixing"
-                                                        class="form-control text-center m-0" placeholder="0"
-                                                        min="0"
-                                                        style="height: 31px; min-height: 31px; border-right: 0;">
-                                                    <span
-                                                        class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
-                                                        style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="time" id="mixing_start"
+                                                        class="form-control form-control-sm">
+                                                    <span>-</span>
+                                                    <input type="time" id="mixing_end"
+                                                        class="form-control form-control-sm">
+
+                                                    <span id="mixing_result" class="badge bg-light text-dark">(0)
+                                                        Menit</span>
                                                 </div>
+
+                                                <!-- hidden -->
+                                                <input type="hidden" name="waktu_mixing" id="mixing_menit">
+                                                <input type="hidden" name="waktu_mixing_start" id="mixing_start_hidden">
+                                                <input type="hidden" name="waktu_mixing_end" id="mixing_end_hidden">
+
                                             </td>
                                         </tr>
                                         <tr>
@@ -372,195 +399,204 @@
         </div>
     </div>
 
-    {{-- ===================== SCRIPT ===================== --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
     <script>
-        $(document).ready(function() {
-            $('.selectpicker').selectpicker();
-        });
-
-        // Otomatis Isi Tanggal & Shift
         document.addEventListener("DOMContentLoaded", function() {
+
+            // =========================
+            // AUTO DATE & SHIFT
+            // =========================
             const dateInput = document.getElementById("dateInput");
             const shiftInput = document.getElementById("shiftInput");
-            let now = new Date();
-            let yyyy = now.getFullYear();
-            let mm = String(now.getMonth() + 1).padStart(2, '0');
-            let dd = String(now.getDate()).padStart(2, '0');
-            let hh = now.getHours();
-            dateInput.value = `${yyyy}-${mm}-${dd}`;
-            if (hh >= 7 && hh < 15) shiftInput.value = "1";
-            else if (hh >= 15 && hh < 23) shiftInput.value = "2";
-            else shiftInput.value = "3";
-        });
 
-        // Validasi Kode Produksi
-        $(function() {
-            const kodeInput = $('#kode_produksi');
-            const kodeError = $('#kodeError');
-            const form = $('#mincingForm');
+            if (dateInput && shiftInput) {
+                let now = new Date();
+                let yyyy = now.getFullYear();
+                let mm = String(now.getMonth() + 1).padStart(2, '0');
+                let dd = String(now.getDate()).padStart(2, '0');
+                let hh = now.getHours();
 
-            function validateKode() {
-                let value = kodeInput.val().toUpperCase().replace(/\s+/g, '');
-                kodeInput.val(value);
-                kodeError.text('').addClass('d-none');
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
 
-                if (value.length !== 10) {
-                    kodeError.text('Kode Batch harus 10 karakter').removeClass('d-none');
-                    return false;
-                }
-                if (!/^[A-Z0-9]+$/.test(value)) {
-                    kodeError.text('Hanya huruf besar & angka').removeClass('d-none');
-                    return false;
-                }
-                if (!/^[A-L]$/.test(value.charAt(1))) {
-                    kodeError.text('Karakter ke-2 harus huruf bulan (A-L)').removeClass('d-none');
-                    return false;
-                }
-                let hari = parseInt(value.substr(2, 2), 10);
-                if (isNaN(hari) || hari < 1 || hari > 31) {
-                    kodeError.text('Karakter ke-3 & ke-4 harus tanggal valid (01-31)').removeClass('d-none');
-                    return false;
-                }
-                return true;
+                if (hh >= 7 && hh < 15) shiftInput.value = "1";
+                else if (hh >= 15 && hh < 23) shiftInput.value = "2";
+                else shiftInput.value = "3";
             }
 
-            kodeInput.on('input', validateKode);
-            form.on('submit', function(e) {
-                if (!validateKode()) {
-                    e.preventDefault();
-                    alert('Kode Batch tidak valid! Periksa kembali.');
-                    kodeInput.focus();
-                }
-            });
-        });
+            // =========================
+            // AJAX DROPDOWN BATCH
+            // =========================
+            $('#nama_produk').on('change', function() {
 
-        // Tambah & Hapus Baris Dinamis (Non-Premix, Premix, Suhu Grinding)
-        document.addEventListener('DOMContentLoaded', function() {
-            // --- 1. Definisi Element ---
+                let namaProduk = $(this).val();
+                let batchSelect = $('#kode_produksi');
+
+                if (!namaProduk) {
+                    batchSelect.html('<option>Pilih Varian dulu</option>');
+                    batchSelect.prop('disabled', true);
+                    return;
+                }
+
+                $.ajax({
+                    url: '/lookup/batch/' + namaProduk,
+                    type: 'GET',
+                    success: function(data) {
+
+                        batchSelect.prop('disabled', false);
+                        batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+                        data.forEach(function(item) {
+                            batchSelect.append(
+                                `<option value="${item.uuid}">${item.kode_produksi}</option>`
+                            );
+                        });
+                    }
+                });
+
+            });
+
+            // =========================
+            // ENABLE SELECT SAAT SUBMIT
+            // =========================
+            $('#mincingForm').on('submit', function() {
+                $('#kode_produksi').prop('disabled', false);
+            });
+
+            // =========================
+            // HITUNG WAKTU
+            // =========================
+            function hitungWaktu(startId, endId, resultId, menitId, startHidden, endHidden) {
+
+                const startEl = document.getElementById(startId);
+                const endEl = document.getElementById(endId);
+
+                if (!startEl || !endEl) return;
+
+                const start = startEl.value;
+                const end = endEl.value;
+
+                if (start && end) {
+                    let startTime = new Date("1970-01-01T" + start + ":00");
+                    let endTime = new Date("1970-01-01T" + end + ":00");
+
+                    let diff = (endTime - startTime) / 60000;
+                    if (diff < 0) diff += 1440;
+
+                    document.getElementById(resultId).innerText =
+                        `${start} - ${end} (${diff}) Menit`;
+
+                    document.getElementById(menitId).value = diff;
+                    document.getElementById(startHidden).value = start;
+                    document.getElementById(endHidden).value = end;
+                }
+            }
+
+            // =========================
+            // EVENT LISTENER AMAN (NO ERROR)
+            // =========================
+            [
+                ['premix_start', 'premix_end', 'premix_result', 'premix_menit', 'premix_start_hidden',
+                    'premix_end_hidden'
+                ],
+                ['bowl_start', 'bowl_end', 'bowl_result', 'bowl_menit', 'bowl_start_hidden', 'bowl_end_hidden'],
+                ['mixing_start', 'mixing_end', 'mixing_result', 'mixing_menit', 'mixing_start_hidden',
+                    'mixing_end_hidden'
+                ]
+            ].forEach(ids => {
+
+                const startEl = document.getElementById(ids[0]);
+                const endEl = document.getElementById(ids[1]);
+
+                if (startEl && endEl) {
+                    startEl.addEventListener('change', () => hitungWaktu(...ids));
+                    endEl.addEventListener('change', () => hitungWaktu(...ids));
+                }
+
+            });
+
+            // =========================
+            // DINAMIS TABLE
+            // =========================
             const tbodyNon = document.getElementById('tbodyNonPremix');
             const tbodyPremix = document.getElementById('tbodyPremix');
             const tbodySuhu = document.getElementById('tbodySuhuGrinding');
 
-            // --- 2. Inisialisasi Index ---
             let indexNonPremix = tbodyNon ? tbodyNon.querySelectorAll('tr').length : 0;
             let indexPremix = tbodyPremix ? tbodyPremix.querySelectorAll('tr').length : 0;
             let indexSuhu = tbodySuhu ? tbodySuhu.querySelectorAll('tr').length : 0;
 
-            // --- 3. Logic Non Premix ---
-            const btnTambahNon = document.getElementById('tambahBarisNonPremix');
-            if (btnTambahNon) {
-                btnTambahNon.addEventListener('click', () => {
-                    let optionBahan = `<option value="" selected disabled>-- Pilih Bahan --</option>`;
-                    @foreach ($rawMaterials as $rm)
-                        optionBahan +=
-                            `<option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>`;
-                    @endforeach
+            // NON PREMIX
+            document.getElementById('tambahBarisNonPremix')?.addEventListener('click', () => {
 
-                    const row = `<tr>
-                    <td>
-                        <select name="non_premix[${indexNonPremix}][nama_bahan]" class="form-control form-select-sm text-center" required>
-                            ${optionBahan}
-                        </select>
-                    </td>
-                    <td><input type="text" name="non_premix[${indexNonPremix}][kode_bahan]" class="form-control form-control-sm text-center"></td>
-                    <td><input type="number" name="non_premix[${indexNonPremix}][suhu_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-                    <td><input type="number" name="non_premix[${indexNonPremix}][ph_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-                    <td><input type="number" name="non_premix[${indexNonPremix}][berat_bahan]" step="0.01" class="form-control form-control-sm text-center"></td>
-                    <td><input type="checkbox" name="non_premix[${indexNonPremix}][sensori]" value="Oke" class="form-check-input"></td>
-                    <td><button type="button" class="btn btn-danger btn-sm hapusBaris"><i class="bi bi-trash"></i></button></td>
-                </tr>`;
-                    tbodyNon.insertAdjacentHTML('beforeend', row);
-                    indexNonPremix++;
-                });
-            }
+                let optionBahan = `<option value="" disabled selected>-- Pilih Bahan --</option>`;
+                @foreach ($rawMaterials as $rm)
+                    optionBahan +=
+                        `<option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>`;
+                @endforeach
 
-            // --- 4. Logic Premix ---
-            const btnTambahPremix = document.getElementById('tambahBarisPremix');
-            if (btnTambahPremix) {
-                btnTambahPremix.addEventListener('click', () => {
-                    const row = `<tr>
-                    <td><input type="text" name="premix[${indexPremix}][nama_premix]" class="form-control form-control-sm text-center"></td>
-                    <td><input type="text" name="premix[${indexPremix}][kode_premix]" class="form-control form-control-sm text-center"></td>
-                    <td><input type="number" name="premix[${indexPremix}][berat_premix]" step="0.01" class="form-control form-control-sm text-center"></td>
-                    <td><input type="checkbox" name="premix[${indexPremix}][sensori_premix]" value="Oke" class="form-check-input"></td>
-                    <td><button type="button" class="btn btn-danger btn-sm hapusBarisPremix"><i class="bi bi-trash"></i></button></td>
-                </tr>`;
-                    tbodyPremix.insertAdjacentHTML('beforeend', row);
-                    indexPremix++;
-                });
-            }
+                const row = `<tr>
+            <td><select name="non_premix[${indexNonPremix}][nama_bahan]" class="form-control form-select-sm">${optionBahan}</select></td>
+            <td><input type="text" name="non_premix[${indexNonPremix}][kode_bahan]" class="form-control form-control-sm"></td>
+            <td><input type="number" name="non_premix[${indexNonPremix}][suhu_bahan]" step="0.01" class="form-control form-control-sm"></td>
+            <td><input type="number" name="non_premix[${indexNonPremix}][ph_bahan]" step="0.01" class="form-control form-control-sm"></td>
+            <td><input type="number" name="non_premix[${indexNonPremix}][berat_bahan]" step="0.01" class="form-control form-control-sm"></td>
+            <td><input type="checkbox" name="non_premix[${indexNonPremix}][sensori]" value="Oke"></td>
+            <td><button type="button" class="btn btn-danger btn-sm hapusBaris">Hapus</button></td>
+        </tr>`;
 
-            // --- 5. Logic Suhu Grinding ---
-            const btnTambahSuhu = document.getElementById('tambahBarisSuhu');
-            if (btnTambahSuhu) {
-                btnTambahSuhu.addEventListener('click', function() {
-                    const row = `<tr>
-                    <td style="width: 45%;">
-                        <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm">
-                            <option value="" selected disabled>Pilih Daging</option>
-                            <option value="BEEF">BEEF</option>
-                            <option value="SBB">SBB</option>
-                            <option value="SBL">SBL</option>
-                            <option value="MDM">MDM</option>
-                            <option value="CCM">CCM</option>
-                        </select>
-                    </td>
-                    <td style="width: 45%;">
-                        <input type="number" name="suhu_grinding_input[${indexSuhu}][suhu]" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
-                    </td>
-                    <td style="width: 10%;">
-                        <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>`;
-                    tbodySuhu.insertAdjacentHTML('beforeend', row);
-                    indexSuhu++;
-                });
-            }
+                tbodyNon.insertAdjacentHTML('beforeend', row);
+                indexNonPremix++;
+            });
 
-            // --- 6. Event Delegation untuk Hapus ---
+            // PREMIX
+            document.getElementById('tambahBarisPremix')?.addEventListener('click', () => {
+
+                const row = `<tr>
+            <td><input type="text" name="premix[${indexPremix}][nama_premix]" class="form-control form-control-sm"></td>
+            <td><input type="text" name="premix[${indexPremix}][kode_premix]" class="form-control form-control-sm"></td>
+            <td><input type="number" name="premix[${indexPremix}][berat_premix]" step="0.01" class="form-control form-control-sm"></td>
+            <td><input type="checkbox" name="premix[${indexPremix}][sensori_premix]" value="Oke"></td>
+            <td><button type="button" class="btn btn-danger btn-sm hapusBarisPremix">Hapus</button></td>
+        </tr>`;
+
+                tbodyPremix.insertAdjacentHTML('beforeend', row);
+                indexPremix++;
+            });
+
+            // SUHU
+            document.getElementById('tambahBarisSuhu')?.addEventListener('click', () => {
+
+                const row = `<tr>
+            <td>
+                <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm">
+                    <option value="" disabled selected>Pilih Daging</option>
+                    <option value="BEEF">BEEF</option>
+                    <option value="SBB">SBB</option>
+                    <option value="SBL">SBL</option>
+                    <option value="MDM">MDM</option>
+                    <option value="CCM">CCM</option>
+                </select>
+            </td>
+            <td><input type="number" name="suhu_grinding_input[${indexSuhu}][suhu]" step="0.01" class="form-control form-control-sm"></td>
+            <td><button type="button" class="btn btn-danger btn-sm hapusBarisSuhu">Hapus</button></td>
+        </tr>`;
+
+                tbodySuhu.insertAdjacentHTML('beforeend', row);
+                indexSuhu++;
+            });
+
+            // HAPUS ROW
             document.addEventListener('click', function(e) {
                 if (e.target.closest('.hapusBaris')) e.target.closest('tr').remove();
                 if (e.target.closest('.hapusBarisPremix')) e.target.closest('tr').remove();
+
                 if (e.target.closest('.hapusBarisSuhu')) {
                     if (tbodySuhu.querySelectorAll('tr').length > 1) {
                         e.target.closest('tr').remove();
                     } else {
-                        alert("Minimal harus ada satu input suhu.");
+                        alert("Minimal satu baris suhu wajib ada");
                     }
-                }
-            });
-        });
-    </script>
-    <script>
-        $('#nama_produk').on('change', function() {
-
-            let namaProduk = $(this).val();
-            let batchSelect = $('#kode_batch');
-
-            if (!namaProduk) {
-                batchSelect.html('<option>Pilih Varian dulu</option>');
-                batchSelect.prop('disabled', true);
-                return;
-            }
-
-            $.ajax({
-                url: '/lookup/batch/' + namaProduk,
-                type: 'GET',
-                success: function(data) {
-
-                    batchSelect.prop('disabled', false);
-                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-                    data.forEach(function(item) {
-                        batchSelect.append(
-                            `<option value="${item.uuid}">${item.kode_produksi}</option>`
-                        );
-                    });
                 }
             });
 
