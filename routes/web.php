@@ -65,7 +65,8 @@ use App\Http\Controllers\{
     PermissionController,
     RoleController,
     MasterRawMaterialController,
-    RetortController
+    RetortController,
+    MasterPremixController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
@@ -80,6 +81,9 @@ Route::get('/get-inspections', [MincingController::class, 'getInspections']);
 Route::get('/lookup/batch/{nama_produk}', [MagnetTrapController::class, 'getBatch']);
 Route::get('/retort', [RetortController::class, 'index'])->name('retort.index');
 Route::post('/retort/cari', [RetortController::class, 'cari'])->name('retort.cari');
+
+
+Route::resource('premix', MasterPremixController::class);
 
 Route::middleware('auth')->group(function () {
     Route::resource('user', UserController::class);

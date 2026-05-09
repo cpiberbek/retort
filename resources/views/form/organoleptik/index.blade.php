@@ -203,7 +203,8 @@
                                                                             {{-- @dd($item); --}}
                                                                             <tr>
                                                                                 <td>{{ $index + 1 }}</td>
-                                                                                <td>{{ $item['mincing']->kode_produksi ?? '-' }}
+                                                                                <td>
+                                                                                    {{ \App\Models\Mincing::find($item['kode_produksi'])->kode_produksi ?? '-' }}
                                                                                 </td>
                                                                                 <td>{{ $item['penampilan'] ?? '-' }}</td>
                                                                                 <td>{{ $item['aroma'] ?? '-' }}</td>

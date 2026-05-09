@@ -63,8 +63,8 @@ class LoadingProdukController extends Controller
             'tanggal' => 'required|date',
             'shift' => 'required|in:Pagi,Malam',
             'jenis_aktivitas' => 'required|string|max:255',
-            'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i',
+            'jam_mulai' => 'nullable|date_format:H:i',
+            'jam_selesai' => 'nullable|date_format:H:i',
             'no_pol_mobil' => 'required|string|max:20',
             'nama_supir' => 'required|string|max:255',
             'ekspedisi' => 'required|string|max:255',
@@ -86,20 +86,20 @@ class LoadingProdukController extends Controller
         ]);
 
         // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
-        $mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
-        $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
+        //$mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
+      //  $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
 
         // Jika shift malam dan jam selesai < jam mulai → berarti lewat tengah malam
-        if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
-            $selesai->addDay();
-        }
+      //  if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
+      //      $selesai->addDay();
+      //  }
 
         // Validasi final
-        if ($selesai->lte($mulai)) {
-            return back()->withErrors([
-                'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
-            ])->withInput();
-        }
+      //  if ($selesai->lte($mulai)) {
+      //      return back()->withErrors([
+     //           'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
+     //       ])->withInput();
+      //  }
 
         DB::beginTransaction();
         try {
@@ -151,8 +151,8 @@ class LoadingProdukController extends Controller
             'tanggal' => 'required|date',
             'shift' => 'required|in:Pagi,Malam',
             'jenis_aktivitas' => 'required|string|max:255',
-            'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i',
+            'jam_mulai' => 'nullable|date_format:H:i',
+            'jam_selesai' => 'nullable|date_format:H:i',
             'no_pol_mobil' => 'required|string|max:20',
             'nama_supir' => 'required|string|max:255',
             'ekspedisi' => 'required|string|max:255',

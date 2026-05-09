@@ -147,6 +147,7 @@
                     bagianArray.forEach(b => {
 
                         const table = $(`
+        <div class="table-responsive">
             <table class="table table-bordered mb-3">
                 <thead>
                     <tr><th colspan="7">${b}</th></tr>
@@ -183,7 +184,8 @@
                     </tr>
                 </tbody>
             </table>
-            `);
+        </div>
+        `);
 
                         wrapper.append(table);
                     });

@@ -8,6 +8,7 @@ use App\Models\Produk;
 use App\Models\Mesin;
 use App\Models\Master_Raw_Material;
 use App\Models\RawMaterialInspection;
+use App\Models\Master_Premix;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -135,10 +136,28 @@ class MincingController extends Controller
         $userPlant = Auth::user()->plant;
 
         $produks = Produk::where('plant', $userPlant)->get();
-        $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
-        $inspections = InspectionProductDetail::all();
 
-        return view('form.mincing.create', compact('produks', 'rawMaterials', 'inspections'));
+        $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)
+            ->orderBy('nama_bahan_baku')
+            ->get();
+
+        $premixes = Master_Premix::where('plant_uuid', Auth::user()->plant)
+                    ->orderBy('nama_premix')
+                    ->get();
+
+        // ambil detail batch + data inspeksi bahan baku
+        $inspections = InspectionProductDetail::with('inspection')
+            ->whereHas('inspection', function ($q) use ($userPlant) {
+                $q->where('plant_uuid', $userPlant);
+            })
+            ->get();
+
+        return view('form.mincing.create', compact(
+            'produks',
+            'rawMaterials',
+            'inspections',
+            'premixes'
+        ));
     }
 
     public function store(Request $request)
@@ -153,7 +172,7 @@ class MincingController extends Controller
             'date'          => 'required|date',
             'shift'         => 'required',
             'nama_produk'   => 'required',
-            'kode_produksi' => 'required|string|uuid',
+            'kode_produksi' => 'required|string',
             'waktu_mulai'   => 'required',
             'waktu_selesai' => 'nullable',
             'premix'        => 'nullable|array',
@@ -247,7 +266,7 @@ class MincingController extends Controller
             'date'          => 'required|date',
             'shift'         => 'required',
             'nama_produk'   => 'required',
-            'kode_produksi' => 'required|string|uuid',
+            'kode_produksi' => 'required|string',
             'waktu_mulai'   => 'required',
             'waktu_selesai' => 'nullable',
             'premix'        => 'nullable|array',
@@ -330,7 +349,7 @@ class MincingController extends Controller
             'date'                  => 'required|date',
             'shift'                 => 'required',
             'nama_produk'           => 'required',
-            'kode_produksi'         => 'required|string|uuid',
+            'kode_produksi'         => 'required|string',
             'waktu_mulai'           => 'required',
             'waktu_selesai'         => 'nullable',
             'premix'                => 'nullable|array',

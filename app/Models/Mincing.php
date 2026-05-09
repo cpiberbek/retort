@@ -83,5 +83,14 @@ class Mincing extends Model
         return $this->belongsTo(Mincing::class, 'kode_produksi', 'uuid');
     }
 
+    public function inspection()
+    {
+        return $this->belongsTo(
+            RawMaterialInspection::class,
+            'raw_material_inspection_uuid',
+            'uuid'
+        );
+    }
+
     protected $dates = ['deleted_at'];
 }

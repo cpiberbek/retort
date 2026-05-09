@@ -49,6 +49,7 @@
                 request()->routeIs('area_suhu.*') ||
                 request()->routeIs('area_sanitasi.*') ||
                 request()->routeIs('raw-material.*') ||
+                request()->routeIs('premix.*') ||
                 request()->routeIs('list_form.*');
         @endphp
         <li class="nav-item {{ $masterActive ? 'active' : '' }}">
@@ -71,6 +72,10 @@
                         href="{{ route('produk.index') }}">List Produk</a>
                     <a class="collapse-item {{ request()->routeIs('raw-material.*') ? 'active' : '' }}"
                         href="{{ route('raw-material.index') }}">List Bahan Baku</a>
+                    <a class="collapse-item {{ request()->routeIs('premix.*') ? 'active' : '' }}"
+                        href="{{ route('premix.index') }}">
+                        List Premix
+                    </a>
                     <a class="collapse-item {{ request()->routeIs('mesin.*') ? 'active' : '' }}"
                         href="{{ route('mesin.index') }}">List Mesin</a>
                     <a class="collapse-item {{ request()->routeIs('supplier.*') ? 'active' : '' }}"

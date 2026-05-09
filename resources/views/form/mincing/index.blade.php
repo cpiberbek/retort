@@ -154,7 +154,7 @@
                                         {{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift:
                                         {{ $dep->shift }}</td>
                                     <td class="text-center align-middle">{{ $dep->nama_produk }}</td>
-                                    <td class="text-center align-middle">{{ $dep->batch->kode_produksi ?? '-' }}</td>
+                                    <td class="text-center align-middle">{{ $dep->kode_produksi ?? '-' }}</td>
                                     <td class="text-center align-middle">
                                         @if ($dep)
                                             <a href="#" data-bs-toggle="modal"
@@ -223,7 +223,10 @@
                                                                         @foreach ($nonPremixItems as $bahan)
                                                                             <tr>
                                                                                 <td>{{ $bahan['nama_bahan'] ?? '-' }}</td>
-                                                                                <td>{{ $bahan['kode_bahan'] ?? '-' }}</td>
+                                                                                <td>
+                                                                                    {{ \App\Models\InspectionProductDetail::where('uuid', $bahan['inspection_uuid'] ?? null)->value('kode_batch') ??
+                                                                                        '-' }}
+                                                                                </td>
                                                                                 <td>{{ $bahan['suhu_bahan'] ?? '-' }}</td>
                                                                                 <td>{{ $bahan['ph_bahan'] ?? '-' }}</td>
                                                                                 <td>{{ $bahan['berat_bahan'] ?? '-' }}</td>
@@ -297,11 +300,9 @@
                                                                     <tr>
                                                                         <td class="text-left">Waktu Mixing Premix</td>
                                                                         <td colspan="5">
-                                                                            {{ $dep->waktu_mixing_premix_start
-                                                                                ? \Carbon\Carbon::parse($dep->waktu_mixing_premix_start)->format('H:i')
-                                                                                : '-' }}
+                                                                            {{ $dep->waktu_mixing_premix_start ? \Carbon\Carbon::parse($dep->waktu_mixing_premix_start)->format('H:i') : '' }}
                                                                             -
-                                                                            {{ $dep->waktu_mixing_premix_end ? \Carbon\Carbon::parse($dep->waktu_mixing_premix_end)->format('H:i') : '-' }}
+                                                                            {{ $dep->waktu_mixing_premix_end ? \Carbon\Carbon::parse($dep->waktu_mixing_premix_end)->format('H:i') : '' }}
                                                                             <span class="text-muted">
                                                                                 ({{ $dep->waktu_mixing_premix ?? 0 }}
                                                                                 menit)
@@ -312,9 +313,9 @@
                                                                     <tr>
                                                                         <td class="text-left">Waktu Bowl Cutter</td>
                                                                         <td colspan="5">
-                                                                            {{ $dep->waktu_bowl_cutter_start ? \Carbon\Carbon::parse($dep->waktu_bowl_cutter_start)->format('H:i') : '-' }}
+                                                                            {{ $dep->waktu_bowl_cutter_start ? \Carbon\Carbon::parse($dep->waktu_bowl_cutter_start)->format('H:i') : '' }}
                                                                             -
-                                                                            {{ $dep->waktu_bowl_cutter_end ? \Carbon\Carbon::parse($dep->waktu_bowl_cutter_end)->format('H:i') : '-' }}
+                                                                            {{ $dep->waktu_bowl_cutter_end ? \Carbon\Carbon::parse($dep->waktu_bowl_cutter_end)->format('H:i') : '' }}
                                                                             <span class="text-muted">
                                                                                 ({{ $dep->waktu_bowl_cutter ?? 0 }} menit)
                                                                             </span>
@@ -337,9 +338,9 @@
                                                                     <tr>
                                                                         <td class="text-left">Waktu Mixing</td>
                                                                         <td colspan="5">
-                                                                            {{ $dep->waktu_mixing_start ? \Carbon\Carbon::parse($dep->waktu_mixing_start)->format('H:i') : '-' }}
+                                                                            {{ $dep->waktu_mixing_start ? \Carbon\Carbon::parse($dep->waktu_mixing_start)->format('H:i') : '' }}
                                                                             -
-                                                                            {{ $dep->waktu_mixing_end ? \Carbon\Carbon::parse($dep->waktu_mixing_end)->format('H:i') : '-' }}
+                                                                            {{ $dep->waktu_mixing_end ? \Carbon\Carbon::parse($dep->waktu_mixing_end)->format('H:i') : '' }}
                                                                             <span class="text-muted">
                                                                                 ({{ $dep->waktu_mixing ?? 0 }} menit)
                                                                             </span>

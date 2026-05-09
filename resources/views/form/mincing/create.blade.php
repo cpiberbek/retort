@@ -1,3 +1,4 @@
+coba cek
 @extends('layouts.app')
 
 @section('content')
@@ -36,38 +37,24 @@
                                 </div>
                             </div>
                             <div class="row mb-3">
-
-                                <!-- Nama Varian -->
                                 <div class="col-md-6">
-                                    <label for="nama_produk" class="form-label fw-semibold">
-                                        Nama Varian <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="nama_produk" id="nama_produk" class="form-control" required>
-                                        <option value="">-- Pilih Varian --</option>
+                                    <label class="form-label fw-semibold">Nama Varian <span
+                                            class="text-danger">*</span></label>
+                                    <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
+                                        required>
+                                        <option value="">-- Pilih Produk --</option>
                                         @foreach ($produks as $produk)
-                                            <option value="{{ $produk->nama_produk }}">
-                                                {{ $produk->nama_produk }}
-                                            </option>
+                                            <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted">
-                                        Pilih varian produk terlebih dahulu
-                                    </small>
                                 </div>
-
-                                <!-- Kode Batch -->
                                 <div class="col-md-6">
-                                    <label for="kode_produksi" class="form-label fw-semibold">
-                                        Kode Produksi <span class="text-danger">*</span>
-                                    </label>
-                                    <select name="kode_produksi" id="kode_produksi" class="form-control" disabled required>
-                                        <option value="">Pilih Varian terlebih dahulu</option>
-                                    </select>
-                                    <small class="text-muted">
-                                        Batch akan muncul otomatis
-                                    </small>
+                                    <label class="form-label fw-semibold">Kode Batch <span
+                                            class="text-danger">*</span></label>
+                                    <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
+                                        maxlength="10" required>
+                                    <small id="kodeError" class="text-danger d-none"></small>
                                 </div>
-
                             </div>
                         </div>
                     </div>
@@ -128,26 +115,42 @@
                                         <tr>
                                             <td>
                                                 <select name="non_premix[0][nama_bahan]"
-                                                    class="form-control form-select-sm text-center">
-                                                    <option value="" selected disabled>-- Pilih Bahan --</option>
+                                                    class="form-control form-select-sm text-center nama-bahan-select">
+
+                                                    <option value="" selected disabled>
+                                                        -- Pilih Bahan --
+                                                    </option>
+
                                                     @foreach ($rawMaterials as $rm)
                                                         <option value="{{ $rm->nama_bahan_baku }}">
                                                             {{ $rm->nama_bahan_baku }}
                                                         </option>
                                                     @endforeach
+
                                                 </select>
                                             </td>
-                                            <td><select name="non_premix[0][inspection_uuid]"
-                                                    class="form-control form-select-sm text-center">
 
-                                                    <option value="" disabled selected>-- Pilih Batch --</option>
+                                            <td>
+                                                <select name="non_premix[0][inspection_uuid]"
+                                                    class="form-control form-select-sm text-center kode-batch-select">
+
+                                                    <option value="" disabled selected>
+                                                        -- Pilih Batch --
+                                                    </option>
 
                                                     @foreach ($inspections as $insp)
-                                                        <option value="{{ $insp->uuid }}">
-                                                            {{ $insp->kode_batch }}
-                                                        </option>
+                                                        @if ($insp->inspection)
+                                                            <option value="{{ $insp->uuid }}"
+                                                                data-bahan="{{ $insp->inspection->bahan_baku }}">
+
+                                                                {{ $insp->kode_batch }}
+
+                                                            </option>
+                                                        @endif
                                                     @endforeach
-                                                </select></td>
+
+                                                </select>
+                                            </td>
                                             <td>
                                                 <input type="text" name="non_premix[0][suhu_bahan]"
                                                     class="form-control form-control-sm text-center">
@@ -187,8 +190,24 @@
                                     </thead>
                                     <tbody id="tbodyPremix">
                                         <tr>
-                                            <td><input type="text" name="premix[0][nama_premix]"
-                                                    class="form-control form-control-sm text-center"></td>
+                                            <td>
+
+                                                <select name="premix[0][nama_premix]"
+                                                    class="form-control form-select-sm text-center" required>
+
+                                                    <option value="">-- Pilih Premix --</option>
+
+                                                    @foreach ($premixes as $premix)
+                                                        <option value="{{ $premix->nama_premix }}">
+
+                                                            {{ $premix->nama_premix }}
+
+                                                        </option>
+                                                    @endforeach
+
+                                                </select>
+
+                                            </td>
                                             <td><input type="text" name="premix[0][kode_premix]"
                                                     class="form-control form-control-sm text-center"></td>
                                             <td><input type="number" name="premix[0][berat_premix]" step="0.01"
@@ -425,45 +444,6 @@
             }
 
             // =========================
-            // AJAX DROPDOWN BATCH
-            // =========================
-            $('#nama_produk').on('change', function() {
-
-                let namaProduk = $(this).val();
-                let batchSelect = $('#kode_produksi');
-
-                if (!namaProduk) {
-                    batchSelect.html('<option>Pilih Varian dulu</option>');
-                    batchSelect.prop('disabled', true);
-                    return;
-                }
-
-                $.ajax({
-                    url: '/lookup/batch/' + namaProduk,
-                    type: 'GET',
-                    success: function(data) {
-
-                        batchSelect.prop('disabled', false);
-                        batchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-                        data.forEach(function(item) {
-                            batchSelect.append(
-                                `<option value="${item.uuid}">${item.kode_produksi}</option>`
-                            );
-                        });
-                    }
-                });
-
-            });
-
-            // =========================
-            // ENABLE SELECT SAAT SUBMIT
-            // =========================
-            $('#mincingForm').on('submit', function() {
-                $('#kode_produksi').prop('disabled', false);
-            });
-
-            // =========================
             // HITUNG WAKTU
             // =========================
             function hitungWaktu(startId, endId, resultId, menitId, startHidden, endHidden) {
@@ -530,60 +510,249 @@
             document.getElementById('tambahBarisNonPremix')?.addEventListener('click', () => {
 
                 let optionBahan = `<option value="" disabled selected>-- Pilih Bahan --</option>`;
+
                 @foreach ($rawMaterials as $rm)
-                    optionBahan +=
-                        `<option value="{{ $rm->nama_bahan_baku }}">{{ $rm->nama_bahan_baku }}</option>`;
+                    optionBahan += `
+                    <option value="{{ $rm->nama_bahan_baku }}">
+                        {{ $rm->nama_bahan_baku }}
+                    </option>
+                `;
                 @endforeach
 
-                const row = `<tr>
-            <td><select name="non_premix[${indexNonPremix}][nama_bahan]" class="form-control form-select-sm">${optionBahan}</select></td>
-            <td><input type="text" name="non_premix[${indexNonPremix}][kode_bahan]" class="form-control form-control-sm"></td>
-            <td><input type="number" name="non_premix[${indexNonPremix}][suhu_bahan]" step="0.01" class="form-control form-control-sm"></td>
-            <td><input type="number" name="non_premix[${indexNonPremix}][ph_bahan]" step="0.01" class="form-control form-control-sm"></td>
-            <td><input type="number" name="non_premix[${indexNonPremix}][berat_bahan]" step="0.01" class="form-control form-control-sm"></td>
-            <td><input type="checkbox" name="non_premix[${indexNonPremix}][sensori]" value="Oke"></td>
-            <td><button type="button" class="btn btn-danger btn-sm hapusBaris">Hapus</button></td>
-        </tr>`;
+                let optionBatch = `<option value="" disabled selected>-- Pilih Batch --</option>`;
+
+                @foreach ($inspections as $insp)
+
+                    @if ($insp->inspection)
+
+                        optionBatch += `
+                        <option
+                            value="{{ $insp->uuid }}"
+                            data-bahan="{{ $insp->inspection->bahan_baku }}">
+
+                            {{ $insp->kode_batch }}
+
+                        </option>
+                    `;
+                    @endif
+                @endforeach
+
+                const row = `
+                <tr>
+
+                    <td>
+                        <select
+                            name="non_premix[${indexNonPremix}][nama_bahan]"
+                            class="form-control form-select-sm nama-bahan-select">
+
+                            ${optionBahan}
+
+                        </select>
+                    </td>
+
+                    <td>
+                        <select
+                            name="non_premix[${indexNonPremix}][inspection_uuid]"
+                            class="form-control form-select-sm kode-batch-select">
+
+                            ${optionBatch}
+
+                        </select>
+                    </td>
+
+                    <td>
+                        <input type="number"
+                            name="non_premix[${indexNonPremix}][suhu_bahan]"
+                            step="0.01"
+                            class="form-control form-control-sm">
+                    </td>
+
+                    <td>
+                        <input type="number"
+                            name="non_premix[${indexNonPremix}][ph_bahan]"
+                            step="0.01"
+                            class="form-control form-control-sm">
+                    </td>
+
+                    <td>
+                        <input type="number"
+                            name="non_premix[${indexNonPremix}][berat_bahan]"
+                            step="0.01"
+                            class="form-control form-control-sm">
+                    </td>
+
+                    <td>
+                        <input type="checkbox"
+                            name="non_premix[${indexNonPremix}][sensori]"
+                            value="Oke">
+                    </td>
+
+                    <td>
+                        <button type="button"
+                            class="btn btn-danger btn-sm hapusBaris">
+                            Hapus
+                        </button>
+                    </td>
+
+                </tr>
+            `;
 
                 tbodyNon.insertAdjacentHTML('beforeend', row);
+
                 indexNonPremix++;
+            });
+
+            document.addEventListener('change', function(e) {
+
+                if (e.target.classList.contains('nama-bahan-select')) {
+
+                    const selectedBahan = e.target.value;
+
+                    const row = e.target.closest('tr');
+
+                    const batchSelect = row.querySelector('.kode-batch-select');
+
+                    const options = batchSelect.querySelectorAll('option');
+
+                    batchSelect.value = '';
+
+                    options.forEach(option => {
+
+                        if (!option.dataset.bahan) return;
+
+                        if (option.dataset.bahan === selectedBahan) {
+                            option.hidden = false;
+                        } else {
+                            option.hidden = true;
+                        }
+
+                    });
+
+                }
+
+            });
+
+            $(function() {
+                const kodeInput = $('#kode_produksi');
+                const kodeError = $('#kodeError');
+                const form = $('#mincingForm');
+
+                function validateKode() {
+                    let value = kodeInput.val().toUpperCase().replace(/\s+/g, '');
+                    kodeInput.val(value);
+                    kodeError.text('').addClass('d-none');
+
+                    if (value.length !== 10) {
+                        kodeError.text('Kode Batch harus 10 karakter').removeClass('d-none');
+                        return false;
+                    }
+                    if (!/^[A-Z0-9]+$/.test(value)) {
+                        kodeError.text('Hanya huruf besar & angka').removeClass('d-none');
+                        return false;
+                    }
+                    if (!/^[A-L]$/.test(value.charAt(1))) {
+                        kodeError.text('Karakter ke-2 harus huruf bulan (A-L)').removeClass('d-none');
+                        return false;
+                    }
+                    let hari = parseInt(value.substr(2, 2), 10);
+                    if (isNaN(hari) || hari < 1 || hari > 31) {
+                        kodeError.text('Karakter ke-3 & ke-4 harus tanggal valid (01-31)').removeClass(
+                            'd-none');
+                        return false;
+                    }
+                    return true;
+                }
+
+                kodeInput.on('input', validateKode);
+                form.on('submit', function(e) {
+                    if (!validateKode()) {
+                        e.preventDefault();
+                        alert('Kode Batch tidak valid! Periksa kembali.');
+                        kodeInput.focus();
+                    }
+                });
             });
 
             // PREMIX
             document.getElementById('tambahBarisPremix')?.addEventListener('click', () => {
 
-                const row = `<tr>
-            <td><input type="text" name="premix[${indexPremix}][nama_premix]" class="form-control form-control-sm"></td>
-            <td><input type="text" name="premix[${indexPremix}][kode_premix]" class="form-control form-control-sm"></td>
-            <td><input type="number" name="premix[${indexPremix}][berat_premix]" step="0.01" class="form-control form-control-sm"></td>
-            <td><input type="checkbox" name="premix[${indexPremix}][sensori_premix]" value="Oke"></td>
-            <td><button type="button" class="btn btn-danger btn-sm hapusBarisPremix">Hapus</button></td>
-        </tr>`;
+                let optionPremix = `
+        <option value="">-- Pilih Premix --</option>
+    `;
+
+                @foreach ($premixes as $premix)
+
+                    optionPremix += `
+            <option value="{{ $premix->nama_premix }}">
+                {{ $premix->nama_premix }}
+            </option>
+        `;
+                @endforeach
+
+                const row = `
+
+        <tr>
+
+            <td>
+
+                <select
+                    name="premix[${indexPremix}][nama_premix]"
+                    class="form-control form-select-sm text-center"
+                    required>
+
+                    ${optionPremix}
+
+                </select>
+
+            </td>
+
+            <td>
+
+                <input
+                    type="text"
+                    name="premix[${indexPremix}][kode_premix]"
+                    class="form-control form-control-sm text-center">
+
+            </td>
+
+            <td>
+
+                <input
+                    type="number"
+                    name="premix[${indexPremix}][berat_premix]"
+                    step="0.01"
+                    class="form-control form-control-sm text-center">
+
+            </td>
+
+            <td>
+
+                <input
+                    type="checkbox"
+                    name="premix[${indexPremix}][sensori_premix]"
+                    value="Oke">
+
+            </td>
+
+            <td>
+
+                <button
+                    type="button"
+                    class="btn btn-danger btn-sm hapusBarisPremix">
+
+                    Hapus
+
+                </button>
+
+            </td>
+
+        </tr>
+    `;
 
                 tbodyPremix.insertAdjacentHTML('beforeend', row);
+
                 indexPremix++;
-            });
 
-            // SUHU
-            document.getElementById('tambahBarisSuhu')?.addEventListener('click', () => {
-
-                const row = `<tr>
-            <td>
-                <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm">
-                    <option value="" disabled selected>Pilih Daging</option>
-                    <option value="BEEF">BEEF</option>
-                    <option value="SBB">SBB</option>
-                    <option value="SBL">SBL</option>
-                    <option value="MDM">MDM</option>
-                    <option value="CCM">CCM</option>
-                </select>
-            </td>
-            <td><input type="number" name="suhu_grinding_input[${indexSuhu}][suhu]" step="0.01" class="form-control form-control-sm"></td>
-            <td><button type="button" class="btn btn-danger btn-sm hapusBarisSuhu">Hapus</button></td>
-        </tr>`;
-
-                tbodySuhu.insertAdjacentHTML('beforeend', row);
-                indexSuhu++;
             });
 
             // HAPUS ROW

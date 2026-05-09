@@ -85,12 +85,12 @@ class RawMaterialInspectionController extends Controller
             'bahan_baku' => 'required|string|max:255',
             'supplier' => 'required|string|max:255',
             'nopol_mobil' => 'required|string|max:255',
-            'suhu_mobil' => 'nullable|numeric',
+            'suhu_mobil' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
             'kondisi_mobil' => 'required|array|min:1',
             'kondisi_mobil.*' => 'string',
             'analisa_ka_ffa' => 'required|numeric',
             'no_segel' => 'required|string|max:255',
-            'suhu_daging' => 'required|numeric',
+            'suhu_daging' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
             'analisa_negara_asal' => 'required|string|max:255',
             'analisa_produsen' => 'required|string|max:255',
             'dokumen_halal_file' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
@@ -115,6 +115,13 @@ class RawMaterialInspectionController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->except(['_token', 'details', 'dokumen_halal_file', 'dokumen_coa_file']);
+            $data['suhu_mobil'] = $request->suhu_mobil === '-'
+                ? null
+                : $request->suhu_mobil;
+
+            $data['suhu_daging'] = $request->suhu_daging === '-'
+                ? null
+                : $request->suhu_daging;
             if ($request->has('kondisi_mobil')) {
                 $data['kondisi_mobil'] = implode(',', $request->kondisi_mobil);
             }
@@ -192,12 +199,12 @@ class RawMaterialInspectionController extends Controller
             'bahan_baku' => 'required|string|max:255',
             'supplier' => 'required|string|max:255',
             'nopol_mobil' => 'required|string|max:255',
-            'suhu_mobil' => 'nullable|numeric',
+            'suhu_mobil' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
             'analisa_ka_ffa' => 'required|numeric',
             'kondisi_mobil' => 'required|array|min:1',
             'kondisi_mobil.*' => 'string',
             'no_segel' => 'required|string|max:255',
-            'suhu_daging' => 'required|numeric',
+            'suhu_daging' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
             'analisa_negara_asal' => 'required|string|max:255',
             'analisa_produsen' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
@@ -234,6 +241,14 @@ class RawMaterialInspectionController extends Controller
                 'dokumen_halal_file',
                 'dokumen_coa_file'
             ]);
+
+            $data['suhu_mobil'] = $request->suhu_mobil === '-'
+                ? null
+                : $request->suhu_mobil;
+
+            $data['suhu_daging'] = $request->suhu_daging === '-'
+                ? null
+                : $request->suhu_daging;
             if ($request->has('kondisi_mobil')) {
                 $data['kondisi_mobil'] = implode(',', $request->kondisi_mobil);
             }

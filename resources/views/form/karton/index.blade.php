@@ -117,7 +117,6 @@
                             <th>Kode Batch</th>
                             <th>Bukti Kode</th>
                             <th>Tgl Kedatangan</th>
-                            <th>Jumlah/Tambahan</th>
                             <th>Nama Supplier</th>
                             <th>No. Lot Karton</th>
                             <th>Keterangan</th>
@@ -153,7 +152,6 @@
                                 @endif
                             </td>
                             <td class="text-center align-middle">{{\Carbon\Carbon::parse($dep->tgl_kedatangan)->format('d-m-Y') }}</td>
-                            <td class="text-center align-middle">{{ $dep->jumlah }}</td>
                             <td class="text-center align-middle">{{ $dep->nama_supplier }}</td>
                             <td class="text-center align-middle">{{ $dep->no_lot }}</td>
                             <td class="text-center align-middle">{{ $dep->keterangan }}</td>
@@ -234,7 +232,7 @@
                                     @csrf
                                     @method('PUT')
                                     <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
-                                    style="background: linear-gradient(145deg, #7a1f12, #9E3419); 
+                                    style="background: linear-gradient(145deg, #7a1f12, #9E3419);
                                     box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
                                     <div class="modal-header border-bottom border-light-subtle p-4"
                                     style="border-bottom-width: 3px !important;">
