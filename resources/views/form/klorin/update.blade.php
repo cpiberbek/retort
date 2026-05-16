@@ -19,9 +19,9 @@
             </div>
             @endif
 
-            <form id="klorinEditForm" 
-            action="{{ route('klorin.update_qc', $klorin->uuid) }}" 
-            method="POST" 
+            <form id="klorinEditForm"
+            action="{{ route('klorin.update_qc', $klorin->uuid) }}"
+            method="POST"
             enctype="multipart/form-data">
             @csrf
             @method('PUT')
@@ -35,15 +35,23 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Tanggal</label>
-                            <input type="date" name="date" class="form-control" 
-                            value="{{ old('date', $klorin->date) }}" 
+                            <input type="date" name="date" class="form-control"
+                            value="{{ old('date', $klorin->date) }}"
                             {{ !empty($klorin->date) ? 'readonly' : '' }} required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Pukul</label>
-                            <input type="time" name="pukul" class="form-control" 
-                            value="{{ old('pukul', $klorin->pukul) }}" 
+                            <input type="time" name="pukul" class="form-control"
+                            value="{{ old('pukul', $klorin->pukul) }}"
                             {{ !empty($klorin->pukul) ? 'readonly' : '' }} required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Lokasi <span class="text-danger">*</span></label>
+                            <select name="lokasi" class="form-control" required {{ !empty($klorin->lokasi) ? 'disabled' : '' }}>
+                                <option value="">-- Pilih Lokasi --</option>
+                                <option value="Packing" {{ old('lokasi', $klorin->lokasi) == 'Packing' ? 'selected' : '' }}>Packing</option>
+                                <option value="Meat Preparation" {{ old('lokasi', $klorin->lokasi) == 'Meat Preparation' ? 'selected' : '' }}>Meat Preparation</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -70,7 +78,7 @@
                             {{-- FOOTBASIN --}}
                             <div class="col-md-6">
                                 <label class="form-label">Foot Basin (Std 200 ppm)</label>
-                                <input type="file" id="footbasin" name="footbasin" 
+                                <input type="file" id="footbasin" name="footbasin"
                                 class="form-control" accept="image/*"
                                 {{ !empty($klorin->footbasin) ? 'disabled' : '' }}>
                                 <small id="footbasin-error" class="text-danger"></small>
@@ -89,7 +97,7 @@
                             {{-- HANDBASIN --}}
                             <div class="col-md-6">
                                 <label class="form-label">Hand Basin (Std 50-100 ppm)</label>
-                                <input type="file" id="handbasin" name="handbasin" 
+                                <input type="file" id="handbasin" name="handbasin"
                                 class="form-control" accept="image/*"
                                 {{ !empty($klorin->handbasin) ? 'disabled' : '' }}>
                                 <small id="handbasin-error" class="text-danger"></small>

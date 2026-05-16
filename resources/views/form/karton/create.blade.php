@@ -100,6 +100,11 @@
 
                             {{-- ================= SUPPLIER ================= --}}
                             <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Jumlah / Tambahan</label>
+                                    <input type="number" name="jumlah" id="jumlah" class="form-control" required
+                                        min="0">
+                                </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">

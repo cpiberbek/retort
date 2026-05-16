@@ -36,13 +36,13 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Palet</label>
-                                    <input type="number" name="palet" id="palet" class="form-control" required>
+                                    <input type="text" name="palet" id="palet" class="form-control" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label for="nama_produk" class="form-label fw-semibold">
                                         Nama Varian <span class="text-danger">*</span>
                                     </label>
-                                    <select id="nama_produk" class="form-control" required>
+                                    <select id="nama_produk" name="nama_produk" class="form-control" required>
                                         <option value="">-- Pilih Varian --</option>
                                         @foreach ($produks as $produk)
                                             <option value="{{ $produk->nama_produk }}">
@@ -60,7 +60,7 @@
                                     <label for="kode_batch" class="form-label fw-semibold">
                                         Kode Batch <span class="text-danger">*</span>
                                     </label>
-                                    <select id="kode_batch" class="form-control" disabled required>
+                                    <select id="kode_batch" name="kode_produksi" class="form-control" disabled required>
                                         <option value="">Pilih Varian terlebih dahulu</option>
                                     </select>
                                     <small class="text-muted">
@@ -117,7 +117,7 @@
                                     <label class="form-label">Kemasan</label>
                                     <select name="kemasan" id="kemasan" class="form-control selectpicker">
                                         <option value="">-- Pilih Jenis Kemasan --</option>
-                                        <option value="Jar">Jar</option>
+                                        <option value="Jar">Toples</option>
                                         <option value="Pouch">Pouch</option>
                                     </select>
                                 </div>
@@ -229,11 +229,11 @@
             });
 
             // Validasi kode produksi dan generate Exp Date otomatis
-            const kodeInput = document.getElementById('kode_produksi');
+            const kodeInput = document.getElementById('kode_batch');
             const expDateInput = document.getElementById('exp_date');
             const kodeError = document.getElementById('kodeError');
 
-            kodeInput.addEventListener('input', function() {
+            kodeInput.addEventListener('change', function() {
                 let value = this.value.toUpperCase().replace(/\s+/g, '');
                 this.value = value;
                 kodeError.textContent = '';
@@ -312,35 +312,46 @@
             // Default nilai awal kalibrasi
             kalibrasi.value = 'Tidak Sesuai';
 
-            // ================== Ambil jumlah_box otomatis dari release_packing ==================
             document.addEventListener('DOMContentLoaded', function() {
-                const namaProdukSelect = document.querySelector('select[name="nama_produk"]');
-                const kodeProduksiInput = document.getElementById('kode_produksi');
-                const jumlahBoxInput = document.getElementById('jumlah_box');
 
-                function fetchJumlahBox() {
-                    const nama_produk = namaProdukSelect.value;
-                    const kode_produksi = kodeProduksiInput.value;
+            const namaProdukSelect = document.getElementById('nama_produk');
+            const kodeBatchSelect = document.getElementById('kode_batch');
+            const jumlahBoxInput = document.getElementById('jumlah_box');
 
-                    if (nama_produk && kode_produksi) {
-                        fetch(
-                                `{{ route('get.jumlah.box') }}?nama_produk=${encodeURIComponent(nama_produk)}&kode_produksi=${encodeURIComponent(kode_produksi)}`)
-                            .then(response => response.json())
-                            .then(data => {
-                                console.log("Response dari getJumlahBox:", data);
-                                jumlahBoxInput.value = data.total_box ?? 0;
-                            })
-                            .catch(err => {
-                                console.error('Gagal mengambil data jumlah_box:', err);
-                                jumlahBoxInput.value = '';
-                            });
-                    } else {
-                        jumlahBoxInput.value = '';
-                    }
+            function fetchJumlahBox() {
+
+                const nama_produk = namaProdukSelect.value;
+                const kode_produksi = kodeBatchSelect.value;
+
+                if (nama_produk && kode_produksi) {
+
+                    fetch(
+                            `{{ route('get.jumlah.box') }}?nama_produk=${encodeURIComponent(nama_produk)}&kode_produksi=${encodeURIComponent(kode_produksi)}`)
+                        .then(response => response.json())
+                        .then(data => {
+
+                            console.log(data);
+
+                            jumlahBoxInput.value = data.total_box ?? 0;
+
+                        })
+                        .catch(error => {
+
+                            console.error(error);
+                            jumlahBoxInput.value = '';
+
+                        });
+
+                } else {
+
+                    jumlahBoxInput.value = '';
+
                 }
+            }
 
-                namaProdukSelect.addEventListener('change', fetchJumlahBox);
-                kodeProduksiInput.addEventListener('input', fetchJumlahBox);
+            namaProdukSelect.addEventListener('change', fetchJumlahBox);
+            kodeBatchSelect.addEventListener('change', fetchJumlahBox);
+
             });
         </script>
         <script>
@@ -364,9 +375,11 @@
                         batchSelect.html('<option value="">-- Pilih Batch --</option>');
 
                         data.forEach(function(item) {
-                            batchSelect.append(
-                                `<option value="${item.uuid}">${item.kode_produksi}</option>`
-                            );
+                            batchSelect.append(`
+                                <option value="${item.kode_produksi}">
+                                    ${item.kode_produksi}
+                                </option>
+                            `);
                         });
                     }
                 });

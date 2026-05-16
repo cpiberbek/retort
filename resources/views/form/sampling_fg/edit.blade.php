@@ -36,7 +36,7 @@
                         <div class="row mb-3">
                          <div class="col-md-6">
                             <label class="form-label">Palet</label>
-                            <input type="number" name="palet" id="palet" class="form-control" value="{{ $sampling_fg->palet }}"required>
+                            <input type="text" name="palet" id="palet" class="form-control" value="{{ $sampling_fg->palet }}"required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Nama Varian</label>

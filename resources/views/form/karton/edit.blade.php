@@ -112,6 +112,12 @@
                             <div class="row g-3 mb-4">
 
                                 <div class="col-md-6">
+                                    <label class="form-label">Jumlah / Tambahan</label>
+                                    <input type="number" name="jumlah" id="jumlah" class="form-control"
+                                        value="{{ old('jumlah', $karton->jumlah) }}" min="0">
+                                </div>
+
+                                <div class="col-md-6">
                                     <label class="form-label fw-semibold">
                                         Nama Supplier
                                     </label>

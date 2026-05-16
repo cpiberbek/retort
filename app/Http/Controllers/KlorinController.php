@@ -16,6 +16,7 @@ class KlorinController extends Controller
     {
         $search     = $request->input('search');
         $date = $request->input('date');
+        $lokasi = $request->input('lokasi');
         $userPlant  = Auth::user()->plant;
 
         $data = Klorin::query()
@@ -57,6 +58,7 @@ class KlorinController extends Controller
         $request->validate([
             'date'      => 'required|date',
             'pukul'     => 'required|string|max:255',
+            'lokasi' => 'required|string',
             'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'catatan'   => 'nullable|string',
@@ -74,6 +76,7 @@ class KlorinController extends Controller
         Klorin::create([
             'date'                => $request->date,
             'pukul'               => $request->pukul,
+            'lokasi'              => $request->lokasi,
             'footbasin'           => $footbasinPath,
             'handbasin'           => $handbasinPath,
             'catatan'             => $request->catatan,
@@ -101,6 +104,7 @@ class KlorinController extends Controller
         $request->validate([
             'date'      => 'required|date',
             'pukul'     => 'required|string|max:255',
+            'lokasi'    => 'required|string',
             'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'catatan'   => 'nullable|string',
@@ -111,6 +115,7 @@ class KlorinController extends Controller
         $updateData = [
             'date'             => $request->date,
             'pukul'            => $request->pukul,
+            'lokasi'           => $request->lokasi,
             'catatan'          => $request->catatan,
             'username_updated' => $username_updated,
         ];
@@ -149,6 +154,7 @@ class KlorinController extends Controller
         $request->validate([
             'date'      => 'required|date',
             'pukul'     => 'required|string|max:255',
+            'lokasi'    => 'required|string',
             'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'catatan'   => 'nullable|string',
@@ -157,6 +163,7 @@ class KlorinController extends Controller
         $updateData = [
             'date'             => $request->date,
             'pukul'            => $request->pukul,
+            'lokasi'           => $request->lokasi,
             'catatan'          => $request->catatan,
         ];
 
@@ -256,7 +263,7 @@ class KlorinController extends Controller
         return redirect()->route('klorin.recyclebin')
         ->with('success', 'Data berhasil direstore.');
     }
-    
+
     public function deletePermanent($uuid)
     {
         $klorin = Klorin::onlyTrashed()->where('uuid', $uuid)->firstOrFail();

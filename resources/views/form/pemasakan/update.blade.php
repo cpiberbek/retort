@@ -21,7 +21,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal</label>
                                 <input type="date" name="date" class="form-control"
-                                value="{{ old('date', $pemasakan->date) }}" 
+                                value="{{ old('date', $pemasakan->date) }}"
                                 {{ $pemasakan->date ? 'readonly' : '' }}>
                             </div>
                             <div class="col-md-6">
@@ -51,7 +51,7 @@
                                 <label class="form-label">No. Chamber</label>
                                 <select class="form-control selectpicker" data-live-search="true" disabled>
                                     @foreach($list_chambers as $list_chamber)
-                                    <option value="{{ $list_chamber->nama_mesin }}" 
+                                    <option value="{{ $list_chamber->nama_mesin }}"
                                         {{ old('no_chamber', $data->no_chamber ?? '') == $list_chamber->nama_mesin ? 'selected' : '' }}>
                                         {{ $list_chamber->nama_mesin }}
                                     </option>
@@ -80,8 +80,8 @@
                                 @endphp
 
                                 @foreach($kodeProduksi as $i => $kp)
-                                <input type="text" 
-                                name="kode_produksi[]" 
+                                <input type="text"
+                                name="kode_produksi[]"
                                 class="form-control mb-2"
                                 value="{{ $kp }}"
                                 {{ $pemasakan->kode_produksi ? 'readonly' : '' }}>
@@ -91,7 +91,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Berat Varian (gram)</label>
                                 <input type="number" name="berat_produk" class="form-control" step="0.1"
-                                value="{{ old('berat_produk', $pemasakan->berat_produk) }}" 
+                                value="{{ old('berat_produk', $pemasakan->berat_produk) }}"
                                 {{ $pemasakan->berat_produk ? 'readonly' : '' }}>
                             </div>
                         </div>
@@ -101,7 +101,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Suhu Varian (°C)</label>
                                 <input type="number" name="suhu_produk" class="form-control" step="0.1"
-                                value="{{ old('suhu_produk', $pemasakan->suhu_produk) }}" 
+                                value="{{ old('suhu_produk', $pemasakan->suhu_produk) }}"
                                 {{ $pemasakan->suhu_produk ? 'readonly' : '' }}>
                             </div>
                             <div class="col-md-6">
@@ -339,8 +339,8 @@
                                     <td>{{ $field=='tekanan_sterilisasi'?0.26:119 }}</td>
                                     @foreach(range(0,3) as $i)
                                     <td>
-                                        <input type="number" step="0.01" name="cooking[{{ $field }}][]" 
-                                        value="{{ $cooking[$field][$i] ?? '' }}" 
+                                        <input type="number" step="0.01" name="cooking[{{ $field }}][]"
+                                        value="{{ $cooking[$field][$i] ?? '' }}"
                                         class="form-control form-control-sm text-center"
                                         {{ isset($cooking[$field][$i]) ? 'readonly' : '' }}>
                                     </td>
@@ -355,8 +355,8 @@
                                     <td rowspan="3" class="align-middle text-center">12 menit</td>
                                     <td rowspan="3" class="align-middle text-center">16 menit</td>
                                     <td colspan="4">
-                                        <input type="time" name="cooking[waktu_mulai_sterilisasi]" 
-                                        value="{{ $cooking['waktu_mulai_sterilisasi'] ?? '' }}" 
+                                        <input type="time" name="cooking[waktu_mulai_sterilisasi]"
+                                        value="{{ $cooking['waktu_mulai_sterilisasi'] ?? '' }}"
                                         class="form-control form-control-sm text-center"
                                         {{ isset($cooking['waktu_mulai_sterilisasi']) ? 'readonly' : '' }}>
                                     </td>
@@ -366,8 +366,8 @@
                                     <td>WIB</td>
                                     @foreach(range(0,3) as $i)
                                     <td>
-                                        <input type="time" name="cooking[waktu_pengecekan_sterilisasi][]" 
-                                        value="{{ $cooking['waktu_pengecekan_sterilisasi'][$i] ?? '' }}" 
+                                        <input type="time" name="cooking[waktu_pengecekan_sterilisasi][]"
+                                        value="{{ $cooking['waktu_pengecekan_sterilisasi'][$i] ?? '' }}"
                                         class="form-control form-control-sm text-center"
                                         {{ isset($cooking['waktu_pengecekan_sterilisasi'][$i]) ? 'readonly' : '' }}>
                                     </td>
@@ -377,8 +377,8 @@
                                     <td class="text-start">Waktu Selesai</td>
                                     <td>WIB</td>
                                     <td colspan="4">
-                                        <input type="time" name="cooking[waktu_selesai_sterilisasi]" 
-                                        value="{{ $cooking['waktu_selesai_sterilisasi'] ?? '' }}" 
+                                        <input type="time" name="cooking[waktu_selesai_sterilisasi]"
+                                        value="{{ $cooking['waktu_selesai_sterilisasi'] ?? '' }}"
                                         class="form-control form-control-sm text-center"
                                         {{ isset($cooking['waktu_selesai_sterilisasi']) ? 'readonly' : '' }}>
                                     </td>
@@ -408,7 +408,7 @@
                                     <td>°C</td>
                                     <td>30 - 35</td>
                                     <td>
-                                        <input type="number" step="0.01" name="cooking[suhu_air_pendinginan_awal]" 
+                                        <input type="number" step="0.01" name="cooking[suhu_air_pendinginan_awal]"
                                         value="{{ $cooking['suhu_air_pendinginan_awal'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['suhu_air_pendinginan_awal']) ? 'readonly' : '' }}>
                                     </td>
@@ -418,7 +418,7 @@
                                     <td>Mpa</td>
                                     <td>0.26</td>
                                     <td>
-                                        <input type="number" step="0.01" name="cooking[tekanan_pendinginan_awal]" 
+                                        <input type="number" step="0.01" name="cooking[tekanan_pendinginan_awal]"
                                         value="{{ $cooking['tekanan_pendinginan_awal'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['tekanan_pendinginan_awal']) ? 'readonly' : '' }}>
                                     </td>
@@ -428,7 +428,7 @@
                                     <td>WIB</td>
                                     <td rowspan="2" class="text-center align-middle">3 - 6 menit</td>
                                     <td>
-                                        <input type="time" name="cooking[waktu_mulai_pendinginan_awal]" 
+                                        <input type="time" name="cooking[waktu_mulai_pendinginan_awal]"
                                         value="{{ $cooking['waktu_mulai_pendinginan_awal'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['waktu_mulai_pendinginan_awal']) ? 'readonly' : '' }}>
                                     </td>
@@ -437,7 +437,7 @@
                                     <td>Waktu Selesai</td>
                                     <td>WIB</td>
                                     <td>
-                                        <input type="time" name="cooking[waktu_selesai_pendinginan_awal]" 
+                                        <input type="time" name="cooking[waktu_selesai_pendinginan_awal]"
                                         value="{{ $cooking['waktu_selesai_pendinginan_awal'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['waktu_selesai_pendinginan_awal']) ? 'readonly' : '' }}>
                                     </td>
@@ -466,7 +466,7 @@
                                     <td>°C</td>
                                     <td>50 ± 3</td>
                                     <td>
-                                        <input type="number" step="0.01" name="cooking[suhu_air_pendinginan]" 
+                                        <input type="number" step="0.01" name="cooking[suhu_air_pendinginan]"
                                         value="{{ $cooking['suhu_air_pendinginan'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['suhu_air_pendinginan']) ? 'readonly' : '' }}>
                                     </td>
@@ -476,7 +476,7 @@
                                     <td>Mpa</td>
                                     <td>0.26</td>
                                     <td>
-                                        <input type="number" step="0.01" name="cooking[tekanan_pendinginan]" 
+                                        <input type="number" step="0.01" name="cooking[tekanan_pendinginan]"
                                         value="{{ $cooking['tekanan_pendinginan'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['tekanan_pendinginan']) ? 'readonly' : '' }}>
                                     </td>
@@ -486,7 +486,7 @@
                                     <td>WIB</td>
                                     <td rowspan="2" class="text-center align-middle">5 menit</td>
                                     <td>
-                                        <input type="time" name="cooking[waktu_mulai_pendinginan]" 
+                                        <input type="time" name="cooking[waktu_mulai_pendinginan]"
                                         value="{{ $cooking['waktu_mulai_pendinginan'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['waktu_mulai_pendinginan']) ? 'readonly' : '' }}>
                                     </td>
@@ -495,7 +495,7 @@
                                     <td>Waktu Selesai</td>
                                     <td>WIB</td>
                                     <td>
-                                        <input type="time" name="cooking[waktu_selesai_pendinginan]" 
+                                        <input type="time" name="cooking[waktu_selesai_pendinginan]"
                                         value="{{ $cooking['waktu_selesai_pendinginan'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['waktu_selesai_pendinginan']) ? 'readonly' : '' }}>
                                     </td>
@@ -524,7 +524,7 @@
                                     <td>°C</td>
                                     <td>36 - 42</td>
                                     <td>
-                                        <input type="number" step="0.01" name="cooking[suhu_air_akhir]" 
+                                        <input type="number" step="0.01" name="cooking[suhu_air_akhir]"
                                         value="{{ $cooking['suhu_air_akhir'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['suhu_air_akhir']) ? 'readonly' : '' }}>
                                     </td>
@@ -534,7 +534,7 @@
                                     <td>Mpa</td>
                                     <td>0</td>
                                     <td>
-                                        <input type="number" step="0.01" name="cooking[tekanan_akhir]" 
+                                        <input type="number" step="0.01" name="cooking[tekanan_akhir]"
                                         value="{{ $cooking['tekanan_akhir'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['tekanan_akhir']) ? 'readonly' : '' }}>
                                     </td>
@@ -544,7 +544,7 @@
                                     <td>WIB</td>
                                     <td rowspan="2" class="text-center align-middle">2 - 3 menit</td>
                                     <td>
-                                        <input type="time" name="cooking[waktu_mulai_akhir]" 
+                                        <input type="time" name="cooking[waktu_mulai_akhir]"
                                         value="{{ $cooking['waktu_mulai_akhir'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['waktu_mulai_akhir']) ? 'readonly' : '' }}>
                                     </td>
@@ -553,7 +553,7 @@
                                     <td>Waktu Selesai</td>
                                     <td>WIB</td>
                                     <td>
-                                        <input type="time" name="cooking[waktu_selesai_akhir]" 
+                                        <input type="time" name="cooking[waktu_selesai_akhir]"
                                         value="{{ $cooking['waktu_selesai_akhir'] ?? '' }}" class="form-control text-center"
                                         {{ isset($cooking['waktu_selesai_akhir']) ? 'readonly' : '' }}>
                                     </td>
@@ -587,7 +587,7 @@
                                         <td rowspan="2" class="text-center align-middle">36.5 - 42.5 menit</td>
                                         <td>
                                             <input type="time" name="cooking[waktu_mulai_total]" id="waktu_mulai_total"
-                                            value="{{ $cooking['waktu_mulai_total'] ?? '' }}" 
+                                            value="{{ $cooking['waktu_mulai_total'] ?? '' }}"
                                             class="form-control form-control-sm text-center"
                                             {{ isset($cooking['waktu_mulai_total']) ? 'readonly' : '' }}>
                                         </td>
@@ -597,7 +597,7 @@
                                         <td>WIB</td>
                                         <td>
                                             <input type="time" name="cooking[waktu_selesai_total]" id="waktu_selesai_total"
-                                            value="{{ $cooking['waktu_selesai_total'] ?? '' }}" 
+                                            value="{{ $cooking['waktu_selesai_total'] ?? '' }}"
                                             class="form-control form-control-sm text-center"
                                             {{ isset($cooking['waktu_selesai_total']) ? 'readonly' : '' }}>
                                         </td>

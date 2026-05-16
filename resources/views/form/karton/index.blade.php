@@ -117,6 +117,7 @@
                             <th>Kode Batch</th>
                             <th>Bukti Kode</th>
                             <th>Tgl Kedatangan</th>
+                            <th>Jumlah</th>
                             <th>Nama Supplier</th>
                             <th>No. Lot Karton</th>
                             <th>Keterangan</th>
@@ -152,6 +153,7 @@
                                 @endif
                             </td>
                             <td class="text-center align-middle">{{\Carbon\Carbon::parse($dep->tgl_kedatangan)->format('d-m-Y') }}</td>
+                            <td class="text-center align-middle">{{ $dep->jumlah }}</td>
                             <td class="text-center align-middle">{{ $dep->nama_supplier }}</td>
                             <td class="text-center align-middle">{{ $dep->no_lot }}</td>
                             <td class="text-center align-middle">{{ $dep->keterangan }}</td>

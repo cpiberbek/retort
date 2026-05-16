@@ -355,6 +355,7 @@
                                             <td rowspan="3" class="align-middle text-center">16 menit</td>
                                             <td colspan="4">
                                                 <input type="time" name="cooking[waktu_mulai_sterilisasi]"
+                                                    id="waktu_mulai_sterilisasi"
                                                     class="form-control form-control-sm text-center">
                                             </td>
                                         </tr>
@@ -375,6 +376,7 @@
                                             <td>WIB</td>
                                             <td colspan="4">
                                                 <input type="time" name="cooking[waktu_selesai_sterilisasi]"
+                                                    id="waktu_selesai_sterilisasi"
                                                     class="form-control form-control-sm text-center">
                                             </td>
                                         </tr>
@@ -590,15 +592,15 @@
                                             <td>
                                                 <input type="time" name="cooking[waktu_mulai_total]"
                                                     id="waktu_mulai_total"
-                                                    class="form-control form-control-sm text-center">
+                                                    class="form-control form-control-sm text-center" readonly>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td class="text-start">Waktu Selesai</td>
                                             <td>WIB</td>
                                             <td>
-                                                <input type="time" name="cooking[waktu_selesai_total]"
-                                                    id="waktu_selesai_total"
+                                                <input type="time" name="cooking[waktu_mulai_total]"
+                                                    id="waktu_mulai_total"
                                                     class="form-control form-control-sm text-center">
                                             </td>
                                         </tr>
@@ -712,34 +714,35 @@
                     </div>
 
                     <div class="card mb-4">
-                        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+                        <div class="card-header bg-warning text-white">
                             <strong>TOTAL REJECT</strong>
                         </div>
+
                         <div class="card-body">
                             <div class="table-responsive">
+
                                 <table class="table table-bordered align-middle text-center">
+
                                     <thead class="table-light">
-                                        <!-- <tr>
-                                            <th>Total Reject</th>
-                                            <th>Satuan</th>
-                                            <th>Hasil</th>
-                                        </tr> -->
+
                                     </thead>
-                                    <tbody>
+
+                                    <tbody id="rejectTableBody">
+
                                         <tr>
-                                            <td class="text-start">Total Reject</td>
-                                            <td>Kg</td>
-                                            <td>
-                                                <input type="number" name="total_reject" id="total_reject"
-                                                    class="form-control form-control-sm text-center" step="0.01">
+                                            <td colspan="3" class="text-muted py-4">
+                                                Belum ada batch dipilih
                                             </td>
                                         </tr>
 
                                     </tbody>
+
                                 </table>
+
                             </div>
                         </div>
                     </div>
+
                     {{-- ===================== Catatan ===================== --}}
                     <div class="card mb-4">
                         <div class="card-header bg-light"><strong>Catatan</strong></div>
@@ -871,6 +874,7 @@
                 // setelah append, panggil ulang fungsi untuk refresh opsi
                 produkSelect.dispatchEvent(new Event('change'));
                 hitungTotalTray();
+                renderRejectTable();
             });
 
 
@@ -878,11 +882,16 @@
             $(document).on('click', '.removeRow', function() {
                 $(this).closest('.batch-row').remove();
                 hitungTotalTray();
+                renderRejectTable();
             });
 
             // ==== JUMLAH TRAY (bisa pisahkan dengan '+') ====
             $(document).on('input', '.jumlah_tray', function() {
                 hitungTotalTray();
+            });
+
+            $(document).on('change', '.kode_produksi', function() {
+                renderRejectTable();
             });
 
             function hitungTotalTray() {
@@ -915,6 +924,136 @@
                     summary.innerHTML = `<span class="text-success">Total: ${total} tray (Maks: 28)</span>`;
                 }
             }
+
+            function renderRejectTable() {
+
+                let tbody = document.getElementById('rejectTableBody');
+
+                tbody.innerHTML = '';
+
+                let hasData = false;
+
+                document.querySelectorAll('.kode_produksi').forEach((select, index) => {
+
+                    let value = select.value;
+                    let text = select.options[select.selectedIndex]?.text;
+
+                    if (value) {
+
+                        hasData = true;
+
+                        tbody.innerHTML += `
+                <tr>
+                    <td class="text-start fw-semibold">
+                        ${text}
+                    </td>
+
+                    <td>
+                        Kg
+                    </td>
+
+                    <td>
+                        <input type="number"
+                            step="0.01"
+                            name="reject[${index}]"
+                            class="form-control form-control-sm text-center"
+                            placeholder="0">
+                    </td>
+                </tr>
+            `;
+                    }
+                });
+
+                if (!hasData) {
+
+                    tbody.innerHTML = `
+            <tr>
+                <td colspan="3" class="text-muted py-4">
+                    Belum ada batch dipilih
+                </td>
+            </tr>
+        `;
+                }
+            }
+
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            function autoChainTime(fromId, toId) {
+
+                const fromInput = document.getElementById(fromId);
+                const toInput = document.getElementById(toId);
+
+                if (!fromInput || !toInput) return;
+
+                fromInput.addEventListener('change', function() {
+
+                    if (this.value) {
+                        toInput.value = this.value;
+                    }
+
+                });
+
+            }
+
+            // PEMANASAN AWAL -> PROSES PEMANASAN
+            autoChainTime(
+                'waktu_selesai_awal',
+                'waktu_mulai_proses'
+            );
+
+            // PROSES PEMANASAN -> STERILISASI
+            autoChainTime(
+                'waktu_selesai_proses',
+                'waktu_mulai_sterilisasi'
+            );
+
+            // STERILISASI -> PENDINGINAN AWAL
+            autoChainTime(
+                'waktu_selesai_sterilisasi',
+                'waktu_mulai_pendinginan_awal'
+            );
+
+            // PENDINGINAN AWAL -> PENDINGINAN
+            autoChainTime(
+                'waktu_selesai_pendinginan_awal',
+                'waktu_mulai_pendinginan'
+            );
+
+            // PENDINGINAN -> PROSES AKHIR
+            autoChainTime(
+                'waktu_selesai_pendinginan',
+                'waktu_mulai_akhir'
+            );
+
+            // PROSES AKHIR -> TOTAL WAKTU PROSES
+            autoChainTime(
+                'waktu_selesai_akhir',
+                'waktu_mulai_total'
+            );
+
+        });
+    </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            const waktuMulaiAwal = document.getElementById('waktu_mulai_awal');
+            const waktuMulaiTotal = document.getElementById('waktu_mulai_total');
+
+            function syncWaktuMulaiTotal() {
+
+                if (waktuMulaiAwal.value) {
+                    waktuMulaiTotal.value = waktuMulaiAwal.value;
+                }
+
+            }
+
+            waktuMulaiAwal.addEventListener('change', syncWaktuMulaiTotal);
+
+            // trigger awal jika sudah ada value
+            syncWaktuMulaiTotal();
 
         });
     </script>

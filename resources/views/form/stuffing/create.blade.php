@@ -97,191 +97,199 @@
 
                     {{-- ===================== DATA STUFFING ===================== --}}
                     <div class="card mb-4">
-                        <div class="card-header bg-warning text-white">
+                        <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
+
                             <strong>Data Stuffing</strong>
+
+                            <button type="button" class="btn btn-dark btn-sm btnTambah" id="btnTambahStuffing">
+
+                                <i class="bi bi-plus-circle"></i>
+                                Tambah Data
+                            </button>
                         </div>
+
                         <div class="card-body">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Nama Mesin</label>
-                                <select name="kode_mesin" class="form-control @error('kode_mesin') is-invalid @enderror"
-                                    required>
-                                    <option value="">-- Pilih Mesin --</option>
-                                    @foreach ($mesins as $m)
-                                        <option value="{{ $m->nama_mesin }}"
-                                            {{ old('kode_mesin') == $m->nama_mesin ? 'selected' : '' }}>
-                                            {{ $m->nama_mesin }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <small class="text-danger">
-                                    @error('kode_mesin')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
+
+                            <div class="accordion" id="accordionStuffing">
+
+                                {{-- ITEM PERTAMA --}}
+                                <div class="accordion-item stuffing-item">
+
+                                    <h5 class="accordion-header" id="heading0">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                            data-bs-target="#collapse0">
+
+                                            <i class="bi bi-clipboard-check me-2 text-warning"></i>
+                                            Stuffing 1
+                                        </button>
+                                    </h5>
+
+                                    <div id="collapse0" class="accordion-collapse collapse show"
+                                        data-bs-parent="#accordionStuffing">
+
+                                        <div class="accordion-body">
+
+                                            <div class="text-end mb-3">
+                                                <button type="button" class="btn btn-outline-danger btn-sm btnHapus">
+
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+
+                                            {{-- ================= FORM ================= --}}
+
+                                            <div class="mb-3">
+                                                <label class="form-label fw-bold">Nama Mesin</label>
+
+                                                <select name="stuffing[0][kode_mesin]" class="form-control" required>
+
+                                                    <option value="">-- Pilih Mesin --</option>
+
+                                                    @foreach ($mesins as $m)
+                                                        <option value="{{ $m->nama_mesin }}">
+                                                            {{ $m->nama_mesin }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Jam Mulai</label>
+
+                                                <input type="time" name="stuffing[0][jam_mulai]" class="form-control">
+                                            </div>
+
+                                            <hr>
+
+                                            <h6 class="fw-bold text-primary">
+                                                Parameter Adonan
+                                            </h6>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Suhu (°C)</label>
+
+                                                <input type="number" step="0.01" name="stuffing[0][suhu]"
+                                                    class="form-control">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Sensori</label>
+
+                                                <select name="stuffing[0][sensori]" class="form-control">
+
+                                                    <option value="">-- Pilih --</option>
+                                                    <option value="OK">OK</option>
+                                                    <option value="Tidak OK">Tidak OK</option>
+                                                </select>
+                                            </div>
+
+                                            <hr>
+
+                                            <h6 class="fw-bold text-primary">
+                                                Parameter Stuffing
+                                            </h6>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Kecepatan Stuffing (/mnt)
+                                                </label>
+
+                                                <input type="number" step="0.01"
+                                                    name="stuffing[0][kecepatan_stuffing]" class="form-control">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Panjang per pcs (cm)
+                                                </label>
+
+                                                <input type="number" step="0.01" name="stuffing[0][panjang_pcs]"
+                                                    class="form-control">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Berat per pcs (gr)
+                                                </label>
+
+                                                <input type="number" step="0.01" name="stuffing[0][berat_pcs]"
+                                                    class="form-control">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Kebersihan Ujung Seal
+                                                </label>
+
+                                                <select name="stuffing[0][kebersihan_seal]" class="form-control">
+
+                                                    <option value="">-- Pilih --</option>
+                                                    <option value="OK">OK</option>
+                                                    <option value="Tidak OK">Tidak OK</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Kekuatan Seal
+                                                </label>
+
+                                                <select name="stuffing[0][kekuatan_seal]" class="form-control">
+
+                                                    <option value="">-- Pilih --</option>
+                                                    <option value="OK">OK</option>
+                                                    <option value="Tidak OK">Tidak OK</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Diameter Klip (mm)
+                                                </label>
+
+                                                <input type="number" step="0.01" name="stuffing[0][diameter_klip]"
+                                                    class="form-control">
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Print Kode Production
+                                                </label>
+
+                                                <select name="stuffing[0][print_kode]" class="form-control">
+
+                                                    <option value="">-- Pilih --</option>
+                                                    <option value="OK">OK</option>
+                                                    <option value="Tidak OK">Tidak OK</option>
+                                                </select>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">
+                                                    Lebar Cassing (mm)
+                                                </label>
+
+                                                <input type="number" step="0.01" name="stuffing[0][lebar_cassing]"
+                                                    class="form-control">
+                                            </div>
+
+                                            {{-- CATATAN --}}
+                                            <div class="card mt-4">
+                                                <div class="card-header bg-light">
+                                                    <strong>Catatan</strong>
+                                                </div>
+
+                                                <div class="card-body">
+                                                    <textarea name="stuffing[0][catatan]" class="form-control" rows="3"></textarea>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                </div>
+
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Jam Mulai</label>
-                                <input type="time" id="jamMulaiInput" name="jam_mulai"
-                                    class="form-control @error('jam_mulai') is-invalid @enderror"
-                                    value="{{ old('jam_mulai') }}">
-                                <small class="text-danger">
-                                    @error('jam_mulai')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <hr>
-                            <h6 class="fw-bold text-primary">Parameter Adonan</h6>
-
-                            <div class="mb-3">
-                                <label class="form-label">Suhu (°C)</label>
-                                <input type="text" step="0.01" name="suhu"
-                                    class="form-control @error('suhu') is-invalid @enderror" value="{{ old('suhu') }}">
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Sensori</label>
-                                <select name="sensori" class="form-control @error('sensori') is-invalid @enderror">
-                                    <option value="">-- Pilih --</option>
-                                    <option value="OK" {{ old('sensori') == 'OK' ? 'selected' : '' }}>OK</option>
-                                    <option value="Tidak OK" {{ old('sensori') == 'Tidak OK' ? 'selected' : '' }}>Tidak OK
-                                    </option>
-                                </select>
-                                <small class="text-danger">
-                                    @error('sensori')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <hr>
-                            <h6 class="fw-bold text-primary">Parameter Stuffing</h6>
-
-                            <div class="mb-3">
-                                <label class="form-label">Kecepatan Stuffing (/mnt)</label>
-                                <input type="number" step="0.01" name="kecepatan_stuffing"
-                                    class="form-control @error('kecepatan_stuffing') is-invalid @enderror"
-                                    value="{{ old('kecepatan_stuffing') }}">
-                                <small class="text-danger">
-                                    @error('kecepatan_stuffing')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Panjang per pcs (cm)</label>
-                                <input type="number" step="0.01" name="panjang_pcs"
-                                    class="form-control @error('panjang_pcs') is-invalid @enderror"
-                                    value="{{ old('panjang_pcs') }}">
-                                <small class="text-danger">
-                                    @error('panjang_pcs')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Berat per pcs (gr)</label>
-                                <input type="number" step="0.01" name="berat_pcs"
-                                    class="form-control @error('berat_pcs') is-invalid @enderror"
-                                    value="{{ old('berat_pcs') }}">
-                                <small class="text-danger">
-                                    @error('berat_pcs')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Kebersihan Ujung Seal</label>
-                                <select name="kebersihan_seal"
-                                    class="form-control @error('kebersihan_seal') is-invalid @enderror">
-                                    <option value="">-- Pilih --</option>
-                                    <option value="OK" {{ old('kebersihan_seal') == 'OK' ? 'selected' : '' }}>OK
-                                    </option>
-                                    <option value="Tidak OK" {{ old('kebersihan_seal') == 'Tidak OK' ? 'selected' : '' }}>
-                                        Tidak OK</option>
-                                </select>
-                                <small class="text-danger">
-                                    @error('kebersihan_seal')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Kekuatan Seal</label>
-                                <select name="kekuatan_seal"
-                                    class="form-control @error('kekuatan_seal') is-invalid @enderror">
-                                    <option value="">-- Pilih --</option>
-                                    <option value="OK" {{ old('kekuatan_seal') == 'OK' ? 'selected' : '' }}>OK
-                                    </option>
-                                    <option value="Tidak OK" {{ old('kekuatan_seal') == 'Tidak OK' ? 'selected' : '' }}>
-                                        Tidak
-                                        OK</option>
-                                </select>
-                                <small class="text-danger">
-                                    @error('kekuatan_seal')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Diameter Klip (mm)</label>
-                                <input type="number" step="0.01" name="diameter_klip"
-                                    class="form-control @error('diameter_klip') is-invalid @enderror"
-                                    value="{{ old('diameter_klip') }}">
-                                <small class="text-danger">
-                                    @error('diameter_klip')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Print Kode Production</label>
-                                <select name="print_kode" class="form-control @error('print_kode') is-invalid @enderror">
-                                    <option value="">-- Pilih --</option>
-                                    <option value="OK" {{ old('print_kode') == 'OK' ? 'selected' : '' }}>OK</option>
-                                    <option value="Tidak OK" {{ old('print_kode') == 'Tidak OK' ? 'selected' : '' }}>Tidak
-                                        OK
-                                    </option>
-                                </select>
-                                <small class="text-danger">
-                                    @error('print_kode')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Lebar Cassing (mm)</label>
-                                <input type="number" step="0.01" name="lebar_cassing"
-                                    class="form-control @error('lebar_cassing') is-invalid @enderror"
-                                    value="{{ old('lebar_cassing') }}">
-                                <small class="text-danger">
-                                    @error('lebar_cassing')
-                                        {{ $message }}
-                                    @enderror
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- ===================== CATATAN ===================== --}}
-                    <div class="card mb-4">
-                        <div class="card-header bg-light"><strong>Catatan</strong></div>
-                        <div class="card-body">
-                            <textarea name="catatan" class="form-control @error('catatan') is-invalid @enderror" rows="3">{{ old('catatan') }}</textarea>
-                            <small class="text-danger">
-                                @error('catatan')
-                                    {{ $message }}
-                                @enderror
-                            </small>
                         </div>
                     </div>
 
@@ -415,4 +423,126 @@
             }
         });
     </script>
+    <script>
+        let stuffingIndex = 1;
+
+        document.getElementById('btnTambahStuffing')
+            .addEventListener('click', function() {
+
+                const firstItem = document.querySelector('.stuffing-item');
+
+                const clone = firstItem.cloneNode(true);
+
+                // update title
+                clone.querySelector('.accordion-button')
+                    .innerHTML = `
+                    <i class="bi bi-clipboard-check me-2 text-warning"></i>
+                    Stuffing ${stuffingIndex + 1}
+                `;
+
+                // update collapse id
+                clone.querySelector('.accordion-header')
+                    .id = `heading${stuffingIndex}`;
+
+                clone.querySelector('.accordion-button')
+                    .setAttribute('data-bs-target',
+                        `#collapse${stuffingIndex}`);
+
+                clone.querySelector('.accordion-collapse')
+                    .id = `collapse${stuffingIndex}`;
+
+                // reset input
+                clone.querySelectorAll('input, select, textarea')
+                    .forEach(el => {
+
+                        // reset value
+                        if (el.tagName === 'SELECT') {
+                            el.selectedIndex = 0;
+                        } else {
+                            el.value = '';
+                        }
+
+                        // update name index
+                        let name = el.getAttribute('name');
+
+                        if (name) {
+                            el.setAttribute(
+                                'name',
+                                name.replace(/\[\d+\]/,
+                                    `[${stuffingIndex}]`)
+                            );
+                        }
+                    });
+
+                // collapse default
+                clone.querySelector('.accordion-collapse')
+                    .classList.remove('show');
+
+                document.getElementById('accordionStuffing')
+                    .appendChild(clone);
+
+                stuffingIndex++;
+            });
+
+        // hapus item
+        document.addEventListener('click', function(e) {
+
+            if (e.target.closest('.btnHapus')) {
+
+                let items = document.querySelectorAll('.stuffing-item');
+
+                if (items.length > 1) {
+                    e.target.closest('.stuffing-item').remove();
+                }
+            }
+        });
+    </script>
+    <style>
+        .accordion-item {
+            border-radius: 12px !important;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border: 1px solid #e9ecef;
+        }
+
+        .accordion-button {
+            font-weight: 600;
+            background: #f8f9fa;
+            box-shadow: none !important;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: #fff3cd;
+            color: #000;
+        }
+
+        .accordion-body {
+            background: #fff;
+            padding: 20px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            min-height: 42px;
+        }
+
+        .btnTambah {
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .btnHapus {
+            border-radius: 8px;
+        }
+
+        .card {
+            border-radius: 14px;
+            overflow: hidden;
+        }
+    </style>
 @endsection
