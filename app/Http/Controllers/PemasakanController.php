@@ -52,7 +52,10 @@ class PemasakanController extends Controller
             }
             $allUUID = array_unique($allUUID);
         // Mengambil data Mincing/Stuffing
-            $stuffingData = Mincing::whereIn('uuid', $allUUID)->get()->keyBy('uuid');
+            $stuffingData = Mincing::whereIn('uuid', $allUUID)
+                ->orWhereIn('kode_produksi', $allUUID)
+                ->get()
+                ->keyBy('uuid');
 
         // 4. RETURN VIEW (Gabungan: Kirim 'shift' dan 'stuffingData')
             return view('form.pemasakan.index', compact('data', 'search', 'date', 'shift', 'stuffingData'));
@@ -246,31 +249,27 @@ class PemasakanController extends Controller
                 'date'          => 'required|date',
                 'shift'         => 'required',
                 'nama_produk'   => 'required',
-                'kode_produksi' => 'required|string',
+                'kode_produksi' => 'required|array', // Pastikan di form name="kode_produksi[]"
+                'jumlah_tray'   => 'required|array', // Pastikan di form name="jumlah_tray[]"
                 'no_chamber'    => 'required',
                 'berat_produk'  => 'required|numeric',
                 'suhu_produk'   => 'required|numeric',
-                'jumlah_tray'   => 'required|string',
                 'total_reject'  => 'nullable|numeric',
                 'catatan'       => 'nullable|string',
                 'cooking'       => 'nullable|array',
             ]);
 
-            $pemasakan->update([
-                'date'             => $request->date,
-                'shift'            => $request->shift,
-                'nama_produk'      => $request->nama_produk,
-                'kode_produksi'    => $request->kode_produksi,
-                'no_chamber'       => $request->no_chamber,
-                'berat_produk'     => $request->berat_produk,
-                'suhu_produk'      => $request->suhu_produk,
-                'jumlah_tray'      => $request->jumlah_tray,
-                'total_reject'     => $request->total_reject,
-                'catatan'          => $request->catatan,
-                'cooking'          => json_encode($request->input('cooking', []), JSON_UNESCAPED_UNICODE),
+            // Ambil data dari request
+            $data = $request->only([
+                'date', 'shift', 'nama_produk', 'kode_produksi',
+                'no_chamber', 'berat_produk', 'suhu_produk', 'jumlah_tray',
+                'total_reject', 'catatan', 'cooking'
             ]);
 
-            return redirect()->route('pemasakan.index')->with('success', 'Data SPV berhasil diperbarui');
+            // Model akan otomatis melakukan json_encode ke database karena $casts = 'array'
+            $pemasakan->update($data);
+
+            return redirect()->route('pemasakan.index')->with('success', 'Data berhasil diperbarui');
         }
 
         public function verification(Request $request)

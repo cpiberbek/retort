@@ -12,6 +12,16 @@
                 @csrf
                 @method('PUT')
 
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 {{-- ===================== IDENTITAS DATA ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
@@ -56,7 +66,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
+                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                     <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                         <option value="{{ $produk->nama_produk }}"
@@ -68,10 +78,13 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <input type="text" name="kode_produksi" id="kode_produksi"
-                                    class="form-control" maxlength="10"
-                                    value="{{ old('kode_produksi', $sampling->kode_produksi) }}" required>
-                                <small id="kodeError" class="text-danger d-none"></small>
+                                <select name="kode_produksi" id="kode_produksi" class="form-control" required>
+                                    @if($sampling->kode_produksi)
+                                        <option value="{{ $sampling->kode_produksi }}" selected>{{ $sampling->kode_produksi }}</option>
+                                    @else
+                                        <option value="">Pilih Varian Terlebih Dahulu</option>
+                                    @endif
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -138,87 +151,85 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
 <script>
     $(document).ready(function(){
-        $('.selectpicker').selectpicker();
-    });
-</script>
-<script>
-    $(document).ready(function(){
-
-        const kodeInput = document.getElementById('kode_produksi');
-        const kodeError = document.getElementById('kodeError');
-        const form = document.getElementById('samplingForm');
-
-        // Validasi langsung saat input
-        kodeInput.addEventListener('input', function() {
-            validateKode();
-        });
-
-        // Cegah submit jika kode salah
-        form.addEventListener('submit', function(e) {
-            if (!validateKode()) {
-                e.preventDefault();
-                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
-                kodeInput.focus();
-            }
-        });
-
-        function validateKode() {
-            let value = kodeInput.value.toUpperCase().replace(/\s+/g, '');
-            kodeInput.value = value;
-            kodeError.textContent = '';
-            kodeError.classList.add('d-none');
-
-            if (value.length !== 10) {
-                kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
-                kodeError.classList.remove('d-none');
-                return false;
-            }
-
-            const format = /^[A-Z0-9]+$/;
-            if (!format.test(value)) {
-                kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-                kodeError.classList.remove('d-none');
-                return false;
-            }
-
-            const bulanChar = value.charAt(1);
-            const validBulan = /^[A-L]$/;
-            if (!validBulan.test(bulanChar)) {
-                kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
-                kodeError.classList.remove('d-none');
-                return false;
-            }
-
-            const hariStr = value.substr(2, 2);
-            const hari = parseInt(hariStr, 10);
-            if (isNaN(hari) || hari < 1 || hari > 31) {
-                kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
-                kodeError.classList.remove('d-none');
-                return false;
-            }
-
-            return true;
+        // Inisialisasi Selectpicker
+        if ($.fn.selectpicker) {
+            $('.selectpicker').selectpicker();
         }
 
         // Otomatis isi tanggal & shift (jika kosong)
         const dateInput = document.getElementById("dateInput");
         const shiftInput = document.getElementById("shiftInput");
 
-        if (!dateInput.value) {
+        if (dateInput && !dateInput.value) {
             let now = new Date();
-            let yyyy = now.getFullYear();
-            let mm = String(now.getMonth() + 1).padStart(2, '0');
-            let dd = String(now.getDate()).padStart(2, '0');
-            dateInput.value = `${yyyy}-${mm}-${dd}`;
+            let localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+            dateInput.value = localDate.toISOString().slice(0, 10);
         }
 
-        if (!shiftInput.value) {
+        if (shiftInput && !shiftInput.value) {
             let hour = new Date().getHours();
             if (hour >= 7 && hour < 15) shiftInput.value = "1";
             else if (hour >= 15 && hour < 23) shiftInput.value = "2";
             else shiftInput.value = "3";
+        }
+
+        // --- AJAX LOAD BATCH ---
+        const batchSelect = $('#kode_produksi');
+        const namaProdukInput = $('#nama_produk');
+
+        function loadBatches(namaProduk, oldBatch = '') {
+            if (!namaProduk) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                batchSelect.prop('disabled', true);
+                return;
+            }
+
+            batchSelect.prop('disabled', false);
+            batchSelect.html('<option value="">Mencari Batch...</option>');
+
+            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
+            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+                    if (!data || data.length === 0) {
+                        batchSelect.html('<option value="">Batch Tidak Ditemukan</option>');
+                        batchSelect.prop('disabled', true);
+                        return;
+                    }
+
+                    data.forEach(function(batch) {
+                        let isSelected = (oldBatch === batch.kode_produksi) ? 'selected' : '';
+                        batchSelect.append(`<option value="${batch.kode_produksi}" ${isSelected}>${batch.kode_produksi}</option>`);
+                    });
+                },
+                error: function(xhr, status, error) {
+                    alert("Gagal mengambil data Batch dari server!");
+                    batchSelect.html('<option value="">Gagal Terhubung ke Server</option>');
+                    batchSelect.prop('disabled', true);
+                }
+            });
+        }
+
+        // Trigger saat produk diganti
+        $(document).on('change', '#nama_produk', function() {
+            loadBatches($(this).val());
+        });
+
+        // Load awal saat halaman dibuka
+        if (namaProdukInput.val()) {
+            let oldBatch = "{{ old('kode_produksi', $sampling->kode_produksi ?? '') }}";
+            if (batchSelect.children('option').length <= 1) {
+                loadBatches(namaProdukInput.val(), oldBatch);
+            }
         }
     });
 </script>

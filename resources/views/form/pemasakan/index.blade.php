@@ -31,7 +31,7 @@
     </div>
     @endif
 
-    {{-- HEADER: Punya ANDA (Fitur PDF) --}}
+    {{-- HEADER --}}
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
         <h2 class="h4"> Pengecekan Pemasakan</h2>
         <div class="btn-group">
@@ -41,7 +41,6 @@
             </a>
             @endcan
             @can('can access export')
-            {{-- Tombol Export PDF --}}
             <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
@@ -54,7 +53,7 @@
         </div>
     </div>
 
-    {{-- FILTER: Punya ANDA (Fitur Shift) --}}
+    {{-- FILTER --}}
     <form id="filterForm" method="GET" action="{{ route('pemasakan.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
         <div class="row">
             <div class="col-md-3">
@@ -98,7 +97,6 @@
                 </div>
             </div>
             <div class="col-md-3 align-self-end">
-                <!-- <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button> -->
                 <a href="{{ route('pemasakan.index') }}" class="btn btn-primary mb-2"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
             </div>
         </div>
@@ -121,7 +119,6 @@
             date.addEventListener('change', () => form.submit());
             if(shift) shift.addEventListener('change', () => form.submit());
 
-
             if(exportPdfBtn){
                 exportPdfBtn.addEventListener('click', function() {
                     const formData = new FormData(form);
@@ -134,7 +131,6 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            {{-- Tabel --}}
             <div class="table-responsive">
                 <table class="table">
                     <thead class="table-secondary text-center">
@@ -161,7 +157,8 @@
 
                         @forelse ($data as $dep)
                         @php
-                        $cooking = json_decode($dep->cooking, true);
+                        // FIX: Tidak perlu json_decode karena $casts di model sudah handle menjadi array
+                        $cooking = $dep->cooking ?? [];
                         @endphp
 
                         <tr>
@@ -199,154 +196,131 @@
                                 <a href="#" class="fw-bold text-decoration-underline text-primary"
                                 data-bs-toggle="modal" data-bs-target="#cookingModal{{ $dep->uuid }}">
                                 Result
-                            </a>
+                                </a>
 
-                            {{-- Modal Detail Cooking (Server Version) --}}
-                            <div class="modal fade" id="cookingModal{{ $dep->uuid }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                    <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
-                                        <div class="modal-header bg-primary bg-gradient text-white">
-                                            <h5 class="modal-title fw-semibold"><i class="bi bi-fire me-2"></i> Detail Proses Pemasakan</h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                        </div>
-                                        <div class="modal-body p-4 bg-light-subtle">
-                                            @php
-                                            $sections = [
-                                            '2. Tekanan & Suhu Awal' => ['Tekanan Angin' => 'tekanan_angin', 'Tekanan Steam' => 'tekanan_steam', 'Tekanan Air' => 'tekanan_air'],
-                                            '3. Pemanasan Awal' => ['Suhu Air Awal' => 'suhu_air_awal', 'Tekanan Awal' => 'tekanan_awal', 'Waktu Mulai' => 'waktu_mulai_awal', 'Waktu Selesai' => 'waktu_selesai_awal'],
-                                            '4. Proses Pemanasan' => ['Suhu Air Proses' => 'suhu_air_proses', 'Tekanan Proses' => 'tekanan_proses', 'Waktu Mulai' => 'waktu_mulai_proses', 'Waktu Selesai' => 'waktu_selesai_proses'],
-                                            '5. Sterilisasi' => ['Suhu Air Sterilisasi' => 'suhu_air_sterilisasi', 'Thermometer Retort' => 'thermometer_retort', 'Tekanan Sterilisasi' => 'tekanan_sterilisasi'],
-                                            '10. Hasil Pemasakan' => ['Suhu Varian Akhir' => 'suhu_produk_akhir', 'Panjang' => 'panjang', 'Diameter' => 'diameter', 'Rasa' => 'rasa', 'Warna' => 'warna', 'Texture' => 'texture']
-                                            ];
-                                            @endphp
-
-                                            @foreach($sections as $title => $rows)
-                                            <div class="mb-3">
-                                                <h6 class="fw-bold text-primary">{{ $title }}</h6>
-                                                <div class="table-responsive shadow-sm rounded">
-                                                    <table class="table table-bordered table-sm align-middle text-center mb-0 bg-white">
-                                                        <tbody>
-                                                            @foreach($rows as $label => $key)
-                                                            <tr>
-                                                                <td class="fw-semibold text-start ps-3 w-50">{{ $label }}</td>
-                                                                <td class="text-start ps-3">{!! showValue($cooking[$key] ?? '-') !!}</td>
-                                                            </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                    </table>
-                                                </div>
+                                <div class="modal fade" id="cookingModal{{ $dep->uuid }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                                        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                                            <div class="modal-header bg-primary bg-gradient text-white">
+                                                <h5 class="modal-title fw-semibold"><i class="bi bi-fire me-2"></i> Detail Proses Pemasakan</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
-                                            @endforeach
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                            <div class="modal-body p-4 bg-light-subtle">
+                                                @php
+                                                $sections = [
+                                                '2. Tekanan & Suhu Awal' => ['Tekanan Angin' => 'tekanan_angin', 'Tekanan Steam' => 'tekanan_steam', 'Tekanan Air' => 'tekanan_air'],
+                                                '3. Pemanasan Awal' => ['Suhu Air Awal' => 'suhu_air_awal', 'Tekanan Awal' => 'tekanan_awal', 'Waktu Mulai' => 'waktu_mulai_awal', 'Waktu Selesai' => 'waktu_selesai_awal'],
+                                                '4. Proses Pemanasan' => ['Suhu Air Proses' => 'suhu_air_proses', 'Tekanan Proses' => 'tekanan_proses', 'Waktu Mulai' => 'waktu_mulai_proses', 'Waktu Selesai' => 'waktu_selesai_proses'],
+                                                '5. Sterilisasi' => ['Suhu Air Sterilisasi' => 'suhu_air_sterilisasi', 'Thermometer Retort' => 'thermometer_retort', 'Tekanan Sterilisasi' => 'tekanan_sterilisasi'],
+                                                '10. Hasil Pemasakan' => ['Suhu Varian Akhir' => 'suhu_produk_akhir', 'Panjang' => 'panjang', 'Diameter' => 'diameter', 'Rasa' => 'rasa', 'Warna' => 'warna', 'Texture' => 'texture']
+                                                ];
+                                                @endphp
+
+                                                @foreach($sections as $title => $rows)
+                                                <div class="mb-3">
+                                                    <h6 class="fw-bold text-primary">{{ $title }}</h6>
+                                                    <div class="table-responsive shadow-sm rounded">
+                                                        <table class="table table-bordered table-sm align-middle text-center mb-0 bg-white">
+                                                            <tbody>
+                                                                @foreach($rows as $label => $key)
+                                                                <tr>
+                                                                    <td class="fw-semibold text-start ps-3 w-50">{{ $label }}</td>
+                                                                    <td class="text-start ps-3">{!! showValue($cooking[$key] ?? '-') !!}</td>
+                                                                </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                                @endforeach
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                            @else
-                            <span>-</span>
-                            @endif
-                        </td>
+                                @else
+                                <span>-</span>
+                                @endif
+                            </td>
 
-                        <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center align-middle">
+                                @if ($dep->status_spv == 0) <span class="fw-bold text-secondary">Created</span>
+                                @elseif ($dep->status_spv == 1) <span class="fw-bold text-success">Verified</span>
+                                @elseif ($dep->status_spv == 2) <span class="fw-bold text-danger">Revisi</span>
+                                @endif
+                            </td>
 
-                        {{-- Status SPV --}}
-                        <td class="text-center align-middle">
-                            @if ($dep->status_spv == 0) <span class="fw-bold text-secondary">Created</span>
-                            @elseif ($dep->status_spv == 1) <span class="fw-bold text-success">Verified</span>
-                            @elseif ($dep->status_spv == 2) <span class="fw-bold text-danger">Revisi</span>
-                            @endif
-                        </td>
+                            <td class="text-center align-middle">
+                                @can('can access verification button')
+                                <button class="btn btn-primary btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}"><i class="bi bi-shield-check"></i> Verifikasi</button>
+                                @endcan
 
-                        <td class="text-center align-middle">
-                            @can('can access verification button')
-                            <button class="btn btn-primary btn-sm mb-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}"><i class="bi bi-shield-check"></i> Verifikasi</button>
-                            @endcan
+                                @can('can access edit button')
+                                <a href="{{ route('pemasakan.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm mb-1"><i class="bi bi-pencil-square"></i> Edit</a>
+                                @endcan
 
-                            @can('can access edit button')
-                            <a href="{{ route('pemasakan.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm mb-1"><i class="bi bi-pencil-square"></i> Edit</a>
-                            @endcan
+                                @can('can access update button')
+                                <a href="{{ route('pemasakan.update.form', $dep->uuid) }}" class="btn btn-info btn-sm mb-1"><i class="bi bi-pencil"></i> Update</a>
+                                @endcan
 
-                            @can('can access update button')
-                            <a href="{{ route('pemasakan.update.form', $dep->uuid) }}" class="btn btn-info btn-sm mb-1"><i class="bi bi-pencil"></i> Update</a>
-                            @endcan
+                                @can('can access delete button')
+                                <form action="{{ route('pemasakan.destroy', $dep->uuid) }}" method="POST" class="d-inline">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-danger btn-sm mb-1" onclick="return confirm('Hapus?')"><i class="bi bi-trash"></i></button>
+                                </form>
+                                @endcan
 
-                            @can('can access delete button')
-                            <form action="{{ route('pemasakan.destroy', $dep->uuid) }}" method="POST" class="d-inline">
-                                @csrf @method('DELETE')
-                                <button class="btn btn-danger btn-sm mb-1" onclick="return confirm('Hapus?')"><i class="bi bi-trash"></i></button>
-                            </form>
-                            @endcan
-
-                            {{-- MODAL VERIFIKASI: VERSI SERVER (Gradient Select & Modal MD) --}}
-                            <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered modal-md">
-                                    <form action="{{ route('pemasakan.verification.update', $dep->uuid) }}" method="POST">
-                                        @csrf @method('PUT')
-
-                                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" 
-                                        style="background: linear-gradient(145deg, #7a1f12, #9E3419); box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
-
-                                        <div class="modal-header border-bottom border-light-subtle p-4" style="border-bottom-width: 3px !important;">
-                                            <h5 class="modal-title fw-bolder fs-3 text-uppercase" id="verifyModalLabel{{ $dep->uuid }}" style="color: #00ffc4;">
-                                                <i class="bi bi-gear-fill me-2"></i> VERIFICATION
-                                            </h5>
-                                            <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-
-                                        <div class="modal-body p-5">
-                                            <p class="text-light mb-4 fs-6">
-                                                Pastikan data yang akan diverifikasi di check dengan teliti terlebih dahulu.
-                                            </p>
-                                            <div class="row g-4">
-                                                <div class="col-md-12">
-                                                    <label for="status_spv_{{ $dep->uuid }}" class="form-label fw-bold mb-2 text-center d-block" style="color: #FFE5DE; font-size: 0.95rem;">
-                                                        Pilih Status Verifikasi
-                                                    </label>
-
-                                                    <select name="status_spv" id="status_spv_{{ $dep->uuid }}" class="form-select form-select-lg fw-bold text-center mx-auto" 
-                                                        style="background: linear-gradient(135deg, #fff1f0, #ffe5de); border: 2px solid #dc3545; border-radius: 12px; color: #dc3545; height: 55px; font-size: 1.1rem; box-shadow: 0 6px 12px rgba(0,0,0,0.1); width: 85%; transition: all 0.3s ease;" required>
-                                                        <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
-                                                        <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
-                                                    </select>
+                                {{-- MODAL VERIFIKASI --}}
+                                <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-md">
+                                        <form action="{{ route('pemasakan.verification.update', $dep->uuid) }}" method="POST">
+                                            @csrf @method('PUT')
+                                            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" style="background: linear-gradient(145deg, #7a1f12, #9E3419);">
+                                                <div class="modal-header border-bottom border-light-subtle p-4">
+                                                    <h5 class="modal-title fw-bolder fs-3 text-uppercase" style="color: #00ffc4;"><i class="bi bi-gear-fill me-2"></i> VERIFICATION</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                                 </div>
-
-                                                <div class="col-md-12 mt-3">
-                                                    <label for="catatan_spv_{{ $dep->uuid }}" class="form-label fw-bold text-light mb-2">
-                                                        Catatan Tambahan (Opsional)
-                                                    </label>
-                                                    <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4" class="form-control text-dark border-0 shadow-none" 
-                                                        placeholder="Masukkan catatan, misalnya alasan revisi..." style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
+                                                <div class="modal-body p-5">
+                                                    <p class="text-light mb-4 fs-6">Pastikan data yang akan diverifikasi di check dengan teliti terlebih dahulu.</p>
+                                                    <div class="row g-4">
+                                                        <div class="col-md-12">
+                                                            <label class="form-label fw-bold mb-2 text-center d-block" style="color: #FFE5DE; font-size: 0.95rem;">Pilih Status Verifikasi</label>
+                                                            <select name="status_spv" class="form-select form-select-lg fw-bold text-center mx-auto" style="background: linear-gradient(135deg, #fff1f0, #ffe5de); border: 2px solid #dc3545; border-radius: 12px; color: #dc3545; height: 55px; width: 85%;" required>
+                                                                <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }}>✅ Verified (Disetujui)</option>
+                                                                <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }}>❌ Revision (Perlu Perbaikan)</option>
+                                                            </select>
+                                                        </div>
+                                                        <div class="col-md-12 mt-3">
+                                                            <label class="form-label fw-bold text-light mb-2">Catatan Tambahan (Opsional)</label>
+                                                            <textarea name="catatan_spv" rows="4" class="form-control text-dark border-0 shadow-none" style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
+                                                        </div>
                                                     </div>
                                                 </div>
+                                                <div class="modal-footer justify-content-end p-4 border-top" style="background-color: #9E3419;">
+                                                    <button type="button" class="btn btn-outline-light fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">Batal</button>
+                                                    <button type="submit" class="btn fw-bolder rounded-pill px-5" style="background-color: #E39581; color: #2c3e50;">SUBMIT</button>
+                                                </div>
                                             </div>
-
-                                            <div class="modal-footer justify-content-end p-4 border-top" style="background-color: #9E3419; border-color: #00ffc4 !important;">
-                                                <button type="button" class="btn btn-outline-light fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">Batal</button>
-                                                <button type="submit" class="btn fw-bolder rounded-pill px-5" style="background-color: #E39581; color: #2c3e50;">
-                                                    <i class="bi bi-save-fill me-1"></i> SUBMIT
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </form>
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
-                            {{-- END MODAL SERVER VERSION --}}
-                        </td>
-                    </tr>
-                    @empty
-                    <tr><td colspan="14" class="text-center">Belum ada data.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="14" class="text-center">Belum ada data.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
 
-        <div class="mt-3">
-            {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
+            <div class="mt-3">
+                {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
         </div>
     </div>
-</div>
 </div>
 
 <script>

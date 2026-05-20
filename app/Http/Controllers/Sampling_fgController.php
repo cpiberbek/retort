@@ -442,4 +442,23 @@ class Sampling_fgController extends Controller
 
         return response()->json($data);
     }
+
+    public function getPalet(Request $request)
+    {
+        $kode_produksi = $request->input('kode_produksi');
+
+        if (!$kode_produksi) {
+            return response()->json([]);
+        }
+
+        // Ambil data palet dari release_packings berdasarkan kode produksi (uuid)
+        // Kita gunakan distinct agar tidak ada palet duplikat jika ada entry dobel
+        $palets = Release_packing::where('kode_produksi', $kode_produksi)
+            ->select('no_palet')
+            ->distinct()
+            ->orderBy('no_palet', 'asc')
+            ->get();
+
+        return response()->json($palets);
+    }
 }

@@ -12,6 +12,16 @@
                 @csrf
                 @method('PUT')
 
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 {{-- ====== IDENTIFIKASI ====== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
@@ -40,7 +50,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
+                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                     <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}"
@@ -64,24 +74,37 @@
                             </div>
                         </div>
 
-                        {{-- Baris 3: Kode Produksi & Berat Produk --}}
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label">Kode Batch</label>
-                                <input type="text" name="kode_produksi" id="kode_produksi"
-                                class="form-control" maxlength="50"
-                                value="{{ old('kode_produksi', is_array($pemasakan->kode_produksi)
-                                ? implode('/', $pemasakan->kode_produksi)
-                                : $pemasakan->kode_produksi) }}"
-                                required>
-                                <small class="text-muted">Pisahkan dengan tanda <strong>/</strong></small><br>
-                                <small id="kodeError" class="text-danger d-none"></small>
+                        {{-- ====== BATCH & TRAY ARRAY ====== --}}
+                        <div id="batchContainer">
+                            {{-- $pemasakan->kode_produksi sudah berupa ARRAY karena cast di model --}}
+                            @foreach($pemasakan->kode_produksi as $index => $kp)
+                            <div class="row mb-3 batch-row">
+                                <div class="col-md-6">
+                                    <label class="form-label">Kode Batch</label>
+                                    <select name="kode_produksi[]" class="form-control kode_produksi" data-old="{{ $kp }}" required>
+                                        <option value="{{ $kp }}">{{ $kp }}</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Jumlah Tray</label>
+                                    {{-- Mengakses array langsung --}}
+                                    <input type="number" name="jumlah_tray[]" class="form-control jumlah_tray" 
+                                        value="{{ $pemasakan->jumlah_tray[$index] ?? '' }}" required>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    @if($loop->first)
+                                        <button type="button" class="btn btn-success w-100 addRow"><i class="bi bi-plus-circle"></i></button>
+                                    @else
+                                        <button type="button" class="btn btn-danger w-100 removeRow"><i class="bi bi-trash"></i></button>
+                                    @endif
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label">Berat Varian (gram)</label>
-                                <input type="number" name="berat_produk" id="berat_produk"
-                                class="form-control" step="0.1"
-                                value="{{ old('berat_produk', $pemasakan->berat_produk) }}" required>
+                            @endforeach
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6 offset-md-6">
+                                <small id="traySummary" class="fw-bold"></small>
                             </div>
                         </div>
 
@@ -95,21 +118,14 @@
                                 value="{{ old('suhu_produk', $pemasakan->suhu_produk) }}" required>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label">Jumlah Tray</label><br>
-                                <small class="text-danger">Standar: 28 tray</small>
-                                <input type="text" name="jumlah_tray" id="jumlah_tray"
-                                class="form-control" required
-                                value="{{ old('jumlah_tray', is_array($pemasakan->jumlah_tray)
-                                ? implode('/', $pemasakan->jumlah_tray)
-                                : $pemasakan->jumlah_tray) }}"
-                                >
-                                <small class="text-muted">Pisahkan dengan tanda <strong>+</strong></small><br>
-                                <small id="trayTotal" class="text-success fw-bold"></small><br>
+                                <label class="form-label">Berat Varian (gram)</label>
+                                <input type="number" name="berat_produk" id="berat_produk"
+                                class="form-control" step="0.1"
+                                value="{{ old('berat_produk', $pemasakan->berat_produk) }}" required>
                             </div>
                         </div>
                     </div>
                 </div>
-
 
                 @php
                 $cooking = json_decode($pemasakan->cooking, true);
@@ -184,12 +200,12 @@
                                     <td class="text-start">Waktu Mulai</td>
                                     <td>WIB</td>
                                     <td rowspan="2" class="align-middle">1.5 - 2.5 menit</td>
-                                    <td><input type="time" name="cooking[waktu_mulai_awal]" value="{{ $cooking['waktu_mulai_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_mulai_awal" name="cooking[waktu_mulai_awal]" value="{{ $cooking['waktu_mulai_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                                 <tr>
                                     <td class="text-start">Waktu Selesai</td>
                                     <td>WIB</td>
-                                    <td><input type="time" name="cooking[waktu_selesai_awal]" value="{{ $cooking['waktu_selesai_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_selesai_awal" name="cooking[waktu_selesai_awal]" value="{{ $cooking['waktu_selesai_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -228,13 +244,13 @@
                                     <td class="text-start">Waktu Mulai</td>
                                     <td>WIB</td>
                                     <td colspan="2">8 - 10 menit</td>
-                                    <td><input type="time" name="cooking[waktu_mulai_proses]" value="{{ $cooking['waktu_mulai_proses'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_mulai_proses" name="cooking[waktu_mulai_proses]" value="{{ $cooking['waktu_mulai_proses'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                                 <tr>
                                     <td class="text-start">Waktu Selesai</td>
                                     <td>WIB</td>
                                     <td colspan="2">8 - 10 menit</td>
-                                    <td><input type="time" name="cooking[waktu_selesai_proses]" value="{{ $cooking['waktu_selesai_proses'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_selesai_proses" name="cooking[waktu_selesai_proses]" value="{{ $cooking['waktu_selesai_proses'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -287,7 +303,7 @@
                                     <td>WIB</td>
                                     <td rowspan="3" class="align-middle">12 menit</td>
                                     <td rowspan="3" class="align-middle">16 menit</td>
-                                    <td colspan="4"><input type="time" name="cooking[waktu_mulai_sterilisasi]" value="{{ $cooking['waktu_mulai_sterilisasi'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                        <td colspan="4"><input type="time" id="waktu_mulai_sterilisasi" name="cooking[waktu_mulai_sterilisasi]" value="{{ $cooking['waktu_mulai_sterilisasi'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                                 <tr>
                                     <td class="text-start">Waktu Pengecekan</td>
@@ -299,7 +315,7 @@
                                 <tr>
                                     <td class="text-start">Waktu Selesai</td>
                                     <td>WIB</td>
-                                    <td colspan="4"><input type="time" name="cooking[waktu_selesai_sterilisasi]" value="{{ $cooking['waktu_selesai_sterilisasi'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                        <td colspan="4"><input type="time" id="waktu_selesai_sterilisasi" name="cooking[waktu_selesai_sterilisasi]" value="{{ $cooking['waktu_selesai_sterilisasi'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -336,12 +352,12 @@
                                     <td class="text-start">Waktu Mulai</td>
                                     <td>WIB</td>
                                     <td rowspan="2" class="align-middle">3 - 6 menit</td>
-                                    <td><input type="time" name="cooking[waktu_mulai_pendinginan_awal]" value="{{ $cooking['waktu_mulai_pendinginan_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_mulai_pendinginan_awal" name="cooking[waktu_mulai_pendinginan_awal]" value="{{ $cooking['waktu_mulai_pendinginan_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                                 <tr>
                                     <td class="text-start">Waktu Selesai</td>
                                     <td>WIB</td>
-                                    <td><input type="time" name="cooking[waktu_selesai_pendinginan_awal]" value="{{ $cooking['waktu_selesai_pendinginan_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_selesai_pendinginan_awal" name="cooking[waktu_selesai_pendinginan_awal]" value="{{ $cooking['waktu_selesai_pendinginan_awal'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -378,12 +394,12 @@
                                     <td class="text-start">Waktu Mulai</td>
                                     <td>WIB</td>
                                     <td rowspan="2" class="align-middle">5 menit</td>
-                                    <td><input type="time" name="cooking[waktu_mulai_pendinginan]" value="{{ $cooking['waktu_mulai_pendinginan'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_mulai_pendinginan" name="cooking[waktu_mulai_pendinginan]" value="{{ $cooking['waktu_mulai_pendinginan'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                                 <tr>
                                     <td class="text-start">Waktu Selesai</td>
                                     <td>WIB</td>
-                                    <td><input type="time" name="cooking[waktu_selesai_pendinginan]" value="{{ $cooking['waktu_selesai_pendinginan'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_selesai_pendinginan" name="cooking[waktu_selesai_pendinginan]" value="{{ $cooking['waktu_selesai_pendinginan'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -420,17 +436,18 @@
                                     <td class="text-start">Waktu Mulai</td>
                                     <td>WIB</td>
                                     <td rowspan="2" class="align-middle">2 - 3 menit</td>
-                                    <td><input type="time" name="cooking[waktu_mulai_akhir]" value="{{ $cooking['waktu_mulai_akhir'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_mulai_akhir" name="cooking[waktu_mulai_akhir]" value="{{ $cooking['waktu_mulai_akhir'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                                 <tr>
                                     <td class="text-start">Waktu Selesai</td>
                                     <td>WIB</td>
-                                    <td><input type="time" name="cooking[waktu_selesai_akhir]" value="{{ $cooking['waktu_selesai_akhir'] ?? '' }}" class="form-control form-control-sm text-center"></td>
+                                    <td><input type="time" id="waktu_selesai_akhir" name="cooking[waktu_selesai_akhir]" value="{{ $cooking['waktu_selesai_akhir'] ?? '' }}" class="form-control form-control-sm text-center"></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
+
                 <div class="card mb-4">
                     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
                         <strong>TOTAL WAKTU PROSES</strong>
@@ -454,14 +471,14 @@
                                         <td rowspan="2" class="text-center align-middle">32.5 - 38.5 menit</td>
                                         <td rowspan="2" class="text-center align-middle">36.5 - 42.5 menit</td>
                                         <td>
-                                            <input type="time" name="cooking[waktu_mulai_total]" id="waktu_mulai_total" value="{{ $cooking['waktu_mulai_total'] ?? '' }}" class="form-control form-control-sm text-center">
+                                            <input type="time" name="cooking[waktu_mulai_total]" id="waktu_mulai_total" value="{{ $cooking['waktu_mulai_total'] ?? '' }}" class="form-control form-control-sm text-center" readonly>
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-start">Waktu Selesai</td>
                                         <td>WIB</td>
                                         <td>
-                                            <input type="time" name="cooking[waktu_selesai_total]" id="waktu_selesai_total" value="{{ $cooking['waktu_selesai_total'] ?? '' }}" class="form-control form-control-sm text-center">
+                                            <input type="time" name="cooking[waktu_selesai_total]" id="waktu_selesai_total" value="{{ $cooking['waktu_selesai_total'] ?? '' }}" class="form-control form-control-sm text-center" readonly>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -469,7 +486,6 @@
                         </div>
                     </div>
                 </div>
-
 
                 <div class="card mb-4">
                     <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
@@ -535,6 +551,7 @@
                     </table>
                 </div>
             </div>
+
             {{-- ===================== Catatan ===================== --}}
             <div class="card mb-4">
                 <div class="card-header bg-light"><strong>Catatan</strong></div>
@@ -554,84 +571,174 @@
                 </a>
             </div>
         </form>
-
-        <hr>
-        <div id="resultArea"></div>
     </div>
 </div>
 </div>
 
-{{-- ====== Script Tambahan ====== --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
 <script>
     $(document).ready(function(){
-        $('.selectpicker').selectpicker();
+        if ($.fn.selectpicker) {
+            $('.selectpicker').selectpicker();
+        }
+
+        let batchedData = [];
+
+        function populateBatches() {
+            let options = '<option value="">-- Pilih Batch --</option>';
+            if (batchedData.length === 0) {
+                options = '<option value="">Batch Tidak Ditemukan / Pilih Varian</option>';
+            } else {
+                batchedData.forEach(item => {
+                    options += `<option value="${item.uuid}">${item.kode_produksi}</option>`;
+                });
+            }
+
+            $('.kode_produksi').each(function() {
+                let oldVal = $(this).attr('data-old'); 
+                $(this).html(options).prop('disabled', batchedData.length === 0);
+                
+                if (oldVal) {
+                    $(this).val(oldVal);
+                }
+            });
+        }
+
+        $('#nama_produk').on('change', function() {
+            let namaProduk = $(this).val();
+            
+            $('.kode_produksi').attr('data-old', '');
+
+            if (!namaProduk) {
+                batchedData = [];
+                populateBatches();
+                return;
+            }
+
+            $('.kode_produksi').html('<option value="">Mencari Batch...</option>').prop('disabled', false);
+
+            $.ajax({
+                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                type: 'GET',
+                success: function(data) {
+                    batchedData = data;
+                    populateBatches();
+                }
+            });
+        });
+
+        // Trigger AJAX Saat Load Pertama (untuk mengisi batch lama)
+        if ($('#nama_produk').val()) {
+            $.ajax({
+                url: '/lookup/batch/' + encodeURIComponent($('#nama_produk').val()),
+                type: 'GET',
+                success: function(data) {
+                    batchedData = data;
+                    populateBatches();
+                }
+            });
+        }
+
+        // Tambah Row
+        $(document).on('click', '.addRow', function() {
+            let row = `
+            <div class="row mb-3 batch-row">
+                <div class="col-md-6">
+                    <label class="form-label">Kode Batch</label>
+                    <select name="kode_produksi[]" class="form-control kode_produksi" required>
+                        <option value="">Pilih Varian Terlebih Dahulu</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Jumlah Tray</label>
+                    <input type="number" name="jumlah_tray[]" class="form-control jumlah_tray" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-danger w-100 removeRow"><i class="bi bi-trash"></i> Hapus</button>
+                </div>
+            </div>`;
+            $('#batchContainer').append(row);
+            populateBatches(); 
+        });
+
+        // Hapus Row
+        $(document).on('click', '.removeRow', function() {
+            $(this).closest('.batch-row').remove();
+            hitungTotalTray();
+        });
+
+        // Hitung Tray
+        $(document).on('input', '.jumlah_tray', function() {
+            hitungTotalTray();
+        });
+
+        function hitungTotalTray() {
+            let total = 0;
+            $('.jumlah_tray').each(function() {
+                total += parseInt($(this).val()) || 0;
+            });
+            const summary = $('#traySummary');
+            if (total === 0) summary.text('');
+            else if (total > 28) summary.html(`<span class="text-danger">Total: ${total} tray (MELEBIHI standar 28!)</span>`);
+            else summary.html(`<span class="text-success">Total: ${total} tray (Maks: 28)</span>`);
+        }
+        
+        hitungTotalTray();
     });
 </script>
-
 <script>
-// ==== VALIDASI KODE PRODUKSI (bisa lebih dari 1, pisahkan dengan /) ====
-    const kodeInput = document.getElementById('kode_produksi');
-    const kodeError = document.getElementById('kodeError');
+    document.addEventListener('DOMContentLoaded', function() {
+        function autoChainTime(fromId, toId) {
+            const fromInput = document.getElementById(fromId);
+            const toInput = document.getElementById(toId);
 
-    kodeInput.addEventListener('input', function() {
-        let value = this.value.toUpperCase().replace(/\s+/g, '');
-        this.value = value;
-        kodeError.textContent = '';
-        kodeError.classList.add('d-none');
+            if (!fromInput || !toInput) return;
 
-        if (!value) return;
+            fromInput.addEventListener('change', function() {
+                if (this.value && !toInput.disabled) {
+                    toInput.value = this.value;
+                    // Trigger manual change event agar chain reaction berjalan berantai
+                    toInput.dispatchEvent(new Event('change'));
+                }
+            });
+        }
 
-        const kodeList = value.split('/');
-        const bulanMap = { 'A':0,'B':1,'C':2,'D':3,'E':4,'F':5,'G':6,'H':7,'I':8,'J':9,'K':10,'L':11 };
+        // 1. PEMANASAN AWAL -> PROSES PEMANASAN
+        autoChainTime('waktu_selesai_awal', 'waktu_mulai_proses');
+        
+        // 2. PROSES PEMANASAN -> STERILISASI
+        autoChainTime('waktu_selesai_proses', 'waktu_mulai_sterilisasi');
+        
+        // 3. STERILISASI -> PENDINGINAN AWAL
+        autoChainTime('waktu_selesai_sterilisasi', 'waktu_mulai_pendinginan_awal');
+        
+        // 4. PENDINGINAN AWAL -> PENDINGINAN
+        autoChainTime('waktu_selesai_pendinginan_awal', 'waktu_mulai_pendinginan');
+        
+        // 5. PENDINGINAN -> PROSES AKHIR
+        autoChainTime('waktu_selesai_pendinginan', 'waktu_mulai_akhir');
+        
+        // 6. PROSES AKHIR -> TOTAL WAKTU PROSES (WAKTU SELESAI TOTAL)
+        autoChainTime('waktu_selesai_akhir', 'waktu_selesai_total');
 
-        for (let kode of kodeList) {
-            if (kode.length !== 10) {
-                kodeError.textContent = "Setiap kode batch harus terdiri dari 10 karakter.";
-                kodeError.classList.remove('d-none');
-                return false;
-            }
+        // ==========================================
+        // SINKRONISASI WAKTU MULAI AWAL -> WAKTU MULAI TOTAL
+        // ==========================================
+        const waktuMulaiAwal = document.getElementById('waktu_mulai_awal');
+        const waktuMulaiTotal = document.getElementById('waktu_mulai_total');
 
-            const format = /^[A-Z0-9]+$/;
-            if (!format.test(kode)) {
-                kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-                kodeError.classList.remove('d-none');
-                return false;
-            }
-
-            const bulanChar = kode.charAt(1);
-            if (!/^[A-L]$/.test(bulanChar)) {
-                kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
-                kodeError.classList.remove('d-none');
-                return false;
-            }
-
-            const hari = parseInt(kode.substr(2, 2), 10);
-            if (isNaN(hari) || hari < 1 || hari > 31) {
-                kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
-                kodeError.classList.remove('d-none');
-                return false;
+        function syncWaktuMulaiTotal() {
+            if (waktuMulaiAwal && waktuMulaiTotal && waktuMulaiAwal.value) {
+                waktuMulaiTotal.value = waktuMulaiAwal.value;
             }
         }
-    });
 
-// ==== JUMLAH TRAY (bisa pisahkan dengan '+') ====
-    const jumlahInput = document.getElementById('jumlah_tray');
-    const trayTotal = document.getElementById('trayTotal');
-
-    jumlahInput.addEventListener('input', function() {
-        const total = this.value
-        .split('+')
-        .map(v => parseInt(v.trim()) || 0)
-        .reduce((a, b) => a + b, 0);
-
-        if (this.value.includes('+')) {
-            trayTotal.textContent = `Total: ${total} tray`;
-        } else {
-            trayTotal.textContent = '';
+        if(waktuMulaiAwal) {
+            waktuMulaiAwal.addEventListener('change', syncWaktuMulaiTotal);
+            syncWaktuMulaiTotal(); 
         }
     });
 </script>

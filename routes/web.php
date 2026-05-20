@@ -565,6 +565,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/wire/{uuid}', [WireController::class, 'destroy'])->name('wire.destroy');
 
     // Sampling FG
+    Route::get('/get-palet', [App\Http\Controllers\Sampling_fgController::class, 'getPalet'])->name('get.palet');
     Route::get('/sampling_fg/export-pdf', [Sampling_fgController::class, 'exportPdf'])->name('sampling_fg.exportPdf');
     Route::get('/get-jumlah-box', [App\Http\Controllers\sampling_fgController::class, 'getJumlahBox'])->name('get.jumlah.box');
     Route::get('/sampling_fg', [Sampling_fgController::class, 'index'])->name('sampling_fg.index');
@@ -578,6 +579,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/sampling_fg/verification/{uuid}', [Sampling_fgController::class, 'updateVerification'])
         ->name('sampling_fg.verification.update');
     Route::delete('/sampling_fg/{uuid}', [Sampling_fgController::class, 'destroy'])->name('sampling_fg.destroy');
+
 
     // Chamber
     Route::get('/chamber/export-pdf', [ChamberController::class, 'exportPdf'])->name('chamber.exportPdf');
