@@ -738,6 +738,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/labelisasi_pvdc/export-pdf', [Labelisasi_pvdcController::class, 'exportPdf'])->name('labelisasi_pvdc.exportPdf');
 
     // Mincing
+
     Route::get('/mincing', [MincingController::class, 'index'])->name('mincing.index');
     Route::get('/mincing/create', [MincingController::class, 'create'])->name('mincing.create');
     Route::post('/mincing', [MincingController::class, 'store'])->name('mincing.store');
@@ -749,6 +750,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/mincing/verification/{uuid}', [MincingController::class, 'updateVerification'])
         ->name('mincing.verification.update');
     Route::get('/mincing/export-pdf', [MincingController::class, 'exportPdf'])->name('mincing.exportPdf');
+    Route::get('/mincing/export-excel', [MincingController::class, 'exportExcel'])->name('mincing.exportExcel');
     Route::delete('/mincing/{uuid}', [MincingController::class, 'destroy'])->name('mincing.destroy');
 
     // Metal
