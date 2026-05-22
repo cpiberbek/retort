@@ -184,11 +184,13 @@ Route::middleware('auth')->group(function () {
     ]);
 
     Route::get('/ajax/search-batch-mincing', [MagnetTrapController::class, 'searchBatchMincing'])->name('ajax.search.batch');
+    Route::get('/metal/export-excel', [MetalController::class, 'exportExcel'])->name('metal.exportExcel');
     Route::get('checklistmagnettrap/update-form/{checklistmagnettrap}', [MagnetTrapController::class, 'showUpdateForm'])
         ->name('checklistmagnettrap.showUpdateForm');
     Route::get('checklistmagnettrap/verification', [MagnetTrapController::class, 'showVerificationPage'])->name('checklistmagnettrap.verification');
     Route::put('checklistmagnettrap/{uuid}/verify', [MagnetTrapController::class, 'verify'])->name('checklistmagnettrap.verify');
     Route::get('checklistmagnettrap/export-pdf', [MagnetTrapController::class, 'exportPdf'])->name('checklistmagnettrap.exportPdf');
+    Route::get('checklistmagnettrap/export-excel', [MagnetTrapController::class, 'exportExcel'])->name('checklistmagnettrap.exportExcel');
     // Route::resource('checklistmagnettrap', MagnetTrapController::class);
     Route::get(
         'checklistmagnettrap/recycle-bin',
