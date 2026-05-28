@@ -189,7 +189,9 @@
                             <td class="text-center align-middle">{{ $dep->no_chamber }}</td>
                             <td class="text-center align-middle">{{ $dep->berat_produk }}</td>
                             <td class="text-center align-middle">{{ $dep->suhu_produk }}</td>
-                            <td class="text-center align-middle">{{ $dep->total_reject }}</td>
+                            <td class="text-center align-middle">
+                                {{ is_array($dep->total_reject) ? implode(' / ', $dep->total_reject) : ($dep->total_reject ?? '-') }}
+                            </td>
 
                             <td class="text-center align-middle">
                                 @if(!empty($cooking))

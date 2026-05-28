@@ -93,9 +93,9 @@
                                 </div>
                                 <div class="col-md-2 d-flex align-items-end">
                                     @if($loop->first)
-                                        <button type="button" class="btn btn-success w-100 addRow"><i class="bi bi-plus-circle"></i></button>
+                                        <button type="button" class="btn btn-success w-100 addRow"><i class="bi bi-plus-circle"></i> Tambah</button>
                                     @else
-                                        <button type="button" class="btn btn-danger w-100 removeRow"><i class="bi bi-trash"></i></button>
+                                        <button type="button" class="btn btn-danger w-100 removeRow"><i class="bi bi-trash"></i> Hapus</button>
                                     @endif
                                 </div>
                             </div>
@@ -128,7 +128,7 @@
                 </div>
 
                 @php
-                $cooking = json_decode($pemasakan->cooking, true);
+                $cooking = !empty($pemasakanData) ? $pemasakanData : [];
                 @endphp
 
                 {{-- ================= PERSIAPAN ================= --}}
@@ -540,15 +540,17 @@
                     <strong>TOTAL REJECT</strong>
                 </div>
                 <div class="card-body">
-                    <table class="table table-bordered text-center align-middle">
-                        <tbody>
-                            <tr>
-                                <td class="text-start">Total Reject</td>
-                                <td>Kg</td>
-                                <td><input type="number" name="total_reject" value="{{ $pemasakan->total_reject ?? '' }}" class="form-control form-control-sm text-center" step="0.01"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-bordered text-center align-middle">
+                            <thead class="table-light">
+                            </thead>
+                            <tbody id="rejectTableBody">
+                                <tr>
+                                    <td colspan="3" class="text-muted py-4">Belum ada batch dipilih</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -586,6 +588,11 @@
         }
 
         let batchedData = [];
+        
+        // Ambil data reject yang sudah tersimpan untuk proses initial load
+        // Menggunakan total_reject sesuai dengan kolom database yang baru
+        let initialRejects = @json(is_array($pemasakan->total_reject) ? $pemasakan->total_reject : (json_decode($pemasakan->total_reject, true) ?? []));
+        let isFirstLoad = true;
 
         function populateBatches() {
             let options = '<option value="">-- Pilih Batch --</option>';
@@ -598,13 +605,73 @@
             }
 
             $('.kode_produksi').each(function() {
-                let oldVal = $(this).attr('data-old'); 
+                let oldVal = $(this).attr('data-old');
+                let currentValue = $(this).val();
                 $(this).html(options).prop('disabled', batchedData.length === 0);
-                
-                if (oldVal) {
+
+                if (currentValue) {
+                    $(this).val(currentValue);
+                } else if (oldVal) {
                     $(this).val(oldVal);
                 }
             });
+        }
+
+        // LOGIC UNTUK RENDER TABEL REJECT
+        function renderRejectTable() {
+            // Ambil data input saat ini supaya tidak hilang saat di-render ulang
+            let currentRejects = [];
+            $('.reject-input').each(function() {
+                let idx = $(this).data('index');
+                currentRejects[idx] = $(this).val();
+            });
+
+            // Timpa dengan data dari database saat halaman pertama kali load
+            if (isFirstLoad) {
+                currentRejects = initialRejects;
+                isFirstLoad = false;
+            }
+
+            let tbody = $('#rejectTableBody');
+            tbody.empty();
+            let hasData = false;
+
+            $('.kode_produksi').each(function(index) {
+                let value = $(this).val();
+                let text = $(this).find('option:selected').text();
+
+                if (value && value !== "") {
+                    hasData = true;
+                    // Ambil isi reject (kosong jika baru ditambahkan dan tidak ada DB/input history)
+                    let rejectVal = currentRejects[index] !== undefined ? currentRejects[index] : '';
+
+                    tbody.append(`
+                        <tr>
+                            <td class="text-start fw-semibold">${text}</td>
+                            <td>Kg</td>
+                            <td>
+                                <input type="number"
+                                    step="0.01"
+                                    name="total_reject[${index}]" 
+                                    value="${rejectVal}"
+                                    class="form-control form-control-sm text-center reject-input"
+                                    data-index="${index}"
+                                    placeholder="0">
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+
+            if (!hasData) {
+                tbody.html(`
+                    <tr>
+                        <td colspan="3" class="text-muted py-4">
+                            Belum ada batch dipilih
+                        </td>
+                    </tr>
+                `);
+            }
         }
 
         $('#nama_produk').on('change', function() {
@@ -615,6 +682,7 @@
             if (!namaProduk) {
                 batchedData = [];
                 populateBatches();
+                renderRejectTable();
                 return;
             }
 
@@ -626,11 +694,12 @@
                 success: function(data) {
                     batchedData = data;
                     populateBatches();
+                    renderRejectTable(); // Reset/render tabel reject
                 }
             });
         });
 
-        // Trigger AJAX Saat Load Pertama (untuk mengisi batch lama)
+        // Trigger AJAX Saat Load Pertama (untuk mengisi batch lama dan data reject)
         if ($('#nama_produk').val()) {
             $.ajax({
                 url: '/lookup/batch/' + encodeURIComponent($('#nama_produk').val()),
@@ -638,12 +707,19 @@
                 success: function(data) {
                     batchedData = data;
                     populateBatches();
+                    renderRejectTable();
                 }
             });
         }
 
+        // Trigger render saat opsi batch dipilih manual
+        $(document).on('change', '.kode_produksi', function() {
+            renderRejectTable();
+        });
+
         // Tambah Row
         $(document).on('click', '.addRow', function() {
+            let rowCount = $('.batch-row').length;
             let row = `
             <div class="row mb-3 batch-row">
                 <div class="col-md-6">
@@ -668,6 +744,7 @@
         $(document).on('click', '.removeRow', function() {
             $(this).closest('.batch-row').remove();
             hitungTotalTray();
+            renderRejectTable();
         });
 
         // Hitung Tray

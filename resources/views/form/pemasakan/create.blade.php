@@ -661,20 +661,25 @@
                     </div>
                 </div>
 
+                {{-- ===================== TOTAL REJECT ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-warning text-white">
                         <strong>TOTAL REJECT</strong>
                     </div>
                     <div class="card-body">
-                        <table class="table table-bordered text-center align-middle">
-                            <tbody>
-                                <tr>
-                                    <td class="text-start fw-bold">Total Reject</td>
-                                    <td>Kg</td>
-                                    <td><input type="number" name="total_reject" class="form-control form-control-sm text-center" step="0.01"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle text-center">
+                                <thead class="table-light">
+                                </thead>
+                                <tbody id="rejectTableBody">
+                                    <tr>
+                                        <td colspan="3" class="text-muted py-4">
+                                            Belum ada batch dipilih
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
@@ -703,6 +708,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
 <script>
     $(document).ready(function() {
 
@@ -746,8 +752,47 @@
             }
 
             $('.kode_produksi').each(function() {
+                let currentValue = $(this).val();
                 $(this).html(options).prop('disabled', batchedData.length === 0);
+                if (currentValue) {
+                    $(this).val(currentValue);
+                }
             });
+        }
+
+        // LOGIC UNTUK RENDER TABEL REJECT
+        function renderRejectTable() {
+            let tbody = $('#rejectTableBody');
+            tbody.empty();
+            let hasData = false;
+
+            $('.kode_produksi').each(function(index) {
+                let value = $(this).val();
+                let text = $(this).find('option:selected').text();
+
+                if (value && value !== "") {
+                    hasData = true;
+                    tbody.append(`
+                        <tr>
+                            <td class="text-start fw-semibold">${text}</td>
+                            <td>Kg</td>
+                            <td>
+                                <input type="number" step="0.01" name="total_reject[]" class="form-control form-control-sm text-center" placeholder="0">
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+
+            if (!hasData) {
+                tbody.html(`
+                    <tr>
+                        <td colspan="3" class="text-muted py-4">
+                            Belum ada batch dipilih
+                        </td>
+                    </tr>
+                `);
+            }
         }
 
         $('#nama_produk').on('change', function() {
@@ -756,6 +801,7 @@
             if (!namaProduk) {
                 batchedData = [];
                 populateBatches();
+                renderRejectTable();
                 return;
             }
 
@@ -767,8 +813,14 @@
                 success: function(data) {
                     batchedData = data;
                     populateBatches();
+                    renderRejectTable(); // Reset/update tabel reject saat varian diubah
                 }
             });
+        });
+
+        // Trigger render saat opsi batch dipilih manual
+        $(document).on('change', '.kode_produksi', function() {
+            renderRejectTable();
         });
 
         // TAMBAH ROW
@@ -798,6 +850,7 @@
         $(document).on('click', '.removeRow', function() {
             $(this).closest('.batch-row').remove();
             hitungTotalTray();
+            renderRejectTable(); // Render ulang tabel reject saat row batch dihapus
         });
 
         // HITUNG TRAY

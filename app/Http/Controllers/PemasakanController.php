@@ -143,7 +143,7 @@ class PemasakanController extends Controller
                 'no_chamber'    => 'required',
                 'berat_produk'  => 'required|numeric', 
                 'suhu_produk'   => 'required|numeric',
-                'total_reject'  => 'nullable|numeric',
+                'total_reject'  => 'nullable|array',
                 'catatan'       => 'nullable|string',
                 'cooking'       => 'nullable|array',
             ]);
@@ -177,9 +177,12 @@ class PemasakanController extends Controller
             ->orderBy('nama_mesin')
             ->get(['uuid', 'nama_mesin']);
 
-            $pemasakanData = !empty($pemasakan->cooking)
-            ? json_decode($pemasakan->cooking, true)
-            : [];
+            $pemasakanData = [];
+            if (!empty($pemasakan->cooking)) {
+                $pemasakanData = is_string($pemasakan->cooking)
+                    ? (json_decode($pemasakan->cooking, true) ?? [])
+                    : (array) $pemasakan->cooking;
+            }
 
             return view('form.pemasakan.update', compact('pemasakan', 'produks', 'pemasakanData', 'list_chambers'));
         }
@@ -198,7 +201,7 @@ class PemasakanController extends Controller
                 'berat_produk'  => 'required|numeric',
                 'suhu_produk'   => 'required|numeric',
                 'jumlah_tray'   => 'required|array',
-                'total_reject'  => 'nullable|numeric',
+                'total_reject'  => 'nullable|array',
                 'catatan'       => 'nullable|string',
                 'cooking'       => 'nullable|array',
             ]);
@@ -234,9 +237,12 @@ class PemasakanController extends Controller
             ->orderBy('nama_mesin')
             ->get(['uuid', 'nama_mesin']);
 
-            $pemasakanData = !empty($pemasakan->cooking)
-            ? json_decode($pemasakan->cooking, true)
-            : [];
+            $pemasakanData = [];
+            if (!empty($pemasakan->cooking)) {
+                $pemasakanData = is_string($pemasakan->cooking)
+                    ? (json_decode($pemasakan->cooking, true) ?? [])
+                    : (array) $pemasakan->cooking;
+            }
 
             return view('form.pemasakan.edit', compact('pemasakan', 'produks', 'pemasakanData', 'list_chambers'));
         }
@@ -254,7 +260,7 @@ class PemasakanController extends Controller
                 'no_chamber'    => 'required',
                 'berat_produk'  => 'required|numeric',
                 'suhu_produk'   => 'required|numeric',
-                'total_reject'  => 'nullable|numeric',
+                'total_reject'  => 'nullable|array',
                 'catatan'       => 'nullable|string',
                 'cooking'       => 'nullable|array',
             ]);
