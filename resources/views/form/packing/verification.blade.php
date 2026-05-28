@@ -13,7 +13,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3><i class="bi bi-list-check"></i> Pemeriksaan Proses Cartoning</h3>
+                <h3><i class="bi bi-list-check"></i> Pemeriksaan Proses Packing</h3>
             </div>
 
             {{-- Filter dan Live Search --}}
@@ -89,7 +89,7 @@
                                             <div class="modal-content">
                                                 <div class="modal-header bg-info text-white">
                                                     <h5 class="modal-title" id="packingModalLabel{{ $dep->uuid }}">
-                                                        Detail Pemeriksaan Proses Cartoning
+                                                        Detail Pemeriksaan Proses Packing
                                                     </h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                 </div>
@@ -109,7 +109,7 @@
                                                                     <th>Kode Toples</th>
                                                                     <th>Kode Karton</th>
                                                                     <th>Suhu</th>
-                                                                    <th>Speed</th>
+                                                                    <th>Speed Conveyor</th>
                                                                     <th>Kondisi Segel</th>
                                                                     <th>Berat Toples (gr)</th>
                                                                     <th>Berat Pouch (gr)</th>

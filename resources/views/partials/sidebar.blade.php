@@ -286,7 +286,7 @@
                     <a class="collapse-item {{ request()->routeIs('organoleptik.*') ? 'active' : '' }}"
                         href="{{ route('organoleptik.index') }}">Pemeriksaan Organoleptik</a>
                     <a class="collapse-item {{ request()->routeIs('packing.*') ? 'active' : '' }}"
-                        href="{{ route('packing.index') }}">Pemeriksaan Proses Cartoning</a>
+                        href="{{ route('packing.index') }}">Pemeriksaan Proses Packing</a>
                     <a class="collapse-item {{ request()->routeIs('sampling.*') ? 'active' : '' }}"
                         href="{{ route('sampling.index') }}">Data Sampling Produk</a>
                     <a class="collapse-item {{ request()->routeIs('karton.*') ? 'active' : '' }}"

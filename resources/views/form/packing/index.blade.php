@@ -2,7 +2,7 @@
 
 @section('content')
 <div class="container-fluid py-0">
-    {{-- Alert sukses --}}
+    {{-- Alert --}}
     @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert">
         <i class="bi bi-check-circle me-2"></i> {{ trim(session('success')) }}
@@ -18,7 +18,7 @@
     @endif
 
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Pemeriksaan Proses Cartoning</h2>
+        <h2 class="h4">Pemeriksaan Proses Packing</h2>
         <div class="btn-group" role="group">
             @can('can access add button')
             <a href="{{ route('packing.create') }}" class="btn btn-success">
@@ -40,7 +40,7 @@
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('packing.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
+        <div class="row w-100">
             <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
@@ -49,8 +49,7 @@
                             <i class="bi bi-calendar-date text-muted"></i>
                         </span>
                     </div>
-                    <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}">
+                    <input type="date" name="date" id="filter_date" class="form-control border-start-0" value="{{ request('date') }}">
                 </div>
             </div>
             <div class="col-md-3">
@@ -93,8 +92,7 @@
                             <i class="bi bi-search text-muted"></i>
                         </span>
                     </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari...">
+                    <input type="text" name="search" id="search" class="form-control border-start-0" value="{{ request('search') }}" placeholder="Cari...">
                 </div>
             </div>
         </div>
@@ -122,7 +120,6 @@
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
-            {{-- Tambahkan table-responsive agar tabel tidak keluar border --}}
             <div class="table-responsive">
                 <table class="table">
                     <thead class="table-secondary text-center">
@@ -135,13 +132,11 @@
                             <th>QC</th>
                             <th>Produksi</th>
                             <th>SPV</th>
-                            <th>Verification</th> {{-- Changed from Action to Verification --}}
+                            <th>Verification</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @php 
-                        $no = ($data->currentPage() - 1) * $data->perPage() + 1; 
-                        @endphp
+                        @php $no = ($data->currentPage() - 1) * $data->perPage() + 1; @endphp
 
                         @forelse ($data as $dep)
                         <tr>
@@ -151,124 +146,123 @@
                             <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->waktu)->format('H:i') }}</td>
                             <td class="text-center align-middle">
                                 @if($dep)
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#packingModal{{ $dep->uuid }}"
-                                    class="fw-bold text-decoration-underline text-primary">Result</a>
-                                    {{-- Modal Pemeriksaan Packing --}}
-                                    <div class="modal fade" id="packingModal{{ $dep->uuid }}" tabindex="-1"
-                                        aria-labelledby="packingModalLabel{{ $dep->uuid }}" aria-hidden="true">
-                                        <div class="modal-dialog modal-xl">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-info text-white">
-                                                    <h5 class="modal-title" id="packingModalLabel{{ $dep->uuid }}">
-                                                        Detail Pemeriksaan Proses Cartoning
-                                                    </h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                </div>
-
-                                                <div class="modal-body">
-                                                    <div class="table-responsive">
-                                                        <table class="table table-bordered table-sm text-center align-middle">
-                                                            <thead class="table-light">
-                                                                <tr>
-                                                                    <th colspan="16">{{ $dep->nama_produk }}</th>
-                                                                </tr>
-                                                                <tr>
-                                                                    <th>Waktu</th>
-                                                                    <th>Kalibrasi</th>
-                                                                    <th>QR Code</th>
-                                                                    <th>Kode Printing</th>
-                                                                    <th>Kode Toples</th>
-                                                                    <th>Kode Karton</th>
-                                                                    <th>Suhu</th>
-                                                                    <th>Speed</th>
-                                                                    <th>Kondisi Segel</th>
-                                                                    <th>Berat Toples (gr)</th>
-                                                                    <th>Berat Pouch (gr)</th>
-                                                                    <th>No Lot</th>
-                                                                    <th>Tgl Kedatangan</th>
-                                                                    <th>Supplier</th>
-                                                                    <th>Keterangan</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td>{{ $dep->waktu ?? '-' }}</td>
-                                                                    <td>{{ $dep->kalibrasi ?? '-' }}</td>
-                                                                    <td>{{ $dep->qrcode ?? '-' }}</td>
-
-                                                                    <td>
-                                                                        @if(!empty($dep->kode_printing))
-                                                                        <a href="{{ asset($dep->kode_printing) }}" target="_blank">
-                                                                            <img src="{{ asset($dep->kode_printing) }}" width="80"
-                                                                            class="img-thumbnail">
-                                                                        </a>
-                                                                        @else
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#packingModal{{ $dep->uuid }}" class="fw-bold text-decoration-underline text-primary">Result</a>
+                                
+                                {{-- Modal Pemeriksaan Packing --}}
+                                <div class="modal fade" id="packingModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="packingModalLabel{{ $dep->uuid }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content text-start">
+                                            <div class="modal-header bg-info text-white">
+                                                <h5 class="modal-title" id="packingModalLabel{{ $dep->uuid }}">
+                                                    Detail Pemeriksaan Proses Packing: {{ $dep->nama_produk }}
+                                                </h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <table class="table table-sm table-bordered">
+                                                            <tr><th>Waktu</th><td>{{ \Carbon\Carbon::parse($dep->waktu)->format('H:i') }}</td></tr>
+                                                            <tr><th>Kode Toples (Batch)</th><td>{{ $dep->kode_toples ?? '-' }}</td></tr>
+                                                            <tr><th>Suhu</th><td>{{ $dep->suhu ?? '-' }} °C</td></tr>
+                                                            <tr><th>Jml Produk</th><td>{{ $dep->jumlah_produk ?? '-' }}</td></tr>
+                                                            <tr>
+                                                                <th>QR Code</th>
+                                                                <td>
+                                                                    @if(!empty($dep->qrcode) && !in_array($dep->qrcode, ['Ok', 'Tidak Ok']))
+                                                                        <a href="{{ asset($dep->qrcode) }}" target="_blank"><img src="{{ asset($dep->qrcode) }}" width="60" class="img-thumbnail" alt="QR Code"></a>
+                                                                    @else
+                                                                        {{ $dep->qrcode ?? '-' }}
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        </table>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <table class="table table-sm table-bordered">
+                                                            <tr><th>Kalibrasi</th><td>{{ $dep->kalibrasi ?? '-' }}</td></tr>
+                                                            <tr><th>Berat Pcs</th><td>{{ $dep->berat_pcs ?? '-' }} gr</td></tr>
+                                                            <tr><th>Berat Pack</th><td>{{ $dep->berat_pack ?? '-' }} gr</td></tr>
+                                                            <tr><th>Kondisi Segel</th><td>{{ $dep->kondisi_segel ?? '-' }}</td></tr>
+                                                            <tr>
+                                                                <th>Kode Printing</th>
+                                                                <td>
+                                                                    @if(!empty($dep->kode_printing))
+                                                                        <a href="{{ asset($dep->kode_printing) }}" target="_blank"><img src="{{ asset($dep->kode_printing) }}" width="60" class="img-thumbnail" alt="Printing"></a>
+                                                                    @else
                                                                         -
-                                                                        @endif
-                                                                    </td>
-
-                                                                    <td>{{ $dep->kode_toples ?? '-' }}</td>
-                                                                    <td>{{ $dep->kode_karton ?? '-' }}</td>
-                                                                    <td>{{ $dep->suhu ?? '-' }}</td>
-                                                                    <td>{{ $dep->speed ?? '-' }}</td>
-                                                                    <td>{{ $dep->kondisi_segel ?? '-' }}</td>
-                                                                    <td>{{ $dep->berat_toples ?? '-' }}</td>
-                                                                    <td>{{ $dep->berat_pouch ?? '-' }}</td>
-                                                                    <td>{{ $dep->no_lot ?? '-' }}</td>
-                                                                    <td>{{ $dep->tgl_kedatangan ?? '-' }}</td>
-                                                                    <td>{{ $dep->nama_supplier ?? '-' }}</td>
-                                                                    <td>{{ $dep->keterangan ?? '-' }}</td>
-                                                                </tr>
-                                                            </tbody>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
                                                         </table>
                                                     </div>
                                                 </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                                                        Tutup
-                                                    </button>
+
+                                                <h6 class="mt-4 fw-bold text-primary"><i class="bi bi-box-seam"></i> Data Kemasan:</h6>
+                                                <div class="table-responsive">
+                                                    <table class="table table-bordered table-sm text-center align-middle">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th>Jenis Kemasan</th>
+                                                                <th>No. Lot Kemasan</th>
+                                                                <th>Tanggal Kedatangan</th>
+                                                                <th>Supplier</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @php $kemasans = json_decode($dep->data_kemasan, true) ?? []; @endphp
+                                                            @foreach($kemasans as $item)
+                                                            <tr>
+                                                                <td>{{ $item['jenis_kemasan'] ?? '-' }}</td>
+                                                                <td>{{ $item['no_lot_kemasan'] ?? '-' }}</td>
+                                                                <td>{{ $item['tgl_kedatangan'] ?? '-' }}</td>
+                                                                <td>{{ $item['nama_supplier'] ?? '-' }}</td>
+                                                            </tr>
+                                                            @endforeach
+                                                        </tbody>
+                                                    </table>
                                                 </div>
+                                                <div class="mt-3">
+                                                    <strong>Keterangan (Global): </strong> {{ $dep->keterangan ?? '-' }}
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
                                             </div>
                                         </div>
                                     </div>
-                                    @else
-                                    <span>-</span>
-                                    @endif
-                                </td>
-                                <td class="text-center align-middle">{{ $dep->username }}</td>
-                                <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
-                                <td class="text-center align-middle">
-                                    @if ($dep->status_spv == 0)
-                                    <span class="fw-bold text-secondary">Created</span>
-                                    @elseif ($dep->status_spv == 1)
-                                    <span class="fw-bold text-success">Verified</span>
-                                    @elseif ($dep->status_spv == 2)
-                                    <a href="javascript:void(0);" data-bs-toggle="modal"
-                                    data-bs-target="#revisionModal{{ $dep->uuid }}"
-                                    class="text-danger fw-bold text-decoration-none">
+                                </div>
+                                @else
+                                <span>-</span>
+                                @endif
+                            </td>
+                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
+                            <td class="text-center align-middle">
+                                @if ($dep->status_spv == 0)
+                                <span class="fw-bold text-secondary">Created</span>
+                                @elseif ($dep->status_spv == 1)
+                                <span class="fw-bold text-success">Verified</span>
+                                @elseif ($dep->status_spv == 2)
+                                <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#revisionModal{{ $dep->uuid }}" class="text-danger fw-bold text-decoration-none">
                                     Revision
                                 </a>
 
-                                <div class="modal fade" id="revisionModal{{ $dep->uuid }}" tabindex="-1"
-                                    aria-labelledby="revisionModalLabel{{ $dep->uuid }}" aria-hidden="true">
+                                <div class="modal fade" id="revisionModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="revisionModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content">
                                             <div class="modal-header bg-danger text-white">
                                                 <h5 class="modal-title">Detail Revisi</h5>
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
-
-                                            <div class="modal-body">
+                                            <div class="modal-body text-start">
                                                 <ul class="list-unstyled">
                                                     <li><strong>Status:</strong> Revision</li>
                                                     <li><strong>Catatan:</strong> {{ $dep->catatan_spv ?? '-' }}</li>
                                                 </ul>
                                             </div>
-
                                             <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
-                                                    Tutup
-                                                </button>
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
                                             </div>
                                         </div>
                                     </div>
@@ -296,20 +290,20 @@
                                 <form action="{{ route('packing.destroy', $dep->uuid) }}" method="POST" class="d-inline">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm mb-1"
-                                    onclick="return confirm('Yakin ingin menghapus?')">
+                                    <button type="submit" class="btn btn-danger btn-sm mb-1" onclick="return confirm('Yakin ingin menghapus?')">
                                     <i class="bi bi-trash"></i> Hapus
                                 </button>
                             </form>
                             @endcan
+                            
+                            {{-- Modal Verify --}}
                             <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered modal-md">
                                     <form action="{{ route('packing.verification.update', $dep->uuid) }}" method="POST">
                                         @csrf
                                         @method('PUT')
                                         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" 
-                                        style="background: linear-gradient(145deg, #7a1f12, #9E3419); 
-                                        box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
+                                        style="background: linear-gradient(145deg, #7a1f12, #9E3419); box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
                                         <div class="modal-header border-bottom border-light-subtle p-4" style="border-bottom-width: 3px !important;">
                                             <h5 class="modal-title fw-bolder fs-3 text-uppercase" id="verifyModalLabel{{ $dep->uuid }}" style="color: #00ffc4;">
                                                 <i class="bi bi-gear-fill me-2"></i> VERIFICATION
@@ -318,7 +312,7 @@
                                         </div>
 
                                         <div class="modal-body p-5">
-                                            <p class="text-light mb-4 fs-6">
+                                            <p class="text-light mb-4 fs-6 text-start">
                                                 Pastikan data yang akan diverifikasi di check dengan teliti terlebih dahulu.
                                             </p>
                                             <div class="row g-4">
@@ -327,54 +321,33 @@
                                                         style="color: #FFE5DE; font-size: 0.95rem;">
                                                         Pilih Status Verifikasi
                                                     </label>
-
-                                                    <select 
-                                                    name="status_spv" 
-                                                    id="status_spv_{{ $dep->uuid }}" 
-                                                    class="form-select form-select-lg fw-bold text-center mx-auto"
-                                                    style="
-                                                    background: linear-gradient(135deg, #fff1f0, #ffe5de);
-                                                    border: 2px solid #dc3545;
-                                                    border-radius: 12px;
-                                                    color: #dc3545;
-                                                    height: 55px;
-                                                    font-size: 1.1rem;
-                                                    box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-                                                    width: 85%;
-                                                    transition: all 0.3s ease;
-                                                    "
-                                                    required
-                                                    >
-                                                    <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} 
-                                                        style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
-                                                        <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} 
-                                                            style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
-                                                        </select>
-                                                    </div>
-
-                                                    <div class="col-md-12 mt-3">
-                                                        <label for="catatan_spv_{{ $dep->uuid }}" class="form-label fw-bold text-light mb-2">
-                                                            Catatan Tambahan (Opsional)
-                                                        </label>
-                                                        <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4" 
-                                                            class="form-control text-dark border-0 shadow-none" 
-                                                            placeholder="Masukkan catatan, misalnya alasan revisi..." 
-                                                            style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
-
-                                                        </div>
-                                                    </div>
+                                                    <select name="status_spv" id="status_spv_{{ $dep->uuid }}" class="form-select form-select-lg fw-bold text-center mx-auto"
+                                                    style="background: linear-gradient(135deg, #fff1f0, #ffe5de); border: 2px solid #dc3545; border-radius: 12px; color: #dc3545; height: 55px; font-size: 1.1rem; box-shadow: 0 6px 12px rgba(0,0,0,0.1); width: 85%; transition: all 0.3s ease;" required>
+                                                        <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
+                                                        <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
+                                                    </select>
                                                 </div>
-
-                                                <div class="modal-footer justify-content-end p-4 border-top" style="background-color: #9E3419; border-color: #00ffc4 !important;">
-                                                    <button type="button" class="btn btn-outline-light fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
-                                                        Batal
-                                                    </button>
-                                                    <button type="submit" class="btn fw-bolder rounded-pill px-5" style="background-color: #E39581; color: #2c3e50;">
-                                                        <i class="bi bi-save-fill me-1"></i> SUBMIT
-                                                    </button>
+                                                <div class="col-md-12 mt-3 text-start">
+                                                    <label for="catatan_spv_{{ $dep->uuid }}" class="form-label fw-bold text-light mb-2">
+                                                        Catatan Tambahan (Opsional)
+                                                    </label>
+                                                    <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4" 
+                                                        class="form-control text-dark border-0 shadow-none" 
+                                                        placeholder="Masukkan catatan, misalnya alasan revisi..." 
+                                                        style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
                                                 </div>
                                             </div>
                                         </div>
+
+                                        <div class="modal-footer justify-content-end p-4 border-top" style="background-color: #9E3419; border-color: #00ffc4 !important;">
+                                            <button type="button" class="btn btn-outline-light fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
+                                                Batal
+                                            </button>
+                                            <button type="submit" class="btn fw-bolder rounded-pill px-5" style="background-color: #E39581; color: #2c3e50;">
+                                                <i class="bi bi-save-fill me-1"></i> SUBMIT
+                                            </button>
+                                        </div>
+                                    </div>
                                     </form>
                                 </div>
                             </div>
@@ -396,7 +369,7 @@
     </div>
 </div>
 </div>
-{{-- Auto-hide alert setelah 3 detik --}}
+
 <script>
     setTimeout(() => {
         const alert = document.querySelector('.alert');
@@ -407,7 +380,6 @@
     }, 3000);
 </script>
 
-{{-- CSS tambahan agar tabel lebih rapi --}}
 <style>
     .table td, .table th {
         font-size: 0.85rem;
