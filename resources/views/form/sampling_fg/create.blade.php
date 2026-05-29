@@ -10,6 +10,12 @@
 
                 <form id="samplingForm" action="{{ route('sampling_fg.store') }}" method="POST">
                     @csrf
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <strong><i class="bi bi-exclamation-triangle"></i> Terjadi Kesalahan!</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
 
                     {{-- ===================== IDENTITAS DATA ===================== --}}
                     <div class="card mb-4">
@@ -35,14 +41,10 @@
 
                             <div class="row mb-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Palet</label>
-                                    <input type="text" name="palet" id="palet" class="form-control" required>
-                                </div>
-                                <div class="col-md-6">
                                     <label for="nama_produk" class="form-label fw-semibold">
                                         Nama Varian <span class="text-danger">*</span>
                                     </label>
-                                    <select id="nama_produk" name="nama_produk" class="form-control" required>
+                                    <select id="nama_produk" name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                         <option value="">-- Pilih Varian --</option>
                                         @foreach ($produks as $produk)
                                             <option value="{{ $produk->nama_produk }}">
@@ -50,12 +52,8 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted">
-                                        Pilih varian produk terlebih dahulu
-                                    </small>
+                                    <small class="text-muted">Pilih varian produk terlebih dahulu</small>
                                 </div>
-                            </div>
-                            <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label for="kode_batch" class="form-label fw-semibold">
                                         Kode Batch <span class="text-danger">*</span>
@@ -63,11 +61,17 @@
                                     <select id="kode_batch" name="kode_produksi" class="form-control" disabled required>
                                         <option value="">Pilih Varian terlebih dahulu</option>
                                     </select>
-                                    <small class="text-muted">
-                                        Batch akan muncul otomatis
-                                    </small>
+                                    <small id="kodeError" class="text-danger d-none"></small>
                                 </div>
-
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-semibold">Palet <span class="text-danger">*</span></label>
+                                    <select name="palet" id="palet" class="form-control" disabled required>
+                                        <option value="">Pilih Batch terlebih dahulu</option>
+                                    </select>
+                                </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Exp. Date</label>
                                     <input type="date" name="exp_date" id="exp_date" class="form-control">
@@ -166,17 +170,18 @@
                             </div>
                         </div>
                     </div>
+                    
                     {{-- ===================== CATATAN ===================== --}}
                     <div class="card mb-4">
                         <div class="card-header bg-light"><strong>Item Mutu</strong></div>
                         <div class="card-body">
-                            <textarea name="item_mutu" class="form-control" rows="3" placeholder="Tambahkan Item Mutu bila ada">{{ old('item_mutu', $data->item_mutu ?? '') }}</textarea>
+                            <textarea name="item_mutu" class="form-control" rows="3" placeholder="Tambahkan Item Mutu bila ada">{{ old('item_mutu') }}</textarea>
                         </div>
                     </div>
                     <div class="card mb-4">
                         <div class="card-header bg-light"><strong>Catatan</strong></div>
                         <div class="card-body">
-                            <textarea name="catatan" class="form-control" rows="3" placeholder="Tambahkan catatan bila ada">{{ old('catatan', $data->catatan ?? '') }}</textarea>
+                            <textarea name="catatan" class="form-control" rows="3" placeholder="Tambahkan catatan bila ada">{{ old('catatan') }}</textarea>
                         </div>
                     </div>
 
@@ -204,10 +209,8 @@
         <script>
             $(document).ready(function() {
                 $('.selectpicker').selectpicker();
-            });
 
-            // Set tanggal, waktu, dan shift otomatis
-            document.addEventListener("DOMContentLoaded", function() {
+                // Set tanggal, waktu, dan shift otomatis
                 const dateInput = document.getElementById("dateInput");
                 const shiftInput = document.getElementById("shiftInput");
                 const timeInput = document.getElementById("timeInput");
@@ -219,171 +222,140 @@
                 const hh = String(now.getHours()).padStart(2, '0');
                 const min = String(now.getMinutes()).padStart(2, '0');
 
-                dateInput.value = `${yyyy}-${mm}-${dd}`;
-                timeInput.value = `${hh}:${min}`;
+                if(dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
+                if(timeInput) timeInput.value = `${hh}:${min}`;
 
                 const hour = parseInt(hh);
                 if (hour >= 7 && hour < 15) shiftInput.value = "1";
                 else if (hour >= 15 && hour < 23) shiftInput.value = "2";
                 else shiftInput.value = "3";
-            });
 
-            // Validasi kode produksi dan generate Exp Date otomatis
-            const kodeInput = document.getElementById('kode_batch');
-            const expDateInput = document.getElementById('exp_date');
-            const kodeError = document.getElementById('kodeError');
+                // Variabel Elemen Form
+                const namaProdukSelect = $('#nama_produk');
+                const kodeBatchSelect = $('#kode_batch');
+                const paletSelect = $('#palet');
+                const expDateInput = $('#exp_date');
+                const jumlahBoxInput = $('#jumlah_box');
+                let currentMincingUuid = null;
 
-            kodeInput.addEventListener('change', function() {
-                let value = this.value.toUpperCase().replace(/\s+/g, '');
-                this.value = value;
-                kodeError.textContent = '';
-                kodeError.classList.add('d-none');
-                expDateInput.value = '';
+                // 1. AJAX LOAD BATCH BERDASARKAN VARIAN
+                namaProdukSelect.on('change', function() {
+                    let namaProduk = $(this).val();
+                    
+                    currentMincingUuid = null;
+                    kodeBatchSelect.html('<option value="">Pilih Varian terlebih dahulu</option>').prop('disabled', true);
+                    paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);
+                    jumlahBoxInput.val('');
+                    expDateInput.val('');
 
-                if (value.length !== 10) {
-                    kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
+                    if (!namaProduk) return;
 
-                const format = /^[A-Z0-9]+$/;
-                if (!format.test(value)) {
-                    kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
+                    $.ajax({
+                        url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                        type: 'GET',
+                        success: function(data) {
+                            kodeBatchSelect.prop('disabled', false);
+                            kodeBatchSelect.html('<option value="">-- Pilih Batch --</option>');
+                            
+                            if(data.length === 0){
+                                kodeBatchSelect.html('<option value="">Batch Kosong</option>');
+                                kodeBatchSelect.prop('disabled', true);
+                                return;
+                            }
 
-                const bulanChar = value.charAt(1);
-                const validBulan = /^[A-L]$/;
-                if (!validBulan.test(bulanChar)) {
-                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
-
-                const hariStr = value.substr(2, 2);
-                const hari = parseInt(hariStr, 10);
-                if (isNaN(hari) || hari < 1 || hari > 31) {
-                    kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
-                    kodeError.classList.remove('d-none');
-                    return;
-                }
-
-                const bulanMap = {
-                    A: 0,
-                    B: 1,
-                    C: 2,
-                    D: 3,
-                    E: 4,
-                    F: 5,
-                    G: 6,
-                    H: 7,
-                    I: 8,
-                    J: 9,
-                    K: 10,
-                    L: 11
-                };
-                const bulanIndex = bulanMap[bulanChar];
-                const tahun = new Date().getFullYear();
-
-                let expDate = new Date(tahun, bulanIndex, hari);
-                expDate.setMonth(expDate.getMonth() + 7);
-
-                const yyyy = expDate.getFullYear();
-                const mm = String(expDate.getMonth() + 1).padStart(2, '0');
-                const dd = String(expDate.getDate()).padStart(2, '0');
-                expDateInput.value = `${yyyy}-${mm}-${dd}`;
-            });
-
-            // Kalibrasi checkbox: sesuai/tidak sesuai
-            const kalibrasi = document.getElementById('kalibrasi');
-            const kalibrasiLabel = document.getElementById('kalibrasiLabel');
-
-            kalibrasi.addEventListener('change', function() {
-                if (this.checked) {
-                    kalibrasiLabel.textContent = 'Sesuai';
-                    this.value = 'Sesuai';
-                } else {
-                    kalibrasiLabel.textContent = 'Tidak Sesuai';
-                    this.value = 'Tidak Sesuai';
-                }
-            });
-
-            // Default nilai awal kalibrasi
-            kalibrasi.value = 'Tidak Sesuai';
-
-            document.addEventListener('DOMContentLoaded', function() {
-
-            const namaProdukSelect = document.getElementById('nama_produk');
-            const kodeBatchSelect = document.getElementById('kode_batch');
-            const jumlahBoxInput = document.getElementById('jumlah_box');
-
-            function fetchJumlahBox() {
-
-                const nama_produk = namaProdukSelect.value;
-                const kode_produksi = kodeBatchSelect.value;
-
-                if (nama_produk && kode_produksi) {
-
-                    fetch(
-                            `{{ route('get.jumlah.box') }}?nama_produk=${encodeURIComponent(nama_produk)}&kode_produksi=${encodeURIComponent(kode_produksi)}`)
-                        .then(response => response.json())
-                        .then(data => {
-
-                            console.log(data);
-
-                            jumlahBoxInput.value = data.total_box ?? 0;
-
-                        })
-                        .catch(error => {
-
-                            console.error(error);
-                            jumlahBoxInput.value = '';
-
-                        });
-
-                } else {
-
-                    jumlahBoxInput.value = '';
-
-                }
-            }
-
-            namaProdukSelect.addEventListener('change', fetchJumlahBox);
-            kodeBatchSelect.addEventListener('change', fetchJumlahBox);
-
-            });
-        </script>
-        <script>
-            $('#nama_produk').on('change', function() {
-
-                let namaProduk = $(this).val();
-                let batchSelect = $('#kode_batch');
-
-                if (!namaProduk) {
-                    batchSelect.html('<option>Pilih Varian dulu</option>');
-                    batchSelect.prop('disabled', true);
-                    return;
-                }
-
-                $.ajax({
-                    url: '/lookup/batch/' + namaProduk,
-                    type: 'GET',
-                    success: function(data) {
-
-                        batchSelect.prop('disabled', false);
-                        batchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-                        data.forEach(function(item) {
-                            batchSelect.append(`
-                                <option value="${item.kode_produksi}">
-                                    ${item.kode_produksi}
-                                </option>
-                            `);
-                        });
-                    }
+                            data.forEach(function(item) {
+                                kodeBatchSelect.append(`<option value="${item.kode_produksi}" data-uuid="${item.uuid}">${item.kode_produksi}</option>`);
+                            });
+                        }
+                    });
                 });
 
+                // 2. AJAX LOAD PALET & HITUNG EXPIRED BERDASARKAN BATCH
+                kodeBatchSelect.on('change', function() {
+                    let kode_produksi = $(this).val();
+                    let uuid_produksi = $(this).find("option:selected").data("uuid");
+
+                    currentMincingUuid = uuid_produksi || null;
+                    paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);
+                    jumlahBoxInput.val('');
+                    expDateInput.val('');
+                    
+                    if (!kode_produksi) return;
+
+                    // A. Hitung Expired Date
+                    if (!kode_produksi.includes('--')) {
+                        const bulanChar = kode_produksi.charAt(1);
+                        const hari = parseInt(kode_produksi.substr(2, 2));
+                        const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
+                        let kodeBulan = bulanMap[bulanChar];
+                        
+                        if (kodeBulan !== undefined) {
+                            let today = new Date();
+                            let tahun = today.getFullYear();
+                            if (kodeBulan < today.getMonth()) tahun++;
+                            
+                            let expDate = new Date(tahun, kodeBulan, hari);
+                            expDate.setMonth(expDate.getMonth() + 7);
+                            let localExp = new Date(expDate.getTime() - (expDate.getTimezoneOffset() * 60000));
+                            expDateInput.val(localExp.toISOString().slice(0, 10));
+                        }
+                    }
+
+                    // B. Load Palet dari Release Packing
+                    if (!currentMincingUuid) {
+                        paletSelect.html('<option value="">Palet Tidak Ditemukan</option>');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: "{{ route('get.palet') }}",
+                        type: 'GET',
+                        data: {
+                            kode_produksi: currentMincingUuid,
+                            nama_produk: namaProdukSelect.val()
+                        },
+                        success: function(data) {
+                            paletSelect.prop('disabled', false);
+                            paletSelect.html('<option value="">-- Pilih Palet --</option>');
+                            
+                            if(data.length === 0){
+                                paletSelect.html('<option value="">Palet Tidak Ditemukan</option>');
+                                return;
+                            }
+
+                            data.forEach(function(item) {
+                                paletSelect.append(`<option value="${item.no_palet}">${item.no_palet}</option>`);
+                            });
+                        }
+                    });
+                });
+
+                // 3. AJAX LOAD JUMLAH BOX BERDASARKAN PALET TERPILIH
+                paletSelect.on('change', function() {
+                    let selectedPalet = $(this).val();
+                    jumlahBoxInput.val('');
+
+                    if (!selectedPalet || !currentMincingUuid) {
+                        jumlahBoxInput.val('');
+                        return;
+                    }
+
+                    $.ajax({
+                        url: "{{ route('get.jumlah.box') }}",
+                        method: 'GET',
+                        data: {
+                            nama_produk: namaProdukSelect.val(),
+                            kode_produksi: currentMincingUuid,
+                            no_palet: selectedPalet
+                        },
+                        success: function (response) {
+                            jumlahBoxInput.val(response.jumlah_box ?? response.total_box ?? 0);
+                        },
+                        error: function () {
+                            jumlahBoxInput.val(0);
+                        }
+                    });
+                });
             });
         </script>
     @endpush

@@ -72,7 +72,7 @@
                                                                     <th>Kode Toples</th>
                                                                     <th>Kode Karton</th>
                                                                     <th>Suhu</th>
-                                                                    <th>Speed</th>
+                                                                    <th>Speed Conveyor</th>
                                                                     <th>Kondisi Segel</th>
                                                                     <th>Berat Toples (gr)</th>
                                                                     <th>Berat Pouch (gr)</th>

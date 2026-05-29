@@ -184,11 +184,13 @@ Route::middleware('auth')->group(function () {
     ]);
 
     Route::get('/ajax/search-batch-mincing', [MagnetTrapController::class, 'searchBatchMincing'])->name('ajax.search.batch');
+    Route::get('/metal/export-excel', [MetalController::class, 'exportExcel'])->name('metal.exportExcel');
     Route::get('checklistmagnettrap/update-form/{checklistmagnettrap}', [MagnetTrapController::class, 'showUpdateForm'])
         ->name('checklistmagnettrap.showUpdateForm');
     Route::get('checklistmagnettrap/verification', [MagnetTrapController::class, 'showVerificationPage'])->name('checklistmagnettrap.verification');
     Route::put('checklistmagnettrap/{uuid}/verify', [MagnetTrapController::class, 'verify'])->name('checklistmagnettrap.verify');
     Route::get('checklistmagnettrap/export-pdf', [MagnetTrapController::class, 'exportPdf'])->name('checklistmagnettrap.exportPdf');
+    Route::get('checklistmagnettrap/export-excel', [MagnetTrapController::class, 'exportExcel'])->name('checklistmagnettrap.exportExcel');
     // Route::resource('checklistmagnettrap', MagnetTrapController::class);
     Route::get(
         'checklistmagnettrap/recycle-bin',
@@ -565,6 +567,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/wire/{uuid}', [WireController::class, 'destroy'])->name('wire.destroy');
 
     // Sampling FG
+    Route::get('/get-palet', [App\Http\Controllers\Sampling_fgController::class, 'getPalet'])->name('get.palet');
     Route::get('/sampling_fg/export-pdf', [Sampling_fgController::class, 'exportPdf'])->name('sampling_fg.exportPdf');
     Route::get('/get-jumlah-box', [App\Http\Controllers\sampling_fgController::class, 'getJumlahBox'])->name('get.jumlah.box');
     Route::get('/sampling_fg', [Sampling_fgController::class, 'index'])->name('sampling_fg.index');
@@ -578,6 +581,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/sampling_fg/verification/{uuid}', [Sampling_fgController::class, 'updateVerification'])
         ->name('sampling_fg.verification.update');
     Route::delete('/sampling_fg/{uuid}', [Sampling_fgController::class, 'destroy'])->name('sampling_fg.destroy');
+
 
     // Chamber
     Route::get('/chamber/export-pdf', [ChamberController::class, 'exportPdf'])->name('chamber.exportPdf');
@@ -736,6 +740,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/labelisasi_pvdc/export-pdf', [Labelisasi_pvdcController::class, 'exportPdf'])->name('labelisasi_pvdc.exportPdf');
 
     // Mincing
+
     Route::get('/mincing', [MincingController::class, 'index'])->name('mincing.index');
     Route::get('/mincing/create', [MincingController::class, 'create'])->name('mincing.create');
     Route::post('/mincing', [MincingController::class, 'store'])->name('mincing.store');
@@ -747,6 +752,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/mincing/verification/{uuid}', [MincingController::class, 'updateVerification'])
         ->name('mincing.verification.update');
     Route::get('/mincing/export-pdf', [MincingController::class, 'exportPdf'])->name('mincing.exportPdf');
+    Route::get('/mincing/export-excel', [MincingController::class, 'exportExcel'])->name('mincing.exportExcel');
     Route::delete('/mincing/{uuid}', [MincingController::class, 'destroy'])->name('mincing.destroy');
 
     // Metal

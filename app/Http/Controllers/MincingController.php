@@ -13,6 +13,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use TCPDF; // Import TCPDF
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\MincingExport;
 
 class MincingController extends Controller
 {
@@ -429,7 +431,7 @@ class MincingController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
-        return view('form.mincing.verification', compact('data', 'search', 'date'));
+        return view('form.mincing.index', compact('data', 'search', 'date'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -448,7 +450,7 @@ class MincingController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('mincing.verification')
+        return redirect()->route('mincing.index')
             ->with('success', 'Status Verifikasi Pengecekan mincing berhasil diperbarui.');
     }
 
@@ -511,5 +513,37 @@ class MincingController extends Controller
             ->get();
 
         return response()->json($data);
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $search    = $request->input('search');
+        $date      = $request->input('date');
+        $shift     = $request->input('shift');
+        $userPlant = Auth::user()->plant;
+
+        $data = Mincing::query()
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('nama_produk', 'like', "%{$search}%")
+                    ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->get();
+
+        $periode = $date
+            ? 'Periode: ' . \Carbon\Carbon::parse($date)->format('d-m-Y')
+            : 'Periode: Semua Periode';
+
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MincingExport($data, $periode), 'Pemeriksaan_Mincing_' . date('Ymd_His') . '.xlsx');
     }
 }

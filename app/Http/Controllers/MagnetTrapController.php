@@ -9,6 +9,8 @@ use App\Models\Produk;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Operator;
+use App\Exports\MagnetTrapExport;
+use Maatwebsite\Excel\Facades\Excel;
 use TCPDF;
 
 
@@ -427,6 +429,34 @@ class MagnetTrapController extends Controller
         $pdf->Output('Checklist_Cleaning_Magnet_Trap_' . date('Ymd_His') . '.pdf', 'I');
 
         exit();
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $search    = $request->input('search');
+        $date      = $request->input('date');
+        $userPlant = Auth::user()->plant;
+
+        $data = MagnetTrapModel::query()
+            ->where('plant_uuid', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_batch', 'like', "%{$search}%")
+                        ->orWhere('keterangan', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('created_at', $date);
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $periode = $date
+            ? 'Periode: ' . \Carbon\Carbon::parse($date)->format('d-m-Y')
+            : 'Periode: Semua Periode';
+
+        return Excel::download(new MagnetTrapExport($data, $periode), 'Checklist_Cleaning_Magnet_Trap_' . date('Ymd_His') . '.xlsx');
     }
 
 }
