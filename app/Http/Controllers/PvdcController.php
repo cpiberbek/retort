@@ -79,14 +79,13 @@ class PvdcController extends Controller
         return view('form.pvdc.index', compact('data', 'produks', 'search', 'date', 'shift', 'namaProduk'));
     }
 
-
     public function create()
     {
-        $userPlant = Auth::user()->plant; 
+        $userPlant = Auth::user()->plant;
 
         $produks = Produk::where('plant', $userPlant)->get();
         $mesins = Mesin::where('plant', $userPlant)
-        ->where('jenis_mesin', 'Stuffing') 
+        ->where('jenis_mesin', 'Stuffing')
         ->orderBy('nama_mesin')
         ->get();
 
@@ -182,7 +181,7 @@ class PvdcController extends Controller
             'tgl_expired'     => 'required|date',
             'catatan'         => 'nullable|string',
             'data_pvdc'       => 'nullable|array',
-            'data_pvdc_old'   => 'nullable|array', 
+            'data_pvdc_old'   => 'nullable|array',
         ]);
 
         $data_pvdc_old = $request->input('data_pvdc_old', []);
@@ -241,7 +240,7 @@ class PvdcController extends Controller
             'tgl_expired'     => 'required|date',
             'catatan'         => 'nullable|string',
             'data_pvdc'       => 'nullable|array',
-            'data_pvdc_old'   => 'nullable|array', 
+            'data_pvdc_old'   => 'nullable|array',
         ]);
 
         $data_pvdc_old = $request->input('data_pvdc_old', []);
@@ -272,7 +271,7 @@ class PvdcController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Pvdc::query()
-        ->where('plant', $userPlant) 
+        ->where('plant', $userPlant)
         ->when($search, function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
@@ -375,9 +374,9 @@ class PvdcController extends Controller
         ->get();
 
         // 3. TRANSFORMASI DATA (PENTING!)
-        // Karena detail ada di dalam JSON, kita harus "memecah" (flatten) data 
+        // Karena detail ada di dalam JSON, kita harus "memecah" (flatten) data
         // agar menjadi baris-baris tabel yang siap cetak.
-        
+
         $items = collect(); // Collection baru untuk menampung baris tabel
 
         foreach ($headers as $header) {
@@ -388,7 +387,7 @@ class PvdcController extends Controller
             if (empty($pvdcData)) {
                 // Jika tidak ada detail mesin, tetap masukkan header saja (opsional)
                 // $items->push((object) [ ... set null values ... ]);
-                continue; 
+                continue;
             }
 
             foreach ($pvdcData as $mesinRow) {
@@ -426,7 +425,7 @@ class PvdcController extends Controller
                     'kode_produksi' => $kodeProduksi,
                     'no_lot' => $row['no_lot'] ?? '-',
                         'jam_mulai' => $row['waktu'] ?? '-', // Di blade pakai jam_mulai
-                        
+
                         // Data Teknis (Sesuaikan dengan key di JSON Anda jika ada)
                         'suhu' => $row['suhu'] ?? null,
                         'kecepatan_stuffing' => $row['speed'] ?? null,

@@ -7,6 +7,8 @@ use App\Models\Operator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use TCPDF;
+use App\Exports\MetalExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MetalController extends Controller
 {
@@ -319,5 +321,32 @@ class MetalController extends Controller
         $pdf->Output('Pengecekan_Metal_Detector_' . date('Ymd_His') . '.pdf', 'I');
 
         exit();
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $search    = $request->input('search');
+        $date      = $request->input('date');
+        $userPlant = Auth::user()->plant;
+
+        $data = Metal::query()
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                // Sesuai dengan filter pencarian pada method index()
+                $query->where('username', 'like', "%{$search}%"); 
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Parameter kedua di MetalExport menerima string tanggal/periode
+        $periode = $date 
+            ? \Carbon\Carbon::parse($date)->format('d-m-Y') 
+            : 'Semua Periode';
+
+        return Excel::download(new MetalExport($data, $periode), 'Pengecekan_Metal_Detector_' . date('Ymd_His') . '.xlsx');
     }
 }

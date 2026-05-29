@@ -12,14 +12,15 @@ class Packing extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'packings';
-
     protected $primaryKey = 'uuid';  
-
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'shift', 'nama_produk', 'waktu', 'kalibrasi', 'qrcode', 'kode_printing', 'kode_toples', 'kode_karton', 'suhu', 'speed', 'kondisi_segel', 'berat_toples', 'berat_pouch', 'no_lot', 'tgl_kedatangan', 'nama_supplier', 'keterangan',
+        'date', 'plant', 'shift', 'nama_produk', 'waktu', 'kalibrasi', 'qrcode', 'kode_printing', 
+        'kode_toples', 'kode_karton', 'suhu', 'speed', 'kondisi_segel', 
+        'jumlah_produk', 'berat_pcs', 'berat_pack', 
+        'data_kemasan', 'keterangan', 
         'nama_produksi', 'status_produksi', 'tgl_update_produksi',
         'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
     ];

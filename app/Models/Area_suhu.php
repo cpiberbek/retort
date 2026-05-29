@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\HasUuid; 
+use App\Traits\HasUuid;
 
 class Area_suhu extends Model
 {
@@ -16,6 +16,8 @@ class Area_suhu extends Model
         'plant',
         'area',
         'standar_min',
-        'standar_max'
+        'standar_max',
+        'rh_min',
+        'rh_max'
     ];
 }

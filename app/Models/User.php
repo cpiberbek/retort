@@ -16,7 +16,7 @@ class User extends Authenticatable
     protected $primaryKey = 'uuid';
 
     protected $keyType = 'string';
-    public $incrementing = false;  
+    public $incrementing = false;
 
     protected $fillable = [
         'uuid', 'name', 'username', 'password', 'plant',

@@ -27,9 +27,12 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('checklistmagnettrap.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-primary">
-                <i class="bi bi-file-earmark-pdf"></i> Export PDF
-            </a>
+                <button type="button" class="btn btn-success me-2" id="exportExcelBtn">
+                    <i class="bi bi-file-earmark-excel"></i> Export Excel
+                </button>
+                <a href="{{ route('checklistmagnettrap.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-primary me-2">
+                    <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                </a>
             @endcan
             @can('can access recycle')
             <a href="{{ route('checklistmagnettrap.recyclebin') }}" class="btn btn-secondary">
@@ -71,6 +74,7 @@
             const search = document.getElementById('search');
             const date = document.getElementById('filter_date');
             const form = document.getElementById('filterForm');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
             let timer;
 
             search.addEventListener('input', () => {
@@ -79,6 +83,14 @@
             });
 
             date.addEventListener('change', () => form.submit());
+
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', () => {
+                    const formData = new FormData(form);
+                    const exportUrl = "{{ route('checklistmagnettrap.exportExcel') }}?" + new URLSearchParams(formData).toString();
+                    window.location.href = exportUrl;
+                });
+            }
         });
     </script>
 

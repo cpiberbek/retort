@@ -13,13 +13,13 @@ class Klorin extends Model
 
     protected $table = 'klorins';
 
-    protected $primaryKey = 'uuid';  
+    protected $primaryKey = 'uuid';
 
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'pukul', 'footbasin', 'handbasin', 'nama_produksi', 'status_produksi', 'tgl_update_produksi', 'catatan',
+        'date', 'plant', 'pukul', 'lokasi', 'footbasin', 'handbasin', 'nama_produksi', 'status_produksi', 'tgl_update_produksi', 'catatan',
         'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
     ];
 

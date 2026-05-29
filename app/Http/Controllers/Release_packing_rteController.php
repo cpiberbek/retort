@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Release_packing_rte;
 use App\Models\Produk;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use TCPDF;
 
@@ -17,21 +18,21 @@ class Release_packing_rteController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Release_packing_rte::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.release_packing_rte.index', compact('data', 'search', 'date'));
     }
@@ -43,18 +44,18 @@ class Release_packing_rteController extends Controller
         $userPlant = Auth::user()->plant;
 
         $data = Release_packing_rte::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'asc')
-        ->get();
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'asc')
+            ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -77,13 +78,13 @@ class Release_packing_rteController extends Controller
         $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
+        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
+            require_once(dirname(__FILE__) . '/lang/eng.php');
             $pdf->setLanguageArray($l);
         }
 
         $pdf->SetFont('helvetica', '', 10);
-        $pdf->AddPage('L', 'A4'); 
+        $pdf->AddPage('L', 'A4');
 
         $html = view('reports.release-packing-rte', compact('data', 'request'))->render();
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
@@ -117,11 +118,16 @@ class Release_packing_rteController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'nama_produk', 'kode_produksi', 'expired_date',
-            'reject', 'release', 'keterangan'
+            'date',
+            'nama_produk',
+            'kode_produksi',
+            'expired_date',
+            'reject',
+            'release',
+            'keterangan'
         ]);
 
-    // Tambahan default
+        // Tambahan default
         $data['username']            = $username;
         $data['plant']               = $userPlant;
         $data['status_spv']          = "0";
@@ -156,8 +162,13 @@ class Release_packing_rteController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'nama_produk', 'kode_produksi', 'expired_date',
-            'reject', 'release', 'keterangan'
+            'date',
+            'nama_produk',
+            'kode_produksi',
+            'expired_date',
+            'reject',
+            'release',
+            'keterangan'
         ]);
 
         $data['username_updated'] = $username_updated;
@@ -191,8 +202,13 @@ class Release_packing_rteController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'nama_produk', 'kode_produksi', 'expired_date',
-            'reject', 'release', 'keterangan'
+            'date',
+            'nama_produk',
+            'kode_produksi',
+            'expired_date',
+            'reject',
+            'release',
+            'keterangan'
         ]);
 
         $release_packing_rte->update($data);
@@ -207,21 +223,21 @@ class Release_packing_rteController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Release_packing_rte::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.release_packing_rte.index', compact('data', 'search', 'date'));
     }
@@ -243,7 +259,7 @@ class Release_packing_rteController extends Controller
         ]);
 
         return redirect()->route('release_packing_rte.index')
-        ->with('success', 'Status Verifikasi Data Release Packing RTE diperbarui.');
+            ->with('success', 'Status Verifikasi Data Release Packing RTE diperbarui.');
     }
 
     public function destroy($uuid)
@@ -256,8 +272,8 @@ class Release_packing_rteController extends Controller
     public function recyclebin()
     {
         $release_packing_rte = Release_packing_rte::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.release_packing_rte.recyclebin', compact('release_packing_rte'));
     }
@@ -267,7 +283,7 @@ class Release_packing_rteController extends Controller
         $release_packing_rte->restore();
 
         return redirect()->route('release_packing_rte.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -275,6 +291,15 @@ class Release_packing_rteController extends Controller
         $release_packing_rte->forceDelete();
 
         return redirect()->route('release_packing_rte.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
+    }
+    public function getBatch($nama_produk)
+    {
+        $data = DB::table('mincings')
+            ->where('nama_produk', $nama_produk)
+            ->select('uuid', 'kode_produksi')
+            ->get();
+
+        return response()->json($data);
     }
 }

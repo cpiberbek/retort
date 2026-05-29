@@ -23,7 +23,7 @@ class KartonController extends Controller
         $nama_produk = $request->input('nama_produk');
         $userPlant  = Auth::user()->plant;
 
-        $data = Karton::with('mincing')  
+        $data = Karton::with('mincing')
         ->where('plant', $userPlant)
         ->when($search, function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
@@ -138,7 +138,7 @@ class KartonController extends Controller
 
     public function update($uuid)
     {
-        $karton = Karton::where('uuid', $uuid)->firstOrFail(); 
+        $karton = Karton::where('uuid', $uuid)->firstOrFail();
         $userPlant = Auth::user()->plant;
 
         $suppliers = Supplier::where('plant', $userPlant)
@@ -171,7 +171,7 @@ class KartonController extends Controller
             'kode_karton'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'waktu_mulai'    => 'required',
             'waktu_selesai'  => 'nullable',
-            'jumlah'         => 'required',
+            'jumlah'         => 'nullable',
             'tgl_kedatangan' => 'required|date',
             'nama_supplier'  => 'required|string',
             'no_lot'         => 'required|string',
@@ -213,7 +213,7 @@ class KartonController extends Controller
 
     public function edit($uuid)
     {
-        $karton = Karton::where('uuid', $uuid)->firstOrFail(); 
+        $karton = Karton::where('uuid', $uuid)->firstOrFail();
         $userPlant = Auth::user()->plant;
 
         $suppliers = Supplier::where('plant', $userPlant)
@@ -246,7 +246,7 @@ class KartonController extends Controller
             'kode_karton'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'waktu_mulai'    => 'required',
             'waktu_selesai'  => 'nullable',
-            'jumlah'         => 'required',
+            'jumlah'         => 'nullable',
             'tgl_kedatangan' => 'required|date',
             'nama_supplier'  => 'required|string',
             'no_lot'         => 'required|string',

@@ -28,6 +28,7 @@ class Pemasakan extends Model
         'cooking'  => 'array',
         'kode_produksi'  => 'array',
         'jumlah_tray'  => 'array',
+        'total_reject'  => 'array',
     ];
 
     protected $dates = ['deleted_at'];

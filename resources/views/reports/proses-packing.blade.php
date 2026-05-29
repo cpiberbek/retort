@@ -40,7 +40,7 @@
         
     </tr>
 </table>
-<h2 class="title">PEMERIKSAAN PROSES CARTONING</h2>
+<h2 class="title">PEMERIKSAAN PROSES PACKING</h2>
 <br>
 <br>
 

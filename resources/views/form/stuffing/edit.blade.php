@@ -39,12 +39,12 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" class="form-control selectpicker @error('nama_produk') is-invalid @enderror" data-live-search="true" required>
+                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker @error('nama_produk') is-invalid @enderror" data-live-search="true" required>
                                     <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
-                                    <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $stuffing->nama_produk)==$produk->nama_produk ? 'selected' : '' }}>
-                                        {{ $produk->nama_produk }}
-                                    </option>
+                                        <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $stuffing->nama_produk)==$produk->nama_produk ? 'selected' : '' }}>
+                                            {{ $produk->nama_produk }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <small class="text-danger">@error('nama_produk') {{ $message }} @enderror</small>
@@ -52,7 +52,14 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <input type="text" name="kode_produksi" id="kode_produksi" class="form-control @error('kode_produksi') is-invalid @enderror" maxlength="10" value="{{ old('kode_produksi', $stuffing->kode_produksi) }}" required>
+                                <select name="kode_produksi" id="kode_produksi" class="form-control @error('kode_produksi') is-invalid @enderror" required>
+                                    {{-- PRE-FILL DENGAN TEXT RELASI AGAR TIDAK KEDIP/MUNCUL UUID SEBELUM AJAX --}}
+                                    @if($stuffing->kode_produksi)
+                                        <option value="{{ $stuffing->kode_produksi }}" selected>{{ $stuffing->mincing->kode_produksi ?? '-' }}</option>
+                                    @else
+                                        <option value="">Pilih Varian Terlebih Dahulu</option>
+                                    @endif
+                                </select>
                                 <small id="kodeError" class="text-danger">@error('kode_produksi') {{ $message }} @enderror</small>
                             </div>
 
@@ -77,9 +84,9 @@
                             <select name="kode_mesin" class="form-control @error('kode_mesin') is-invalid @enderror" required>
                                 <option value="">-- Pilih Mesin --</option>
                                 @foreach($mesins as $m)
-                                <option value="{{ $m->nama_mesin }}" {{ old('kode_mesin', $stuffing->kode_mesin) == $m->nama_mesin ? 'selected' : '' }}>
-                                    {{ $m->nama_mesin }}
-                                </option>
+                                    <option value="{{ $m->nama_mesin }}" {{ old('kode_mesin', $stuffing->kode_mesin) == $m->nama_mesin ? 'selected' : '' }}>
+                                        {{ $m->nama_mesin }}
+                                    </option>
                                 @endforeach
                             </select>
                             <small class="text-danger">@error('kode_mesin') {{ $message }} @enderror</small>
@@ -130,7 +137,6 @@
                             <input type="number" step="0.01" name="berat_pcs" class="form-control @error('berat_pcs') is-invalid @enderror" value="{{ old('berat_pcs', $stuffing->berat_pcs) }}">
                             <small class="text-danger">@error('berat_pcs') {{ $message }} @enderror</small>
                         </div>
-
 
                         <div class="mb-3">
                             <label class="form-label">Kebersihan Ujung Seal</label>
@@ -206,64 +212,118 @@
 
 <script>
     $(document).ready(function() {
-        $('.selectpicker').selectpicker();
-    });
+        if ($.fn.selectpicker) {
+            $('.selectpicker').selectpicker();
+        }
 
-    document.addEventListener("DOMContentLoaded", function () {
         const dateInput = document.getElementById("dateInput");
         const shiftInput = document.getElementById("shiftInput");
         const timeInput = document.getElementById("jamMulaiInput");
 
-        if(!dateInput.value){
+        if(dateInput && !dateInput.value){
             let now = new Date();
-            dateInput.value = now.toISOString().slice(0,10);
-            timeInput.value = now.toTimeString().slice(0,5);
+            let localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+            dateInput.value = localDate.toISOString().slice(0, 10);
+            
+            if (timeInput && !timeInput.value) timeInput.value = now.toTimeString().slice(0,5);
 
             let hour = now.getHours();
-            if(hour >= 7 && hour < 15) shiftInput.value = "1";
-            else if(hour >= 15 && hour < 23) shiftInput.value = "2";
-            else shiftInput.value = "3";
+            if(shiftInput && !shiftInput.value) {
+                if(hour >= 7 && hour < 15) shiftInput.value = "1";
+                else if(hour >= 15 && hour < 23) shiftInput.value = "2";
+                else shiftInput.value = "3";
+            }
         }
-    });
 
-    // Validasi & Exp Date
-    const kodeInput = document.getElementById('kode_produksi');
-    const expDateInput = document.getElementById('exp_date');
-    const kodeError = document.getElementById('kodeError');
+        const batchSelect = $('#kode_produksi');
+        const expDateInput = $('#exp_date');
+        const namaProdukInput = $('#nama_produk');
 
-    kodeInput.addEventListener('input', function() {
-        let value = this.value.toUpperCase().replace(/\s+/g, '');
-        this.value = value;
-        kodeError.textContent = '';
-        expDateInput.value = '';
+        function loadBatches(namaProduk, oldBatch = '') {
+            if (!namaProduk) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                batchSelect.prop('disabled', true);
+                expDateInput.val('');
+                return;
+            }
 
-        if(value.length !== 10){
-            kodeError.textContent = "Kode batch harus 10 karakter.";
-            return;
-        }
-        if(!/^[A-Z0-9]+$/.test(value)){
-            kodeError.textContent = "Hanya huruf besar & angka.";
-            return;
-        }
-        const bulanChar = value.charAt(1);
-        if(!/^[A-L]$/.test(bulanChar)){
-            kodeError.textContent = "Huruf bulan harus A–L.";
-            return;
-        }
-        const hari = parseInt(value.substr(2,2));
-        if(isNaN(hari) || hari <1 || hari>31){
-            kodeError.textContent = "Tanggal harus 01–31.";
-            return;
-        }
-        const bulanMap = {A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,I:8,J:9,K:10,L:11};
-        let kodeBulan = bulanMap[bulanChar];
-        let now = new Date();
-        let tahun = now.getFullYear();
-        if(kodeBulan < now.getMonth()) tahun++;
+            batchSelect.prop('disabled', false);
+            batchSelect.html('<option value="">Mencari Batch...</option>');
 
-        let expDate = new Date(tahun, kodeBulan, hari);
-        expDate.setMonth(expDate.getMonth() + 7);
-        expDateInput.value = expDate.toISOString().slice(0,10);
+            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
+            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+                    if (!data || data.length === 0) {
+                        batchSelect.html('<option value="">Batch Tidak Ditemukan</option>');
+                        batchSelect.prop('disabled', true);
+                        expDateInput.val('');
+                        return;
+                    }
+
+                    data.forEach(function(batch) {
+                        let isSelected = (oldBatch === batch.uuid || oldBatch === batch.kode_produksi) ? 'selected' : '';
+                        batchSelect.append(`<option value="${batch.uuid}" ${isSelected}>${batch.kode_produksi}</option>`);
+                    });
+
+                    // Trigger exp date jika batch langsung terselect
+                    if (oldBatch) {
+                        batchSelect.trigger('change');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert("Gagal mengambil data Batch dari server!");
+                    batchSelect.html('<option value="">Gagal Terhubung ke Server</option>');
+                    batchSelect.prop('disabled', true);
+                }
+            });
+        }
+
+        // Trigger AJAX ketika dropdown produk diganti
+        $(document).on('change', '#nama_produk', function() {
+            loadBatches($(this).val());
+        });
+
+        // Selalu load batch saat render pertama 
+        if (namaProdukInput.val()) {
+            let oldBatch = "{{ old('kode_produksi', $stuffing->kode_produksi ?? '') }}";
+            loadBatches(namaProdukInput.val(), oldBatch);
+        }
+
+        // Generate Exp date otomatis
+        $(document).on('change', '#kode_produksi', function() {
+            let selectedText = $(this).find("option:selected").text();
+            let kodeProduksi = selectedText.split(" - ")[0].trim();
+
+            if (!kodeProduksi || kodeProduksi.includes('-- Pilih Batch') || kodeProduksi.includes('Tidak Ditemukan')) {
+                expDateInput.val('');
+                return;
+            }
+
+            const bulanChar = kodeProduksi.charAt(1);
+            const hari = parseInt(kodeProduksi.substr(2, 2));
+            const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
+            
+            let kodeBulan = bulanMap[bulanChar];
+            if (kodeBulan === undefined) return;
+
+            let now = new Date();
+            let tahun = now.getFullYear();
+            
+            if (kodeBulan < now.getMonth()) tahun++;
+            
+            let expDate = new Date(tahun, kodeBulan, hari);
+            expDate.setMonth(expDate.getMonth() + 7);
+            
+            let localExp = new Date(expDate.getTime() - (expDate.getTimezoneOffset() * 60000));
+            expDateInput.val(localExp.toISOString().slice(0, 10));
+        });
     });
 </script>
 @endsection

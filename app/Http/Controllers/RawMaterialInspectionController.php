@@ -17,7 +17,12 @@ class RawMaterialInspectionController extends Controller
 {
     // Daftar field boolean (dari tombol OK/Not OK)
     private $booleanFields = [
-        'mobil_check_warna', 'mobil_check_kotoran', 'mobil_check_aroma', 'mobil_check_kemasan', 'analisa_logo_halal', 'dokumen_halal_berlaku'
+        'mobil_check_warna',
+        'mobil_check_kotoran',
+        'mobil_check_aroma',
+        'mobil_check_kemasan',
+        'analisa_logo_halal',
+        'dokumen_halal_berlaku'
     ];
 
     public function index(Request $request)
@@ -40,80 +45,87 @@ class RawMaterialInspectionController extends Controller
             // Grup 'where' agar 'orWhere' tidak mengganggu filter tanggal
             $q->where(function ($subQuery) use ($search) {
                 $subQuery->where('bahan_baku', 'like', "%{$search}%")
-                ->orWhere('supplier', 'like', "%{$search}%")
-                ->orWhere('do_po', 'like', "%{$search}%");
+                    ->orWhere('supplier', 'like', "%{$search}%")
+                    ->orWhere('do_po', 'like', "%{$search}%");
             });
         });
 
         // Ambil data setelah difilter, urutkan, dan paginasi
         $inspections = $query->latest() // Mengurutkan dari yang terbaru
-        ->paginate(10)
-                            ->withQueryString(); // <-- Penting agar filter tetap ada di link paginasi
+            ->paginate(10)
+            ->withQueryString(); // <-- Penting agar filter tetap ada di link paginasi
 
-                            return view('raw_material.IndexRawMaterial', compact('inspections'));
-                        }
+        return view('raw_material.IndexRawMaterial', compact('inspections'));
+    }
 
     public function create()
     {
         // Ambil data master bahan baku sesuai dengan plant user yang login
         $masterBahanBaku = Master_Raw_Material::where('plant_uuid', Auth::user()->plant)
-                                                ->orderBy('nama_bahan_baku', 'asc')
-                                                ->get();
+            ->orderBy('nama_bahan_baku', 'asc')
+            ->get();
 
         // Ambil data supplier berdasarkan plant user yang login
         $suppliers = Supplier::where('plant', Auth::user()->plant)
-                             ->orderBy('nama_supplier', 'asc')
-                             ->get();
+            ->orderBy('nama_supplier', 'asc')
+            ->get();
 
         // Kirim data ($masterBahanBaku dan $suppliers) ke view
         return view('raw_material.CreateRawMaterial', compact('masterBahanBaku', 'suppliers'));
     }
 
-                        public function store(Request $request)
-                        {
+    public function store(Request $request)
+    {
         // PERUBAHAN: Menambahkan validasi untuk boolean fields
-                            $booleanFieldRule = 'required|in:0,1';
+        $booleanFieldRule = 'required|in:0,1';
 
-                            $validationRules = [
-                                'setup_kedatangan' => 'required|date',
-                                'do_po' => 'required|string|max:255',
-                                'bahan_baku' => 'required|string|max:255',
-                                'supplier' => 'required|string|max:255',
-                                'nopol_mobil' => 'required|string|max:255',
-                                'suhu_mobil' => 'required|numeric',
-                                'kondisi_mobil' => 'required|array|min:1',
-                                'kondisi_mobil.*' => 'string',
-                                'analisa_ka_ffa' => 'required|numeric',
-                                'no_segel' => 'required|string|max:255',
-                                'suhu_daging' => 'required|numeric',
-                                'analisa_negara_asal' => 'required|string|max:255',
-                                'analisa_produsen' => 'required|string|max:255',
-                                'dokumen_halal_file' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
-                                'dokumen_coa_file' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
+        $validationRules = [
+            'setup_kedatangan' => 'required|date',
+            'do_po' => 'required|string|max:255',
+            'bahan_baku' => 'required|string|max:255',
+            'supplier' => 'required|string|max:255',
+            'nopol_mobil' => 'required|string|max:255',
+            'suhu_mobil' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
+            'kondisi_mobil' => 'required|array|min:1',
+            'kondisi_mobil.*' => 'string',
+            'analisa_ka_ffa' => 'required|numeric',
+            'no_segel' => 'required|string|max:255',
+            'suhu_daging' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
+            'analisa_negara_asal' => 'required|string|max:255',
+            'analisa_produsen' => 'required|string|max:255',
+            'dokumen_halal_file' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
+            'dokumen_coa_file' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
 
-                                'details' => 'required|array|min:1',
-                                'details.*.kode_batch' => 'required|string',
-                                'details.*.tanggal_produksi' => 'required|date',
-                                'details.*.exp' => 'required|date|after:details.*.tanggal_produksi',
-                                'details.*.jumlah' => 'required|numeric|min:0',
-                                'details.*.jumlah_sampel' => 'required|numeric|min:0',
-                                'details.*.jumlah_reject' => 'required|numeric|min:0',
-                            ];
+            'details' => 'required|array|min:1',
+            'details.*.kode_batch' => 'required|string',
+            'details.*.tanggal_produksi' => 'required|date',
+            'details.*.exp' => 'required|date|after:details.*.tanggal_produksi',
+            'details.*.jumlah' => 'required|numeric|min:0',
+            'details.*.jumlah_sampel' => 'required|numeric|min:0',
+            'details.*.jumlah_reject' => 'required|numeric|min:0',
+        ];
 
         // Tambahkan aturan validasi untuk semua boolean field
-                            foreach ($this->booleanFields as $field) {
-                                $validationRules[$field] = $booleanFieldRule;
-                            }
+        foreach ($this->booleanFields as $field) {
+            $validationRules[$field] = $booleanFieldRule;
+        }
 
-                            $request->validate($validationRules);
+        $request->validate($validationRules);
 
-                            DB::beginTransaction();
-                            try {
-                                $data = $request->except(['_token', 'details', 'dokumen_halal_file', 'dokumen_coa_file']);
-                                if ($request->has('kondisi_mobil')) {
-                                    $data['kondisi_mobil'] = implode(',', $request->kondisi_mobil);
-                                }
-                                $user = Auth::user();
+        DB::beginTransaction();
+        try {
+            $data = $request->except(['_token', 'details', 'dokumen_halal_file', 'dokumen_coa_file']);
+            $data['suhu_mobil'] = $request->suhu_mobil === '-'
+                ? null
+                : $request->suhu_mobil;
+
+            $data['suhu_daging'] = $request->suhu_daging === '-'
+                ? null
+                : $request->suhu_daging;
+            if ($request->has('kondisi_mobil')) {
+                $data['kondisi_mobil'] = implode(',', $request->kondisi_mobil);
+            }
+            $user = Auth::user();
             $data['plant_uuid'] = $user->plant; // Ambil dari user yang login
             $data['updated_by'] = $user->uuid;  // Updated pertama = Creator
             // PERUBAHAN: Handle boolean (OK/Not OK) fields
@@ -121,7 +133,7 @@ class RawMaterialInspectionController extends Controller
             foreach ($this->booleanFields as $field) {
                 $data[$field] = $request->input($field) == '1';
             }
-            
+
             // Handle file upload
             if ($request->hasFile('dokumen_halal_file')) {
                 $data['dokumen_halal_file'] = $request->file('dokumen_halal_file')->store('halal_docs', 'public');
@@ -130,7 +142,7 @@ class RawMaterialInspectionController extends Controller
                 $data['dokumen_coa_file'] = $request->file('dokumen_coa_file')->store('coa_docs', 'public');
             }
 
-            $inspection = RawMaterialInspection::create($data); 
+            $inspection = RawMaterialInspection::create($data);
 
             if ($request->has('details')) {
                 $inspection->productDetails()->createMany($request->details);
@@ -138,19 +150,18 @@ class RawMaterialInspectionController extends Controller
 
             DB::commit();
             return redirect()->route('inspections.index')->with('success', 'Data berhasil ditambahkan.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage())->withInput();
         }
     }
-    
+
     public function show(RawMaterialInspection $inspection)
     {
         // Load relasi productDetails agar bisa di-loop di view
         // $inspection sudah otomatis di-fetch berdasarkan 'uuid'
         $inspection->load('productDetails', 'creator');
-        
+
         // Arahkan ke view baru untuk 'show'
         return view('raw_material.ShowRawMaterial', compact('inspection'));
     }
@@ -159,16 +170,16 @@ class RawMaterialInspectionController extends Controller
     {
         // Load relasi productDetails
         $inspection->load('productDetails', 'creator');
-        
+
         // Ambil data master bahan baku sesuai dengan plant user yang login
         $masterBahanBaku = Master_Raw_Material::where('plant_uuid', Auth::user()->plant)
-                                                ->orderBy('nama_bahan_baku', 'asc')
-                                                ->get();
-        
-       // Ambil data supplier
+            ->orderBy('nama_bahan_baku', 'asc')
+            ->get();
+
+        // Ambil data supplier
         $suppliers = Supplier::where('plant', Auth::user()->plant)
-                             ->orderBy('nama_supplier', 'asc')
-                             ->get();
+            ->orderBy('nama_supplier', 'asc')
+            ->get();
         // Pastikan variabel $masterBahanBaku dan $suppliers ikut dikirim ke dalam fungsi compact()
         return view('raw_material.EditRawMaterial', compact('inspection', 'masterBahanBaku', 'suppliers'));
     }
@@ -180,7 +191,7 @@ class RawMaterialInspectionController extends Controller
     {
         // Aturan validasi untuk tombol OK/Not OK
         $booleanFieldRule = 'required|in:0,1';
-        
+
         // Validasi lengkap untuk semua field
         $validationRules = [
             'setup_kedatangan' => 'required|date',
@@ -188,12 +199,12 @@ class RawMaterialInspectionController extends Controller
             'bahan_baku' => 'required|string|max:255',
             'supplier' => 'required|string|max:255',
             'nopol_mobil' => 'required|string|max:255',
-            'suhu_mobil' => 'required|numeric',
+            'suhu_mobil' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
             'analisa_ka_ffa' => 'required|numeric',
             'kondisi_mobil' => 'required|array|min:1',
             'kondisi_mobil.*' => 'string',
             'no_segel' => 'required|string|max:255',
-            'suhu_daging' => 'required|numeric',
+            'suhu_daging' => ['nullable', 'regex:/^(\-|\d+(\.\d+)?)$/'],
             'analisa_negara_asal' => 'required|string|max:255',
             'analisa_produsen' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
@@ -201,7 +212,7 @@ class RawMaterialInspectionController extends Controller
             // Validasi file: nullable agar tidak wajib diisi ulang
             'dokumen_halal_file' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
             'dokumen_coa_file' => 'nullable|file|mimes:pdf,jpg,png|max:2048',
-            
+
             // Validasi untuk detail produk (repeatable items)
             'details' => 'required|array|min:1',
             'details.*.kode_batch' => 'required|string',
@@ -224,12 +235,20 @@ class RawMaterialInspectionController extends Controller
         try {
             // Ambil semua data kecuali token, method, details, dan file
             $data = $request->except([
-                '_token', 
-                '_method', 
-                'details', 
-                'dokumen_halal_file', 
+                '_token',
+                '_method',
+                'details',
+                'dokumen_halal_file',
                 'dokumen_coa_file'
             ]);
+
+            $data['suhu_mobil'] = $request->suhu_mobil === '-'
+                ? null
+                : $request->suhu_mobil;
+
+            $data['suhu_daging'] = $request->suhu_daging === '-'
+                ? null
+                : $request->suhu_daging;
             if ($request->has('kondisi_mobil')) {
                 $data['kondisi_mobil'] = implode(',', $request->kondisi_mobil);
             }
@@ -249,9 +268,9 @@ class RawMaterialInspectionController extends Controller
                 // Simpan file baru
                 $data['dokumen_halal_file'] = $request->file('dokumen_halal_file')->store('halal_docs', 'public');
             }
-            
+
             if ($request->hasFile('dokumen_coa_file')) {
-                 // Hapus file lama jika ada
+                // Hapus file lama jika ada
                 if ($inspection->dokumen_coa_file) {
                     Storage::disk('public')->delete($inspection->dokumen_coa_file);
                 }
@@ -264,7 +283,7 @@ class RawMaterialInspectionController extends Controller
 
             // Hapus detail lama dan buat yang baru (strategi paling sederhana)
             $inspection->productDetails()->delete();
-            
+
             if ($request->has('details')) {
                 // Buat ulang product details
                 // Eloquent akan otomatis mengisi 'raw_material_inspection_uuid'
@@ -273,10 +292,9 @@ class RawMaterialInspectionController extends Controller
             }
 
             DB::commit();
-            
+
             // Redirect ke halaman index dengan pesan sukses
             return redirect()->route('inspections.index')->with('success', 'Data berhasil diupdate.');
-
         } catch (\Exception $e) {
             DB::rollBack();
             // Jika terjadi error, kembali ke form edit dengan pesan error dan input lama
@@ -288,13 +306,13 @@ class RawMaterialInspectionController extends Controller
     {
         try {
             DB::beginTransaction();
-            
+
             Storage::disk('public')->delete($inspection->dokumen_halal_file);
             Storage::disk('public')->delete($inspection->dokumen_coa_file);
-            
+
             $inspection->productDetails()->delete();
             $inspection->delete();
-            
+
             DB::commit();
             return redirect()->route('inspections.index')->with('success', 'Data berhasil dihapus.');
         } catch (\Exception $e) {
@@ -306,8 +324,8 @@ class RawMaterialInspectionController extends Controller
     public function recyclebin()
     {
         $inspection = RawMaterialInspection::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.raw_material.recyclebin', compact('inspection'));
     }
@@ -317,7 +335,7 @@ class RawMaterialInspectionController extends Controller
         $inspection->restore();
 
         return redirect()->route('raw_material.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -325,7 +343,7 @@ class RawMaterialInspectionController extends Controller
         $inspection->forceDelete();
 
         return redirect()->route('raw_material.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     // ===================================================================
@@ -361,22 +379,22 @@ class RawMaterialInspectionController extends Controller
         // 4. Terapkan filter pencarian jika ada
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
-            
+
             // Menggunakan kolom 'bahan_baku' dan 'supplier'
-            $query->where(function($q) use ($searchTerm) {
+            $query->where(function ($q) use ($searchTerm) {
                 $q->where('bahan_baku', 'like', '%' . $searchTerm . '%')
-                ->orWhere('supplier', 'like', '%' . $searchTerm . '%');
+                    ->orWhere('supplier', 'like', '%' . $searchTerm . '%');
             });
         }
 
         // 5. Eksekusi query dengan urutan terbaru, paginasi, dan tambahkan parameter filter
         $data = $query->latest() // Mengurutkan dari yang terbaru
-        ->paginate(10)
-                       ->withQueryString(); // <-- Penting agar filter tetap aktif saat pindah halaman
+            ->paginate(10)
+            ->withQueryString(); // <-- Penting agar filter tetap aktif saat pindah halaman
 
         // 6. Kirim data ke view verifikasi yang baru
-                       return view('raw_material.verification', compact('data'));
-                   }
+        return view('raw_material.verification', compact('data'));
+    }
 
     /**
      * Handle the SPV verification update.
@@ -396,7 +414,7 @@ class RawMaterialInspectionController extends Controller
         $inspection = RawMaterialInspection::where('uuid', $uuid)->firstOrFail();
 
         $inspection->status_spv = $request->status_spv;
-        
+
         // Hanya simpan catatan jika statusnya adalah 'Revision', jika tidak, kosongkan.
         $inspection->catatan_spv = ($request->status_spv == 2) ? $request->catatan_spv : null;
 
@@ -416,12 +434,12 @@ class RawMaterialInspectionController extends Controller
         // Tambahkan juga data master bahan baku di sini
         // agar dropdown bisa me-load data jika view ini menggunakannya
         $masterBahanBaku = Master_Raw_Material::where('plant_uuid', Auth::user()->plant)
-                                                ->orderBy('nama_bahan_baku', 'asc')
-                                                ->get();
+            ->orderBy('nama_bahan_baku', 'asc')
+            ->get();
 
         $suppliers = Supplier::where('plant', Auth::user()->plant)
-                             ->orderBy('nama_supplier', 'asc')
-                             ->get();
+            ->orderBy('nama_supplier', 'asc')
+            ->get();
 
         // Arahkan ke blade baru: resources/views/raw_material/UpdateRawMaterial.blade.php
         return view('raw_material.UpdateRawMaterial', compact('inspection', 'masterBahanBaku', 'suppliers'));

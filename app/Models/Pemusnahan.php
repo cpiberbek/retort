@@ -13,16 +13,31 @@ class Pemusnahan extends Model
 
     protected $table = 'pemusnahans';
 
-    protected $primaryKey = 'uuid';  
+    protected $primaryKey = 'uuid';
 
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'nama_produk', 'kode_produksi', 'expired_date', 'analisa', 'keterangan',
-        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'date',
+        'plant',
+        'nama_produk',
+        'kode_produksi',
+        'expired_date',
+        'analisa',
+        'keterangan',
+        'username',
+        'username_updated',
+        'nama_spv',
+        'status_spv',
+        'catatan_spv',
+        'tgl_update_spv'
     ];
 
     protected $dates = ['deleted_at'];
 
+    public function batch()
+    {
+        return $this->belongsTo(Mincing::class, 'kode_produksi', 'uuid');
+    }
 }

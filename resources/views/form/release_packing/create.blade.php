@@ -129,7 +129,7 @@
     // Set tanggal, waktu, dan shift otomatis
     // document.addEventListener("DOMContentLoaded", function () {
         $(document).ready(function () {
-    
+
         const dateInput = document.getElementById("dateInput");
 
         const now = new Date();
@@ -230,7 +230,7 @@
         // });
     });
 
-        
+
 
 </script>
 @endpush

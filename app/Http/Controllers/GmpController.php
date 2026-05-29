@@ -30,17 +30,17 @@ class GmpController extends Controller
 
         $type_user = Auth::user()->type_user;
         $areas = Area_hygiene::where('plant', $userPlant)
-        ->orderBy('area', 'asc')
-        ->get();
+            ->orderBy('area', 'asc')
+            ->get();
 
         $data = Gmp::when($userPlant, fn($q) => $q->where('plant', $userPlant))
-        ->when($search, fn($q) => $q->where('username', 'like', "%{$search}%"))
-        ->when($date, fn($q) => $q->whereDate('date', $date))
-        ->orderBy('date', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->when($search, fn($q) => $q->where('username', 'like', "%{$search}%"))
+            ->when($date, fn($q) => $q->whereDate('date', $date))
+            ->orderBy('date', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
-        $data->getCollection()->transform(function($item) {
+        $data->getCollection()->transform(function ($item) {
             $decoded = json_decode($item->pemeriksaan, true) ?: [];
             $item->pemeriksaan = $decoded;
 
@@ -63,32 +63,32 @@ class GmpController extends Controller
         $userPlant = Auth::user()->plant;
 
         $gmp = Gmp::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-        $gmp->status_spv = $request->status_spv; 
+        $gmp->status_spv = $request->status_spv;
         $gmp->catatan_spv = $request->catatan_spv;
         $gmp->nama_spv = Auth::user()->username;
         $gmp->tgl_update_spv = now();
         $gmp->save();
 
         return redirect()->route('gmp.index')
-        ->with('success', 'Status verifikasi berhasil diperbarui.');
+            ->with('success', 'Status verifikasi berhasil diperbarui.');
     }
 
     public function create()
     {
         $userPlant = Auth::user()->plant;
         $areas = Area_hygiene::where('plant', $userPlant)
-        ->orderBy('area', 'asc')
-        ->get();
+            ->orderBy('area', 'asc')
+            ->get();
 
         $karyawanByArea = [];
         foreach ($areas as $area) {
             $karyawanByArea[$area->area] = Produksi::where('area', $area->area)
-            ->where('plant', $userPlant)
-            ->pluck('nama_karyawan')
-            ->toArray();
+                ->where('plant', $userPlant)
+                ->pluck('nama_karyawan')
+                ->toArray();
         }
 
         return view('form.gmp.create', compact('areas', 'karyawanByArea'));
@@ -108,8 +108,8 @@ class GmpController extends Controller
             'username' => $user->username,
             'plant' => $user->plant,
             'nama_produksi' => session()->has('selected_produksi')
-            ? User::where('uuid', session('selected_produksi'))->first()->name
-            : null,
+                ? User::where('uuid', session('selected_produksi'))->first()->name
+                : null,
             'status_produksi' => "1",
             'status_spv' => "0",
             'catatan' => $request->input('catatan'),
@@ -117,398 +117,414 @@ class GmpController extends Controller
 
         $pemeriksaanData = [];
 
-    // 🔥 Ambil semua slug area yang valid
+        // 🔥 Ambil semua slug area yang valid
         $areaSlugs = Area_hygiene::orderBy('area', 'asc')
-        ->get()
-        ->mapWithKeys(function ($area) {
-            return [ Str::slug($area->area, '_') => $area->area ];
-        });
+            ->get()
+            ->mapWithKeys(function ($area) {
+                return [Str::slug($area->area, '_') => $area->area];
+            });
 
-    // 🔥 Loop hanya area yang sesuai slug (tidak acak semua request)
+        // 🔥 Loop hanya area yang sesuai slug (tidak acak semua request)
         foreach ($areaSlugs as $slug => $namaAreaAsli) {
 
             if (!$request->has($slug)) {
-            continue; // skip kalau area tidak dikirim
+                continue; // skip kalau area tidak dikirim
+            }
+
+            foreach ($request->$slug as $row) {
+                $pemeriksaanData[] = [
+                    'area' => $namaAreaAsli,
+                    'nama_karyawan' => $row['nama_karyawan'] ?? '',
+                    'pukul' => now()->format('H:i'),
+
+                    'anting' => $row['anting'] ?? 0,
+                    'kalung' => $row['kalung'] ?? 0,
+                    'cincin' => $row['cincin'] ?? 0,
+                    'jam_tangan' => $row['jam_tangan'] ?? 0,
+                    'peniti' => $row['peniti'] ?? 0,
+                    'bros' => $row['bros'] ?? 0,
+                    'payet' => $row['payet'] ?? 0,
+                    'softlens' => $row['softlens'] ?? 0,
+                    'eyelashes' => $row['eyelashes'] ?? 0,
+                    'seragam' => $row['seragam'] ?? 0,
+                    'boot' => $row['boot'] ?? 0,
+                    'masker' => $row['masker'] ?? 0,
+                    'ciput_hairnet' => $row['ciput_hairnet'] ?? 0,
+                    'kuku' => $row['kuku'] ?? 0,
+                    'parfum' => $row['parfum'] ?? 0,
+                    'make_up' => $row['make_up'] ?? 0,
+
+                    'diare' => $row['diare'] ?? 0,
+                    'demam' => $row['demam'] ?? 0,
+                    'luka_bakar' => $row['luka_bakar'] ?? 0,
+                    'batuk' => $row['batuk'] ?? 0,
+                    'radang' => $row['radang'] ?? 0,
+                    'influenza' => $row['influenza'] ?? 0,
+                    'sakit_mata' => $row['sakit_mata'] ?? 0,
+
+                    'keterangan' => $row['keterangan'] ?? null,
+                ];
+            }
         }
 
-        foreach ($request->$slug as $row) {
-            $pemeriksaanData[] = [
-                'area' => $namaAreaAsli,
-                'nama_karyawan' => $row['nama_karyawan'] ?? '',
-                'pukul' => now()->format('H:i'),
+        // 🔥 Simpan JSON
+        $data['pemeriksaan'] = json_encode($pemeriksaanData);
 
-                'anting' => $row['anting'] ?? 0,
-                'kalung' => $row['kalung'] ?? 0,
-                'cincin' => $row['cincin'] ?? 0,
-                'jam_tangan' => $row['jam_tangan'] ?? 0,
-                'peniti' => $row['peniti'] ?? 0, 
-                'bros' => $row['bros'] ?? 0,
-                'payet' => $row['payet'] ?? 0,
-                'softlens' => $row['softlens'] ?? 0,
-                'eyelashes' => $row['eyelashes'] ?? 0,
-                'seragam' => $row['seragam'] ?? 0,
-                'boot' => $row['boot'] ?? 0,
-                'masker' => $row['masker'] ?? 0,
-                'ciput_hairnet' => $row['ciput_hairnet'] ?? 0,
-                'kuku' => $row['kuku'] ?? 0,
-                'parfum' => $row['parfum'] ?? 0,
-                'make_up' => $row['make_up'] ?? 0,
+        $gmp = Gmp::create($data);
+        $gmp->update(['tgl_update_produksi' => Carbon::parse($gmp->created_at)->addHour()]);
 
-                'diare' => $row['diare'] ?? 0,
-                'demam' => $row['demam'] ?? 0,
-                'luka_bakar' => $row['luka_bakar'] ?? 0,
-                'batuk' => $row['batuk'] ?? 0,
-                'radang' => $row['radang'] ?? 0,
-                'influenza' => $row['influenza'] ?? 0,
-                'sakit_mata' => $row['sakit_mata'] ?? 0,
-
-                'keterangan' => $row['keterangan'] ?? null,
-            ];
-        }
+        return redirect()->route('gmp.index')
+            ->with('success', 'Data GMP berhasil disimpan.');
     }
 
-    // 🔥 Simpan JSON
-    $data['pemeriksaan'] = json_encode($pemeriksaanData);
+    public function edit(string $uuid)
+    {
+        $gmp = Gmp::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->firstOrFail();
 
-    $gmp = Gmp::create($data);
-    $gmp->update(['tgl_update_produksi' => Carbon::parse($gmp->created_at)->addHour()]);
+        $pemeriksaan = json_decode($gmp->pemeriksaan, true) ?? [];
 
-    return redirect()->route('gmp.index')
-    ->with('success', 'Data GMP berhasil disimpan.');
-}
+        $karyawanByArea = [];
+        $oldDataPerArea = [];
 
-public function edit(string $uuid)
-{
-    $gmp = Gmp::where('uuid', $uuid)
-    ->where('plant', Auth::user()->plant)
-    ->firstOrFail();
+        foreach ($pemeriksaan as $row) {
+            $areaName = $row['area'] ?? 'Unknown';
+            $namaKaryawan = $row['nama_karyawan'] ?? 'Unknown';
 
-    $pemeriksaan = json_decode($gmp->pemeriksaan, true) ?? [];
+            if (!isset($karyawanByArea[$areaName])) {
+                $karyawanByArea[$areaName] = [];
+                $oldDataPerArea[$areaName] = [];
+            }
 
-    $karyawanByArea = [];
-    $oldDataPerArea = [];
-
-    foreach ($pemeriksaan as $row) {
-        $areaName = $row['area'] ?? 'Unknown';
-        $namaKaryawan = $row['nama_karyawan'] ?? 'Unknown';
-
-        if (!isset($karyawanByArea[$areaName])) {
-            $karyawanByArea[$areaName] = [];
-            $oldDataPerArea[$areaName] = [];
+            $karyawanByArea[$areaName][] = $namaKaryawan;
+            $oldDataPerArea[$areaName][$namaKaryawan] = $row;
         }
 
-        $karyawanByArea[$areaName][] = $namaKaryawan;
-        $oldDataPerArea[$areaName][$namaKaryawan] = $row;
+        $areas = array_map(function ($areaName) {
+            return (object)['area' => $areaName];
+        }, array_keys($karyawanByArea));
+
+        return view('form.gmp.edit', compact('gmp', 'areas', 'karyawanByArea', 'oldDataPerArea'));
     }
 
-    $areas = array_map(function($areaName) {
-        return (object)['area' => $areaName];
-    }, array_keys($karyawanByArea));
+    public function update(Request $request, string $uuid)
+    {
+        $userPlant = Auth::user()->plant;
+        $userType  = Auth::user()->type_user ?? null;
 
-    return view('form.gmp.edit', compact('gmp', 'areas', 'karyawanByArea', 'oldDataPerArea'));
-}
+        $gmp = Gmp::where('uuid', $uuid)
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-public function update(Request $request, string $uuid)
-{
-    $userPlant = Auth::user()->plant;
-    $userType  = Auth::user()->type_user ?? null;
+        $request->validate([
+            'date' => 'required|date',
+        ]);
 
-    $gmp = Gmp::where('uuid', $uuid)
-    ->where('plant', $userPlant)
-    ->firstOrFail();
+        // Hanya update username_updated untuk type_user 4 & 8
+        $usernameUpdated = in_array($userType, [4, 8])
+            ? Auth::user()->username
+            : $gmp->username_updated;
 
-    $request->validate([
-        'date' => 'required|date',
-    ]);
+        $data = [
+            'date' => $request->date,
+            'username_updated' => $usernameUpdated,
+            'plant' => $userPlant,
+            'nama_produksi' => session()->has('selected_produksi')
+                ? User::where('uuid', session('selected_produksi'))->first()->name
+                : null,
+            'catatan' => $request->input('catatan'),
+        ];
 
-    // Hanya update username_updated untuk type_user 4 & 8
-    $usernameUpdated = in_array($userType, [4,8])
-    ? Auth::user()->username
-    : $gmp->username_updated; 
+        $pemeriksaanData = [];
 
-    $data = [
-        'date' => $request->date,
-        'username_updated' => $usernameUpdated,
-        'plant' => $userPlant,
-        'nama_produksi' => session()->has('selected_produksi')
-        ? User::where('uuid', session('selected_produksi'))->first()->name
-        : null,
-        'catatan' => $request->input('catatan'),
-    ];
+        // 🔥 Ambil semua slug area yang valid
+        $areaSlugs = Area_hygiene::orderBy('area', 'asc')
+            ->get()
+            ->mapWithKeys(function ($area) {
+                return [Str::slug($area->area, '_') => $area->area];
+            });
 
-    $pemeriksaanData = [];
+        // 🔥 Loop hanya area yang sesuai slug (tidak acak semua request)
+        foreach ($areaSlugs as $slug => $namaAreaAsli) {
 
-    // 🔥 Ambil semua slug area yang valid
-    $areaSlugs = Area_hygiene::orderBy('area', 'asc')
-    ->get()
-    ->mapWithKeys(function ($area) {
-        return [ Str::slug($area->area, '_') => $area->area ];
-    });
+            if (!$request->has($slug)) {
+                continue; // skip kalau area tidak dikirim
+            }
 
-    // 🔥 Loop hanya area yang sesuai slug (tidak acak semua request)
-    foreach ($areaSlugs as $slug => $namaAreaAsli) {
+            foreach ($request->$slug as $row) {
+                $pemeriksaanData[] = [
+                    'area' => $namaAreaAsli,
+                    'nama_karyawan' => $row['nama_karyawan'] ?? '',
+                    'pukul' => now()->format('H:i'),
 
-        if (!$request->has($slug)) {
-            continue; // skip kalau area tidak dikirim
+                    'anting' => $row['anting'] ?? 0,
+                    'kalung' => $row['kalung'] ?? 0,
+                    'cincin' => $row['cincin'] ?? 0,
+                    'jam_tangan' => $row['jam_tangan'] ?? 0,
+                    'peniti' => $row['peniti'] ?? 0,
+                    'bros' => $row['bros'] ?? 0,
+                    'payet' => $row['payet'] ?? 0,
+                    'softlens' => $row['softlens'] ?? 0,
+                    'eyelashes' => $row['eyelashes'] ?? 0,
+                    'seragam' => $row['seragam'] ?? 0,
+                    'boot' => $row['boot'] ?? 0,
+                    'masker' => $row['masker'] ?? 0,
+                    'ciput_hairnet' => $row['ciput_hairnet'] ?? 0,
+                    'kuku' => $row['kuku'] ?? 0,
+                    'parfum' => $row['parfum'] ?? 0,
+                    'make_up' => $row['make_up'] ?? 0,
+
+                    'diare' => $row['diare'] ?? 0,
+                    'demam' => $row['demam'] ?? 0,
+                    'luka_bakar' => $row['luka_bakar'] ?? 0,
+                    'batuk' => $row['batuk'] ?? 0,
+                    'radang' => $row['radang'] ?? 0,
+                    'influenza' => $row['influenza'] ?? 0,
+                    'sakit_mata' => $row['sakit_mata'] ?? 0,
+
+                    'keterangan' => $row['keterangan'] ?? null,
+                ];
+            }
         }
 
-        foreach ($request->$slug as $row) {
-            $pemeriksaanData[] = [
-                'area' => $namaAreaAsli,
-                'nama_karyawan' => $row['nama_karyawan'] ?? '',
-                'pukul' => now()->format('H:i'),
+        $data['pemeriksaan'] = json_encode($pemeriksaanData);
 
-                'anting' => $row['anting'] ?? 0,
-                'kalung' => $row['kalung'] ?? 0,
-                'cincin' => $row['cincin'] ?? 0,
-                'jam_tangan' => $row['jam_tangan'] ?? 0,
-                'peniti' => $row['peniti'] ?? 0,
-                'bros' => $row['bros'] ?? 0,
-                'payet' => $row['payet'] ?? 0,
-                'softlens' => $row['softlens'] ?? 0,
-                'eyelashes' => $row['eyelashes'] ?? 0,
-                'seragam' => $row['seragam'] ?? 0,
-                'boot' => $row['boot'] ?? 0,
-                'masker' => $row['masker'] ?? 0,
-                'ciput_hairnet' => $row['ciput_hairnet'] ?? 0,
-                'kuku' => $row['kuku'] ?? 0,
-                'parfum' => $row['parfum'] ?? 0,
-                'make_up' => $row['make_up'] ?? 0,
+        $gmp->update($data);
+        $gmp->update(['tgl_update_produksi' => Carbon::parse($gmp->updated_at)->addHour()]);
 
-                'diare' => $row['diare'] ?? 0,
-                'demam' => $row['demam'] ?? 0,
-                'luka_bakar' => $row['luka_bakar'] ?? 0,
-                'batuk' => $row['batuk'] ?? 0,
-                'radang' => $row['radang'] ?? 0,
-                'influenza' => $row['influenza'] ?? 0,
-                'sakit_mata' => $row['sakit_mata'] ?? 0,
-
-                'keterangan' => $row['keterangan'] ?? null,
-            ];
-        }
+        return redirect()->route('gmp.index')->with('success', 'Data GMP berhasil diperbarui.');
     }
 
-    $data['pemeriksaan'] = json_encode($pemeriksaanData);
+    public function destroy($uuid)
+    {
+        $userPlant = Auth::user()->plant;
 
-    $gmp->update($data);
-    $gmp->update(['tgl_update_produksi' => Carbon::parse($gmp->updated_at)->addHour()]);
+        $gmp = Gmp::where('uuid', $uuid)
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-    return redirect()->route('gmp.index')->with('success', 'Data GMP berhasil diperbarui.');
-}
+        $gmp->delete();
 
-public function destroy($uuid)
-{
-    $userPlant = Auth::user()->plant;
+        return redirect()->route('gmp.index')
+            ->with('success', 'Data GMP Karyawan berhasil dihapus');
+    }
 
-    $gmp = Gmp::where('uuid', $uuid)
-    ->where('plant', $userPlant)
-    ->firstOrFail();
+    public function recyclebin()
+    {
+        $gmp = Gmp::onlyTrashed()
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
-    $gmp->delete();
+        // Transform data dari $gmp
+        $gmp->getCollection()->transform(function ($item) {
 
-    return redirect()->route('gmp.index')
-    ->with('success', 'Data GMP Karyawan berhasil dihapus'); 
-}
+            $decoded = json_decode($item->pemeriksaan, true) ?: [];
+            $item->pemeriksaan = $decoded;
 
-public function recyclebin()
-{
-    $gmp = Gmp::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            $areasFromJson = array_unique(
+                array_map(fn($row) => $row['area'] ?? 'Unknown', $decoded)
+            );
 
-    // Transform data dari $gmp
-    $gmp->getCollection()->transform(function($item) {
+            $item->areas = $areasFromJson;
 
-        $decoded = json_decode($item->pemeriksaan, true) ?: [];
-        $item->pemeriksaan = $decoded;
+            return $item;
+        });
 
-        $areasFromJson = array_unique(
-            array_map(fn($row) => $row['area'] ?? 'Unknown', $decoded)
-        );
+        return view('form.gmp.recyclebin', compact('gmp'));
+    }
 
-        $item->areas = $areasFromJson;
+    public function restore($uuid)
+    {
+        $gmp = Gmp::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $gmp->restore();
 
-        return $item;
-    });
+        return redirect()->route('gmp.recyclebin')
+            ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $gmp = Gmp::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $gmp->forceDelete();
 
-    return view('form.gmp.recyclebin', compact('gmp'));
-}
-
-public function restore($uuid)
-{
-    $gmp = Gmp::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $gmp->restore();
-
-    return redirect()->route('gmp.recyclebin')
-    ->with('success', 'Data berhasil direstore.');
-}
-public function deletePermanent($uuid)
-{
-    $gmp = Gmp::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $gmp->forceDelete();
-
-    return redirect()->route('gmp.recyclebin')
-    ->with('success', 'Data berhasil dihapus permanen.');
-}
+        return redirect()->route('gmp.recyclebin')
+            ->with('success', 'Data berhasil dihapus permanen.');
+    }
 
     // EXPORT EXCEL
-public function export(Request $request)
-{
-    $date = $request->input('date');
-    $atribut = $request->input('atribut');
+    public function export(Request $request)
+    {
+        $date = $request->input('date');
+        $atribut = $request->input('atribut');
 
-    if (!$date || !$atribut) {
-        return redirect()->route('gmp.index')
-        ->with('error', 'Pilih tanggal dan area terlebih dahulu.');
-    }
-
-    try {
-        $userPlant = Auth::user()->plant;
-        $username = Auth::user()->username ?? '-';
-        $nama_produksi = session('selected_produksi')
-        ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
-        : '-';
-
-        $areas = Area_hygiene::where('plant', $userPlant)->get();
-
-        $selectedArea = $areas->firstWhere('area', $atribut);
-        if (!$selectedArea) {
-            return back()->with('error', 'Area tidak ditemukan di Area Hygiene.');
+        if (!$date || !$atribut) {
+            return redirect()->route('gmp.index')
+                ->with('error', 'Pilih tanggal dan area terlebih dahulu.');
         }
 
-        $selectedSlug = Str::slug($selectedArea->area, '_');
-        $normalize = fn($str) => Str::slug(strtolower($str), '_');
+        try {
+            $userPlant = Auth::user()->plant;
+            $username = Auth::user()->username ?? '-';
+            $nama_produksi = session('selected_produksi')
+                ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
+                : '-';
 
-        $gmpRows = Gmp::where('plant', $userPlant)
-        ->where('date', $date)
-        ->get();
+            $areas = Area_hygiene::where('plant', $userPlant)->get();
 
-        if ($gmpRows->isEmpty()) {
-            return back()->with('error', "Tidak ada data GMP pada tanggal {$date}.");
-        }
+            $selectedArea = $areas->firstWhere('area', $atribut);
+            if (!$selectedArea) {
+                return back()->with('error', 'Area tidak ditemukan di Area Hygiene.');
+            }
 
-        $attributes = [
-            'anting','kalung','cincin','jam_tangan','peniti','bros',
-            'payet','softlens','eyelashes',
-            'seragam','boot','masker','ciput_hairnet',
-            'kuku','parfum','make_up',
-            'diare','demam','luka_bakar','batuk','radang','influenza','sakit_mata'
-        ];
+            $selectedSlug = Str::slug($selectedArea->area, '_');
+            $normalize = fn($str) => Str::slug(strtolower($str), '_');
 
-        $rekap = [];
+            $gmpRows = Gmp::where('plant', $userPlant)
+                ->where('date', $date)
+                ->get();
 
-        foreach ($gmpRows as $row) {
+            if ($gmpRows->isEmpty()) {
+                return back()->with('error', "Tidak ada data GMP pada tanggal {$date}.");
+            }
 
-            $json = json_decode($row->pemeriksaan, true);
-            if (!$json) continue;
+            $attributes = [
+                'anting',
+                'kalung',
+                'cincin',
+                'jam_tangan',
+                'peniti',
+                'bros',
+                'payet',
+                'softlens',
+                'eyelashes',
+                'seragam',
+                'boot',
+                'masker',
+                'ciput_hairnet',
+                'kuku',
+                'parfum',
+                'make_up',
+                'diare',
+                'demam',
+                'luka_bakar',
+                'batuk',
+                'radang',
+                'influenza',
+                'sakit_mata'
+            ];
 
-            foreach ($json as $entry) {
+            $rekap = [];
 
-                if (!isset($entry['area'])) continue;
-                if ($normalize($entry['area']) !== $selectedSlug) continue;
+            foreach ($gmpRows as $row) {
 
-                $nama = $entry['nama_karyawan'] ?? 'Unknown';
-                $pukul = $entry['pukul'] ?? '-';
-                $keterangan = $entry['keterangan'] ?? '';
+                $json = json_decode($row->pemeriksaan, true);
+                if (!$json) continue;
 
-                if (!isset($rekap[$nama])) {
-                    $rekap[$nama] = [
-                        'pukul' => '',
-                        'keterangan' => ''
-                    ];
+                foreach ($json as $entry) {
+
+                    if (!isset($entry['area'])) continue;
+                    if ($normalize($entry['area']) !== $selectedSlug) continue;
+
+                    $nama = $entry['nama_karyawan'] ?? 'Unknown';
+                    $pukul = $entry['pukul'] ?? '-';
+                    $keterangan = $entry['keterangan'] ?? '';
+
+                    if (!isset($rekap[$nama])) {
+                        $rekap[$nama] = [
+                            'pukul' => '',
+                            'keterangan' => ''
+                        ];
+                        foreach ($attributes as $attr) {
+                            $rekap[$nama][$attr] = 0;
+                        }
+                    }
+
+                    $rekap[$nama]['pukul'] = $pukul;
+                    $rekap[$nama]['keterangan'] = $keterangan;
+
                     foreach ($attributes as $attr) {
-                        $rekap[$nama][$attr] = 0;
+                        $rekap[$nama][$attr] = isset($entry[$attr]) ? (int)$entry[$attr] : 0;
                     }
                 }
-
-                $rekap[$nama]['pukul'] = $pukul;
-                $rekap[$nama]['keterangan'] = $keterangan;
-
-                foreach ($attributes as $attr) {
-                    $rekap[$nama][$attr] = isset($entry[$attr]) ? (int)$entry[$attr] : 0;
-                }
             }
-        }
 
-        if (empty($rekap)) {
-            return back()->with('error', "Tidak ada data pada area {$atribut} untuk tanggal {$date}.");
-        }
+            if (empty($rekap)) {
+                return back()->with('error', "Tidak ada data pada area {$atribut} untuk tanggal {$date}.");
+            }
 
-        $templatePath = storage_path('app/templates/personal_hygiene.xlsx');
-        $spreadsheet  = IOFactory::load($templatePath);
-        $sheet        = $spreadsheet->getActiveSheet();
+            $templatePath = storage_path('app/templates/personal_hygiene.xlsx');
+            $spreadsheet  = IOFactory::load($templatePath);
+            $sheet        = $spreadsheet->getActiveSheet();
 
-        $sheet->getStyle($sheet->calculateWorksheetDimension())
-        ->getFont()
-        ->setName('Times')
-        ->setSize(10);
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getFont()
+                ->setName('Times')
+                ->setSize(10);
 
-        $sheet->setCellValue('K7', strtoupper($atribut));
-        $sheet->setCellValue('E7', \Carbon\Carbon::parse($date)->format('d F Y'));
+            $sheet->setCellValue('K7', strtoupper($atribut));
+            $sheet->setCellValue('E7', \Carbon\Carbon::parse($date)->format('d F Y'));
 
-        $sheet->setCellValueByColumnAndRow(7, 10, \Carbon\Carbon::parse($date)->format('d-m-Y'));
+            $sheet->setCellValueByColumnAndRow(7, 10, \Carbon\Carbon::parse($date)->format('d-m-Y'));
 
-        $rowNum = 12;
-        $no = 1;
+            $rowNum = 12;
+            $no = 1;
 
-        $center = [
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
-                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-            ]
-        ];
+            $center = [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ]
+            ];
 
-        $left = [
-            'alignment' => [
-                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
-                'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
-            ]
-        ];
+            $left = [
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT,
+                    'vertical'   => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ]
+            ];
 
-        foreach ($rekap as $nama => $data) {
-            $sheet->setCellValue("B{$rowNum}", $no);
-            $sheet->getStyle("B{$rowNum}")->applyFromArray($center);
+            foreach ($rekap as $nama => $data) {
+                $sheet->setCellValue("B{$rowNum}", $no);
+                $sheet->getStyle("B{$rowNum}")->applyFromArray($center);
 
-            $sheet->setCellValue("C{$rowNum}", $nama);
-            $sheet->getStyle("C{$rowNum}")->applyFromArray($left);
+                $sheet->setCellValue("C{$rowNum}", $nama);
+                $sheet->getStyle("C{$rowNum}")->applyFromArray($left);
 
-            $col = 6; 
-            $sheet->setCellValueByColumnAndRow($col, $rowNum, $data['pukul']);
-            $sheet->getStyleByColumnAndRow($col, $rowNum)->applyFromArray($center);
-            $col++;
-
-            foreach ($attributes as $attr) {
-                $sheet->setCellValueByColumnAndRow($col, $rowNum, $data[$attr]);
+                $col = 6;
+                $sheet->setCellValueByColumnAndRow($col, $rowNum, $data['pukul']);
                 $sheet->getStyleByColumnAndRow($col, $rowNum)->applyFromArray($center);
                 $col++;
+
+                foreach ($attributes as $attr) {
+                    $sheet->setCellValueByColumnAndRow($col, $rowNum, $data[$attr]);
+                    $sheet->getStyleByColumnAndRow($col, $rowNum)->applyFromArray($center);
+                    $col++;
+                }
+
+                $totalAtribut = array_sum(array_map(fn($a) => $data[$a], $attributes));
+                $sheet->setCellValueByColumnAndRow(30, $rowNum, $totalAtribut);
+                $sheet->getStyleByColumnAndRow(30, $rowNum)->applyFromArray($center);
+                $sheet->setCellValueByColumnAndRow(31, $rowNum, $data['keterangan']);
+                $sheet->getStyleByColumnAndRow(31, $rowNum)->applyFromArray($left);
+                $sheet->setCellValueByColumnAndRow(33, $rowNum, $username);
+                $sheet->getStyleByColumnAndRow(33, $rowNum)->applyFromArray($center);
+                $sheet->setCellValueByColumnAndRow(34, $rowNum, $nama_produksi);
+                $sheet->getStyleByColumnAndRow(34, $rowNum)->applyFromArray($center);
+
+                $rowNum++;
+                $no++;
             }
 
-            $totalAtribut = array_sum(array_map(fn($a)=>$data[$a], $attributes));
-            $sheet->setCellValueByColumnAndRow(30, $rowNum, $totalAtribut);
-            $sheet->getStyleByColumnAndRow(30, $rowNum)->applyFromArray($center);
-            $sheet->setCellValueByColumnAndRow(31, $rowNum, $data['keterangan']);
-            $sheet->getStyleByColumnAndRow(31, $rowNum)->applyFromArray($left);
-            $sheet->setCellValueByColumnAndRow(33, $rowNum, $username);
-            $sheet->getStyleByColumnAndRow(33, $rowNum)->applyFromArray($center);
-            $sheet->setCellValueByColumnAndRow(34, $rowNum, $nama_produksi);
-            $sheet->getStyleByColumnAndRow(34, $rowNum)->applyFromArray($center);
+            $filename = "Rekap_GMP_" . Str::slug($atribut, '_') . "_" . $date . ".xlsx";
 
-            $rowNum++;
-            $no++;
+            if (ob_get_contents()) ob_end_clean();
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header("Content-Disposition: attachment; filename=\"{$filename}\"");
+
+            (new Xlsx($spreadsheet))->save('php://output');
+            exit;
+        } catch (\Throwable $e) {
+            return back()->with('error', "Gagal export: " . $e->getMessage());
         }
-
-        $filename = "Rekap_GMP_" . Str::slug($atribut,'_') . "_" . $date . ".xlsx";
-
-        if (ob_get_contents()) ob_end_clean();
-        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-        header("Content-Disposition: attachment; filename=\"{$filename}\"");
-
-        (new Xlsx($spreadsheet))->save('php://output');
-        exit;
-
-    } catch (\Throwable $e) {
-        return back()->with('error', "Gagal export: " . $e->getMessage());
     }
-}
-
 }

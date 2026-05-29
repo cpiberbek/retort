@@ -18,8 +18,6 @@
     </div>
     @endif
 
-    <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Pengecekan Metal Detector</h2>
         <div class="btn-group" role="group">
             @can('can access add button')
             <a href="{{ route('metal.create') }}" class="btn btn-success">
@@ -27,6 +25,9 @@
             </a>
             @endcan
             @can('can access export')
+            <button type="button" class="btn btn-success" id="exportExcelBtn">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
             <a href="{{ route('metal.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
@@ -37,7 +38,6 @@
             </a>
             @endcan
         </div>
-    </div>
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('metal.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
@@ -78,6 +78,7 @@
             const search = document.getElementById('search');
             const date = document.getElementById('filter_date');
             const form = document.getElementById('filterForm');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
             let timer;
 
             search.addEventListener('input', () => {
@@ -86,6 +87,15 @@
             });
 
             date.addEventListener('change', () => form.submit());
+
+            // Script tambahan untuk Export Excel membawa parameter
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', () => {
+                    const formData = new FormData(form);
+                    const exportUrl = "{{ route('metal.exportExcel') }}?" + new URLSearchParams(formData).toString();
+                    window.location.href = exportUrl;
+                });
+            }
         });
     </script>
 

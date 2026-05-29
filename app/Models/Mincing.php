@@ -13,34 +13,56 @@ class Mincing extends Model
 
     protected $table = 'mincings';
 
-    protected $primaryKey = 'uuid';  
+    protected $primaryKey = 'uuid';
 
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'shift', 'nama_produk', 'kode_produksi', 
-        'waktu_mulai', 'waktu_selesai', 
-        'premix', 'non_premix', 
-        'daging', 
-        'suhu_sebelum_grinding', 
+        'date',
+        'plant',
+        'shift',
+        'nama_produk',
+        'kode_produksi',
+        'waktu_mulai',
+        'waktu_selesai',
+        'premix',
+        'non_premix',
+        'daging',
+        'suhu_sebelum_grinding',
         'waktu_mixing_premix',
-        'waktu_bowl_cutter',  
-        'waktu_aging_emulsi_awal', 'waktu_aging_emulsi_akhir', 
-        'suhu_akhir_emulsi_gel', 
-        'waktu_mixing',      
-        'suhu_akhir_mixing', 'suhu_akhir_emulsi', 'catatan',
-        'nama_produksi', 'status_produksi', 'tgl_update_produksi',
-        'username', 'username_updated', 'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'waktu_mixing_premix_start',
+        'waktu_mixing_premix_end',
+        'waktu_bowl_cutter',
+        'waktu_bowl_cutter_start',
+        'waktu_bowl_cutter_end',
+        'waktu_aging_emulsi_awal',
+        'waktu_aging_emulsi_akhir',
+        'suhu_akhir_emulsi_gel',
+        'waktu_mixing',
+        'waktu_mixing_start',
+        'waktu_mixing_end',
+        'suhu_akhir_mixing',
+        'suhu_akhir_emulsi',
+        'catatan',
+        'nama_produksi',
+        'status_produksi',
+        'tgl_update_produksi',
+        'username',
+        'username_updated',
+        'nama_spv',
+        'status_spv',
+        'catatan_spv',
+        'tgl_update_spv'
     ];
 
     protected $casts = [
         'premix' => 'array',
         'non_premix' => 'array',
-        'suhu_sebelum_grinding' => 'array', 
+        'suhu_sebelum_grinding' => 'array',
     ];
 
-    //relasi kode batch 
+    //relasi kode batch
     public function stuffing()
     {
         return $this->hasMany(Stuffing::class);
@@ -54,6 +76,20 @@ class Mincing extends Model
     public function wire()
     {
         return $this->hasMany(Wire::class);
+    }
+
+    public function batch()
+    {
+        return $this->belongsTo(Mincing::class, 'kode_produksi', 'uuid');
+    }
+
+    public function inspection()
+    {
+        return $this->belongsTo(
+            RawMaterialInspection::class,
+            'raw_material_inspection_uuid',
+            'uuid'
+        );
     }
 
     protected $dates = ['deleted_at'];

@@ -12,9 +12,9 @@ class LookupController extends Controller
     {
         $userPlant  = Auth::user()->plant;
         $batches = Mincing::where('nama_produk', $nama_produk)
-            ->where('plant', $userPlant) 
+            ->where('plant', $userPlant)
             ->orderBy('id', 'desc')
-            ->take(2)
+            ->take(6)
             ->get();
 
         return response()->json($batches);

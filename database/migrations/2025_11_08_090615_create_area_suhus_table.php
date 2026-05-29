@@ -19,6 +19,8 @@ return new class extends Migration
         $table->string('area');
         $table->decimal('standar_min', 5, 2);
         $table->decimal('standar_max', 5, 2);
+        $table->decimal('rh_min', 5, 2)->nullable();
+        $table->decimal('rh_max', 5, 2)->nullable();
         $table->timestamps();
     });
 }

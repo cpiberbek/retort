@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\PackagingInspection;
+use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log; // Untuk error logging
 use Illuminate\View\View;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 
@@ -57,18 +58,18 @@ class PackagingInspectionController extends Controller
     {
         // Opsi untuk dropdown KONDISI KENDARAAN (sekarang dipakai di level item)
         $vehicleConditions = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
-        return view('packaging_inspections.create', compact('vehicleConditions'));
+        $suppliers = Supplier::all();
+        return view('packaging_inspections.create', compact('vehicleConditions', 'suppliers'));
     }
-
     /**
      * Menyimpan inspeksi baru ke database.
      */
     public function store(Request $request): RedirectResponse
-    {  
+    {
         $validatedHeader = $request->validate([
             'inspection_date' => 'required|date',
             'shift'           => 'required|string|max:255',
-            
+
             // Validasi Items
             'items'                       => 'required|array|min:1',
             'items.*.no_pol'              => 'required|string|max:255',
@@ -91,7 +92,7 @@ class PackagingInspectionController extends Controller
 
         try {
             DB::beginTransaction();
-            
+
             // --- LOGIKA UTAMA: DATA USER ---
             $user = Auth::user();
 
@@ -99,15 +100,15 @@ class PackagingInspectionController extends Controller
                 'inspection_date' => $validatedHeader['inspection_date'],
                 'shift'           => $validatedHeader['shift'],
                 // Ambil 'plant' dari kolom tabel users
-                'plant_uuid'      => $user->plant ?? null, 
+                'plant_uuid'      => $user->plant ?? null,
                 // Simpan ID user (integer) ke kolom created_by/updated_by
-                'created_by'      => $user->uuid, 
+                'created_by'      => $user->uuid,
                 'updated_by'      => $user->uuid,
             ];
 
             // 1. Simpan Header
             $inspection = PackagingInspection::create($headerData);
-            
+
             // 2. Simpan Items
             $itemsData = collect($validatedHeader['items'])->map(function ($item) use ($inspection) {
                 if (isset($item['vehicle_condition']) && is_array($item['vehicle_condition'])) {
@@ -121,7 +122,7 @@ class PackagingInspectionController extends Controller
             $inspection->items()->createMany($itemsData);
 
             DB::commit();
-            
+
             return redirect()->route('packaging-inspections.index')
             ->with('success', 'Inspeksi packaging berhasil disimpan.');
 
@@ -149,7 +150,7 @@ class PackagingInspectionController extends Controller
     {
         $packagingInspection->load('items');
         $vehicleConditions = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
-        
+
         return view('packaging_inspections.edit', compact('packagingInspection', 'vehicleConditions'));
     }
 
@@ -180,7 +181,7 @@ class PackagingInspectionController extends Controller
             'items.*.acceptance_status'   => 'required|in:OK,Tolak',
             'items.*.notes'               => 'nullable|string',
         ]);
-        
+
         try {
             DB::beginTransaction();
 
@@ -195,7 +196,7 @@ class PackagingInspectionController extends Controller
             // Logic Update Items (Sama seperti sebelumnya)
             $incomingItemIds = [];
             foreach ($validatedData['items'] as $itemData) {
-                
+
                 if (isset($itemData['vehicle_condition']) && is_array($itemData['vehicle_condition'])) {
                     $itemData['vehicle_condition'] = implode(',', $itemData['vehicle_condition']);
                 }
@@ -316,7 +317,7 @@ class PackagingInspectionController extends Controller
                 'required_if:status_spv,2',
             ],
         ]);
-        
+
         // TIDAK PERLU LAGI MENCARI MANUAL:
         // $inspection = PackagingInspection::where('uuid', $uuid)->firstOrFail();
         // Variabel $inspection sudah berisi data yang benar dari URL.
@@ -335,7 +336,7 @@ class PackagingInspectionController extends Controller
         } catch (\Exception $e) {
             Log::error('Gagal menyimpan verifikasi packaging: ' . $e->getMessage());
             // Tampilkan pesan error yang sebenarnya ke user
-            return back()->with('error', 'GAGAL: ' . $e->getMessage()); 
+            return back()->with('error', 'GAGAL: ' . $e->getMessage());
         }
     }
 
