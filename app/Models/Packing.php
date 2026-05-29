@@ -18,7 +18,7 @@ class Packing extends Model
 
     protected $fillable = [
         'date', 'plant', 'shift', 'nama_produk', 'waktu', 'kalibrasi', 'qrcode', 'kode_printing', 
-        'kode_toples', 'kode_karton', 'suhu', 'speed', 'kondisi_segel', 
+        'kode_toples', 'suhu', 'speed', 'kondisi_segel', 
         'jumlah_produk', 'berat_pcs', 'berat_pack', 
         'data_kemasan', 'keterangan', 
         'nama_produksi', 'status_produksi', 'tgl_update_produksi',

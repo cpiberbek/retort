@@ -751,12 +751,17 @@
                 
                 if (value) {
                     hasData = true;
-                    let rejectVal = currentRejects[globalIndex] !== undefined ? currentRejects[globalIndex] : '';
+                    // Mencegah nilai null merender "0"
+                    let rawVal = currentRejects[globalIndex];
+                    let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
+                    
                     tbody.append(`
                         <tr>
                             <td class="text-start fw-semibold">${text} <span class="badge bg-secondary ms-2">Lama</span></td>
                             <td>Kg</td>
-                            <td><input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}" placeholder="0"></td>
+                            <td>
+                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}" placeholder="">
+                            </td>
                         </tr>
                     `);
                 }
@@ -770,12 +775,17 @@
                 
                 if (value && value !== "") {
                     hasData = true;
-                    let rejectVal = currentRejects[globalIndex] !== undefined ? currentRejects[globalIndex] : '';
+                    // Mencegah nilai null merender "0"
+                    let rawVal = currentRejects[globalIndex];
+                    let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
+                    
                     tbody.append(`
                         <tr>
                             <td class="text-start fw-semibold">${text} <span class="badge bg-success ms-2">Baru</span></td>
                             <td>Kg</td>
-                            <td><input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}" placeholder="0"></td>
+                            <td>
+                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}" placeholder="">
+                            </td>
                         </tr>
                     `);
                 }
