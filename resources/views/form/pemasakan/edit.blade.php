@@ -642,8 +642,10 @@
 
                 if (value && value !== "") {
                     hasData = true;
-                    // Ambil isi reject (kosong jika baru ditambahkan dan tidak ada DB/input history)
-                    let rejectVal = currentRejects[index] !== undefined ? currentRejects[index] : '';
+                    
+                    // Ambil isi reject dan cegah angka 0 muncul akibat nilai null
+                    let rawVal = currentRejects[index];
+                    let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
 
                     tbody.append(`
                         <tr>
@@ -656,7 +658,7 @@
                                     value="${rejectVal}"
                                     class="form-control form-control-sm text-center reject-input"
                                     data-index="${index}"
-                                    placeholder="0">
+                                    placeholder="">
                             </td>
                         </tr>
                     `);
@@ -738,6 +740,7 @@
             </div>`;
             $('#batchContainer').append(row);
             populateBatches(); 
+            renderRejectTable(); // Pastikan tabel reject ikut di-update
         });
 
         // Hapus Row

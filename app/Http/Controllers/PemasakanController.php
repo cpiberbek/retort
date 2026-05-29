@@ -153,7 +153,7 @@ class PemasakanController extends Controller
                 'no_chamber', 'berat_produk', 'suhu_produk', 'jumlah_tray',
                 'total_reject', 'catatan',
             ]);
-            $data['cooking']             = json_encode($request->input('cooking', []), JSON_UNESCAPED_UNICODE);
+            $data['cooking']             = $request->input('cooking', []);
             $data['username']            = $username;
             $data['plant']               = $userPlant;
             $data['nama_produksi']       = $nama_produksi;
@@ -218,7 +218,7 @@ class PemasakanController extends Controller
                 'total_reject'     => $request->total_reject,
                 'catatan'          => $request->catatan,
                 'username_updated' => $username_updated,
-                'cooking'          => json_encode($request->input('cooking', []), JSON_UNESCAPED_UNICODE),
+                'cooking'          => $request->input('cooking', []),
             ];
 
             $pemasakan->update($data);

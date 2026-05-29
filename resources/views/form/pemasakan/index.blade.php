@@ -190,7 +190,10 @@
                             <td class="text-center align-middle">{{ $dep->berat_produk }}</td>
                             <td class="text-center align-middle">{{ $dep->suhu_produk }}</td>
                             <td class="text-center align-middle">
-                                {{ is_array($dep->total_reject) ? implode(' / ', $dep->total_reject) : ($dep->total_reject ?? '-') }}
+                                @php
+                                    $rejects = is_array($dep->total_reject) ? array_filter($dep->total_reject, fn($v) => !is_null($v) && $v !== '') : [];
+                                @endphp
+                                {{ !empty($rejects) ? implode(' / ', $rejects) : '-' }}
                             </td>
 
                             <td class="text-center align-middle">

@@ -142,7 +142,7 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label fw-bold">Kode Toples (Batch) <span class="text-danger">*</span></label>
                                 @php $hasToples = !empty($packing->kode_toples); @endphp
                                 <select name="kode_toples" id="kode_toples" class="form-control" {{ $hasToples ? 'disabled' : '' }} required>
@@ -157,14 +157,6 @@
                                 @endif
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Kode Karton</label>
-                                @php $hasKarton = !empty($packing->kode_karton); @endphp
-                                <input type="text" name="kode_karton" class="form-control" value="{{ old('kode_karton', $packing->kode_karton) }}" {{ $hasKarton ? 'readonly' : '' }}>
-                                @if($hasKarton)
-                                <input type="hidden" name="kode_karton" value="{{ $packing->kode_karton }}">
-                                @endif
-                            </div>
                         </div>
 
                         <div class="row mb-3">

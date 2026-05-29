@@ -111,7 +111,7 @@
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label fw-bold">Kode Toples (Batch) <span class="text-danger">*</span></label>
                                 <select name="kode_toples" id="kode_toples" class="form-control" required>
                                     @if($packing->kode_toples)
@@ -122,10 +122,6 @@
                                 </select>
                             </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Kode Karton</label>
-                                <input type="text" name="kode_karton" class="form-control" value="{{ old('kode_karton', $packing->kode_karton) }}">
-                            </div>
                         </div>
 
                         <div class="row mb-3">
