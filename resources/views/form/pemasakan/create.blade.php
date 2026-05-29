@@ -762,6 +762,13 @@
 
         // LOGIC UNTUK RENDER TABEL REJECT
         function renderRejectTable() {
+            // 1. Simpan nilai input saat ini agar tidak hilang saat dirender ulang
+            let currentRejects = [];
+            $('.reject-input').each(function() {
+                let idx = $(this).data('index');
+                currentRejects[idx] = $(this).val();
+            });
+
             let tbody = $('#rejectTableBody');
             tbody.empty();
             let hasData = false;
@@ -772,12 +779,23 @@
 
                 if (value && value !== "") {
                     hasData = true;
+                    
+                    // 2. Terapkan nilai yang sudah diketik sebelumnya (jika ada)
+                    let rawVal = currentRejects[index];
+                    let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
+
                     tbody.append(`
                         <tr>
                             <td class="text-start fw-semibold">${text}</td>
                             <td>Kg</td>
                             <td>
-                                <input type="number" step="0.01" name="total_reject[]" class="form-control form-control-sm text-center" placeholder="0">
+                                <input type="number" 
+                                    step="0.01" 
+                                    name="total_reject[]" 
+                                    value="${rejectVal}"
+                                    class="form-control form-control-sm text-center reject-input" 
+                                    data-index="${index}"
+                                    placeholder="">
                             </td>
                         </tr>
                     `);
@@ -844,6 +862,8 @@
 
             $('#batchContainer').append(row);
             populateBatches(); 
+            // Render dipanggil agar tabel reject mengikuti jumlah baris baru
+            renderRejectTable();
         });
 
         // HAPUS ROW
