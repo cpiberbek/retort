@@ -76,7 +76,12 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Waktu</label>
-                                <input type="time" name="pukul" id="timeInput" class="form-control" value="{{ old('pukul', $sampling_fg->pukul) }}">
+                                @php $sudahAdaPukul = !empty($sampling_fg->pukul); @endphp
+                                <input type="time" name="pukul" id="timeInput" class="form-control" value="{{ old('pukul', $sampling_fg->pukul) }}" {{ $sudahAdaPukul ? 'readonly disabled' : '' }}>
+                                @if($sudahAdaPukul)
+                                <input type="hidden" name="pukul" value="{{ $sampling_fg->pukul }}">
+                                <small class="text-muted">Sudah terisi, tidak dapat diubah</small>
+                                @endif
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label d-block">Kalibrasi</label>
@@ -87,6 +92,7 @@
                                 </select>
                                 @if($sudahAda)
                                 <input type="hidden" name="kalibrasi" value="{{ $sampling_fg->kalibrasi }}">
+                                <small class="text-muted">Sudah terisi, tidak dapat diubah</small>
                                 @endif
                             </div>
                         </div>
@@ -94,54 +100,74 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Berat Varian per Box (gr)</label>
-                                <input type="number" name="berat_produk" id="berat_produk" class="form-control" value="{{ old('berat_produk', $sampling_fg->berat_produk) }}">
+                                @php $sudahAdaBerat = !empty($sampling_fg->berat_produk); @endphp
+                                <input type="number" name="berat_produk" id="berat_produk" class="form-control" value="{{ old('berat_produk', $sampling_fg->berat_produk) }}" {{ $sudahAdaBerat ? 'readonly' : '' }}>
+                                @if($sudahAdaBerat)
+                                <small class="text-muted">Sudah terisi, tidak dapat diubah</small>
+                                @endif
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Keterangan</label>
-                                <input type="text" name="keterangan" id="keterangan" class="form-control" value="{{ old('keterangan', $sampling_fg->keterangan) }}">
+                                @php $sudahAdaKet = !empty($sampling_fg->keterangan); @endphp
+                                <input type="text" name="keterangan" id="keterangan" class="form-control" value="{{ old('keterangan', $sampling_fg->keterangan) }}" {{ $sudahAdaKet ? 'readonly' : '' }}>
+                                @if($sudahAdaKet)
+                                <small class="text-muted">Sudah terisi, tidak dapat diubah</small>
+                                @endif
                             </div>
                         </div>
 
                         <div class="row mb-3">
                             <div class="col-md-3">
                                 <label class="form-label">Isi Varian per Box</label>
-                                <input type="number" name="isi_per_box" id="isi_per_box" class="form-control" value="{{ old('isi_per_box', $sampling_fg->isi_per_box) }}">
+                                @php $sudahAdaIsi = !empty($sampling_fg->isi_per_box); @endphp
+                                <input type="number" name="isi_per_box" id="isi_per_box" class="form-control" value="{{ old('isi_per_box', $sampling_fg->isi_per_box) }}" {{ $sudahAdaIsi ? 'readonly' : '' }}>
+                                @if($sudahAdaIsi)
+                                <small class="text-muted">Sudah terisi, tidak dapat diubah</small>
+                                @endif
                             </div>
                             <div class="col-md-3">
                                 <label class="form-label">Kemasan</label>
-                                <select name="kemasan" id="kemasan" class="form-control selectpicker" {{ $sampling_fg->kemasan ? 'disabled' : '' }}>
+                                @php $sudahAdaKemasan = !empty($sampling_fg->kemasan); @endphp
+                                <select name="kemasan" id="kemasan" class="form-control selectpicker" {{ $sudahAdaKemasan ? 'disabled' : '' }}>
                                     <option value="Jar" {{ $sampling_fg->kemasan == 'Jar' ? 'selected' : '' }}>Jar</option>
                                     <option value="Pouch" {{ $sampling_fg->kemasan == 'Pouch' ? 'selected' : '' }}>Pouch</option>
                                 </select>
-                                @if($sampling_fg->kemasan)
+                                @if($sudahAdaKemasan)
                                 <input type="hidden" name="kemasan" value="{{ $sampling_fg->kemasan }}">
+                                <small class="text-muted">Sudah terisi, tidak dapat diubah</small>
                                 @endif
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Jumlah (Box)</label>
                                 <input type="number" name="jumlah_box" id="jumlah_box" class="form-control" value="{{ $sampling_fg->jumlah_box }}" readonly>
+                                <small class="text-muted">Otomatis dari Release Packing</small>
                             </div>
                         </div>
                         <hr>
+                        
+                        {{-- ===================== STATUS VARIAN ===================== --}}
                         <label class="form-label"><b>Status Varian</b></label>
                         <div class="row mb-3">
                             <div class="col-md-4">
                                 <label class="form-label">Release (Box)</label>
-                                <input type="number" name="release" id="release" class="form-control" value="{{ old('release', $sampling_fg->release) }}">
+                                @php $adaRelease = isset($sampling_fg->release) && $sampling_fg->release !== ''; @endphp
+                                <input type="number" name="release" id="release" class="form-control" value="{{ old('release', $sampling_fg->release) }}" {{ $adaRelease ? 'readonly' : '' }}>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Reject (Box)</label>
-                                <input type="number" name="reject" id="reject" class="form-control" value="{{ old('reject', $sampling_fg->reject) }}">
+                                @php $adaReject = isset($sampling_fg->reject) && $sampling_fg->reject !== ''; @endphp
+                                <input type="number" name="reject" id="reject" class="form-control" value="{{ old('reject', $sampling_fg->reject) }}" {{ $adaReject ? 'readonly' : '' }}>
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label">Hold (Box)</label>
-                                <input type="number" name="hold" id="hold" class="form-control" value="{{ old('hold', $sampling_fg->hold) }}">
+                                @php $adaHold = isset($sampling_fg->hold) && $sampling_fg->hold !== ''; @endphp
+                                <input type="number" name="hold" id="hold" class="form-control" value="{{ old('hold', $sampling_fg->hold) }}" {{ $adaHold ? 'readonly' : '' }}>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- ===================== CATATAN ===================== --}}
+                {{-- ===================== KOORDINATOR ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-info text-white">
                         <strong>Koordinator</strong>
@@ -149,7 +175,8 @@
                     <div class="card-body">
                         <div class="col-md-6">
                             <label class="form-label">Nama KR</label>
-                            <select id="nama_koordinator" name="nama_koordinator" class="form-control selectpicker" data-live-search="true" required>
+                            @php $adaKR = !empty($sampling_fg->nama_koordinator); @endphp
+                            <select id="nama_koordinator" name="nama_koordinator" class="form-control selectpicker" data-live-search="true" required {{ $adaKR ? 'disabled' : '' }}>
                                 <option value="">-- Pilih Koordinator --</option>
                                 @foreach($koordinators as $koordinator)
                                 <option value="{{ $koordinator->nama_karyawan }}" {{ old('nama_koordinator', $sampling_fg->nama_koordinator) == $koordinator->nama_karyawan ? 'selected' : '' }}>
@@ -157,20 +184,36 @@
                                 </option>
                                 @endforeach
                             </select>
+                            
+                            {{-- Hidden input agar data tetap tersubmit saat disabled --}}
+                            @if($adaKR)
+                                <input type="hidden" name="nama_koordinator" value="{{ $sampling_fg->nama_koordinator }}">
+                                <small class="text-muted mt-1 d-block">Sudah terisi, tidak dapat diubah</small>
+                            @endif
                         </div>
                     </div>
                 </div>
 
+                {{-- ===================== CATATAN & ITEM MUTU ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-light"><strong>Item Mutu</strong></div>
                     <div class="card-body">
-                        <textarea name="item_mutu" class="form-control" rows="3">{{ old('item_mutu', $sampling_fg->item_mutu) }}</textarea>
+                        @php $adaItemMutu = !empty($sampling_fg->item_mutu); @endphp
+                        <textarea name="item_mutu" class="form-control" rows="3" {{ $adaItemMutu ? 'readonly' : '' }}>{{ old('item_mutu', $sampling_fg->item_mutu) }}</textarea>
+                        @if($adaItemMutu)
+                            <small class="text-muted mt-1 d-block">Sudah terisi, tidak dapat diubah</small>
+                        @endif
                     </div>
                 </div>
+                
                 <div class="card mb-4">
                     <div class="card-header bg-light"><strong>Catatan</strong></div>
                     <div class="card-body">
-                        <textarea name="catatan" class="form-control" rows="3">{{ old('catatan', $sampling_fg->catatan) }}</textarea>
+                        @php $adaCatatan = !empty($sampling_fg->catatan); @endphp
+                        <textarea name="catatan" class="form-control" rows="3" {{ $adaCatatan ? 'readonly' : '' }}>{{ old('catatan', $sampling_fg->catatan) }}</textarea>
+                        @if($adaCatatan)
+                            <small class="text-muted mt-1 d-block">Sudah terisi, tidak dapat diubah</small>
+                        @endif
                     </div>
                 </div>
 
@@ -196,18 +239,42 @@
     $(document).ready(function () {
         $('.selectpicker').selectpicker();
 
-        const nama_produk = $('#nama_produk').val();
-        const kode_produksi = $('#kode_produksi').val();
-        
-        // Panggil saat page dimuat untuk mengisi jumlah_box jika kosong
-        if (nama_produk && kode_produksi) {
+        // Get data dari hidden input
+        const namaProduk = $('#nama_produk').val();
+        const kodeProduksiText = $('#kode_produksi').val();
+        const palet = $('#palet').val();
+        const jumlahBoxInput = $('#jumlah_box');
+
+        // Jika sudah ada data, load jumlah_box berdasarkan relasi palet
+        if (namaProduk && kodeProduksiText && palet && !jumlahBoxInput.val()) {
             $.ajax({
-                url: "{{ route('get.jumlah.box') }}",
-                method: 'GET',
-                data: { nama_produk: nama_produk, kode_produksi: kode_produksi },
-                success: function (response) {
-                    if(!$('#jumlah_box').val() || $('#jumlah_box').val() == 0){
-                        $('#jumlah_box').val(response.total_box || 0);
+                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                type: 'GET',
+                success: function(data) {
+                    let mincingUuid = null;
+                    if(data && data.length > 0) {
+                        const found = data.find(item => item.kode_produksi === kodeProduksiText);
+                        if(found) {
+                            mincingUuid = found.uuid;
+                        }
+                    }
+
+                    if(mincingUuid) {
+                        $.ajax({
+                            url: "{{ route('get.jumlah.box') }}",
+                            method: 'GET',
+                            data: {
+                                nama_produk: namaProduk,
+                                kode_produksi: mincingUuid,
+                                no_palet: palet
+                            },
+                            success: function (response) {
+                                jumlahBoxInput.val(response.jumlah_box ?? response.total_box ?? 0);
+                            },
+                            error: function () {
+                                jumlahBoxInput.val(0);
+                            }
+                        });
                     }
                 }
             });

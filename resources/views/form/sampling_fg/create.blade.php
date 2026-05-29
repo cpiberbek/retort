@@ -236,15 +236,13 @@
                 const paletSelect = $('#palet');
                 const expDateInput = $('#exp_date');
                 const jumlahBoxInput = $('#jumlah_box');
+                let currentMincingUuid = null;
 
-                // Kita butuh penampung untuk menyimpan UUID sementara (dibutuhkan untuk panggil relasi palet di controller jika controller membutuhkannya)
-                // Namun, karena `getPalet` controller sekarang mencari berdasarkan `kode_produksi` (di controller anda UUID, tapi sebentar lagi kita akan mengirim teksnya), 
-                // Mari kita pastikan Controller "getPalet" memproses Teks Batch/Kode Produksi, bukan UUID.
-                
                 // 1. AJAX LOAD BATCH BERDASARKAN VARIAN
                 namaProdukSelect.on('change', function() {
                     let namaProduk = $(this).val();
                     
+                    currentMincingUuid = null;
                     kodeBatchSelect.html('<option value="">Pilih Varian terlebih dahulu</option>').prop('disabled', true);
                     paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);
                     jumlahBoxInput.val('');
@@ -266,18 +264,18 @@
                             }
 
                             data.forEach(function(item) {
-                                // VALUE DIUBAH KE TEKS KODE PRODUKSI (bukan item.uuid)
                                 kodeBatchSelect.append(`<option value="${item.kode_produksi}" data-uuid="${item.uuid}">${item.kode_produksi}</option>`);
                             });
                         }
                     });
                 });
 
-                // 2. AJAX LOAD PALET & HITUNG EXPIRED & LOAD BOX BERDASARKAN BATCH
+                // 2. AJAX LOAD PALET & HITUNG EXPIRED BERDASARKAN BATCH
                 kodeBatchSelect.on('change', function() {
-                    let kode_produksi = $(this).val(); // INI SEKARANG TEKS KODE BATCH (Bukan UUID)
-                    let uuid_produksi = $(this).find("option:selected").data("uuid"); // Ambil UUID dari data-attribute untuk fungsi AJAX jika dibutuhkan
-                    
+                    let kode_produksi = $(this).val();
+                    let uuid_produksi = $(this).find("option:selected").data("uuid");
+
+                    currentMincingUuid = uuid_produksi || null;
                     paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);
                     jumlahBoxInput.val('');
                     expDateInput.val('');
@@ -285,7 +283,7 @@
                     if (!kode_produksi) return;
 
                     // A. Hitung Expired Date
-                    if (kode_produksi && !kode_produksi.includes('--')) {
+                    if (!kode_produksi.includes('--')) {
                         const bulanChar = kode_produksi.charAt(1);
                         const hari = parseInt(kode_produksi.substr(2, 2));
                         const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
@@ -303,11 +301,19 @@
                         }
                     }
 
-                    // B. Load Palet dari Release Packing (Menggunakan UUID karena Controller mengharapkan uuid mincing)
+                    // B. Load Palet dari Release Packing
+                    if (!currentMincingUuid) {
+                        paletSelect.html('<option value="">Palet Tidak Ditemukan</option>');
+                        return;
+                    }
+
                     $.ajax({
                         url: "{{ route('get.palet') }}",
                         type: 'GET',
-                        data: { kode_produksi: uuid_produksi }, // Kirim UUID ke controller
+                        data: {
+                            kode_produksi: currentMincingUuid,
+                            nama_produk: namaProdukSelect.val()
+                        },
                         success: function(data) {
                             paletSelect.prop('disabled', false);
                             paletSelect.html('<option value="">-- Pilih Palet --</option>');
@@ -322,16 +328,28 @@
                             });
                         }
                     });
+                });
 
-                    // C. Load Jumlah Box
-                    let nama_produk = namaProdukSelect.val();
+                // 3. AJAX LOAD JUMLAH BOX BERDASARKAN PALET TERPILIH
+                paletSelect.on('change', function() {
+                    let selectedPalet = $(this).val();
+                    jumlahBoxInput.val('');
+
+                    if (!selectedPalet || !currentMincingUuid) {
+                        jumlahBoxInput.val('');
+                        return;
+                    }
+
                     $.ajax({
                         url: "{{ route('get.jumlah.box') }}",
                         method: 'GET',
-                        // Parameter kode_produksi pada Controller getJumlahBox mengharapkan TEKS
-                        data: { nama_produk: nama_produk, kode_produksi: kode_produksi }, 
+                        data: {
+                            nama_produk: namaProdukSelect.val(),
+                            kode_produksi: currentMincingUuid,
+                            no_palet: selectedPalet
+                        },
                         success: function (response) {
-                            jumlahBoxInput.val(response.total_box || 0);
+                            jumlahBoxInput.val(response.jumlah_box ?? response.total_box ?? 0);
                         },
                         error: function () {
                             jumlahBoxInput.val(0);

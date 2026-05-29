@@ -10,6 +10,7 @@ use App\Models\Mincing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use TCPDF;
 
 class Sampling_fgController extends Controller
@@ -400,36 +401,58 @@ class Sampling_fgController extends Controller
     {
         $nama_produk   = $request->input('nama_produk');
         $kode_produksi = $request->input('kode_produksi');
+        $no_palet      = $request->input('no_palet');
 
-        if (!$nama_produk || !$kode_produksi) {
+        if (!$kode_produksi) {
             return response()->json([
-                'total_box' => 0
+                'jumlah_box' => 0,
             ]);
         }
 
-        // mencari data di tabel mincings soalnya uuid kode produksinya dari sini
-        $mincing = Mincing::where('kode_produksi', $kode_produksi)
-            ->where('nama_produk', $nama_produk)
-            ->first();
+        $releaseQuery = Release_packing::query();
 
-        if (!$mincing) {
+        // Jika kode_produksi sudah berupa UUID, gunakan langsung.
+        if (Str::isUuid($kode_produksi)) {
+            $releaseQuery->where('kode_produksi', $kode_produksi);
+        } else {
+            if (!$nama_produk) {
+                return response()->json([
+                    'jumlah_box' => 0,
+                ]);
+            }
+
+            $mincing = Mincing::where('kode_produksi', $kode_produksi)
+                ->where('nama_produk', $nama_produk)
+                ->first();
+
+            if (!$mincing) {
+                return response()->json([
+                    'jumlah_box' => 0,
+                ]);
+            }
+
+            $releaseQuery->where('kode_produksi', $mincing->uuid);
+        }
+
+        if ($no_palet) {
+            $releaseQuery->where('no_palet', $no_palet);
+            $jumlahBox = $releaseQuery->sum('release');
             return response()->json([
-                'total_box' => 0
+                'nama_produk' => $nama_produk,
+                'kode_produksi' => $kode_produksi,
+                'no_palet' => $no_palet,
+                'jumlah_box' => $jumlahBox,
+                'total_box' => $jumlahBox,
             ]);
         }
 
-        // ambil uuid sebagai kode_produksi di tabel release_packings
-        $uuidProduksi = $mincing->uuid;
-
-        // hitung/count release
-        $totalBox = Release_packing::where('kode_produksi', $uuidProduksi)
-            ->sum('release');
+        $totalRelease = $releaseQuery->sum('release');
 
         return response()->json([
-            'nama_produk'   => $nama_produk,
+            'nama_produk' => $nama_produk,
             'kode_produksi' => $kode_produksi,
-            'uuid'          => $uuidProduksi,
-            'total_box'     => $totalBox
+            'jumlah_box' => $totalRelease,
+            'total_box' => $totalRelease,
         ]);
     }
 
@@ -446,13 +469,23 @@ class Sampling_fgController extends Controller
     public function getPalet(Request $request)
     {
         $kode_produksi = $request->input('kode_produksi');
+        $nama_produk = $request->input('nama_produk');
 
         if (!$kode_produksi) {
             return response()->json([]);
         }
 
-        // Ambil data palet dari release_packings berdasarkan kode produksi (uuid)
-        // Kita gunakan distinct agar tidak ada palet duplikat jika ada entry dobel
+        if (!Str::isUuid($kode_produksi)) {
+            $query = Mincing::where('kode_produksi', $kode_produksi);
+            if ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            }
+            $mincing = $query->first();
+            if ($mincing) {
+                $kode_produksi = $mincing->uuid;
+            }
+        }
+
         $palets = Release_packing::where('kode_produksi', $kode_produksi)
             ->select('no_palet')
             ->distinct()

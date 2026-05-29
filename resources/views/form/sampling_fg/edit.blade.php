@@ -56,11 +56,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
                                 <select name="kode_produksi" id="kode_produksi" class="form-control @error('kode_produksi') is-invalid @enderror" required>
-                                    @if($sampling_fg->kode_produksi)
-                                        <option value="{{ $sampling_fg->kode_produksi }}" selected>Sedang memuat batch...</option>
-                                    @else
-                                        <option value="">Pilih Varian Terlebih Dahulu</option>
-                                    @endif
+                                    <option value="">-- Pilih Batch --</option>
                                 </select>
                             </div>
                         </div>
@@ -68,17 +64,13 @@
                             <div class="col-md-6">
                                 <label class="form-label">Palet</label>
                                 <select name="palet" id="palet" class="form-control @error('palet') is-invalid @enderror" required>
-                                    @if($sampling_fg->palet)
-                                        <option value="{{ $sampling_fg->palet }}" selected>Sedang memuat palet...</option>
-                                    @else
-                                        <option value="">Pilih Batch Terlebih Dahulu</option>
-                                    @endif
+                                    <option value="">-- Pilih Palet --</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Exp. Date</label>
-                                <input type="date" name="exp_date" id="exp_date" value="{{ old('exp_date', $sampling_fg->exp_date) }}" class="form-control">
-                                <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode batch</small>
+                                <input type="date" name="exp_date" id="exp_date" value="{{ old('exp_date', $sampling_fg->exp_date) }}" class="form-control" readonly>
+                                <small class="text-muted">Tanggal ini dihitung otomatis dari kode batch</small>
                             </div>
                         </div>
                     </div>
@@ -213,53 +205,66 @@
         const paletSelect = $('#palet');
         const expDateInput = $('#exp_date');
         const jumlahBoxInput = $('#jumlah_box');
+        let currentMincingUuid = null;
+
+        // Helper: Calculate Exp Date from Kode Batch
+        function calculateExpDate(kodeProduksi) {
+            if (!kodeProduksi || kodeProduksi.includes('--') || kodeProduksi.includes('Tidak Ditemukan')) {
+                return '';
+            }
+
+            const bulanChar = kodeProduksi.charAt(1);
+            const hari = parseInt(kodeProduksi.substr(2, 2));
+            const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
+            
+            let kodeBulan = bulanMap[bulanChar];
+            if (kodeBulan === undefined) return '';
+
+            let now = new Date();
+            let tahun = now.getFullYear();
+            if (kodeBulan < now.getMonth()) tahun++;
+            
+            let expDate = new Date(tahun, kodeBulan, hari);
+            expDate.setMonth(expDate.getMonth() + 7);
+            let localExp = new Date(expDate.getTime() - (expDate.getTimezoneOffset() * 60000));
+            return localExp.toISOString().slice(0, 10);
+        }
 
         // Fungsi Load Batches
         function loadBatches(namaProduk, oldBatch = '') {
-            if (!batchSelect.is('select')) return;
-
             if (!namaProduk) {
                 batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
-                expDateInput.val('');
                 return;
             }
 
-            batchSelect.prop('disabled', false);
-            if(batchSelect.find('option').length <= 1) {
-                batchSelect.html('<option value="">Mencari Batch...</option>');
-            }
-
-            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
-            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
-
             $.ajax({
-                url: url,
+                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
                 type: 'GET',
-                dataType: 'json',
                 success: function(data) {
+                    batchSelect.prop('disabled', false);
                     batchSelect.html('<option value="">-- Pilih Batch --</option>');
-                    if (!data || data.length === 0) {
+                    
+                    if(!data || data.length === 0){
                         batchSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
                         return;
                     }
 
-                    data.forEach(function(batch) {
-                        let isSelected = (oldBatch === batch.kode_produksi) ? 'selected' : '';
-                        
-                        // Set teks sebagai value, dan uuid di dalam data-uuid
-                        batchSelect.append(`<option value="${batch.kode_produksi}" data-uuid="${batch.uuid}" ${isSelected}>${batch.kode_produksi}</option>`);
+                    data.forEach(function(item) {
+                        let isSelected = (oldBatch === item.kode_produksi) ? 'selected' : '';
+                        batchSelect.append(`<option value="${item.kode_produksi}" data-uuid="${item.uuid}" ${isSelected}>${item.kode_produksi}</option>`);
                     });
 
-                    // JIKA SEDANG MODE EDIT (oldBatch terisi)
+                    // Jika sedang edit mode, set uuid dan load palet
                     if (oldBatch) {
-                        // Ambil data-uuid dari opsi yang baru saja di-render dan diset 'selected'
-                        let uuid_produksi = batchSelect.find('option:selected').data('uuid');
+                        let uuid = batchSelect.find('option:selected').data('uuid');
+                        currentMincingUuid = uuid;
                         
-                        // Jalankan loadPalet dengan memberikan uuid tersebut
+                        // Hitung exp date
+                        expDateInput.val(calculateExpDate(oldBatch));
+                        
+                        // Load palet dengan oldPalet
                         let oldPalet = "{{ old('palet', $sampling_fg->palet ?? '') }}";
-                        if(uuid_produksi) {
-                            loadPalet(uuid_produksi, oldPalet);
-                        }
+                        loadPalet(uuid, oldPalet);
                     }
                 }
             });
@@ -269,30 +274,35 @@
         function loadPalet(uuid_produksi, oldPalet = '') {
             if (!uuid_produksi) {
                 paletSelect.html('<option value="">Pilih Batch Terlebih Dahulu</option>').prop('disabled', true);
+                jumlahBoxInput.val('');
                 return;
-            }
-
-            paletSelect.prop('disabled', false);
-            if(paletSelect.find('option').length <= 1) {
-                paletSelect.html('<option value="">Mencari Palet...</option>');
             }
 
             $.ajax({
                 url: "{{ route('get.palet') }}",
                 type: 'GET',
-                data: { kode_produksi: uuid_produksi }, // get.palet di controller mengharapkan UUID
+                data: {
+                    kode_produksi: uuid_produksi,
+                    nama_produk: namaProdukSelect.val()
+                },
                 success: function(data) {
+                    paletSelect.prop('disabled', false);
                     paletSelect.html('<option value="">-- Pilih Palet --</option>');
-                    if (data.length === 0) {
+                    
+                    if(data.length === 0){
                         paletSelect.html('<option value="">Palet Tidak Ditemukan</option>');
                         return;
                     }
 
                     data.forEach(function(item) {
-                        // Jika oldPalet sesuai dengan data item, tandai selected
                         let isSelected = (oldPalet == item.no_palet) ? 'selected' : '';
                         paletSelect.append(`<option value="${item.no_palet}" ${isSelected}>${item.no_palet}</option>`);
                     });
+
+                    // Jika ada oldPalet, trigger change untuk load jumlah_box
+                    if (oldPalet) {
+                        paletSelect.trigger('change');
+                    }
                 },
                 error: function() {
                     paletSelect.html('<option value="">Gagal Terhubung</option>');
@@ -300,64 +310,75 @@
             });
         }
 
-        // Trigger Change Varian (Jika user manual mengganti varian)
+        // Event: Change Varian (user manual change)
         namaProdukSelect.on('change', function() {
-            loadBatches($(this).val());
+            let namaProduk = $(this).val();
+            
+            currentMincingUuid = null;
+            batchSelect.html('<option value="">-- Pilih Batch --</option>').prop('disabled', false);
             paletSelect.html('<option value="">Pilih Batch Terlebih Dahulu</option>').prop('disabled', true);
             jumlahBoxInput.val('');
             expDateInput.val('');
-        });
 
-        // Trigger Change Batch (Jika user manual mengganti batch)
-        batchSelect.on('change', function() {
-            let kode_produksi = $(this).val(); // Berupa Teks Kode (P3012..)
-            let uuid_produksi = $(this).find("option:selected").data("uuid"); // Ambil UUID
-            
-            paletSelect.html('<option value="">Pilih Batch Terlebih Dahulu</option>').prop('disabled', true);
-            jumlahBoxInput.val('');
-
-            // Panggil Load Palet menggunakan UUID
-            if(uuid_produksi) {
-                loadPalet(uuid_produksi);
-            }
-
-            // Coba Load Jml Box
-            if (namaProdukSelect.val() && kode_produksi && !kode_produksi.includes('Pilih')) {
-                $.ajax({
-                    url: "{{ route('get.jumlah.box') }}",
-                    method: 'GET',
-                    data: { nama_produk: namaProdukSelect.val(), kode_produksi: kode_produksi }, // Controller minta text kode
-                    success: function (response) { jumlahBoxInput.val(response.total_box || 0); },
-                    error: function () { jumlahBoxInput.val(0); }
-                });
-            }
-
-            // Set Exp Date
-            if (!kode_produksi || kode_produksi.includes('-- Pilih Batch') || kode_produksi.includes('Tidak Ditemukan')) {
-                expDateInput.val('');
+            if (!namaProduk) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
                 return;
             }
 
-            const bulanChar = kode_produksi.charAt(1);
-            const hari = parseInt(kode_produksi.substr(2, 2));
-            const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
-            
-            let kodeBulan = bulanMap[bulanChar];
-            if (kodeBulan !== undefined) {
-                let now = new Date();
-                let tahun = now.getFullYear();
-                if (kodeBulan < now.getMonth()) tahun++;
-                
-                let expDate = new Date(tahun, kodeBulan, hari);
-                expDate.setMonth(expDate.getMonth() + 7);
-                let localExp = new Date(expDate.getTime() - (expDate.getTimezoneOffset() * 60000));
-                expDateInput.val(localExp.toISOString().slice(0, 10));
-            }
+            loadBatches(namaProduk);
         });
 
-        // Init Saat Halaman Dimuat (Edit Case)
-        if (namaProdukSelect.val() && batchSelect.is('select')) {
-            let oldBatch = "{{ old('kode_produksi', $sampling_fg->kode_produksi ?? '') }}";
+        // Event: Change Batch (user manual change atau programmatic)
+        batchSelect.on('change', function() {
+            let kode_produksi = $(this).val();
+            let uuid_produksi = $(this).find("option:selected").data("uuid");
+
+            currentMincingUuid = uuid_produksi || null;
+            jumlahBoxInput.val('');
+            expDateInput.val(calculateExpDate(kode_produksi));
+            
+            // Update hidden input untuk kode_produksi
+            $('input[name="kode_produksi"]').val(kode_produksi);
+            
+            if (!currentMincingUuid) {
+                return;
+            }
+
+            loadPalet(currentMincingUuid);
+        });
+
+        // Event: Change Palet (load jumlah box)
+        paletSelect.on('change', function() {
+            let selectedPalet = $(this).val();
+            jumlahBoxInput.val('');
+            
+            // Update hidden input untuk palet
+            $('input[name="palet"]').val(selectedPalet);
+
+            if (!selectedPalet || !currentMincingUuid) {
+                return;
+            }
+
+            $.ajax({
+                url: "{{ route('get.jumlah.box') }}",
+                method: 'GET',
+                data: {
+                    nama_produk: namaProdukSelect.val(),
+                    kode_produksi: currentMincingUuid,
+                    no_palet: selectedPalet
+                },
+                success: function (response) {
+                    jumlahBoxInput.val(response.jumlah_box ?? response.total_box ?? 0);
+                },
+                error: function () {
+                    jumlahBoxInput.val(0);
+                }
+            });
+        });
+
+        // Init pada page load (Edit mode)
+        let oldBatch = "{{ old('kode_produksi', $sampling_fg->kode_produksi ?? '') }}";
+        if (namaProdukSelect.val() && oldBatch) {
             loadBatches(namaProdukSelect.val(), oldBatch);
         }
     });
