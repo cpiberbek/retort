@@ -1,4 +1,3 @@
-coba cek
 @extends('layouts.app')
 
 @section('content')
@@ -671,6 +670,32 @@ coba cek
                         kodeInput.focus();
                     }
                 });
+            });
+
+            // TAMBAH SUHU / DAGING
+            document.getElementById('tambahBarisSuhu')?.addEventListener('click', () => {
+                const row = `
+                <tr>
+                    <td style="width: 45%;">
+                        <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm">
+                            <option value="" selected disabled>Pilih Daging</option>
+                            <option value="BEEF">BEEF</option>
+                            <option value="SBB">SBB</option>
+                            <option value="SBL">SBL</option>
+                            <option value="MDM">MDM</option>
+                            <option value="CCM">CCM</option>
+                            <option value="SURIMI">SURIMI</option>
+                        </select>
+                    </td>
+                    <td style="width: 45%;">
+                        <input type="number" name="suhu_grinding_input[${indexSuhu}][suhu]" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
+                    </td>
+                    <td style="width: 10%;">
+                        <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>`;
+                tbodySuhu.insertAdjacentHTML('beforeend', row);
+                indexSuhu++;
             });
 
             // PREMIX
