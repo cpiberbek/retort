@@ -826,7 +826,7 @@
             $('.kode_produksi').html('<option value="">Mencari Batch...</option>').prop('disabled', false);
 
             $.ajax({
-                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent(namaProduk),
                 type: 'GET',
                 success: function(data) {
                     batchedData = data;
