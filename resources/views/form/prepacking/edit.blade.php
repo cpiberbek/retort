@@ -23,19 +23,31 @@
                             </div>
                         </div>
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                           <div class="col-md-6">
                                 <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
+                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                     <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
-                                    <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $prepacking->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>{{ $produk->nama_produk }}</option>
+                                    <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $prepacking->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
+                                        {{ $produk->nama_produk }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
+
+                            @php
+                                $batches = \App\Models\Mincing::where('nama_produk', $prepacking->nama_produk)->get();
+                            @endphp
+
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" maxlength="10" value="{{ old('kode_produksi', $prepacking->kode_produksi) }}" required>
-                                <small id="kodeError" class="text-danger d-none"></small>
+                                <select name="kode_produksi" class="form-control" id="kode_batch" required>
+                                    @foreach($batches as $batch)
+                                        <option value="{{ $batch->uuid }}" {{ $prepacking->kode_produksi == $batch->uuid ? 'selected' : '' }}>
+                                            {{ $batch->kode_produksi }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -267,4 +279,38 @@
         fields.forEach(type => hitungTotal(type));
     });
 </script>
+
+<script>
+    $('#nama_produk').on('change', function() {
+
+    let namaProduk = $(this).val();
+    let batchSelect = $('#kode_batch');
+
+    batchSelect.val('');
+    batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+    if (!namaProduk) {
+        batchSelect.prop('disabled', true);
+        return;
+    }
+
+    let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
+
+    $.ajax({
+        url: url,
+        type: 'GET',
+        success: function(data) {
+
+            batchSelect.prop('disabled', false);
+
+            data.forEach(function(item) {
+                batchSelect.append(
+                    `<option value="${item.uuid}">${item.kode_produksi}</option>`
+                );
+            });
+        }
+    });
+
+});
+    </script>
 @endsection
