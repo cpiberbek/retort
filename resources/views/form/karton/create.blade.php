@@ -151,7 +151,7 @@
                                     </label>
 
                                     <input type="file" id="kode_karton" name="kode_karton" class="form-control"
-                                        accept="image/*">
+                                        accept="image/*"required>
 
                                     <small id="kode-karton-error" class="text-danger"></small>
                                 </div>

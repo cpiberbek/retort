@@ -91,7 +91,7 @@ class KartonController extends Controller
             'date'      => 'required|date',
             'nama_produk'     => 'required|string',
             'kode_produksi'     => 'required|string',
-            'kode_karton' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'kode_karton' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'waktu_mulai'     => 'nullable',
             'waktu_selesai'     => 'nullable',
             'jumlah'     => 'nullable',

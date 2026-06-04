@@ -49,11 +49,14 @@
 
                                 </div>
 
+                                @php
+                                    $kode = \App\Models\Mincing::where('uuid', $karton->kode_produksi)->value('kode_produksi');
+                                @endphp
+
                                 <div class="col-md-6">
                                     <label class="form-label">Kode Batch</label>
-                                    <input type="text" name="kode_produksi" id="kode_produksi" maxlength="10"
-                                        class="form-control" value="{{ old('kode_produksi', $karton->kode_produksi) }}"
-                                        {{ $karton->kode_produksi ? 'readonly' : '' }} required>
+                                    <input type="text" class="form-control" value="{{ $kode }}" readonly>
+                                    <input type="hidden" name="kode_produksi" value="{{ $karton->kode_produksi }}">
                                     <small id="kodeError" class="text-danger d-none"></small>
                                 </div>
                             </div>
