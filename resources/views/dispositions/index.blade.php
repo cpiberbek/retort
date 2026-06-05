@@ -176,31 +176,40 @@
 
                         <td class="text-center align-middle text-nowrap">
 
-                            <div class="d-flex justify-content-center align-items-center">
+                        <div class="d-flex justify-content-center align-items-center">
 
-                                {{-- 0. Tombol Verifikasi --}}
-                                <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" 
+                            @can('can access verification button')
+                            {{-- 0. Tombol Verifikasi --}}
+                            <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" 
                                 data-bs-toggle="modal" 
                                 data-bs-target="#verifyModal{{ $disp->uuid }}"
                                 title="Verifikasi SPV">
                                 <i class="bi bi-shield-check me-1"></i> Verifikasi
                             </button>
+                            @endcan
 
+                            @can('can access detail button')
                             {{-- 1. Detail --}}
                             <a href="{{ route('dispositions.show', $disp->uuid) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
                                 <i class="bi bi-eye"></i>
                             </a>
+                            @endcan
 
+                            @can('can access edit button')
                             {{-- 2. Edit --}}
                             <a href="{{ route('dispositions.edit', $disp->uuid) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
                                 <i class="bi bi-pencil-square"></i> Edit Data
                             </a>
+                            @endcan
 
+                            @can('can access update button')
                             {{-- 3. Update --}}
                             <a href="{{ route('dispositions.update_form', $disp->uuid) }}" class="btn btn-info btn-sm mx-1 text-white" title="Update Form">
                                 <i class="bi bi-pencil"></i> Update
                             </a>
+                            @endcan
 
+                            @can('can access delete button')
                             {{-- 4. Hapus --}}
                             <form action="{{ route('dispositions.destroy', $disp->uuid) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
                                 @csrf
@@ -209,6 +218,7 @@
                                     <i class="bi bi-trash"></i> Hapus
                                 </button>
                             </form>
+                            @endcan
 
                         </div>
                     </td>
