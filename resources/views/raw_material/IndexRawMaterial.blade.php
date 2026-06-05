@@ -187,9 +187,11 @@
                                 <div class="d-flex justify-content-center align-items-center">
 
                                     {{-- 1. Tombol Verifikasi (Memicu Modal) --}}
+                                    @can('can access verification button')
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $item->uuid }}">
                                         <i class="bi bi-shield-check me-1"></i> Verifikasi
                                     </button>
+                                    @endcan
 
                                     {{-- 2. Detail --}}
                                     <a href="{{ route('inspections.show', $item->uuid) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
@@ -197,16 +199,21 @@
                                     </a>
 
                                     {{-- 3. Edit Data --}}
+                                    @can('can access edit button')
                                     <a href="{{ route('inspections.edit', $item->uuid) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
                                         <i class="bi bi-pencil-square"></i> Edit Data
                                     </a>
+                                    @endcan
 
                                     {{-- 4. Update (Route Baru) --}}
+                                     @can('can access update button')
                                     <a href="{{ route('inspections.form_update', $item->uuid) }}" class="btn btn-info btn-sm mx-1 text-white" title="Update Form">
                                         <i class="bi bi-pencil"></i> Update
                                     </a>
+                                    @endcan
 
                                     {{-- 5. Hapus --}}
+                                    @can('can access delete button')
                                     <form action="{{ route('inspections.destroy', $item->uuid) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin ingin menghapus data ini?')">
                                         @csrf
                                         @method('DELETE')
@@ -214,6 +221,7 @@
                                             <i class="bi bi-trash"></i> Hapus
                                         </button>
                                     </form>
+                                    @endcan
 
                                 </div>
                             </td>
