@@ -5,7 +5,7 @@
     <div class="card shadow-sm">
         <div class="card-body">
             <h4 class="mb-4">
-                <i class="bi bi-pencil-square"></i> Edit Pengecekan pemasakan_rte
+                <i class="bi bi-pencil-square"></i> Edit Pengecekan Pemasakan RTE
             </h4>
             
             <form id="pemasakanForm" action="{{ route('pemasakan_rte.edit_spv', $pemasakan_rte->uuid) }}" method="POST">
@@ -38,13 +38,12 @@
 
                         {{-- Baris 2: Produk & Chamber --}}
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                             <div class="col-md-6">
                                 <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
+                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                     <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
-                                    <option value="{{ $produk->nama_produk }}"
-                                        {{ old('nama_produk', $pemasakan_rte->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
+                                    <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $pemasakan_rte->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
                                     </option>
                                     @endforeach
@@ -64,13 +63,22 @@
                             </div>
                         </div>
 
+                        {{-- ?? --}}
                         {{-- Baris 3: Kode Produksi & Berat Produk --}}
                         <div class="row mb-3">
+                            @php
+                            $batches = collect();
+                            @endphp
+
                             <div class="col-md-6">
                                 <label class="form-label">Kode Produksi</label>
-                                <input type="text" name="kode_produksi" id="kode_produksi"
-                                class="form-control" maxlength="50"
-                                value="{{ old('kode_produksi', $pemasakan_rte->kode_produksi) }}" required>
+                                <select name="kode_produksi" class="form-control" id="kode_batch" required>
+                                    @foreach($batches as $batch)
+                                        <option value="{{ $batch->uuid }}" {{ $pemasakan_rte->kode_produksi == $batch->uuid ? 'selected' : '' }}>
+                                            {{ $batch->kode_produksi }}
+                                        </option>
+                                    @endforeach
+                                </select>
                                 <small class="text-muted">Pisahkan dengan tanda <strong>/</strong></small><br>
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
@@ -608,6 +616,46 @@
             trayTotal.textContent = '';
         }
     });
+</script>
+
+<script>
+$(function () {
+
+    const batchSelect = $('#kode_batch');
+
+    function loadBatch(namaProduk, selected = null) {
+
+        batchSelect.prop('disabled', true);
+        batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+        if (!namaProduk) return;
+
+        let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
+
+        $.get(url, function (data) {
+
+            data.forEach(function (item) {
+                batchSelect.append(
+                    `<option value="${item.uuid}" ${selected == item.uuid ? 'selected' : ''}>${item.kode_produksi}</option>`
+                );
+            });
+
+            batchSelect.prop('disabled', false);
+        });
+    }
+
+    $('#nama_produk').on('change', function () {
+        loadBatch($(this).val());
+    });
+
+    let initialProduk = $('#nama_produk').val();
+    let initialBatch = "{{ $pemasakan_rte->kode_produksi ?? '' }}";
+
+    if (initialProduk) {
+        loadBatch(initialProduk, initialBatch);
+    }
+
+});
 </script>
 
 @endsection
