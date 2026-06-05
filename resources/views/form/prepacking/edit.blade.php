@@ -36,7 +36,7 @@
                             </div>
 
                             @php
-                                $batches = \App\Models\Mincing::where('nama_produk', $prepacking->nama_produk)->get();
+                                $batches = collect();
                             @endphp
 
                             <div class="col-md-6">
@@ -280,37 +280,43 @@
     });
 </script>
 
-<script>
-    $('#nama_produk').on('change', function() {
+    <script>
+$(function () {
 
-    let namaProduk = $(this).val();
-    let batchSelect = $('#kode_batch');
+    const batchSelect = $('#kode_batch');
 
-    batchSelect.val('');
-    batchSelect.html('<option value="">-- Pilih Batch --</option>');
+    function loadBatch(namaProduk, selected = null) {
 
-    if (!namaProduk) {
         batchSelect.prop('disabled', true);
-        return;
-    }
+        batchSelect.html('<option value="">-- Pilih Batch --</option>');
 
-    let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
+        if (!namaProduk) return;
 
-    $.ajax({
-        url: url,
-        type: 'GET',
-        success: function(data) {
+        let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
 
-            batchSelect.prop('disabled', false);
+        $.get(url, function (data) {
 
-            data.forEach(function(item) {
+            data.forEach(function (item) {
                 batchSelect.append(
-                    `<option value="${item.uuid}">${item.kode_produksi}</option>`
+                    `<option value="${item.uuid}" ${selected == item.uuid ? 'selected' : ''}>${item.kode_produksi}</option>`
                 );
             });
-        }
+
+            batchSelect.prop('disabled', false);
+        });
+    }
+
+    $('#nama_produk').on('change', function () {
+        loadBatch($(this).val());
     });
 
+    let initialProduk = $('#nama_produk').val();
+    let initialBatch = "{{ $prepacking->kode_produksi ?? '' }}";
+
+    if (initialProduk) {
+        loadBatch(initialProduk, initialBatch);
+    }
+
 });
-    </script>
+</script>
 @endsection
