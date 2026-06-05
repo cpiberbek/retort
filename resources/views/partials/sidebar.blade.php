@@ -134,6 +134,7 @@
                 'packing.*',
                 'prepacking.*',
                 'release_packing.*',
+                'pemeriksaan_retain.*',
                 'sampling.*',
                 'karton.*',
             ];
