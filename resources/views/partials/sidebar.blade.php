@@ -125,27 +125,29 @@
         @php
 
             // jika ada perubahan form, bisa ditambahkan disini
-            $meatRoutes = ['checklistmagnettrap.*', 'mincing.*', 'thermometer.*', 'metal.*', 'pemasakan.*','washing.*', 'chamber.*', 'timbangan.*','pemeriksaan-kekuatan-magnet-trap.*',];
+            $meatRoutes = ['checklistmagnettrap.*', 'mincing.*', 'metal.*'];
             $stuffingRoutes = ['pvdc.*', 'labelisasi_pvdc.*', 'stuffing.*', 'wire.*'];
             $smfgRoutes = ['sampling_fg.*'];
-            $retortRoutes = [];
+            $retortRoutes = ['pemasakan.*', 'washing.*', 'chamber.*', 'pemusnahan.*'];
             $packingRoutes = [
                 'organoleptik.*',
                 'packing.*',
                 'prepacking.*',
                 'release_packing.*',
-                'pemeriksaan_retain.*',
                 'sampling.*',
                 'karton.*',
             ];
-            $warehouseRoutes = ['inspections.*', 'packaging-inspections.*', 'loading-produks.*'];
+            $warehouseRoutes = ['inspections.*', 'packaging-inspections.*', 'loading-produks.*', 'klorin.*'];
             $cikandeRoutes = [
                 'pemeriksaan_retain.*',
-
+                'dispositions.*',
+                'berita-acara.*',
+                'pemeriksaan-kekuatan-magnet-trap.*',
+                'penyimpangan-kualitas.*',
             ];
             $rteRoutes = ['retain_rte.*', 'release_packing_rte.*', 'pemasakan_rte.*'];
             $kebersihanRoutes = ['gmp.*', 'suhu.*', 'sanitasi.*'];
-            $umumRoutes = ['klorin.*','sampel.*', 'timbangan.*', 'dispositions.*', 'berita-acara.*', 'pemusnahan.*', 'penyimpangan-kualitas.*',];
+            $umumRoutes = ['sampel.*', 'timbangan.*', 'thermometer.*'];
 
             // Aktivasi dropdown
             $meatPrepActive = request()->routeIs($meatRoutes);
@@ -180,32 +182,13 @@
                     <a class="collapse-item {{ request()->routeIs('mincing.*') ? 'active' : '' }}"
                         href="{{ route('mincing.index') }}">Pemeriksaan Mincing - Emulsifying - Aging
                     </a>
-                    <a class="collapse-item {{ request()->routeIs('thermometer.*') ? 'active' : '' }}"
-                        href="{{ route('thermometer.index') }}">Peneraan Thermometer
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('metal.*') ? 'active' : '' }}"
-                        href="{{ route('metal.index') }}">
-                        Pengecekan Metal Detector
-                    </a>
                     <a class="collapse-item {{ request()->routeIs('checklistmagnettrap.*') ? 'active' : '' }}"
                         href="{{ route('checklistmagnettrap.index') }}">
                         Checklist Cleaning Magnet Trap
                     </a>
-                    <a class="collapse-item {{ request()->routeIs('pemasakan.*') ? 'active' : '' }}"
-                        href="{{ route('pemasakan.index') }}">Pengecekan Pemasakan
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('washing.*') ? 'active' : '' }}"
-                        href="{{ route('washing.index') }}">Pemeriksaan Washing - Drying
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('chamber.*') ? 'active' : '' }}"
-                        href="{{ route('chamber.index') }}">Verifikasi Timer Chamber
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('timbangan.*') ? 'active' : '' }}"
-                        href="{{ route('timbangan.index') }}">Peneraan Timbangan
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('pemeriksaan-kekuatan-magnet-trap.*') ? 'active' : '' }}"
-                        href="{{ route('pemeriksaan-kekuatan-magnet-trap.index') }}">
-                        Pemeriksaan Kekuatan Magnet Trap
+                    <a class="collapse-item {{ request()->routeIs('metal.*') ? 'active' : '' }}"
+                        href="{{ route('metal.index') }}">
+                        Pengecekan Metal Detector
                     </a>
                 </div>
             </div>
@@ -223,18 +206,18 @@
             <div id="UollapseStuffing" class="collapse {{ $stuffingActive ? 'show' : '' }}"
                 data-bs-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item {{ request()->routeIs('stuffing.*') ? 'active' : '' }}"
-                        href="{{ route('stuffing.index') }}">
-                        Pemeriksaan Stuffing Sosis Retort
+                    <a class="collapse-item {{ request()->routeIs('pvdc.*') ? 'active' : '' }}"
+                        href="{{ route('pvdc.index') }}">
+                        Data No. Lot PVDC
                     </a>
                     <a class="collapse-item {{ request()->routeIs('labelisasi_pvdc.*') ? 'active' : '' }}"
                         href="{{ route('labelisasi_pvdc.index') }}">
                         Kontrol Labelisasi PVDC
                     </a>
-                    <a class="collapse-item {{ request()->routeIs('pvdc.*') ? 'active' : '' }}"
-                        href="{{ route('pvdc.index') }}">
-                        Data No. Lot PVDC
-                    </a> 
+                    <a class="collapse-item {{ request()->routeIs('stuffing.*') ? 'active' : '' }}"
+                        href="{{ route('stuffing.index') }}">
+                        Pemeriksaan Stuffing Sosis Retort
+                    </a>
                     <a class="collapse-item {{ request()->routeIs('wire.*') ? 'active' : '' }}"
                         href="{{ route('wire.index') }}">
                         Data No. Lot Wire
@@ -266,7 +249,7 @@
         </li>
 
         {{-- Retort --}}
-        {{-- <li class="nav-item {{ $retortActive ? 'active' : '' }}">
+        <li class="nav-item {{ $retortActive ? 'active' : '' }}">
             <a class="nav-link {{ $retortActive ? '' : 'collapsed' }}" href="#" data-bs-toggle="collapse"
                 data-bs-target="#rollapseRetort" aria-expanded="{{ $retortActive ? 'true' : 'false' }}"
                 aria-controls="rollapseRetort">
@@ -277,9 +260,17 @@
             <div id="rollapseRetort" class="collapse {{ $retortActive ? 'show' : '' }}"
                 data-bs-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
+                    <a class="collapse-item {{ request()->routeIs('pemasakan.*') ? 'active' : '' }}"
+                        href="{{ route('pemasakan.index') }}">Pengecekan Pemasakan</a>
+                    <a class="collapse-item {{ request()->routeIs('washing.*') ? 'active' : '' }}"
+                        href="{{ route('washing.index') }}">Pemeriksaan Washing - Drying</a>
+                    <a class="collapse-item {{ request()->routeIs('chamber.*') ? 'active' : '' }}"
+                        href="{{ route('chamber.index') }}">Verifikasi Timer Chamber</a>
+                    <a class="collapse-item {{ request()->routeIs('pemusnahan.*') ? 'active' : '' }}"
+                        href="{{ route('pemusnahan.index') }}">Pemusnahan Barang</a>
                 </div>
             </div>
-        </li> --}}
+        </li>
 
         {{-- Packing --}}
         <li class="nav-item {{ $packingActive ? 'active' : '' }}">
@@ -292,20 +283,18 @@
             <div id="collapsePacking" class="collapse {{ $packingActive ? 'show' : '' }}"
                 data-bs-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item {{ request()->routeIs('sampling.*') ? 'active' : '' }}"
-                        href="{{ route('sampling.index') }}">Data Sampling Produk</a>
                     <a class="collapse-item {{ request()->routeIs('organoleptik.*') ? 'active' : '' }}"
                         href="{{ route('organoleptik.index') }}">Pemeriksaan Organoleptik</a>
-                    <a class="collapse-item {{ request()->routeIs('prepacking.*') ? 'active' : '' }}"
-                        href="{{ route('prepacking.index') }}">Pengecekan Pre Packing</a>
                     <a class="collapse-item {{ request()->routeIs('packing.*') ? 'active' : '' }}"
                         href="{{ route('packing.index') }}">Pemeriksaan Proses Packing</a>
+                    <a class="collapse-item {{ request()->routeIs('sampling.*') ? 'active' : '' }}"
+                        href="{{ route('sampling.index') }}">Data Sampling Produk</a>
                     <a class="collapse-item {{ request()->routeIs('karton.*') ? 'active' : '' }}"
                         href="{{ route('karton.index') }}">Kontrol Labelisasi Karton</a>
+                    <a class="collapse-item {{ request()->routeIs('prepacking.*') ? 'active' : '' }}"
+                        href="{{ route('prepacking.index') }}">Pengecekan Pre Packing</a>
                     <a class="collapse-item {{ request()->routeIs('release_packing.*') ? 'active' : '' }}"
                         href="{{ route('release_packing.index') }}">Data Release Packing</a>
-                    <a class="collapse-item {{ request()->routeIs('pemeriksaan_retain.*') ? 'active' : '' }}"
-                        href="{{ route('pemeriksaan_retain.index') }}">Pemeriksaan Retain Sampel</a>
                 </div>
             </div>
         </li>
@@ -321,10 +310,6 @@
             <div id="collapseWarehouse" class="collapse {{ $warehouseActive ? 'show' : '' }}"
                 data-bs-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item {{ request()->routeIs('loading-produks.*') ? 'active' : '' }}"
-                        href="{{ route('loading-produks.index') }}">
-                        Pemeriksaan Loading Produk
-                    </a>
                     <a class="collapse-item {{ request()->routeIs('inspections.*') ? 'active' : '' }}"
                         href="{{ route('inspections.index') }}">
                         Pemeriksaan Input Bahan Baku
@@ -333,12 +318,20 @@
                         href="{{ route('packaging-inspections.index') }}">
                         Pemeriksaan Packaging
                     </a>
+                    <a class="collapse-item {{ request()->routeIs('loading-produks.*') ? 'active' : '' }}"
+                        href="{{ route('loading-produks.index') }}">
+                        Pemeriksaan Loading Produk
+                    </a>
+                    <a class="collapse-item {{ request()->routeIs('klorin.*') ? 'active' : '' }}"
+                        href="{{ route('klorin.index') }}">
+                        Pengecekan Klorin
+                    </a>
                 </div>
             </div>
         </li>
 
         {{-- Cikande Form --}}
-        {{-- <li class="nav-item {{ $cikandeActive ? 'active' : '' }}">
+        <li class="nav-item {{ $cikandeActive ? 'active' : '' }}">
             <a class="nav-link {{ $cikandeActive ? '' : 'collapsed' }}" href="#" data-bs-toggle="collapse"
                 data-bs-target="#collapseCikande" aria-expanded="{{ $cikandeActive ? 'true' : 'false' }}"
                 aria-controls="collapseCikande">
@@ -351,14 +344,34 @@
 
                 <div class="bg-white py-2 collapse-inner rounded">
 
+                    <a class="collapse-item {{ request()->routeIs('pemeriksaan_retain.*') ? 'active' : '' }}"
+                        href="{{ route('pemeriksaan_retain.index') }}">
+                        Pemeriksaan Retain Sampel
+                    </a>
 
+                    <a class="collapse-item {{ request()->routeIs('dispositions.*') ? 'active' : '' }}"
+                        href="{{ route('dispositions.index') }}">
+                        Disposisi Produk & Prosedur
+                    </a>
 
+                    <a class="collapse-item {{ request()->routeIs('berita-acara.*') ? 'active' : '' }}"
+                        href="{{ route('berita-acara.index') }}">
+                        Berita Acara
+                    </a>
 
+                    <a class="collapse-item {{ request()->routeIs('pemeriksaan-kekuatan-magnet-trap.*') ? 'active' : '' }}"
+                        href="{{ route('pemeriksaan-kekuatan-magnet-trap.index') }}">
+                        Pemeriksaan Kekuatan Magnet Trap
+                    </a>
 
+                    <a class="collapse-item {{ request()->routeIs('penyimpangan-kualitas.*') ? 'active' : '' }}"
+                        href="{{ route('penyimpangan-kualitas.index') }}">
+                        Penyimpangan Kualitas Internal
+                    </a>
 
                 </div>
             </div>
-        </li> --}}
+        </li>
 
         {{-- RTE --}}
         <li class="nav-item {{ $rteActive ? 'active' : '' }}">
@@ -429,31 +442,12 @@
             </a>
             <div id="Uollapseumum" class="collapse {{ $umumActive ? 'show' : '' }}" data-bs-parent="#accordionSidebar">
                 <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item {{ request()->routeIs('klorin.*') ? 'active' : '' }}"
-                        href="{{ route('klorin.index') }}">
-                        Pengecekan Klorin
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('dispositions.*') ? 'active' : '' }}"
-                        href="{{ route('dispositions.index') }}">
-                        Disposisi Produk & Prosedur
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('berita-acara.*') ? 'active' : '' }}"
-                        href="{{ route('berita-acara.index') }}">
-                        Berita Acara
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('pemusnahan.*') ? 'active' : '' }}"
-                        href="{{ route('pemusnahan.index') }}">
-                        Pemusnahan Barang
-                    </a>
-                    <a class="collapse-item {{ request()->routeIs('penyimpangan-kualitas.*') ? 'active' : '' }}"
-                        href="{{ route('penyimpangan-kualitas.index') }}">
-                        Penyimpangan Kualitas Internal
-                    </a>
-
                     <a class="collapse-item {{ request()->routeIs('sampel.*') ? 'active' : '' }}"
                         href="{{ route('sampel.index') }}">Pengambilan Sampel</a>
-                   
-                    
+                    <a class="collapse-item {{ request()->routeIs('timbangan.*') ? 'active' : '' }}"
+                        href="{{ route('timbangan.index') }}">Peneraan Timbangan</a>
+                    <a class="collapse-item {{ request()->routeIs('thermometer.*') ? 'active' : '' }}"
+                        href="{{ route('thermometer.index') }}">Peneraan Thermometer</a>
 
                 </div>
             </div>
