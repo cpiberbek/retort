@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Release_packing_rte;
 use App\Models\Produk;
+use App\Models\Mincing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -13,9 +14,9 @@ class Release_packing_rteController extends Controller
 {
     public function index(Request $request)
     {
-        $search     = $request->input('search');
-        $date       = $request->input('date');
-        $userPlant  = Auth::user()->plant;
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $userPlant = Auth::user()->plant;
 
         $data = Release_packing_rte::query()
             ->where('plant', $userPlant)
@@ -23,7 +24,13 @@ class Release_packing_rteController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
                         ->orWhere('nama_produk', 'like', "%{$search}%")
-                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhereExists(function ($sub) use ($search) {
+                            $sub->selectRaw(1)
+                                ->from('mincings')
+                                ->whereColumn('mincings.uuid', 'release_packing_rtes.kode_produksi')
+                                ->where('mincings.kode_produksi', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($date, function ($query) use ($date) {
@@ -33,6 +40,13 @@ class Release_packing_rteController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->appends($request->all());
+
+        $data->getCollection()->transform(function ($item) {
+            $item->kode_produksi = Mincing::where('uuid', $item->kode_produksi)
+                ->value('kode_produksi') ?? $item->kode_produksi;
+
+            return $item;
+        });
 
         return view('form.release_packing_rte.index', compact('data', 'search', 'date'));
     }
