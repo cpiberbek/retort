@@ -79,7 +79,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                <small class="text-muted">Pisahkan dengan tanda <strong>/</strong></small><br>
+                                {{-- <small class="text-muted">Pisahkan dengan tanda <strong>/</strong></small><br> --}}
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
                             <div class="col-md-6">
