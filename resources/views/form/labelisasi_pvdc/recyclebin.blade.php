@@ -72,11 +72,17 @@
 
                                                                 <td>
                                                                     @if(!empty($items['file']))
-                                                                    <a href="{{ asset(stripslashes($items['file'])) }}"
-                                                                    target="_blank">
-                                                                    <img src="{{ asset(stripslashes($items['file'])) }}"
-                                                                    width="50" class="img-thumbnail">
-                                                                </a>
+                                                                    @php
+                                                                        $fileUrl = $items['file'];
+                                                                        if (preg_match('/^https?:\/\/[^\/]+\/storage\/(.+)$/i', $fileUrl, $matches)) {
+                                                                            $fileUrl = asset('storage/' . $matches[1]);
+                                                                        } elseif (!preg_match('/^https?:\/\//i', $fileUrl)) {
+                                                                            $fileUrl = asset('storage/' . ltrim($fileUrl, '/'));
+                                                                        }
+                                                                    @endphp
+                                                                    <a href="{{ $fileUrl }}" target="_blank">
+                                                                        <img src="{{ $fileUrl }}" width="50" class="img-thumbnail">
+                                                                    </a>
                                                                 @else
                                                                 -
                                                                 @endif

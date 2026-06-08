@@ -429,13 +429,5 @@ class SamplingController extends Controller
 
         exit();
     }
-    public function getBatch($nama_produk)
-    {
-        $data = DB::table('mincings')
-            ->where('nama_produk', $nama_produk)
-            ->select('uuid', 'kode_produksi')
-            ->get();
 
-        return response()->json($data);
-    }
 }
