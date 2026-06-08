@@ -186,9 +186,11 @@
                                 <div class="d-flex justify-content-center align-items-center">
 
                                     {{-- 0. Tombol Verifikasi (New) --}}
+                                    @can('can access verification button')
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $produk->uuid }}">
                                         <i class="bi bi-shield-check me-1"></i> Verifikasi
                                     </button>
+                                    @endcan
 
                                     {{-- 1. Detail --}}
                                     <a href="{{ route('loading-produks.show', $produk->uuid) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
@@ -196,16 +198,21 @@
                                     </a>
                                     
                                     {{-- 2. Edit --}}
+                                    @can('can access edit button')
                                     <a href="{{ route('loading-produks.edit', $produk->uuid) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
                                         <i class="bi bi-pencil-square"></i> Edit Data
                                     </a>
+                                    @endcan
 
                                     {{-- 3. Update (Lengkapi Data) --}}
+                                    @can('can access edit button')
                                     <a href="{{ route('loading-produks.edit-details', $produk->uuid) }}" class="btn btn-info btn-sm mx-1 text-white" title="Lengkapi Data">
                                         <i class="bi bi-pencil"></i> Update Data
                                     </a>
+                                    @endcan
 
                                     {{-- 4. Hapus --}}
+                                    @can('can access delete button')
                                     <form action="{{ route('loading-produks.destroy', $produk->uuid) }}" method="POST" class="d-inline" onsubmit="return confirm('Anda yakin ingin menghapus data ini?');">
                                         @csrf
                                         @method('DELETE')
@@ -213,6 +220,7 @@
                                             <i class="bi bi-trash"></i> Hapus
                                         </button>
                                     </form>
+                                    @endcan
 
                                 </div>
                             </td>

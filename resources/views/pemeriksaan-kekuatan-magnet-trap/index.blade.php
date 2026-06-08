@@ -74,6 +74,11 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                 <i class="bi bi-plus-circle"></i> Tambah
             </a>
             @endcan
+            @can('can access export')
+            <a href="{{ route('checklistmagnettrap.exportPdf') }}" class="btn btn-danger">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </a>
+            @endcan
             {{-- Tombol Export PDF dihapus sementara karena tidak ada di snippet asli, silakan tambahkan jika routenya ada --}}
             @can('can access recycle')
             <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.recyclebin') }}" class="btn btn-secondary">
@@ -161,14 +166,16 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                             {{-- Aksi dengan Layout Text-Nowrap + MX-1 --}}
                             <td class="text-center align-middle text-nowrap">
                                 <div class="d-flex justify-content-center align-items-center">
-
+                                    
+                                    @can('can access verification button')
                                     {{-- 0. Tombol Verifikasi (Memicu Modal) --}}
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#verifyModal{{ $item->id }}"
-                                    title="Verifikasi SPV">
-                                    <i class="bi bi-shield-check me-1"></i> Verifikasi
-                                </button>
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#verifyModal{{ $item->id }}"
+                                        title="Verifikasi SPV">
+                                        <i class="bi bi-shield-check me-1"></i> Verifikasi
+                                    </button>
+                                    @endcan
 
                                 {{-- 1. Detail --}}
                                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.show', $item->id) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
@@ -176,16 +183,21 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                 </a>
 
                                 {{-- 2. Edit --}}
+                                @can('can access edit button')
                                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.edit', $item->id) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
                                     <i class="bi bi-pencil-square me-1"></i> Edit
                                 </a>
+                                @endcan
 
                                 {{-- 3. Update Form --}}
+                                @can('can access update button')
                                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.update_form', $item->id) }}" class="btn btn-info btn-sm mx-1 text-white" title="Update / Lengkapi Data">
                                     <i class="bi bi-pencil me-1"></i> Update
                                 </a>
+                                @endcan
 
                                 {{-- 4. Hapus --}}
+                                @can('can access delete button')
                                 <form action="{{ route('pemeriksaan-kekuatan-magnet-trap.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
                                     @csrf
                                     @method('DELETE')
@@ -193,6 +205,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                         <i class="bi bi-trash me-1"></i> Hapus
                                     </button>
                                 </form>
+                                @endcan
 
                             </div>
                         </td>

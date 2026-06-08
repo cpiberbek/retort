@@ -98,8 +98,16 @@
                                         <input type="file" name="data_pvdc[{{ $i }}][kode_produksi]" class="form-control form-control-sm" accept="image/*">
                                         <div class="preview mt-2">
                                             @if(!empty($row['file']))
-                                            <a href="{{ $row['file'] }}" target="_blank">
-                                                <img src="{{ $row['file'] }}" width="100" class="img-thumbnail">
+                                            @php
+                                                $fileUrl = $row['file'];
+                                                if (preg_match('/^https?:\/\/[^\/]+\/storage\/(.+)$/i', $fileUrl, $matches)) {
+                                                    $fileUrl = asset('storage/' . $matches[1]);
+                                                } elseif (!preg_match('/^https?:\/\//i', $fileUrl)) {
+                                                    $fileUrl = asset('storage/' . ltrim($fileUrl, '/'));
+                                                }
+                                            @endphp
+                                            <a href="{{ $fileUrl }}" target="_blank">
+                                                <img src="{{ $fileUrl }}" width="100" class="img-thumbnail">
                                             </a>
                                             <input type="hidden" name="data_pvdc[{{ $i }}][file_url]" value="{{ $row['file'] }}">
                                             @endif

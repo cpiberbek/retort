@@ -202,7 +202,7 @@ class LoadingProdukController extends Controller
 
             // --- PERBAIKAN DI SINI ---
             // Arahkan redirect ke route 'show' menggunakan UUID, bukan ID.
-            return redirect()->route('loading-produks.show', $loadingProduk->uuid)
+            return redirect()->route('loading-produks.index', $loadingProduk->uuid)
                 ->with('success', 'Data pemeriksaan loading berhasil diperbarui.');
             // --- BATAS PERBAIKAN ---
 

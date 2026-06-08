@@ -205,8 +205,11 @@
                 batchSelect.prop('disabled', false);
                 batchSelect.html('<option value="">Mencari Batch...</option>');
 
+                let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
+                url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
+
                 $.ajax({
-                    url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                    url: url, // Gunakan variabel url yang sudah aman
                     type: 'GET',
                     success: function(data) {
                         batchSelect.html('<option value="">-- Pilih Batch --</option>');
@@ -218,7 +221,6 @@
                         }
 
                         data.forEach(function(item) {
-                            // Mengirim teks kode_produksi, BUKAN UUID
                             batchSelect.append(
                                 `<option value="${item.kode_produksi}">${item.kode_produksi}</option>`
                             );

@@ -128,7 +128,10 @@
                 </div>
 
                 @php
-                $cooking = !empty($pemasakanData) ? $pemasakanData : [];
+                $cooking = is_string($pemasakan->cooking) 
+                    ? json_decode($pemasakan->cooking, true) 
+                    : $pemasakan->cooking;
+                $cooking = is_array($cooking) ? $cooking : [];
                 @endphp
 
                 {{-- ================= PERSIAPAN ================= --}}
@@ -691,7 +694,7 @@
             $('.kode_produksi').html('<option value="">Mencari Batch...</option>').prop('disabled', false);
 
             $.ajax({
-                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent(namaProduk),
                 type: 'GET',
                 success: function(data) {
                     batchedData = data;
@@ -704,7 +707,7 @@
         // Trigger AJAX Saat Load Pertama (untuk mengisi batch lama dan data reject)
         if ($('#nama_produk').val()) {
             $.ajax({
-                url: '/lookup/batch/' + encodeURIComponent($('#nama_produk').val()),
+                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent($('#nama_produk').val()),
                 type: 'GET',
                 success: function(data) {
                     batchedData = data;

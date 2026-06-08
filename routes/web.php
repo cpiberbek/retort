@@ -78,7 +78,7 @@ Route::get('/', function () {
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::get('/get-inspections', [MincingController::class, 'getInspections']);
-Route::get('/lookup/batch/{nama_produk}', [MagnetTrapController::class, 'getBatch']);
+// Route::get('/lookup/batch/{nama_produk}', [MagnetTrapController::class, 'getBatch']);
 Route::get('/retort', [RetortController::class, 'index'])->name('retort.index');
 Route::post('/retort/cari', [RetortController::class, 'cari'])->name('retort.cari');
 

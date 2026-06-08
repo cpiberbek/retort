@@ -250,25 +250,33 @@
 
                     if (!namaProduk) return;
 
+                    let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
+                    url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
+
                     $.ajax({
-                        url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                        url: url,
                         type: 'GET',
+                        dataType: 'json',
                         success: function(data) {
                             kodeBatchSelect.prop('disabled', false);
                             kodeBatchSelect.html('<option value="">-- Pilih Batch --</option>');
-                            
-                            if(data.length === 0){
-                                kodeBatchSelect.html('<option value="">Batch Kosong</option>');
-                                kodeBatchSelect.prop('disabled', true);
+
+                            if (!Array.isArray(data) || data.length === 0) {
+                                kodeBatchSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
                                 return;
                             }
 
                             data.forEach(function(item) {
                                 kodeBatchSelect.append(`<option value="${item.kode_produksi}" data-uuid="${item.uuid}">${item.kode_produksi}</option>`);
                             });
+                        },
+                        error: function() {
+                            kodeBatchSelect.html('<option value="">Gagal memuat data</option>').prop('disabled', true);
                         }
                     });
                 });
+
+                
 
                 // 2. AJAX LOAD PALET & HITUNG EXPIRED BERDASARKAN BATCH
                 kodeBatchSelect.on('change', function() {

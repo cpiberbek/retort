@@ -715,7 +715,7 @@
         // 1. Tarik data batch via AJAX saat halaman dimuat (berdasarkan varian yg readonly)
         if (namaProduk) {
             $.ajax({
-                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent(namaProduk),
                 type: 'GET',
                 success: function(data) {
                     batchedData = data;

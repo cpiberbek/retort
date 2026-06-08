@@ -350,12 +350,16 @@
 
             kodeToplesSelect.prop('disabled', false).html('<option value="">Mencari Batch...</option>');
 
+            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
+            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
+
             $.ajax({
-                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                url: url,
                 type: 'GET',
+                dataType: 'json',
                 success: function(data) {
                     kodeToplesSelect.html('<option value="">-- Pilih Kode Toples (Batch) --</option>');
-                    if (!data || data.length === 0) {
+                    if (!Array.isArray(data) || data.length === 0) {
                         kodeToplesSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
                         return;
                     }
@@ -374,6 +378,8 @@
         namaProdukSelect.on('change', function() {
             loadBatches($(this).val());
         });
+
+        
 
         if (namaProdukSelect.val() && kodeToplesSelect.is('select')) {
             let oldBatch = "{{ old('kode_toples', $packing->kode_toples ?? '') }}";

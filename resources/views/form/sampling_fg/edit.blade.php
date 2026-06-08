@@ -237,14 +237,17 @@
                 return;
             }
 
+            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
+
             $.ajax({
-                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                url: url,
                 type: 'GET',
+                dataType: 'json',
                 success: function(data) {
                     batchSelect.prop('disabled', false);
                     batchSelect.html('<option value="">-- Pilih Batch --</option>');
                     
-                    if(!data || data.length === 0){
+                    if(!Array.isArray(data) || data.length === 0){
                         batchSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
                         return;
                     }
@@ -266,6 +269,9 @@
                         let oldPalet = "{{ old('palet', $sampling_fg->palet ?? '') }}";
                         loadPalet(uuid, oldPalet);
                     }
+                },
+                error: function() {
+                    batchSelect.html('<option value="">Gagal memuat data</option>').prop('disabled', true);
                 }
             });
         }
@@ -327,6 +333,8 @@
 
             loadBatches(namaProduk);
         });
+
+        
 
         // Event: Change Batch (user manual change atau programmatic)
         batchSelect.on('change', function() {
