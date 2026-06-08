@@ -164,5 +164,29 @@
         }
     });
 </script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+
+    document.querySelectorAll(
+        '#sanitasiForm input[type="text"], ' +
+        '#sanitasiForm input[type="number"], ' +
+        '#sanitasiForm input[type="time"], ' +
+        '#sanitasiForm textarea'
+    ).forEach(field => {
+        if (field.value.trim() !== '') {
+            field.readOnly = true;
+        }
+    });
+
+    document.querySelectorAll('#sanitasiForm select').forEach(field => {
+        if (field.value.trim() !== '') {
+            field.style.pointerEvents = 'none';
+            field.style.backgroundColor = '#e9ecef';
+        }
+    });
+
+});
+</script>
 @endpush
 @endsection
