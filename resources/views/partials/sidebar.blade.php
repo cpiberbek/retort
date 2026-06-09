@@ -472,7 +472,7 @@
 
                      {{-- <hanya bisa diakses cikande 2> --}}
                     @can('can access cikande')
-                        
+                        <hr class="sidebar-divider d-none d-md-block" style="border: 0; border-top: 1px solid rgb(185, 178, 178);">
                         <a class="collapse-item {{ request()->routeIs('timbangan.*') ? 'active' : '' }}"
                         href="{{ route('timbangan.index') }}">Verifikasi Timbangan</a>  
                         <a class="collapse-item {{ request()->routeIs('pemusnahan.*') ? 'active' : '' }}"
