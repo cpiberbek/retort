@@ -12,19 +12,22 @@ class Stuffing extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'stuffings';
-
     protected $primaryKey = 'uuid';  
-
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'shift', 'nama_produk', 'kode_produksi', 'exp_date', 'kode_mesin', 'jam_mulai', 'suhu', 'sensori', 'kecepatan_stuffing', 'panjang_pcs', 'berat_pcs', 'kebersihan_seal', 'kekuatan_seal', 'diameter_klip', 'print_kode', 'lebar_cassing', 'catatan', 
+        'date', 'plant', 'shift', 'nama_produk', 'kode_produksi', 'exp_date', 
+        'data_stuffing', // <-- Tambahkan kolom JSON ini
         'nama_produksi', 'status_produksi', 'tgl_update_produksi',
-        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'username', 'username_updated', 'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
     ];
 
-    //relasi kode batch     
+    // Konversi JSON otomatis menjadi Array PHP bertenaga Eloquent
+    protected $casts = [
+        'data_stuffing' => 'array',
+    ];
+
     public function mincing()
     {
         return $this->belongsTo(Mincing::class, 'kode_produksi', 'uuid');
