@@ -129,7 +129,6 @@ class StuffingController extends Controller
             if ($user) $nama_produksi = $user->name;
         }
 
-        // 1. Validasi Root & Validasi Array Multi-Dimensi (Dot Notation)
         $validated = $request->validate([
             'date'          => 'required|date',
             'shift'         => 'required',
@@ -137,7 +136,6 @@ class StuffingController extends Controller
             'kode_produksi' => 'required|exists:mincings,uuid',
             'exp_date'      => 'required|date',
             
-            // Validasi Array Form Dinamis
             'stuffing'                      => 'required|array|min:1',
             'stuffing.*.kode_mesin'         => 'required|string',
             'stuffing.*.jam_mulai'          => 'required',
@@ -153,44 +151,25 @@ class StuffingController extends Controller
             'stuffing.*.lebar_cassing'      => 'nullable|numeric',
             'stuffing.*.catatan'            => 'nullable|string',
         ], [
-            // Kustomisasi pesan error agar mudah dipahami user
             'stuffing.*.kode_mesin.required' => 'Nama Mesin pada salah satu form belum dipilih.',
             'stuffing.*.jam_mulai.required'  => 'Jam Mulai pada salah satu form belum diisi.',
         ]);
 
-        // 2. Looping Simpan Data ke Database
-        foreach ($request->stuffing as $item) {
-            Stuffing::create([
-                'date'               => $request->date,
-                'shift'              => $request->shift,
-                'nama_produk'        => $request->nama_produk,
-                'kode_produksi'      => $request->kode_produksi,
-                'exp_date'           => $request->exp_date,
-                
-                // Ambil dari iterasi form
-                'kode_mesin'         => $item['kode_mesin'],
-                'jam_mulai'          => $item['jam_mulai'],
-                'suhu'               => $item['suhu'] ?? null,
-                'sensori'            => $item['sensori'] ?? null,
-                'kecepatan_stuffing' => $item['kecepatan_stuffing'] ?? null,
-                'panjang_pcs'        => $item['panjang_pcs'] ?? null,
-                'berat_pcs'          => $item['berat_pcs'] ?? null,
-                'kebersihan_seal'    => $item['kebersihan_seal'] ?? null,
-                'kekuatan_seal'      => $item['kekuatan_seal'] ?? null,
-                'diameter_klip'      => $item['diameter_klip'] ?? null,
-                'print_kode'         => $item['print_kode'] ?? null,
-                'lebar_cassing'      => $item['lebar_cassing'] ?? null,
-                'catatan'            => $item['catatan'] ?? null,
-
-                // Sistem/User tracking
-                'username'           => $username,
-                'plant'              => $userPlant,
-                'nama_produksi'      => $nama_produksi,
-                'status_produksi'    => "1",
-                'tgl_update_produksi'=> now()->addHour(),
-                'status_spv'         => "0",
-            ]);
-        }
+        // SIMPAN SEBAGAI SATU BARIS DATA UTUH
+        Stuffing::create([
+            'date'               => $request->date,
+            'shift'              => $request->shift,
+            'nama_produk'        => $request->nama_produk,
+            'kode_produksi'      => $request->kode_produksi,
+            'exp_date'           => $request->exp_date,
+            'data_stuffing'      => $request->stuffing, // Array masuk langsung ke kolom JSON
+            'username'           => $username,
+            'plant'              => $userPlant,
+            'nama_produksi'      => $nama_produksi,
+            'status_produksi'    => "1",
+            'tgl_update_produksi'=> now()->addHour(),
+            'status_spv'         => "0",
+        ]);
 
         return redirect()->route('stuffing.index')->with('success', 'Pemeriksaan Stuffing Sosis Retort berhasil disimpan');
     }
@@ -221,9 +200,7 @@ class StuffingController extends Controller
             'kode_produksi' => 'required',
             'exp_date'      => 'required|date',
             
-            // Validasi Array Form Dinamis
             'stuffing'                      => 'required|array|min:1',
-            'stuffing.*.uuid'               => 'nullable|string',
             'stuffing.*.kode_mesin'         => 'required|string',
             'stuffing.*.jam_mulai'          => 'required',
             'stuffing.*.suhu'               => 'nullable|numeric',
@@ -242,68 +219,18 @@ class StuffingController extends Controller
             'stuffing.*.jam_mulai.required'  => 'Jam Mulai pada salah satu form belum diisi.',
         ]);
 
-        $nama_produksi = 'Produksi RTT';
-        if (session()->has('selected_produksi')) {
-            $user = \App\Models\User::where('uuid', session('selected_produksi'))->first();
-            if ($user) $nama_produksi = $user->name;
-        }
+        // CUKUP LAKUKAN 1 KALI UPDATE, HAPUS LOGIK FOREACH
+        $stuffingOriginal->update([
+            'date'               => $request->date,
+            'shift'              => $request->shift,
+            'nama_produk'        => $request->nama_produk,
+            'kode_produksi'      => $request->kode_produksi,
+            'exp_date'           => $request->exp_date,
+            'data_stuffing'      => $request->stuffing, // Timpa dengan array baru
+            'username_updated'   => $username_updated,
+        ]);
 
-        foreach ($request->stuffing as $item) {
-            if (!empty($item['uuid']) && $item['uuid'] === $uuid) {
-                // A. UPDATE DATA EXISTING (Sesuai kiriman hidden input karena di UI readonly)
-                $stuffingOriginal->update([
-                    'date'               => $request->date,
-                    'shift'              => $request->shift,
-                    'nama_produk'        => $request->nama_produk,
-                    'kode_produksi'      => $request->kode_produksi,
-                    'exp_date'           => $request->exp_date,
-                    'kode_mesin'         => $item['kode_mesin'],
-                    'jam_mulai'          => $item['jam_mulai'],
-                    'suhu'               => $item['suhu'],
-                    'sensori'            => $item['sensori'],
-                    'kecepatan_stuffing' => $item['kecepatan_stuffing'],
-                    'panjang_pcs'        => $item['panjang_pcs'],
-                    'berat_pcs'          => $item['berat_pcs'],
-                    'kebersihan_seal'    => $item['kebersihan_seal'],
-                    'kekuatan_seal'      => $item['kekuatan_seal'],
-                    'diameter_klip'      => $item['diameter_klip'],
-                    'print_kode'         => $item['print_kode'],
-                    'lebar_cassing'      => $item['lebar_cassing'],
-                    'catatan'            => $item['catatan'],
-                    'username_updated'   => $username_updated,
-                ]);
-            } else {
-                // B. INSERT DATA BARU YANG DITAMBAHKAN VIA TOMBOL
-                Stuffing::create([
-                    'date'               => $request->date,
-                    'shift'              => $request->shift,
-                    'nama_produk'        => $request->nama_produk,
-                    'kode_produksi'      => $request->kode_produksi,
-                    'exp_date'           => $request->exp_date,
-                    'kode_mesin'         => $item['kode_mesin'],
-                    'jam_mulai'          => $item['jam_mulai'],
-                    'suhu'               => $item['suhu'] ?? null,
-                    'sensori'            => $item['sensori'] ?? null,
-                    'kecepatan_stuffing' => $item['kecepatan_stuffing'] ?? null,
-                    'panjang_pcs'        => $item['panjang_pcs'] ?? null,
-                    'berat_pcs'          => $item['berat_pcs'] ?? null,
-                    'kebersihan_seal'    => $item['kebersihan_seal'] ?? null,
-                    'kekuatan_seal'      => $item['kekuatan_seal'] ?? null,
-                    'diameter_klip'      => $item['diameter_klip'] ?? null,
-                    'print_kode'         => $item['print_kode'] ?? null,
-                    'lebar_cassing'      => $item['lebar_cassing'] ?? null,
-                    'catatan'            => $item['catatan'] ?? null,
-                    'username'           => $username_updated,
-                    'plant'              => Auth::user()->plant,
-                    'nama_produksi'      => $nama_produksi,
-                    'status_produksi'    => "1",
-                    'tgl_update_produksi'=> now()->addHour(),
-                    'status_spv'         => "0",
-                ]);
-            }
-        }
-
-        return redirect()->route('stuffing.index')->with('success', 'Pemeriksaan Stuffing Sosis Retort berhasil diperbarui & ditambahkan');
+        return redirect()->route('stuffing.index')->with('success', 'Pemeriksaan Stuffing Sosis Retort berhasil diperbarui');
     }
 
     public function edit(string $uuid)
@@ -333,7 +260,6 @@ class StuffingController extends Controller
             'exp_date'      => 'required|date',
             
             'stuffing'                      => 'required|array|min:1',
-            'stuffing.*.uuid'               => 'nullable|string',
             'stuffing.*.kode_mesin'         => 'required|string',
             'stuffing.*.jam_mulai'          => 'required',
             'stuffing.*.suhu'               => 'nullable|numeric',
@@ -352,68 +278,18 @@ class StuffingController extends Controller
             'stuffing.*.jam_mulai.required'  => 'Jam Mulai pada salah satu form belum diisi.',
         ]);
 
-        foreach ($request->stuffing as $item) {
-            if (!empty($item['uuid']) && $item['uuid'] === $uuid) {
-                // A. UPDATE DATA EXISTING (Oleh SPV - Nilainya bisa diubah secara penuh)
-                $stuffingOriginal->update([
-                    'date'               => $request->date,
-                    'shift'              => $request->shift,
-                    'nama_produk'        => $request->nama_produk,
-                    'kode_produksi'      => $request->kode_produksi,
-                    'exp_date'           => $request->exp_date,
-                    'kode_mesin'         => $item['kode_mesin'],
-                    'jam_mulai'          => $item['jam_mulai'],
-                    'suhu'               => $item['suhu'],
-                    'sensori'            => $item['sensori'],
-                    'kecepatan_stuffing' => $item['kecepatan_stuffing'],
-                    'panjang_pcs'        => $item['panjang_pcs'],
-                    'berat_pcs'          => $item['berat_pcs'],
-                    'kebersihan_seal'    => $item['kebersihan_seal'],
-                    'kekuatan_seal'      => $item['kekuatan_seal'],
-                    'diameter_klip'      => $item['diameter_klip'],
-                    'print_kode'         => $item['print_kode'],
-                    'lebar_cassing'      => $item['lebar_cassing'],
-                    'catatan'            => $item['catatan'],
-                    'username_updated'   => $username_updated,
-                ]);
-            } else {
-                // B. INSERT DATA BARU YANG DITAMBAHKAN VIA TOMBOL
-                $nama_produksi = 'Produksi RTT';
-                if (session()->has('selected_produksi')) {
-                    $user = \App\Models\User::where('uuid', session('selected_produksi'))->first();
-                    if ($user) $nama_produksi = $user->name;
-                }
+        // CUKUP LAKUKAN 1 KALI UPDATE, HAPUS LOGIK FOREACH
+        $stuffingOriginal->update([
+            'date'               => $request->date,
+            'shift'              => $request->shift,
+            'nama_produk'        => $request->nama_produk,
+            'kode_produksi'      => $request->kode_produksi,
+            'exp_date'           => $request->exp_date,
+            'data_stuffing'      => $request->stuffing, // Timpa dengan array baru
+            'username_updated'   => $username_updated,
+        ]);
 
-                Stuffing::create([
-                    'date'               => $request->date,
-                    'shift'              => $request->shift,
-                    'nama_produk'        => $request->nama_produk,
-                    'kode_produksi'      => $request->kode_produksi,
-                    'exp_date'           => $request->exp_date,
-                    'kode_mesin'         => $item['kode_mesin'],
-                    'jam_mulai'          => $item['jam_mulai'],
-                    'suhu'               => $item['suhu'] ?? null,
-                    'sensori'            => $item['sensori'] ?? null,
-                    'kecepatan_stuffing' => $item['kecepatan_stuffing'] ?? null,
-                    'panjang_pcs'        => $item['panjang_pcs'] ?? null,
-                    'berat_pcs'          => $item['berat_pcs'] ?? null,
-                    'kebersihan_seal'    => $item['kebersihan_seal'] ?? null,
-                    'kekuatan_seal'      => $item['kekuatan_seal'] ?? null,
-                    'diameter_klip'      => $item['diameter_klip'] ?? null,
-                    'print_kode'         => $item['print_kode'] ?? null,
-                    'lebar_cassing'      => $item['lebar_cassing'] ?? null,
-                    'catatan'            => $item['catatan'] ?? null,
-                    'username'           => $username_updated,
-                    'plant'              => Auth::user()->plant,
-                    'nama_produksi'      => $nama_produksi,
-                    'status_produksi'    => "1",
-                    'tgl_update_produksi'=> now()->addHour(),
-                    'status_spv'         => "0",
-                ]);
-            }
-        }
-
-        return redirect()->route('stuffing.index')->with('success', 'Pemeriksaan Stuffing Sosis Retort berhasil diperbarui & ditambahkan');
+        return redirect()->route('stuffing.index')->with('success', 'Pemeriksaan Stuffing Sosis Retort berhasil diperbarui oleh SPV');
     }
 
     public function verification(Request $request)

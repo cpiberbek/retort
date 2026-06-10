@@ -81,29 +81,12 @@
                         <div class="accordion" id="accordionStuffing">
                             
                             @php
-                                $oldStuffing = old('stuffing');
-                                if(!$oldStuffing) {
-                                    $oldStuffing = [[
-                                        'uuid'               => $stuffing->uuid,
-                                        'kode_mesin'         => $stuffing->kode_mesin,
-                                        'jam_mulai'          => $stuffing->jam_mulai,
-                                        'suhu'               => $stuffing->suhu,
-                                        'sensori'            => $stuffing->sensori,
-                                        'kecepatan_stuffing' => $stuffing->kecepatan_stuffing,
-                                        'panjang_pcs'        => $stuffing->panjang_pcs,
-                                        'berat_pcs'          => $stuffing->berat_pcs,
-                                        'kebersihan_seal'    => $stuffing->kebersihan_seal,
-                                        'kekuatan_seal'      => $stuffing->kekuatan_seal,
-                                        'diameter_klip'      => $stuffing->diameter_klip,
-                                        'print_kode'         => $stuffing->print_kode,
-                                        'lebar_cassing'      => $stuffing->lebar_cassing,
-                                        'catatan'            => $stuffing->catatan,
-                                    ]];
-                                }
+                                $oldStuffing = old('stuffing', is_array($stuffing->data_stuffing) ? $stuffing->data_stuffing : [[]]);
+                                $originalCount = is_array($stuffing->data_stuffing) ? count($stuffing->data_stuffing) : 0;
                             @endphp
 
                             @foreach ($oldStuffing as $index => $item)
-                                @php $isExisting = isset($item['uuid']) || $index === 0; @endphp
+                                @php $isExisting = $index < $originalCount; @endphp
                                 <div class="accordion-item stuffing-item">
                                     <h5 class="accordion-header" id="heading{{ $index }}">
                                         <button class="accordion-button {{ $index == 0 ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}">
@@ -114,40 +97,36 @@
                                     <div id="collapse{{ $index }}" class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}" data-bs-parent="#accordionStuffing">
                                         <div class="accordion-body">
                                             
-                                            @if($isExisting)
-                                                <input type="hidden" name="stuffing[{{ $index }}][uuid]" value="{{ $item['uuid'] ?? $stuffing->uuid }}">
-                                            @else
-                                                <div class="text-end mb-3">
-                                                    <button type="button" class="btn btn-outline-danger btn-sm btnHapus"><i class="bi bi-trash"></i></button>
-                                                </div>
-                                            @endif
+                                            <div class="text-end mb-3">
+                                                <button type="button" class="btn btn-outline-danger btn-sm btnHapus"><i class="bi bi-trash"></i></button>
+                                            </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label fw-bold">Nama Mesin</label>
                                                 <select name="stuffing[{{ $index }}][kode_mesin]" class="form-control" required>
                                                     <option value="">-- Pilih Mesin --</option>
                                                     @foreach($mesins as $m)
-                                                        <option value="{{ $m->nama_mesin }}" {{ $item['kode_mesin'] == $m->nama_mesin ? 'selected' : '' }}>{{ $m->nama_mesin }}</option>
+                                                        <option value="{{ $m->nama_mesin }}" {{ ($item['kode_mesin'] ?? '') == $m->nama_mesin ? 'selected' : '' }}>{{ $m->nama_mesin }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
 
                                             <div class="mb-3">
                                                 <label class="form-label">Jam Mulai</label>
-                                                <input type="time" name="stuffing[{{ $index }}][jam_mulai]" class="form-control" value="{{ $item['jam_mulai'] }}" required>
+                                                <input type="time" name="stuffing[{{ $index }}][jam_mulai]" class="form-control" value="{{ $item['jam_mulai'] ?? '' }}" required>
                                             </div>
 
                                             <hr><h6 class="fw-bold text-primary">Parameter Adonan</h6>
                                             <div class="mb-3">
                                                 <label class="form-label">Suhu (°C)</label>
-                                                <input type="number" step="0.01" name="stuffing[{{ $index }}][suhu]" class="form-control" value="{{ $item['suhu'] }}">
+                                                <input type="number" step="0.01" name="stuffing[{{ $index }}][suhu]" class="form-control" value="{{ $item['suhu'] ?? '' }}">
                                             </div>
                                             <div class="mb-3">
                                                 <label class="form-label">Sensori</label>
                                                 <select name="stuffing[{{ $index }}][sensori]" class="form-control">
                                                     <option value="">-- Pilih --</option>
-                                                    <option value="OK" {{ $item['sensori'] == 'OK' ? 'selected' : '' }}>OK</option>
-                                                    <option value="Tidak OK" {{ $item['sensori'] == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
+                                                    <option value="OK" {{ ($item['sensori'] ?? '') == 'OK' ? 'selected' : '' }}>OK</option>
+                                                    <option value="Tidak OK" {{ ($item['sensori'] ?? '') == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
                                                 </select>
                                             </div>
 
@@ -160,7 +139,7 @@
                                             @foreach($fields as $key => $label)
                                                 <div class="mb-3">
                                                     <label class="form-label">{{ $label }}</label>
-                                                    <input type="number" step="0.01" name="stuffing[{{ $index }}][{{ $key }}]" class="form-control" value="{{ $item[$key] }}">
+                                                    <input type="number" step="0.01" name="stuffing[{{ $index }}][{{ $key }}]" class="form-control" value="{{ $item[$key] ?? '' }}">
                                                 </div>
                                             @endforeach
 
@@ -169,8 +148,8 @@
                                                     <label class="form-label">{{ $label }}</label>
                                                     <select name="stuffing[{{ $index }}][{{ $key }}]" class="form-control">
                                                         <option value="">-- Pilih --</option>
-                                                        <option value="OK" {{ $item[$key] == 'OK' ? 'selected' : '' }}>OK</option>
-                                                        <option value="Tidak OK" {{ $item[$key] == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
+                                                        <option value="OK" {{ ($item[$key] ?? '') == 'OK' ? 'selected' : '' }}>OK</option>
+                                                        <option value="Tidak OK" {{ ($item[$key] ?? '') == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
                                                     </select>
                                                 </div>
                                             @endforeach
@@ -178,7 +157,7 @@
                                             <div class="card mt-4">
                                                 <div class="card-header bg-light"><strong>Catatan</strong></div>
                                                 <div class="card-body">
-                                                    <textarea name="stuffing[{{ $index }}][catatan]" class="form-control" rows="3">{{ $item['catatan'] }}</textarea>
+                                                    <textarea name="stuffing[{{ $index }}][catatan]" class="form-control" rows="3">{{ $item['catatan'] ?? '' }}</textarea>
                                                 </div>
                                             </div>
 

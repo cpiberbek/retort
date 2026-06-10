@@ -10,22 +10,18 @@ return new class extends Migration
     {
         Schema::table('mincings', function (Blueprint $table) {
             // PREMIX
-            $table->time('waktu_mixing_premix_start')
-                ->nullable()
-                ->after('waktu_mixing_premix');
+            $table->time('waktu_mixing_premix_start')->nullable();
 
             $table->time('waktu_mixing_premix_end')
-                ->nullable()
-                ->after('waktu_mixing_premix_start');
+                ->nullable();
 
             // BOWL CUTTER
             $table->time('waktu_bowl_cutter_start')
-                ->nullable()
-                ->after('waktu_bowl_cutter');
+                ->nullable();
+
 
             $table->time('waktu_bowl_cutter_end')
-                ->nullable()
-                ->after('waktu_bowl_cutter_start');
+                ->nullable();
         });
     }
 
