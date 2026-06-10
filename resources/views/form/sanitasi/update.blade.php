@@ -140,12 +140,15 @@
                     <tr>
                         <td><input type="time" name="pemeriksaan[${b}][waktu]" class="form-control" value="${rowData.waktu ?? ''}"></td>
                         <td>
-                            <select name="pemeriksaan[${b}][kondisi]" class="form-control">
+                            <select name="pemeriksaan[${b}][kondisi]" class="form-control kondisi-select">
+                                <option value="" selected disabled>-- Pilih Kondisi --</option>
                                 <option value="✔" ${rowData.kondisi === '✔' ? 'selected' : ''}>✔</option>
-                    ${[...Array(11)].map((_, i) => `<option value="${i+1}" ${rowData.kondisi == (i+1) ? 'selected' : ''}>${i+1}</option>`).join('')}
+                                ${[...Array(11)].map((_, i) => `<option value="${i+1}" ${rowData.kondisi == (i+1) ? 'selected' : ''}>${i+1}</option>`).join('')}
                             </select>
                         </td>
-                        <td><input type="text" name="pemeriksaan[${b}][keterangan]" class="form-control" value="${rowData.keterangan ?? ''}"></td>
+                        <td>
+                            <input type="text" name="pemeriksaan[${b}][keterangan]" class="form-control keterangan-input" value="${rowData.keterangan ?? ''}">
+                            </td>
                         <td><input type="text" name="pemeriksaan[${b}][tindakan]" class="form-control" value="${rowData.tindakan ?? ''}"></td>
                         <td><input type="time" name="pemeriksaan[${b}][waktu_koreksi]" class="form-control" value="${rowData.waktu_koreksi ?? ''}"></td>
                         <td><input type="text" name="pemeriksaan[${b}][dikerjakan_oleh]" class="form-control" value="${rowData.dikerjakan_oleh ?? ''}"></td>
@@ -156,6 +159,32 @@
                 wrapper.appendChild(table);
             });
         }
+
+        // ================= AUTO KETERANGAN =================
+                const kondisiMap = {
+                    "✔": "OK (Bersih)",
+                    "1": "Basah",
+                    "2": "Berdebu",
+                    "3": "Kerak",
+                    "4": "Noda",
+                    "5": "Karat",
+                    "6": "Sampah",
+                    "7": "Retak/Pecah",
+                    "8": "Sisa Produk",
+                    "9": "Sisa Adonan",
+                    "10": "Berjamur",
+                    "11": "Lain-lain"
+                };
+
+                $(document).on('change', '.kondisi-select', function() {
+                    let value = $(this).val();
+                    let row = $(this).closest('tr');
+                    let keteranganInput = row.find('.keterangan-input');
+
+                    if (kondisiMap[value]) {
+                        keteranganInput.val(kondisiMap[value]);
+                    }
+                });
 
     // Render pemeriksaan saat load
         if(sanitasiData.pemeriksaan) {

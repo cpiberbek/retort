@@ -167,6 +167,7 @@
 
                         <td>
                             <select name="pemeriksaan[${b}][kondisi]" class="form-control kondisi-select">
+                                <option value="" selected disabled>-- Pilih Kondisi --</option>
                                 <option value="✔">✔</option>
                                 ${[...Array(11)].map((_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
                             </select>
