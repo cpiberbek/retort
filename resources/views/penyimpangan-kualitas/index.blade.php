@@ -135,51 +135,61 @@
                             <td class="text-center align-middle text-nowrap">
                                 <div class="d-flex justify-content-center align-items-center gap-2">
 
+                                    @can('can access verification button')
                                     {{-- Verifikasi --}}
                                     <button type="button"
-                                    class="btn btn-primary btn-sm fw-bold shadow-sm"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#verifyModal{{ $item->id }}"
-                                    title="Verifikasi Penyimpangan Kualitas">
-                                    <i class="bi bi-shield-check me-1"></i> Verifikasi
-                                </button>
+                                        class="btn btn-primary btn-sm fw-bold shadow-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#verifyModal{{ $item->id }}"
+                                        title="Verifikasi Penyimpangan Kualitas">
+                                        <i class="bi bi-shield-check me-1"></i> Verifikasi
+                                    </button>
+                                    @endcan
 
-                                {{-- Detail --}}
-                                <a href="{{ route('penyimpangan-kualitas.show', $item->id) }}"
-                                   class="btn btn-outline-primary btn-sm"
-                                   title="Detail">
-                                   <i class="bi bi-eye me-1"></i> Detail
-                               </a>
+                                    @can('can access detail button')
+                                    {{-- Detail --}}
+                                    <a href="{{ route('penyimpangan-kualitas.show', $item->id) }}"
+                                    class="btn btn-outline-primary btn-sm"
+                                    title="Detail">
+                                    <i class="bi bi-eye me-1"></i> Detail
+                                    </a>
+                                    @endcan
 
-                               {{-- Edit --}}
-                               <a href="{{ route('penyimpangan-kualitas.edit', $item->id) }}"
-                                   class="btn btn-warning btn-sm text-white"
-                                   title="Edit">
-                                   <i class="bi bi-pencil-square me-1"></i> Edit
-                               </a>
+                                    @can('can access edit button')
+                                    {{-- Edit --}}
+                                    <a href="{{ route('penyimpangan-kualitas.edit', $item->id) }}"
+                                    class="btn btn-warning btn-sm text-white"
+                                    title="Edit">
+                                    <i class="bi bi-pencil-square me-1"></i> Edit
+                                    </a>
+                                    @endcan
 
-                               {{-- Update / Lengkapi --}}
-                               <a href="{{ route('penyimpangan-kualitas.update_form', $item->id) }}"
-                                   class="btn btn-success btn-sm"
-                                   title="Update / Lengkapi Data">
-                                   <i class="bi bi-pencil me-1"></i> Update
-                               </a>
+                                    @can('can access update button')
+                                    {{-- Update / Lengkapi --}}
+                                    <a href="{{ route('penyimpangan-kualitas.update_form', $item->id) }}"
+                                    class="btn btn-success btn-sm"
+                                    title="Update / Lengkapi Data">
+                                    <i class="bi bi-pencil me-1"></i> Update
+                                    </a>
+                                    @endcan
 
-                               {{-- Hapus --}}
-                               <form action="{{ route('penyimpangan-kualitas.destroy', $item->id) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
-                                  @csrf
-                                  @method('DELETE')
-                                  <button type="submit"
-                                  class="btn btn-danger btn-sm"
-                                  title="Hapus">
-                                  <i class="bi bi-trash me-1"></i> Hapus
-                              </button>
-                          </form>
+                                    @can('can access delete button')
+                                    {{-- Hapus --}}
+                                    <form action="{{ route('penyimpangan-kualitas.destroy', $item->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                            class="btn btn-danger btn-sm"
+                                            title="Hapus">
+                                            <i class="bi bi-trash me-1"></i> Hapus
+                                        </button>
+                                    </form>
+                                    @endcan
 
-                      </div>
-                  </td>
+                                </div>
+                            </td>
               </tr>
               @empty
               <tr>

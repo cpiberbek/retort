@@ -311,7 +311,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($area_suhus as $index => $area)
+                            @foreach ($area_suhus->filter(function ($area) {
+                                return $area->rh_min !== null && $area->rh_max !== null;
+                            })->values() as $index => $area)
                                 <tr>
                                     <td>{{ $index + 1 }}</td>
 

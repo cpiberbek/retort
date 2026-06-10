@@ -63,11 +63,15 @@
 
                         {{-- Baris 3 --}}
                         <div class="row mb-3">
+                             @php
+                                $kode = \App\Models\Mincing::where('uuid', $pemasakan_rte->kode_produksi)->value('kode_produksi');
+                            @endphp
+
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <input type="text" name="kode_produksi" class="form-control" maxlength="50"
-                                value="{{ old('kode_produksi', $pemasakan_rte->kode_produksi) }}" 
-                                {{ $pemasakan_rte->kode_produksi ? 'readonly' : '' }}>
+                                <input type="text" class="form-control" value="{{ $kode }}" readonly>
+                                <input type="hidden" name="kode_produksi" value="{{ $pemasakan_rte->kode_produksi }}">
+                                <small id="kodeError" class="text-danger d-none"></small>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Berat Varian (gram)</label>

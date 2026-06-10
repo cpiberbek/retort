@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Retain_rte;
 use App\Models\Produk;
+use App\Models\Mincing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -12,10 +13,10 @@ use TCPDF;
 class Retain_rteController extends Controller
 {
 
-    public function index(Request $request)
+   public function index(Request $request)
     {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
+        $search = $request->input('search');
+        $date = $request->input('date');
         $userPlant = Auth::user()->plant;
 
         $data = Retain_rte::query()
@@ -24,7 +25,13 @@ class Retain_rteController extends Controller
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
                         ->orWhere('nama_produk', 'like', "%{$search}%")
-                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhereExists(function ($sub) use ($search) {
+                            $sub->selectRaw(1)
+                                ->from('mincings')
+                                ->whereColumn('mincings.uuid', 'retain_rtes.kode_produksi')
+                                ->where('mincings.kode_produksi', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($date, function ($query) use ($date) {
@@ -34,6 +41,13 @@ class Retain_rteController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->appends($request->all());
+
+        $data->getCollection()->transform(function ($item) {
+            $item->kode_produksi = Mincing::where('uuid', $item->kode_produksi)
+                ->value('kode_produksi') ?? $item->kode_produksi;
+
+            return $item;
+        });
 
         return view('form.retain_rte.index', compact('data', 'search', 'date'));
     }

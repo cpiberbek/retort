@@ -15,7 +15,7 @@ class PermissionController extends Controller
      */
     public function index()
     {
-        $permissions = Permission::all();
+        $permissions = Permission::where('name', '!=', 'can access cikande')->get();
         return view('admin.permissions.index', compact('permissions'));
     }
 

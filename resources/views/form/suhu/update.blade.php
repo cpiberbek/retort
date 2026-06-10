@@ -227,67 +227,123 @@
         </div>
 
         {{-- ===================== INPUT SUHU AREA ===================== --}}
-        <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-3 p-md-4">
-                <h6 class="fw-bold mb-4 text-dark d-flex align-items-center">
-                    <i class="bi bi-thermometer-half text-info me-2 fs-5"></i> Edit Suhu Ruangan
-                </h6>
-                
-                <div class="table-responsive">
-                    <table class="table table-borderless table-modern mb-0" style="min-width: 600px;">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-3 p-md-4">
+                    <h6 class="fw-bold mb-4 text-dark d-flex align-items-center">
+                        <i class="bi bi-thermometer-half text-info me-2 fs-5"></i> Edit Suhu Ruangan
+                    </h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-modern mb-0" style="min-width: 600px;">
+                            <thead>
+                                <tr>
+                                    <th class="text-center" style="width: 5%">No</th>
+                                    <th style="width: 35%">Area Pengukuran</th>
+                                    <th class="text-center" style="width: 25%">Batas Standar (°C)</th>
+                                    <th style="width: 35%">Hasil Pengukuran (°C)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($area_suhus as $index => $area)
+                                    @php
+                                        // Ambil nilai lama berdasarkan nama area sesuai struktur data form Edit
+                                        $matched = $suhuData[$area->area] ?? null;
+                                        $nilai = $matched['suhu'] ?? '';
+                                    @endphp
+                                    <tr>
+                                        <td data-label="No" class="text-center text-muted fw-bold">{{ $index + 1 }}</td>
+
+                                        <td data-label="Area Pengukuran">
+                                            <input type="hidden" name="hasil_suhu[{{ $index }}][area]"
+                                                value="{{ $area->area }}">
+                                            <span class="fw-medium text-dark">{{ $area->area }}</span>
+                                        </td>
+
+                                        <td data-label="Batas Standar" class="text-center">
+                                            @if ($area->standar_min !== null && $area->standar_max !== null)
+                                                <span class="badge-standar">
+                                                    {{ $area->standar_min }}°C - {{ $area->standar_max }}°C
+                                                </span>
+                                            @else
+                                                <span class="text-muted small fw-medium text-danger"><i
+                                                        class="bi bi-exclamation-triangle"></i> Standar Kosong</span>
+                                            @endif
+                                        </td>
+
+                                        <td data-label="Hasil Pengukuran">
+                                            <div class="position-relative w-100">
+                                                {{-- Diubah ke type text inputmode decimal agar support tanda minus --}}
+                                                <input type="text" inputmode="decimal"
+                                                    name="hasil_suhu[{{ $index }}][nilai]"
+                                                    value="{{ $nilai }}"
+                                                    class="form-control form-control-solid suhu-input check-old rounded-3"
+                                                    data-min="{{ $area->standar_min }}"
+                                                    data-max="{{ $area->standar_max }}"
+                                                    placeholder="Masukkan suhu"
+                                                    {{ $nilai !== '' && $nilai !== null ? 'readonly' : '' }}>
+
+                                                <div class="text-danger warning-msg d-none mt-1"
+                                                    style="font-size: 0.75rem; font-weight: 500;">
+                                                    <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        {{-- ===================== INPUT SUHU RH ===================== --}}    
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="mb-3">Edit RH</h5>
+
+                    <table class="table table-bordered">
                         <thead>
                             <tr>
-                                <th class="text-center" style="width: 5%">No</th>
-                                <th style="width: 35%">Area Pengukuran</th>
-                                <th class="text-center" style="width: 25%">Batas Standar (°C)</th>
-                                <th style="width: 35%">Hasil Pengukuran (°C)</th>
+                                <th>No</th>
+                                <th>Area</th>
+                                <th>Standar</th>
+                                <th>Hasil</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($area_suhus as $index => $area)
+                            @foreach ($area_suhus->filter(function ($area) {
+                                return $area->rh_min !== null && $area->rh_max !== null;
+                            })->values() as $index => $area)
                                 @php
-                                    // Ambil nilai lama berdasarkan nama area
                                     $matched = $suhuData[$area->area] ?? null;
-                                    $nilai = $matched['nilai'] ?? '';
-                                    // QC Update logic: Input readonly jika nilai sudah pernah diisi
-                                    $isReadonly = $nilai !== ''; 
+                                    $nilai_rh = $matched['rh'] ?? '';
                                 @endphp
                                 <tr>
-                                    <td data-label="No" class="text-center text-muted fw-bold">{{ $index + 1 }}</td>
-                                    
-                                    <td data-label="Area Pengukuran">
-                                        <input type="hidden" name="hasil_suhu[{{ $index }}][area]" value="{{ $area->area }}">
-                                        <span class="fw-medium text-dark">{{ $area->area }}</span>
+                                    <td>{{ $index + 1 }}</td>
+
+                                    <td>
+                                        <input type="hidden" name="hasil_rh[{{ $index }}][area]"
+                                            value="{{ $area->area }}">
+                                        {{ $area->area }}
                                     </td>
-                                    
-                                    <td data-label="Batas Standar" class="text-center">
-                                        @if($area->standar_min !== null && $area->standar_max !== null)
-                                            <span class="badge-standar">
-                                                {{ $area->standar_min }}°C - {{ $area->standar_max }}°C
-                                            </span>
+
+                                    <td>
+                                        @if ($area->rh_min !== null && $area->rh_max !== null)
+                                            {{ $area->rh_min }} - {{ $area->rh_max }} %
                                         @else
-                                            <span class="text-muted small fw-medium text-danger"><i class="bi bi-exclamation-triangle"></i> Standar Kosong</span>
+                                            <span class="text-muted">-</span>
                                         @endif
                                     </td>
-                                    
-                                    <td data-label="Hasil Pengukuran">
-                                        <div class="position-relative w-100">
-                                            {{-- Type diubah ke text agar bisa menerima karakter '-' dan memfilter huruf --}}
-                                            <input 
-                                                type="text" 
-                                                inputmode="decimal" 
-                                                name="hasil_suhu[{{ $index }}][nilai]" 
-                                                value="{{ $nilai }}" 
-                                                class="form-control form-control-solid suhu-input rounded-3" 
-                                                data-min="{{ $area->standar_min }}" 
-                                                data-max="{{ $area->standar_max }}" 
-                                                placeholder="Masukkan suhu"
-                                                {{ $isReadonly ? 'readonly' : '' }}>
-                                            
-                                            <div class="text-danger warning-msg d-none mt-1" style="font-size: 0.75rem; font-weight: 500;">
-                                                <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
-                                            </div>
-                                        </div>
+
+                                    <td>
+                                        <input type="text"
+                                            name="hasil_rh[{{ $index }}][nilai]"
+                                            value="{{ $nilai_rh }}"
+                                            class="form-control rh-input check-old {{ $area->rh_min === null ? 'bg-light text-muted' : '' }}"
+                                            data-min="{{ $area->rh_min }}"
+                                            data-max="{{ $area->rh_max }}"
+                                            {{ $area->rh_min === null ? 'disabled' : '' }}
+                                            {{ $nilai_rh !== '' && $nilai_rh !== null ? 'readonly' : '' }}>
                                     </td>
                                 </tr>
                             @endforeach
@@ -295,7 +351,6 @@
                     </table>
                 </div>
             </div>
-        </div>
 
         {{-- ===================== CATATAN & KETERANGAN ===================== --}}
         <div class="card border-0 shadow-sm rounded-4 mb-4">
@@ -307,11 +362,22 @@
                 <div class="row g-3 g-md-4">
                     <div class="col-12 col-md-6">
                         <label class="label-premium">Keterangan (Opsional)</label>
-                        <textarea name="keterangan" class="form-control form-control-solid rounded-3" rows="3" placeholder="Ketik keterangan di sini...">{{ $suhu->keterangan }}</textarea>
+                        <textarea
+                            name="keterangan"
+                            class="form-control form-control-solid rounded-3"
+                            rows="3"
+                            placeholder="Ketik keterangan di sini..."
+                            {{ !empty($suhu->keterangan) ? 'readonly' : '' }}>{{ $suhu->keterangan }}</textarea>
                     </div>
+
                     <div class="col-12 col-md-6">
                         <label class="label-premium">Catatan Penting (Opsional)</label>
-                        <textarea name="catatan" class="form-control form-control-solid rounded-3" rows="3" placeholder="Ketik catatan di sini...">{{ $suhu->catatan }}</textarea>
+                        <textarea
+                            name="catatan"
+                            class="form-control form-control-solid rounded-3"
+                            rows="3"
+                            placeholder="Ketik catatan di sini..."
+                            {{ !empty($suhu->catatan) ? 'readonly' : '' }}>{{ $suhu->catatan }}</textarea>
                     </div>
                 </div>
             </div>

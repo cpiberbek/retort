@@ -28,26 +28,33 @@
                             </div>
 
                             <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Nama Varian</label>
-                                    <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
-                                        required>
-                                        <option value="">-- Pilih Varian --</option>
-                                        @foreach ($produks as $produk)
-                                            <option value="{{ $produk->nama_produk }}"
-                                                {{ old('nama_produk', $karton->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
-                                                {{ $produk->nama_produk }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Kode Batch</label>
-                                    <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
-                                        maxlength="10" value="{{ old('kode_produksi', $karton->kode_produksi) }}" required>
-                                    <small id="kodeError" class="text-danger d-none"></small>
-                                </div>
+                           <div class="col-md-6">
+                                <label class="form-label">Nama Varian</label>
+                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
+                                    <option value="">-- Pilih Varian --</option>
+                                    @foreach($produks as $produk)
+                                    <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $karton->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
+                                        {{ $produk->nama_produk }}
+                                    </option>
+                                    @endforeach
+                                </select>
                             </div>
+
+                            @php
+                                $batches = collect();
+                            @endphp
+
+                            <div class="col-md-6">
+                                <label class="form-label">Kode Batch</label>
+                                <select name="kode_produksi" class="form-control" id="kode_batch" required>
+                                    @foreach($batches as $batch)
+                                        <option value="{{ $batch->uuid }}" {{ $karton->kode_produksi == $batch->uuid ? 'selected' : '' }}>
+                                            {{ $batch->kode_produksi }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                         </div>
                     </div>
 
@@ -335,4 +342,43 @@
             });
         });
     </script>
+    <script>
+$(function () {
+
+    const batchSelect = $('#kode_batch');
+
+    function loadBatch(namaProduk, selected = null) {
+
+        batchSelect.prop('disabled', true);
+        batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+        if (!namaProduk) return;
+
+        let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
+
+        $.get(url, function (data) {
+
+            data.forEach(function (item) {
+                batchSelect.append(
+                    `<option value="${item.uuid}" ${selected == item.uuid ? 'selected' : ''}>${item.kode_produksi}</option>`
+                );
+            });
+
+            batchSelect.prop('disabled', false);
+        });
+    }
+
+    $('#nama_produk').on('change', function () {
+        loadBatch($(this).val());
+    });
+
+    let initialProduk = $('#nama_produk').val();
+    let initialBatch = "{{ $karton->kode_produksi ?? '' }}";
+
+    if (initialProduk) {
+        loadBatch(initialProduk, initialBatch);
+    }
+
+});
+</script>
 @endsection

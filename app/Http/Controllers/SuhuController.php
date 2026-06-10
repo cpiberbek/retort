@@ -89,38 +89,37 @@ class SuhuController extends Controller
         $hasil_suhu = $request->input('hasil_suhu', []);
         $hasil_rh   = $request->input('hasil_rh', []);
 
+        $rhByArea = collect($hasil_rh)
+            ->keyBy('area')
+            ->toArray();
+
         $hasil_terstruktur = [];
 
-        foreach ($hasil_suhu as $id => $item) {
+        foreach ($hasil_suhu as $item) {
+
+            $area = $item['area'] ?? '';
 
             $nilai_suhu_raw = $item['nilai'] ?? '';
-            $nilai_rh_raw   = $hasil_rh[$id]['nilai'] ?? '';
+            $nilai_rh_raw   = $rhByArea[$area]['nilai'] ?? '';
 
-            // FORMAT SUHU
-            if ($nilai_suhu_raw === '') {
-                $nilai_suhu = null;
-            } elseif ($nilai_suhu_raw === '-') {
-                $nilai_suhu = '-';
-            } else {
-                $nilai_suhu = (float) str_replace(',', '.', $nilai_suhu_raw);
-            }
+            $nilai_suhu = $nilai_suhu_raw === ''
+                ? null
+                : ($nilai_suhu_raw === '-'
+                    ? '-'
+                    : (float) str_replace(',', '.', $nilai_suhu_raw));
 
-            // FORMAT RH
-            if ($nilai_rh_raw === '') {
-                $nilai_rh = null;
-            } elseif ($nilai_rh_raw === '-') {
-                $nilai_rh = '-';
-            } else {
-                $nilai_rh = (float) str_replace(',', '.', $nilai_rh_raw);
-            }
+            $nilai_rh = $nilai_rh_raw === ''
+                ? null
+                : ($nilai_rh_raw === '-'
+                    ? '-'
+                    : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
-                'area' => $item['area'] ?? '',
+                'area' => $area,
                 'suhu' => $nilai_suhu,
                 'rh'   => $nilai_rh,
             ];
         }
-
         // SORT AREA
         $area_order = Area_suhu::where('plant', $userPlant)
             ->orderBy('area')
@@ -171,54 +170,44 @@ class SuhuController extends Controller
     public function update_qc(Request $request, string $uuid)
     {
         $suhu = Suhu::where('uuid', $uuid)->firstOrFail();
-        $username_updated = Auth::user()->username ?? 'User QC';
 
         $request->validate([
-            'date'        => 'required|date',
-            'shift'       => 'required',
-            'pukul'       => 'required',
-            'keterangan'  => 'nullable|string',
-            'catatan'     => 'nullable|string',
-            'hasil_suhu'  => 'nullable|array',
-            'hasil_rh'    => 'nullable|array',
+            'date' => 'required|date',
+            'shift' => 'required',
+            'pukul' => 'required',
+            'keterangan' => 'nullable|string',
+            'catatan' => 'nullable|string',
+            'hasil_suhu' => 'nullable|array',
+            'hasil_rh' => 'nullable|array',
         ]);
 
-        $hasil_suhu = $request->input('hasil_suhu', []);
-        $hasil_rh   = $request->input('hasil_rh', []);
+        $hasil_suhu = collect($request->input('hasil_suhu', []));
+        $hasil_rh = collect($request->input('hasil_rh', []))->keyBy('area');
 
         $hasil_terstruktur = [];
 
-        foreach ($hasil_suhu as $id => $item) {
+        foreach ($hasil_suhu as $item) {
+
+            $area = $item['area'] ?? '';
 
             $nilai_suhu_raw = $item['nilai'] ?? '';
-            $nilai_rh_raw   = $hasil_rh[$id]['nilai'] ?? '';
+            $nilai_rh_raw = $hasil_rh[$area]['nilai'] ?? '';
 
-            // FORMAT SUHU
-            if ($nilai_suhu_raw === '') {
-                $nilai_suhu = null;
-            } elseif ($nilai_suhu_raw === '-') {
-                $nilai_suhu = '-';
-            } else {
-                $nilai_suhu = (float) str_replace(',', '.', $nilai_suhu_raw);
-            }
+            $nilai_suhu = $nilai_suhu_raw === ''
+                ? null
+                : ($nilai_suhu_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_suhu_raw));
 
-            // FORMAT RH
-            if ($nilai_rh_raw === '') {
-                $nilai_rh = null;
-            } elseif ($nilai_rh_raw === '-') {
-                $nilai_rh = '-';
-            } else {
-                $nilai_rh = (float) str_replace(',', '.', $nilai_rh_raw);
-            }
+            $nilai_rh = $nilai_rh_raw === ''
+                ? null
+                : ($nilai_rh_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
-                'area' => $item['area'] ?? '',
+                'area' => $area,
                 'suhu' => $nilai_suhu,
-                'rh'   => $nilai_rh,
+                'rh' => $nilai_rh,
             ];
         }
 
-        // SORT AREA
         $area_order = Area_suhu::where('plant', $suhu->plant)
             ->orderBy('area')
             ->pluck('area')
@@ -229,17 +218,14 @@ class SuhuController extends Controller
             ->values()
             ->toArray();
 
-        $data = [
-            'date'             => $request->date,
-            'shift'            => $request->shift,
-            'pukul'            => $request->pukul,
-            'keterangan'       => $request->keterangan,
-            'catatan'          => $request->catatan,
-            'username_updated' => $username_updated,
-            'hasil_suhu'       => json_encode($hasil_terstruktur, JSON_UNESCAPED_UNICODE),
-        ];
-
-        $suhu->update($data);
+        $suhu->update([
+            'date' => $request->date,
+            'shift' => $request->shift,
+            'pukul' => $request->pukul,
+            'keterangan' => $request->keterangan,
+            'catatan' => $request->catatan,
+            'hasil_suhu' => json_encode($hasil_terstruktur, JSON_UNESCAPED_UNICODE),
+        ]);
 
         return redirect()->route('suhu.index')
             ->with('success', 'Data Pemeriksaan Suhu dan RH berhasil diperbarui');
@@ -271,51 +257,42 @@ class SuhuController extends Controller
         $suhu = Suhu::where('uuid', $uuid)->firstOrFail();
 
         $request->validate([
-            'date'        => 'required|date',
-            'shift'       => 'required',
-            'pukul'       => 'required',
-            'keterangan'  => 'nullable|string',
-            'catatan'     => 'nullable|string',
-            'hasil_suhu'  => 'nullable|array',
-            'hasil_rh'    => 'nullable|array',
+            'date' => 'required|date',
+            'shift' => 'required',
+            'pukul' => 'required',
+            'keterangan' => 'nullable|string',
+            'catatan' => 'nullable|string',
+            'hasil_suhu' => 'nullable|array',
+            'hasil_rh' => 'nullable|array',
         ]);
 
-        $hasil_suhu = $request->input('hasil_suhu', []);
-        $hasil_rh   = $request->input('hasil_rh', []);
+        $hasil_suhu = collect($request->input('hasil_suhu', []));
+        $hasil_rh = collect($request->input('hasil_rh', []))->keyBy('area');
 
         $hasil_terstruktur = [];
 
-        foreach ($hasil_suhu as $id => $item) {
+        foreach ($hasil_suhu as $item) {
+
+            $area = $item['area'] ?? '';
 
             $nilai_suhu_raw = $item['nilai'] ?? '';
-            $nilai_rh_raw   = $hasil_rh[$id]['nilai'] ?? '';
+            $nilai_rh_raw = $hasil_rh[$area]['nilai'] ?? '';
 
-            // FORMAT SUHU
-            if ($nilai_suhu_raw === '') {
-                $nilai_suhu = null;
-            } elseif ($nilai_suhu_raw === '-') {
-                $nilai_suhu = '-';
-            } else {
-                $nilai_suhu = (float) str_replace(',', '.', $nilai_suhu_raw);
-            }
+            $nilai_suhu = $nilai_suhu_raw === ''
+                ? null
+                : ($nilai_suhu_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_suhu_raw));
 
-            // FORMAT RH
-            if ($nilai_rh_raw === '') {
-                $nilai_rh = null;
-            } elseif ($nilai_rh_raw === '-') {
-                $nilai_rh = '-';
-            } else {
-                $nilai_rh = (float) str_replace(',', '.', $nilai_rh_raw);
-            }
+            $nilai_rh = $nilai_rh_raw === ''
+                ? null
+                : ($nilai_rh_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
-                'area' => $item['area'] ?? '',
+                'area' => $area,
                 'suhu' => $nilai_suhu,
-                'rh'   => $nilai_rh,
+                'rh' => $nilai_rh,
             ];
         }
 
-        // SORT AREA
         $area_order = Area_suhu::where('plant', $suhu->plant)
             ->orderBy('area')
             ->pluck('area')
@@ -326,16 +303,14 @@ class SuhuController extends Controller
             ->values()
             ->toArray();
 
-        $data = [
-            'date'       => $request->date,
-            'shift'      => $request->shift,
-            'pukul'      => $request->pukul,
+        $suhu->update([
+            'date' => $request->date,
+            'shift' => $request->shift,
+            'pukul' => $request->pukul,
             'keterangan' => $request->keterangan,
-            'catatan'    => $request->catatan,
+            'catatan' => $request->catatan,
             'hasil_suhu' => json_encode($hasil_terstruktur, JSON_UNESCAPED_UNICODE),
-        ];
-
-        $suhu->update($data);
+        ]);
 
         return redirect()->route('suhu.index')
             ->with('success', 'Data Pemeriksaan Suhu dan RH berhasil diperbarui');

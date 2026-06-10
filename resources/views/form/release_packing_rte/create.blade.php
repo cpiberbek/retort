@@ -26,7 +26,7 @@
                                     <label for="nama_produk" class="form-label fw-semibold">
                                         Nama Varian <span class="text-danger">*</span>
                                     </label>
-                                    <select id="nama_produk" class="form-control" required>
+                                    <select id="nama_produk" name="nama_produk" class="form-control" required>
                                         <option value="">-- Pilih Varian --</option>
                                         @foreach ($produks as $produk)
                                             <option value="{{ $produk->nama_produk }}">
@@ -44,7 +44,7 @@
                                     <label for="kode_batch" class="form-label fw-semibold">
                                         Kode Batch <span class="text-danger">*</span>
                                     </label>
-                                    <select id="kode_batch" class="form-control" disabled required>
+                                    <select id="kode_batch" name="kode_produksi" class="form-control" disabled required>
                                         <option value="">Pilih Varian terlebih dahulu</option>
                                     </select>
                                     <small class="text-muted">
@@ -206,9 +206,10 @@
                     batchSelect.prop('disabled', true);
                     return;
                 }
+                let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
 
                 $.ajax({
-                    url: '/lookup/batch/' + namaProduk,
+                    url: url,
                     type: 'GET',
                     success: function(data) {
 
