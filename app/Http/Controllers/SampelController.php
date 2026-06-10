@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Sampel;
 use App\Models\Produk;
+use App\Models\Mincing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -12,9 +13,9 @@ class SampelController extends Controller
 {
     public function index(Request $request)
     {
-        $search     = $request->input('search');
+        $search = $request->input('search');
         $date = $request->input('date');
-        $userPlant  = Auth::user()->plant;
+        $userPlant = Auth::user()->plant;
 
         $data = Sampel::query()
             ->where('plant', $userPlant)
@@ -23,7 +24,13 @@ class SampelController extends Controller
                     $q->where('username', 'like', "%{$search}%")
                         ->orWhere('nama_produk', 'like', "%{$search}%")
                         ->orWhere('kode_produksi', 'like', "%{$search}%")
-                        ->orWhere('jenis_sampel', 'like', "%{$search}%");
+                        ->orWhere('jenis_sampel', 'like', "%{$search}%")
+                        ->orWhereExists(function ($sub) use ($search) {
+                            $sub->selectRaw(1)
+                                ->from('mincings')
+                                ->whereColumn('mincings.uuid', 'sampels.kode_produksi')
+                                ->where('mincings.kode_produksi', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($date, function ($query) use ($date) {
@@ -33,6 +40,13 @@ class SampelController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->appends($request->all());
+
+        $data->getCollection()->transform(function ($item) {
+            $item->kode_produksi = Mincing::where('uuid', $item->kode_produksi)
+                ->value('kode_produksi') ?? $item->kode_produksi;
+
+            return $item;
+        });
 
         return view('form.sampel.index', compact('data', 'search', 'date'));
     }
@@ -50,7 +64,7 @@ class SampelController extends Controller
         $request->validate([
             'date'            => 'required|date',
             'nama_produk'     => 'required|string|max:255',
-            'kode_produksi'   => 'required|string|max:20',
+            'kode_produksi'   => 'required|string',
             'keterangan'      => 'nullable|string',
             'jenis_sampel'    => 'nullable|string|max:255',
             'jenis_sampel_select' => 'nullable|string|max:255',
@@ -97,7 +111,7 @@ class SampelController extends Controller
         $request->validate([
             'date'            => 'required|date',
             'nama_produk'     => 'required|string|max:255',
-            'kode_produksi'   => 'required|string|max:20',
+            'kode_produksi'   => 'required|string',
             'keterangan'      => 'nullable|string',
             'jenis_sampel'    => 'nullable|string|max:255',
             'jenis_sampel_select' => 'nullable|string|max:255',
@@ -141,7 +155,7 @@ class SampelController extends Controller
         $request->validate([
             'date'            => 'required|date',
             'nama_produk'     => 'required|string|max:255',
-            'kode_produksi'   => 'required|string|max:20',
+            'kode_produksi'   => 'required|string',
             'keterangan'      => 'nullable|string',
             'jenis_sampel'    => 'nullable|string|max:255',
             'jenis_sampel_select' => 'nullable|string|max:255',

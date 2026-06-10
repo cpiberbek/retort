@@ -208,7 +208,7 @@
                                                 <tr>
                                                     <td>{{ $bagian }}</td>
                                                     <td>{{ $item['waktu'] ?? '-' }}</td>
-                                                    <td>{{ $kondisiMapping[$item['kondisi']] ?? '-' }}</td>
+                                                    <td>{{ $kondisiMapping[$item['kondisi'] ?? ''] ?? '-' }}</td>
                                                     <td>{{ $item['keterangan'] ?? '-' }}</td>
                                                     <td>{{ $item['tindakan'] ?? '-' }}</td>
                                                     <td>{{ $item['waktu_koreksi'] ?? '-' }}</td>

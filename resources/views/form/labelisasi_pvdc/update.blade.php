@@ -140,8 +140,16 @@
                                             ? 'disabled' : '' }}>
                                         <div class="preview mt-2">
                                             @if(!empty($row['file']))
-                                            <a href="{{ $row['file'] }}" target="_blank">
-                                                <img src="{{ $row['file'] }}" width="100" class="img-thumbnail">
+                                            @php
+                                                $fileUrl = $row['file'];
+                                                if (preg_match('/^https?:\/\/[^\/]+\/storage\/(.+)$/i', $fileUrl, $matches)) {
+                                                    $fileUrl = asset('storage/' . $matches[1]);
+                                                } elseif (!preg_match('/^https?:\/\//i', $fileUrl)) {
+                                                    $fileUrl = asset('storage/' . ltrim($fileUrl, '/'));
+                                                }
+                                            @endphp
+                                            <a href="{{ $fileUrl }}" target="_blank">
+                                                <img src="{{ $fileUrl }}" width="100" class="img-thumbnail">
                                             </a>
                                             @endif
                                         </div>

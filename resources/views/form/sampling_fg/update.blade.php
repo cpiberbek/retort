@@ -247,12 +247,14 @@
 
         // Jika sudah ada data, load jumlah_box berdasarkan relasi palet
         if (namaProduk && kodeProduksiText && palet && !jumlahBoxInput.val()) {
+            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
             $.ajax({
-                url: '/lookup/batch/' + encodeURIComponent(namaProduk),
+                url: url,
                 type: 'GET',
+                dataType: 'json',
                 success: function(data) {
                     let mincingUuid = null;
-                    if(data && data.length > 0) {
+                    if(Array.isArray(data) && data.length > 0) {
                         const found = data.find(item => item.kode_produksi === kodeProduksiText);
                         if(found) {
                             mincingUuid = found.uuid;
@@ -276,6 +278,9 @@
                             }
                         });
                     }
+                },
+                error: function() {
+                    jumlahBoxInput.val(0);
                 }
             });
         }

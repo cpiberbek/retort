@@ -5,11 +5,20 @@ namespace App\Http\Controllers;
 use App\Models\Mincing;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LookupController extends Controller
 {
     public function getBatchByProduk($nama_produk)
     {
+        // Log request for debugging (temporary)
+        Log::info('LookupController@getBatchByProduk called', [
+            'nama_produk' => $nama_produk,
+            'user' => optional(Auth::user())->username,
+            'plant' => optional(Auth::user())->plant,
+            'ip' => request()->ip(),
+        ]);
+
         $userPlant  = Auth::user()->plant;
         $batches = Mincing::where('nama_produk', $nama_produk)
             ->where('plant', $userPlant)

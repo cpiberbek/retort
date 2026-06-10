@@ -16,34 +16,41 @@ use TCPDF;
 
 class KartonController extends Controller
 {
-    public function index(Request $request)
+   public function index(Request $request)
     {
-        $search     = $request->input('search');
+        $search = $request->input('search');
         $date = $request->input('date');
         $nama_produk = $request->input('nama_produk');
-        $userPlant  = Auth::user()->plant;
+        $userPlant = Auth::user()->plant;
 
         $data = Karton::with('mincing')
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%")
-                ->orWhere('kode_karton', 'like', "%{$search}%")
-                ->orWhere('nama_supplier', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_karton', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', $search)
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhereExists(function ($sub) use ($search) {
+                            $sub->selectRaw(1)
+                                ->from('mincings')
+                                ->whereColumn('mincings.uuid', 'kartons.kode_produksi')
+                                ->where('mincings.kode_produksi', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($nama_produk, function ($query) use ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.karton.index', compact('data', 'search', 'date', 'nama_produk'));
     }
@@ -91,7 +98,7 @@ class KartonController extends Controller
             'date'      => 'required|date',
             'nama_produk'     => 'required|string',
             'kode_produksi'     => 'required|string',
-            'kode_karton' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'kode_karton' => 'required|image|mimes:jpeg,png,jpg|max:2048',
             'waktu_mulai'     => 'nullable',
             'waktu_selesai'     => 'nullable',
             'jumlah'     => 'nullable',

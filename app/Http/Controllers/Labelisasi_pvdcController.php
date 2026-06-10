@@ -20,6 +20,22 @@ use TCPDF;
 class Labelisasi_pvdcController extends Controller
 {
 
+    private function normalizeFilePath(?string $filePath): ?string
+    {
+        if (empty($filePath)) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $filePath)) {
+            $parsed = parse_url($filePath);
+            $path = $parsed['path'] ?? $filePath;
+            $path = preg_replace('#^/storage/#i', '', $path);
+            return ltrim($path, '/');
+        }
+
+        return ltrim($filePath, '/');
+    }
+
     public function index(Request $request)
     {
         $search    = $request->input('search');
@@ -81,18 +97,19 @@ class Labelisasi_pvdcController extends Controller
 
             $file = $request->file('file');
 
-            $path = 'public/uploads/pvdc_temp';
+            $path = 'uploads/pvdc_temp';
             $filename = time() . '_' . Str::random(8) . '.jpg';
+            $relativePath = "{$path}/{$filename}";
 
             $this->compressAndStore($file, $path, $filename);
 
-            $url = Storage::url("uploads/pvdc_temp/{$filename}");
+            $previewUrl = asset('storage/' . $relativePath);
 
             $tempData = session()->get('pvdc_temp', []);
             $tempData[] = [
                 'mesin' => $request->mesin,
                 'kode_batch' => $request->kode_batch,
-                'file' => $url,
+                'file' => $relativePath,
                 'keterangan' => $request->keterangan ?? null,
             ];
 
@@ -100,7 +117,7 @@ class Labelisasi_pvdcController extends Controller
 
             return response()->json([
                 'success' => true,
-                'file' => $url,
+                'file' => $previewUrl,
                 'message' => 'Data berhasil disimpan sementara dengan gambar terkompresi.'
             ]);
         } catch (\Exception $e) {
@@ -130,16 +147,16 @@ class Labelisasi_pvdcController extends Controller
         ]);
 
         $dataPvdc = [];
-        foreach($request->data_pvdc as $item) {
+        foreach ($request->data_pvdc as $item) {
             $file = $item['kode_produksi'];
-            $filename = time().'_'.Str::random(8).'.'.$file->getClientOriginalExtension();
-            $path = $file->storeAs('public/uploads/pvdc', $filename);
-            $url = Storage::url($path);
+            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
+            $relativePath = "uploads/pvdc/{$filename}";
+            $file->storeAs('uploads/pvdc', $filename, 'public');
 
             $dataPvdc[] = [
                 'mesin' => $item['mesin'],
                 'kode_batch' => $item['kode_batch'],
-                'file' => $url,
+                'file' => $relativePath,
                 'keterangan' => $item['keterangan'] ?? null,
             ];
         }
@@ -182,8 +199,9 @@ class Labelisasi_pvdcController extends Controller
 
         $labelisasi_pvdcData = json_decode($labelisasi_pvdc->labelisasi, true) ?? [];
 
-        // Tambahkan kode_produksi untuk display
+        // Normalize file path from legacy absolute URLs and add kode_produksi display
         foreach ($labelisasi_pvdcData as &$row) {
+            $row['file'] = $this->normalizeFilePath($row['file'] ?? null);
             if (!empty($row['kode_batch'])) {
                 $mincing = Mincing::where('uuid', $row['kode_batch'])->first();
                 if ($mincing) {
@@ -227,14 +245,14 @@ class Labelisasi_pvdcController extends Controller
                 if (isset($row['kode_produksi']) && $row['kode_produksi'] instanceof \Illuminate\Http\UploadedFile) {
                     $file = $row['kode_produksi'];
 
-                    $path = 'public/uploads/pvdc_temp';
+                    $path = 'uploads/pvdc_temp';
                     $filename = time() . '_' . Str::random(8) . '.jpg';
                     $this->compressAndStore($file, $path, $filename);
 
-                    $fileUrl = Storage::url("uploads/pvdc_temp/{$filename}");
+                    $fileUrl = "{$path}/{$filename}";
                 } else {
                     $old = collect($tempData)->firstWhere('mesin', $mesin);
-                    $fileUrl = $old['file'] ?? null;
+                    $fileUrl = $this->normalizeFilePath($old['file'] ?? null);
                 }
 
                 $updatedData[] = [
@@ -285,6 +303,9 @@ class Labelisasi_pvdcController extends Controller
         ->get();
 
         $labelisasi_pvdcData = json_decode($labelisasi_pvdc->labelisasi, true) ?? [];
+        foreach ($labelisasi_pvdcData as &$row) {
+            $row['file'] = $this->normalizeFilePath($row['file'] ?? null);
+        }
         session()->put('pvdc_temp', $labelisasi_pvdcData);
 
         return view('form.labelisasi_pvdc.edit', compact(
@@ -320,14 +341,14 @@ class Labelisasi_pvdcController extends Controller
                 if (isset($row['kode_produksi']) && $row['kode_produksi'] instanceof \Illuminate\Http\UploadedFile) {
                     $file = $row['kode_produksi'];
 
-                    $path = 'public/uploads/pvdc_temp';
+                    $path = 'uploads/pvdc_temp';
                     $filename = time() . '_' . Str::random(8) . '.jpg';
                     $this->compressAndStore($file, $path, $filename);
 
-                    $fileUrl = Storage::url("uploads/pvdc_temp/{$filename}");
+                    $fileUrl = "{$path}/{$filename}";
                 } else {
                     $old = collect($tempData)->firstWhere('mesin', $mesin);
-                    $fileUrl = $old['file'] ?? null;
+                    $fileUrl = $this->normalizeFilePath($old['file'] ?? null);
                 }
 
                 $updatedData[] = [
@@ -444,7 +465,7 @@ class Labelisasi_pvdcController extends Controller
         ->scale(width: 1280)
         ->toJpeg(quality: 75);
 
-        Storage::put("{$path}/{$filename}", (string) $image);
+        Storage::disk('public')->put("{$path}/{$filename}", (string) $image);
     }
 
     public function exportPdf(Request $request)

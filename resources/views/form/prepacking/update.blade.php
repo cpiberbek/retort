@@ -27,9 +27,14 @@
                             <label class="form-label">Nama Varian</label>
                             <input type="text" name="nama_produk" class="form-control" value="{{ $prepacking->nama_produk }}" readonly>
                         </div>
+                        @php
+                            $kode = \App\Models\Mincing::where('uuid', $prepacking->kode_produksi)->value('kode_produksi');
+                        @endphp
+
                         <div class="col-md-6">
                             <label class="form-label">Kode Batch</label>
-                            <input type="text" name="kode_produksi" id="kode_produksi" class="form-control" value="{{ $prepacking->kode_produksi }}" {{ $prepacking->kode_produksi ? 'readonly' : '' }}>
+                            <input type="text" class="form-control" value="{{ $kode }}" readonly>
+                            <input type="hidden" name="kode_produksi" value="{{ $prepacking->kode_produksi }}">
                             <small id="kodeError" class="text-danger d-none"></small>
                         </div>
                     </div>

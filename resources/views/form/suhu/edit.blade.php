@@ -255,7 +255,7 @@
                                     @php
                                         // Ambil nilai lama berdasarkan nama area sesuai struktur data form Edit
                                         $matched = $suhuData[$area->area] ?? null;
-                                        $nilai = $matched['nilai'] ?? '';
+                                        $nilai = $matched['suhu'] ?? '';
                                     @endphp
                                     <tr>
                                         <td data-label="No" class="text-center text-muted fw-bold">{{ $index + 1 }}</td>
@@ -315,7 +315,9 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach ($area_suhus as $index => $area)
+                            @foreach ($area_suhus->filter(function ($area) {
+                                return $area->rh_min !== null && $area->rh_max !== null;
+                            })->values() as $index => $area)
                                 @php
                                     $matched = $suhuData[$area->area] ?? null;
                                     $nilai_rh = $matched['rh'] ?? '';

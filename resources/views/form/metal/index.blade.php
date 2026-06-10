@@ -18,6 +18,9 @@
     </div>
     @endif
 
+    <div class="d-sm-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4"><i class="bi bi-clipboard-data"></i> Data Pengecekan Metal Detector</h2>
+
         <div class="btn-group" role="group">
             @can('can access add button')
             <a href="{{ route('metal.create') }}" class="btn btn-success">
@@ -38,6 +41,7 @@
             </a>
             @endcan
         </div>
+    </div>
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('metal.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">

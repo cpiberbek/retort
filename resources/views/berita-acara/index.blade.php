@@ -173,40 +173,50 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                             <td class="text-center align-middle text-nowrap">
                                 <div class="d-flex justify-content-center align-items-center">
 
+                                    @can('can access verification button')
                                     {{-- 0. Tombol Verifikasi (Memicu Modal) --}}
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" 
-                                    data-bs-toggle="modal" 
-                                    data-bs-target="#verifyModal{{ $item->id }}"
-                                    title="Verifikasi SPV">
-                                    <i class="bi bi-shield-check me-1"></i> Verifikasi
-                                </button>
-
-                                {{-- 1. Detail --}}
-                                <a href="{{ route('berita-acara.show', $item->id) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
-                                    <i class="bi bi-eye me-1"></i> Detail
-                                </a>
-
-                                {{-- 2. Edit --}}
-                                <a href="{{ route('berita-acara.edit', $item->id) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
-                                    <i class="bi bi-pencil-square me-1"></i> Edit
-                                </a>
-
-                                {{-- 3. Update Form --}}
-                                <a href="{{ route('berita-acara.update_form', $item->id) }}" class="btn btn-info btn-sm mx-1 text-white" title="Update / Lengkapi Data">
-                                    <i class="bi bi-pencil me-1"></i> Update
-                                </a>
-
-                                {{-- 4. Hapus --}}
-                                <form action="{{ route('berita-acara.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm mx-1" title="Hapus">
-                                        <i class="bi bi-trash me-1"></i> Hapus
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#verifyModal{{ $item->id }}"
+                                        title="Verifikasi SPV">
+                                        <i class="bi bi-shield-check me-1"></i> Verifikasi
                                     </button>
-                                </form>
+                                    @endcan
 
-                            </div>
-                        </td>
+                                    @can('can access detail button')
+                                    {{-- 1. Detail --}}
+                                    <a href="{{ route('berita-acara.show', $item->id) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
+                                        <i class="bi bi-eye me-1"></i> Detail
+                                    </a>
+                                    @endcan
+
+                                    @can('can access edit button')
+                                    {{-- 2. Edit --}}
+                                    <a href="{{ route('berita-acara.edit', $item->id) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
+                                        <i class="bi bi-pencil-square me-1"></i> Edit
+                                    </a>
+                                    @endcan
+
+                                    @can('can access update button')
+                                    {{-- 3. Update Form --}}
+                                    <a href="{{ route('berita-acara.update_form', $item->id) }}" class="btn btn-info btn-sm mx-1 text-white" title="Update / Lengkapi Data">
+                                        <i class="bi bi-pencil me-1"></i> Update
+                                    </a>
+                                    @endcan
+
+                                    @can('can access delete button')
+                                    {{-- 4. Hapus --}}
+                                    <form action="{{ route('berita-acara.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger btn-sm mx-1" title="Hapus">
+                                            <i class="bi bi-trash me-1"></i> Hapus
+                                        </button>
+                                    </form>
+                                    @endcan
+
+                                </div>
+                            </td>
                     </tr>
                     @empty
                     <tr>

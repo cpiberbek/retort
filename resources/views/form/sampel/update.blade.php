@@ -66,16 +66,14 @@
                                 </datalist>
                             </div>
 
+                            @php
+                                $kode = \App\Models\Mincing::where('uuid', $sampel->kode_produksi)->value('kode_produksi');
+                            @endphp
+
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <input type="text" 
-                                name="kode_produksi" 
-                                id="kode_produksi"
-                                class="form-control" 
-                                maxlength="10"
-                                value="{{ old('kode_produksi', $sampel->kode_produksi) }}" 
-                                required
-                                {{ $sampel->kode_produksi ? 'readonly' : '' }}>
+                                <input type="text" class="form-control" value="{{ $kode }}" readonly>
+                                <input type="hidden" name="kode_produksi" value="{{ $sampel->kode_produksi }}">
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
                         </div>

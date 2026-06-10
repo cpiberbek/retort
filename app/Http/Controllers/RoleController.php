@@ -49,14 +49,15 @@ class RoleController extends Controller
    
     public function edit(Role $role)
     {
-        $permissions = Permission::get();
-        $rolePermissions = DB::table("role_has_permissions")->where("role_has_permissions.role_id",$role->id)
-            ->pluck('role_has_permissions.permission_id','role_has_permissions.permission_id')
+        $permissions = Permission::where('name', '!=', 'can access cikande')->get();
+
+        $rolePermissions = DB::table("role_has_permissions")
+            ->where("role_has_permissions.role_id", $role->id)
+            ->pluck('role_has_permissions.permission_id', 'role_has_permissions.permission_id')
             ->all();
 
-        return view('admin.roles.edit', compact('role','permissions','rolePermissions'));
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
-
     
     public function update(Request $request, Role $role)
     {
