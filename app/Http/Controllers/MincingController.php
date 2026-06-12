@@ -144,8 +144,8 @@ class MincingController extends Controller
             ->get();
 
         $premixes = Master_Premix::where('plant_uuid', Auth::user()->plant)
-                    ->orderBy('nama_premix')
-                    ->get();
+            ->orderBy('nama_premix')
+            ->get();
 
         // ambil detail batch + data inspeksi bahan baku
         $inspections = InspectionProductDetail::with('inspection')
@@ -248,6 +248,12 @@ class MincingController extends Controller
         $produks = Produk::where('plant', $userPlant)->get();
         $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
 
+        $inspections = InspectionProductDetail::with('inspection')
+            ->whereHas('inspection', function ($q) use ($userPlant) {
+                $q->where('plant_uuid', $userPlant);
+            })
+            ->get();
+
         $premixData = !empty($mincing->premix)
             ? json_decode($mincing->premix, true)
             : [];
@@ -256,7 +262,7 @@ class MincingController extends Controller
             ? json_decode($mincing->non_premix, true)
             : [];
 
-        return view('form.mincing.update', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials'));
+        return view('form.mincing.update', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials', 'inspections'));
     }
 
     public function update_qc(Request $request, string $uuid)
@@ -332,6 +338,11 @@ class MincingController extends Controller
         $userPlant = Auth::user()->plant;
         $produks = Produk::where('plant', $userPlant)->get();
         $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
+        $inspections = InspectionProductDetail::with('inspection')
+            ->whereHas('inspection', function ($q) use ($userPlant) {
+                $q->where('plant_uuid', $userPlant);
+            })
+            ->get();
         $premixData = !empty($mincing->premix)
             ? json_decode($mincing->premix, true)
             : [];
@@ -340,7 +351,7 @@ class MincingController extends Controller
             ? json_decode($mincing->non_premix, true)
             : [];
 
-        return view('form.mincing.edit', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials'));
+        return view('form.mincing.edit', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials', 'inspections'));
     }
 
     public function edit_spv(Request $request, string $uuid)
@@ -527,8 +538,8 @@ class MincingController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
-                    ->orWhere('nama_produk', 'like', "%{$search}%")
-                    ->orWhere('kode_produksi', 'like', "%{$search}%");
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
                 });
             })
             ->when($date, function ($query) use ($date) {

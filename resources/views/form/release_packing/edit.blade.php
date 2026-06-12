@@ -21,7 +21,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal</label>
-                                <input type="date" name="date" id="dateInput" class="form-control" 
+                                <input type="date" name="date" id="dateInput" class="form-control"
                                 value="{{ old('date', $release_packing->date) }}" required>
                             </div>
                             <div class="col-md-6">
@@ -41,7 +41,7 @@
                                 <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                     <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
-                                    <option value="{{ $produk->nama_produk }}" 
+                                    <option value="{{ $produk->nama_produk }}"
                                         {{ old('nama_produk', $release_packing->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
                                     </option>
@@ -52,7 +52,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
                                 <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
-                                value="{{ old('kode_produksi', $release_packing->kode_produksi) }}" maxlength="10" required>
+                                value="{{ old('kode_produksi', $release_packing->mincing->kode_produksi) }}" maxlength="10" required>
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
                         </div>
