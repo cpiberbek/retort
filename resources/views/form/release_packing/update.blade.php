@@ -21,10 +21,10 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal</label>
-                                <input 
-                                type="date" 
-                                name="date" 
-                                id="dateInput" 
+                                <input
+                                type="date"
+                                name="date"
+                                id="dateInput"
                                 class="form-control"
                                 value="{{ old('date', $release_packing->date) }}"
                                 {{ $release_packing->date ? 'readonly' : '' }}
@@ -33,9 +33,9 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Jenis Kemasan</label>
-                                <select 
-                                name="jenis_kemasan" 
-                                id="jenis_kemasan" 
+                                <select
+                                name="jenis_kemasan"
+                                id="jenis_kemasan"
                                 class="form-control selectpicker"
                                 data-live-search="true"
                                 {{ $release_packing->jenis_kemasan ? 'readonly' : '' }}
@@ -51,15 +51,15 @@
                     <div class="row mb-3">
                         <div class="col-md-6">
                             <label class="form-label">Nama Varian</label>
-                            <select 
-                            name="nama_produk" 
+                            <select
+                            name="nama_produk"
                             class="form-control selectpicker"
                             data-live-search="true"
                             {{ $release_packing->nama_produk ? 'readonly' : '' }}
                             required>
                             <option value="">-- Pilih Varian --</option>
                             @foreach($produks as $produk)
-                            <option value="{{ $produk->nama_produk }}" 
+                            <option value="{{ $produk->nama_produk }}"
                                 {{ old('nama_produk', $release_packing->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
                                 {{ $produk->nama_produk }}
                             </option>
@@ -69,12 +69,12 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Kode Batch</label>
-                        <input 
-                        type="text" 
-                        name="kode_produksi" 
-                        id="kode_produksi" 
+                        <input
+                        type="text"
+                        name="kode_produksi"
+                        id="kode_produksi"
                         class="form-control"
-                        value="{{ old('kode_produksi', $release_packing->kode_produksi) }}" 
+                        value="{{ old('kode_produksi', $release_packing->mincing->kode_produksi) }}"
                         maxlength="10"
                         {{ $release_packing->kode_produksi ? 'readonly' : '' }}
                         required>
@@ -85,10 +85,10 @@
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Exp. Date</label>
-                        <input 
-                        type="date" 
-                        name="expired_date" 
-                        id="expired_date" 
+                        <input
+                        type="date"
+                        name="expired_date"
+                        id="expired_date"
                         class="form-control"
                         value="{{ old('expired_date', $release_packing->expired_date) }}"
                         {{ $release_packing->expired_date ? 'readonly' : '' }}>
@@ -97,10 +97,10 @@
 
                     <div class="col-md-6">
                         <label class="form-label">No. Palet</label>
-                        <input 
-                        type="text" 
-                        name="no_palet" 
-                        id="no_palet" 
+                        <input
+                        type="text"
+                        name="no_palet"
+                        id="no_palet"
                         class="form-control"
                         value="{{ old('no_palet', $release_packing->no_palet) }}"
                         {{ $release_packing->no_palet ? 'readonly' : '' }}

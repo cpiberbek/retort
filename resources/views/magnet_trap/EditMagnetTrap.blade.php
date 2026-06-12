@@ -23,7 +23,7 @@
     .form-control, .form-select {
         border-radius: 8px;
     }
-    
+
     /* === PERBAIKAN CSS SELECT2 DI SINI === */
     /* Memastikan tinggi Select2 sama dengan Input Bootstrap standar */
     .select2-container--bootstrap-5 .select2-selection {
@@ -75,19 +75,19 @@
                     <div class="card-body">
                         <div class="mb-3">
                             <label for="nama_produk" class="form-label">{{ __('Nama Varian') }}</label>
-                            
+
                             {{-- Dropdown Select2 --}}
                             <select class="form-select select2 @error('nama_produk') is-invalid @enderror" id="nama_produk" name="nama_produk" required>
                                 <option></option> {{-- Placeholder for Select2 --}}
                                 @foreach($produks as $produk)
                                     {{-- Logika Edit: Cek old input -> Cek database --}}
-                                    <option value="{{ $produk->nama_produk }}" 
+                                    <option value="{{ $produk->nama_produk }}"
                                         {{ (old('nama_produk', $checklistmagnettrap->nama_produk) == $produk->nama_produk) ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
                                     </option>
                                 @endforeach
                             </select>
-                            
+
                             @error('nama_produk')
                                 <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                             @enderror
@@ -95,17 +95,17 @@
 
                         <div class="mb-3">
                             <label for="kode_batch" class="form-label">{{ __('Kode Batch') }}</label>
-                            
-                            <input 
-                                id="kode_batch" 
-                                type="text" 
-                                class="form-control @error('kode_batch') is-invalid @enderror" 
-                                name="kode_batch" 
-                                value="{{ old('kode_batch', $checklistmagnettrap->kode_batch) }}" 
-                                required 
-                                autocomplete="off" 
+
+                            <input
+                                id="kode_batch"
+                                type="text"
+                                class="form-control @error('kode_batch') is-invalid @enderror"
+                                name="kode_batch"
+                                value="{{ old('kode_batch', $checklistmagnettrap->mincing->kode_produksi) }}"
+                                required
+                                autocomplete="off"
                                 placeholder="Sesuai data mincing"
-                                maxlength="10" 
+                                maxlength="10"
                                 list="batch_suggestions"
                             >
 
@@ -119,7 +119,7 @@
                                 *Otomatis kapital, max 10 karakter, tanpa spasi/simbol.
                             </small>
                         </div>
-                        
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="pukul" class="form-label">{{ __('Pukul') }}</label>
@@ -150,7 +150,7 @@
                             <div class="status-selector">
                                 <input type="radio" name="status" id="status_v" value="v" {{ (old('status', $checklistmagnettrap->status) == 'v') ? 'checked' : '' }}>
                                 <label for="status_v">✓ OK</label>
-                                
+
                                 <input type="radio" name="status" id="status_x" value="x" {{ (old('status', $checklistmagnettrap->status) == 'x') ? 'checked' : '' }}>
                                 <label for="status_x">✗ NOT OK</label>
                             </div>
@@ -176,9 +176,9 @@
                                 <label for="produksi" class="form-label">{{ __('Operator Produksi') }}</label>
                                 <select class="form-select @error('produksi_id') is-invalid @enderror" id="produksi" name="produksi_id" required>
                                     <option value="" disabled {{ is_null($checklistmagnettrap->produksi_id) ? 'selected' : '' }}>Pilih Operator...</option>
-                                    
+
                                     @foreach($operators as $operator)
-                                        <option value="{{ $operator->id }}" 
+                                        <option value="{{ $operator->id }}"
                                             {{-- Logic: Cek old input, jika tidak ada cek data database. Jika cocok dengan ID loop, set selected --}}
                                             {{ (old('produksi_id', $checklistmagnettrap->produksi_id) == $operator->id) ? 'selected' : '' }}>
                                             {{ $operator->nama_karyawan }}
@@ -186,7 +186,7 @@
                                     @endforeach
 
                                 </select>
-                                
+
                                 @error('produksi_id')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
@@ -195,9 +195,9 @@
                                 <label for="engineer" class="form-label">{{ __('Engineer') }}</label>
                                 <select class="form-select @error('engineer_id') is-invalid @enderror" id="engineer" name="engineer_id" required>
                                     <option disabled value="" {{ is_null($checklistmagnettrap->engineer_id) ? 'selected' : '' }}>Pilih Engineer...</option>
-                                    
+
                                     @foreach($engineers as $engineer)
-                                        <option value="{{ $engineer->id }}" 
+                                        <option value="{{ $engineer->id }}"
                                             {{ (old('engineer_id', $checklistmagnettrap->engineer_id) == $engineer->id) ? 'selected' : '' }}>
                                             {{ $engineer->nama_karyawan }}
                                         </option>
@@ -231,11 +231,11 @@
 
 <script>
     $(document).ready(function() {
-        
+
         // --- 1. EXISTING: Konfigurasi Select2 Anda ---
         $('.select2').select2({
             theme: "bootstrap-5",
-            width: '100%', 
+            width: '100%',
             placeholder: "Ketik untuk mencari varian...",
         });
 
@@ -268,7 +268,7 @@
                     success: function(data) {
                         let dataList = $('#batch_suggestions');
                         dataList.empty(); // Bersihkan list lama
-                        
+
                         $.each(data, function(key, item) {
                             // Tambah opsi baru
                             dataList.append('<option value="' + item + '">');

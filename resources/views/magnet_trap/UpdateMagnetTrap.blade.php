@@ -23,7 +23,7 @@
     .form-control, .form-select {
         border-radius: 8px;
     }
-    
+
     /* === PERBAIKAN CSS SELECT2 DI SINI === */
     .select2-container--bootstrap-5 .select2-selection {
         min-height: calc(2.25rem + 2px) !important;
@@ -33,7 +33,7 @@
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
         margin-top: -2px;
     }
-    
+
     /* CSS Khusus untuk Readonly agar terlihat jelas terkunci */
     .form-control[readonly], .form-select[disabled], .select2-container--disabled .select2-selection {
         background-color: #e9ecef !important; /* Abu-abu bootstrap */
@@ -84,22 +84,22 @@
                         <strong>Detail Produk & Temuan</strong>
                     </div>
                     <div class="card-body">
-                        
+
                         {{-- Field: Nama Produk --}}
                         <div class="mb-3">
                             <label for="nama_produk" class="form-label">{{ __('Nama Varian') }}</label>
-                            
+
                             {{-- Cek apakah data sudah ada --}}
                             @php $isProdukFilled = !empty($checklistmagnettrap->nama_produk); @endphp
 
-                            <select class="form-select select2 @error('nama_produk') is-invalid @enderror" 
-                                    id="nama_produk" 
-                                    name="nama_produk" 
-                                    {{ $isProdukFilled ? 'disabled' : '' }} 
+                            <select class="form-select select2 @error('nama_produk') is-invalid @enderror"
+                                    id="nama_produk"
+                                    name="nama_produk"
+                                    {{ $isProdukFilled ? 'disabled' : '' }}
                                     required>
                                 <option></option>
                                 @foreach($produks as $produk)
-                                    <option value="{{ $produk->nama_produk }}" 
+                                    <option value="{{ $produk->nama_produk }}"
                                         {{ (old('nama_produk', $checklistmagnettrap->nama_produk) == $produk->nama_produk) ? 'selected' : '' }}>
                                         {{ $produk->nama_produk }}
                                     </option>
@@ -110,32 +110,31 @@
                             @if($isProdukFilled)
                                 <input type="hidden" name="nama_produk" value="{{ $checklistmagnettrap->nama_produk }}">
                             @endif
-                            
+
                             @error('nama_produk')
                                 <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                             @enderror
                         </div>
-
                         {{-- Field: Kode Batch --}}
                         <div class="mb-3">
                             <label for="kode_batch" class="form-label">{{ __('Kode Batch') }}</label>
-                            
-                            <input 
-                                id="kode_batch" 
-                                type="text" 
-                                class="form-control @error('kode_batch') is-invalid @enderror {{ !empty($checklistmagnettrap->kode_batch) ? 'bg-body-secondary' : '' }}" 
-                                name="kode_batch" 
-                                value="{{ old('kode_batch', $checklistmagnettrap->kode_batch) }}" 
-                                required 
-                                autocomplete="off" 
+
+                            <input
+                                id="kode_batch"
+                                type="text"
+                                class="form-control @error('kode_batch') is-invalid @enderror {{ !empty($checklistmagnettrap->kode_batch) ? 'bg-body-secondary' : '' }}"
+                                name="kode_batch"
+                                value="{{ old('kode_batch', $checklistmagnettrap->mincing->kode_produksi) }}"
+                                required
+                                autocomplete="off"
                                 placeholder="Sesuai data mincing"
-                                maxlength="10" 
+                                maxlength="10"
                                 list="batch_suggestions"
                                 {{ !empty($checklistmagnettrap->kode_batch) ? 'readonly' : '' }}
                             >
 
                             <datalist id="batch_suggestions"></datalist>
-                            
+
                             @error('kode_batch')
                                 <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                             @enderror
@@ -146,15 +145,15 @@
                                 </small>
                             @endif
                         </div>
-                        
+
                         <div class="row">
                             {{-- Field: Pukul --}}
                             <div class="col-md-6 mb-3">
                                 <label for="pukul" class="form-label">{{ __('Pukul') }}</label>
-                                <input id="pukul" type="time" 
-                                       class="form-control @error('pukul') is-invalid @enderror {{ !empty($checklistmagnettrap->pukul) ? 'bg-body-secondary' : '' }}" 
-                                       name="pukul" 
-                                       value="{{ old('pukul', $checklistmagnettrap->pukul) }}" 
+                                <input id="pukul" type="time"
+                                       class="form-control @error('pukul') is-invalid @enderror {{ !empty($checklistmagnettrap->pukul) ? 'bg-body-secondary' : '' }}"
+                                       name="pukul"
+                                       value="{{ old('pukul', $checklistmagnettrap->pukul) }}"
                                        required
                                        {{ !empty($checklistmagnettrap->pukul) ? 'readonly' : '' }}>
                                 @error('pukul')
@@ -165,13 +164,13 @@
                             {{-- Field: Jumlah Temuan --}}
                             <div class="col-md-6 mb-3">
                                 <label for="jumlah_temuan" class="form-label">{{ __('Jumlah Temuan') }}</label>
-                                {{-- Catatan: Biasanya '0' dianggap ada isi, tapi jika null baru boleh diedit. 
+                                {{-- Catatan: Biasanya '0' dianggap ada isi, tapi jika null baru boleh diedit.
                                      Jika logika Anda 0 boleh diedit, ganti !empty dengan check null --}}
-                                <input id="jumlah_temuan" type="number" 
-                                       class="form-control @error('jumlah_temuan') is-invalid @enderror {{ ($checklistmagnettrap->jumlah_temuan !== null) ? 'bg-body-secondary' : '' }}" 
-                                       name="jumlah_temuan" 
-                                       value="{{ old('jumlah_temuan', $checklistmagnettrap->jumlah_temuan) }}" 
-                                       required 
+                                <input id="jumlah_temuan" type="number"
+                                       class="form-control @error('jumlah_temuan') is-invalid @enderror {{ ($checklistmagnettrap->jumlah_temuan !== null) ? 'bg-body-secondary' : '' }}"
+                                       name="jumlah_temuan"
+                                       value="{{ old('jumlah_temuan', $checklistmagnettrap->jumlah_temuan) }}"
+                                       required
                                        min="0"
                                        placeholder="Contoh: 0"
                                        {{ ($checklistmagnettrap->jumlah_temuan !== null) ? 'readonly' : '' }}>
@@ -189,19 +188,19 @@
                         <strong class="text-dark">Status Pemeriksaan</strong>
                     </div>
                     <div class="card-body">
-                        
+
                         {{-- Field: Status --}}
                         <div class="mb-3">
                             <label class="form-label">{{ __('Status') }}</label>
                             @php $isStatusFilled = !empty($checklistmagnettrap->status); @endphp
-                            
+
                             <div class="status-selector">
-                                <input type="radio" name="status" id="status_v" value="v" 
+                                <input type="radio" name="status" id="status_v" value="v"
                                     {{ (old('status', $checklistmagnettrap->status) == 'v') ? 'checked' : '' }}
                                     {{ $isStatusFilled ? 'disabled' : '' }}>
                                 <label for="status_v">✓ OK</label>
-                                
-                                <input type="radio" name="status" id="status_x" value="x" 
+
+                                <input type="radio" name="status" id="status_x" value="x"
                                     {{ (old('status', $checklistmagnettrap->status) == 'x') ? 'checked' : '' }}
                                     {{ $isStatusFilled ? 'disabled' : '' }}>
                                 <label for="status_x">✗ NOT OK</label>
@@ -216,10 +215,10 @@
                         {{-- Field: Keterangan --}}
                         <div class="mb-3">
                             <label for="keterangan" class="form-label">{{ __('Keterangan') }}</label>
-                            <textarea id="keterangan" 
-                                      class="form-control @error('keterangan') is-invalid @enderror {{ !empty($checklistmagnettrap->keterangan) ? 'bg-body-secondary' : '' }}" 
-                                      name="keterangan" 
-                                      rows="3" 
+                            <textarea id="keterangan"
+                                      class="form-control @error('keterangan') is-invalid @enderror {{ !empty($checklistmagnettrap->keterangan) ? 'bg-body-secondary' : '' }}"
+                                      name="keterangan"
+                                      rows="3"
                                       placeholder="Tambahkan catatan jika diperlukan..."
                                       {{ !empty($checklistmagnettrap->keterangan) ? 'readonly' : '' }}
                                       >{{ old('keterangan', $checklistmagnettrap->keterangan) }}</textarea>
@@ -237,31 +236,31 @@
                     </div>
                     <div class="card-body">
                         <div class="row">
-                            
+
                             {{-- Field: Operator Produksi --}}
                     <div class="col-md-6 mb-3">
                         <label for="produksi" class="form-label">{{ __('Operator Produksi') }}</label>
-                        
+
                         {{-- Cek apakah data sudah terisi sebelumnya --}}
                         @php $isProduksiFilled = !empty($checklistmagnettrap->produksi_id); @endphp
-                        
-                        <select class="form-select @error('produksi_id') is-invalid @enderror" 
-                                id="produksi" 
-                                name="produksi_id" 
+
+                        <select class="form-select @error('produksi_id') is-invalid @enderror"
+                                id="produksi"
+                                name="produksi_id"
                                 required
                                 {{ $isProduksiFilled ? 'disabled' : '' }}>
-                            
+
                             <option value="" disabled {{ is_null($checklistmagnettrap->produksi_id) ? 'selected' : '' }}>Pilih Operator...</option>
-                            
+
                             @foreach($operators as $operator)
-                                <option value="{{ $operator->id }}" 
+                                <option value="{{ $operator->id }}"
                                     {{ (old('produksi_id', $checklistmagnettrap->produksi_id) == $operator->id) ? 'selected' : '' }}>
                                     {{ $operator->nama_karyawan }}
                                 </option>
                             @endforeach
                         </select>
-                        
-                        {{-- PENTING: Jika select disabled, value tidak terkirim via form post. 
+
+                        {{-- PENTING: Jika select disabled, value tidak terkirim via form post.
                             Maka kita butuh input hidden agar controller tetap menerima ID-nya --}}
                         @if($isProduksiFilled)
                             <input type="hidden" name="produksi_id" value="{{ $checklistmagnettrap->produksi_id }}">
@@ -279,16 +278,16 @@
                                 {{-- Cek apakah data Engineer sudah terisi --}}
                                 @php $isEngineerFilled = !empty($checklistmagnettrap->engineer_id); @endphp
 
-                                <select class="form-select @error('engineer_id') is-invalid @enderror" 
-                                        id="engineer" 
-                                        name="engineer_id" 
+                                <select class="form-select @error('engineer_id') is-invalid @enderror"
+                                        id="engineer"
+                                        name="engineer_id"
                                         required
                                         {{ $isEngineerFilled ? 'disabled' : '' }}>
-                                        
+
                                     <option disabled value="" {{ is_null($checklistmagnettrap->engineer_id) ? 'selected' : '' }}>Pilih Engineer...</option>
-                                    
+
                                     @foreach($engineers as $engineer)
-                                        <option value="{{ $engineer->id }}" 
+                                        <option value="{{ $engineer->id }}"
                                             {{ (old('engineer_id', $checklistmagnettrap->engineer_id) == $engineer->id) ? 'selected' : '' }}>
                                             {{ $engineer->nama_karyawan }}
                                         </option>
@@ -327,18 +326,18 @@
 
 <script>
     $(document).ready(function() {
-        
+
         // --- 1. CONFIG SELECT2 (BAWAAN ANDA) ---
         $('.select2').select2({
             theme: "bootstrap-5",
-            width: '100%', 
+            width: '100%',
             placeholder: "Ketik untuk mencari varian...",
         });
 
         // --- 2. LOGIC KODE BATCH ---
         // Cek apakah input readonly? Jika readonly, script tidak perlu jalan
         if ($('#kode_batch').prop('readonly') === false) {
-            
+
             $('#kode_batch').on('input', function() {
                 let input = $(this);
                 let value = input.val();
@@ -365,8 +364,8 @@
                         data: { q: value },
                         success: function(data) {
                             let dataList = $('#batch_suggestions');
-                            dataList.empty(); 
-                            
+                            dataList.empty();
+
                             $.each(data, function(key, item) {
                                 dataList.append('<option value="' + item + '">');
                             });
