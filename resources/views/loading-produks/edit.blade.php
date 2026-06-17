@@ -26,7 +26,7 @@
     .form-control, .form-select {
         border-radius: 8px;
     }
-    
+
     /* Memastikan Select2 sesuai dengan tinggi Bootstrap */
     .select2-container .select2-selection--single {
         height: calc(2.25rem + 2px); /* Sesuaikan dengan tinggi form-control Anda */
@@ -41,7 +41,7 @@
         border-color: #86b7fe;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
-    
+
     /* Style untuk item dinamis */
     .dynamic-item-card {
         background-color: #fdfdfd;
@@ -84,7 +84,7 @@
                             {{-- Informasi Utama --}}
                             <div class="col-md-4">
                                 <label for="tanggal" class="form-label">Hari/Tanggal <span class="text-danger">*</span></label>
-                                <input type="date" class="form-control" id="tanggal" name="tanggal" 
+                                <input type="date" class="form-control" id="tanggal" name="tanggal"
                                        value="{{ old('tanggal', $loadingProduk->tanggal) }}" required>
                             </div>
                             <div class="col-md-4">
@@ -103,47 +103,47 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="jam_mulai" class="form-label">Jam Mulai <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control" id="jam_mulai" name="jam_mulai" 
+                                <input type="time" class="form-control" id="jam_mulai" name="jam_mulai"
                                        value="{{ old('jam_mulai', $loadingProduk->jam_mulai) }}" required>
                             </div>
                             <div class="col-md-6">
                                 <label for="jam_selesai" class="form-label">Jam Selesai <span class="text-danger">*</span></label>
-                                <input type="time" class="form-control" id="jam_selesai" name="jam_selesai" 
+                                <input type="time" class="form-control" id="jam_selesai" name="jam_selesai"
                                        value="{{ old('jam_selesai', $loadingProduk->jam_selesai) }}" required>
                             </div>
-                            
+
                             {{-- Garis Pemisah --}}
                             <div class="col-12"><hr class="my-2"></div>
 
                             {{-- Informasi Kendaraan --}}
                             <div class="col-md-4">
                                 <label for="no_pol_mobil" class="form-label">No. Pol Mobil <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="no_pol_mobil" name="no_pol_mobil" 
+                                <input type="text" class="form-control" id="no_pol_mobil" name="no_pol_mobil"
                                        value="{{ old('no_pol_mobil', $loadingProduk->no_pol_mobil) }}" required>
                             </div>
                             <div class="col-md-4">
                                 <label for="nama_supir" class="form-label">Nama Supir <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="nama_supir" name="nama_supir" 
+                                <input type="text" class="form-control" id="nama_supir" name="nama_supir"
                                        value="{{ old('nama_supir', $loadingProduk->nama_supir) }}" required>
                             </div>
                             <div class="col-md-4">
                                 <label for="ekspedisi" class="form-label">Ekspedisi <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="ekspedisi" name="ekspedisi" 
+                                <input type="text" class="form-control" id="ekspedisi" name="ekspedisi"
                                        value="{{ old('ekspedisi', $loadingProduk->ekspedisi) }}" required>
                             </div>
                             <div class="col-md-4">
                                 <label for="tujuan_asal" class="form-label">Tujuan / Asal <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="tujuan_asal" name="tujuan_asal" 
+                                <input type="text" class="form-control" id="tujuan_asal" name="tujuan_asal"
                                        value="{{ old('tujuan_asal', $loadingProduk->tujuan_asal) }}" required>
                             </div>
                             <div class="col-md-4">
                                 <label for="no_segel" class="form-label">No. Segel</label>
-                                <input type="text" class="form-control" id="no_segel" name="no_segel" 
+                                <input type="text" class="form-control" id="no_segel" name="no_segel"
                                        value="{{ old('no_segel', $loadingProduk->no_segel) }}">
                             </div>
                             <div class="col-md-4">
                                 <label for="jenis_kendaraan" class="form-label">Jenis Kendaraan</label>
-                                <input type="text" class="form-control" id="jenis_kendaraan" name="jenis_kendaraan" 
+                                <input type="text" class="form-control" id="jenis_kendaraan" name="jenis_kendaraan"
                                        value="{{ old('jenis_kendaraan', $loadingProduk->jenis_kendaraan) }}">
                             </div>
                         </div>
@@ -180,7 +180,7 @@
                                         @foreach ($kondisiList as $key => $label)
                                         <div class="col-md-6">
                                             <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox" 
+                                                <input class="form-check-input" type="checkbox"
                                                        name="kondisi_mobil[]" value="{{ $key }}" id="kondisi_{{ $key }}"
                                                        @checked(in_array($key, $currentKondisi))>
                                                 <label class="form-check-label" for="kondisi_{{ $key }}">
@@ -192,7 +192,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
                             {{-- Keterangan & PIC --}}
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -206,7 +206,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label for="pic_qc" class="form-label">PIC QC</label>
-                                        <input type="text" class="form-control" id="pic_qc" name="pic_qc" value="{{ old('pic_qc', $loadingProduk->pic_qc) }}">
+                                        <input type="text" class="form-control" id="pic_qc" name="pic_qc" value="{{ old('pic_qc', $user->name) }}">
                                     </div>
                                     <div class="col-md-4">
                                         <label for="pic_warehouse" class="form-label">PIC Warehouse</label>
@@ -268,7 +268,7 @@
 
     // 4. Script untuk form dinamis
     document.addEventListener('DOMContentLoaded', function() {
-        
+
         const container = document.getElementById('details-container');
         const addBtn = document.getElementById('add-detail-btn');
         let detailIndex = 0;
@@ -278,7 +278,7 @@
          */
         function renderDetailForm(data = null) {
             const i = detailIndex;
-            
+
             // Siapkan nilai default atau dari 'old' data / $loadingProduk
             const nama_produk = data?.nama_produk || '';
             const kode_produksi = data?.kode_produksi || '';
@@ -287,14 +287,14 @@
             const keterangan = data?.keterangan || '';
 
             const newDetail = document.createElement('div');
-            newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded'); 
-            
+            newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded');
+
             newDetail.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="mb-0">Item Produk #${i + 1}</h5>
                     <button type="button" class="btn btn-danger btn-sm remove-detail-btn"><i class="bi bi-trash"></i> Hapus</button>
                 </div>
-                
+
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Nama Produk (Varian) <span class="text-danger">*</span></label>
@@ -327,7 +327,7 @@
         if (addBtn) {
             addBtn.addEventListener('click', () => renderDetailForm(null));
         }
-        
+
         // --- Event Listener untuk Tombol Hapus ---
         if (container) {
             container.addEventListener('click', function(e) {
@@ -342,7 +342,7 @@
         // --- Render data 'old' atau $loadingProduk->details saat halaman dimuat ---
         // **PERUBAHAN KUNCI DI SINI:**
         const existingDetails = @json(old('details', $loadingProduk->details ?? []));
-        
+
         if (existingDetails.length > 0) {
             existingDetails.forEach(itemData => {
                 renderDetailForm(itemData);

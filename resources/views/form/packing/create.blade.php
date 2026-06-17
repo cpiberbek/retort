@@ -6,7 +6,7 @@
         <div class="card-body">
 
             <h4 class="mb-4"><i class="bi bi-plus-circle"></i> Form Pemeriksaan Proses Packing</h4>
-            
+
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <ul class="mb-0">
@@ -89,7 +89,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-6 file-wrapper">
                                 <label class="form-label fw-bold">QR Code (Upload Gambar)</label>
@@ -112,7 +112,7 @@
                                 </select>
                             </div>
                         </div>
-                        
+
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label fw-bold">Suhu</label>
@@ -154,10 +154,10 @@
                     </div>
                 </div>
 
-                {{-- ===================== ➕ DATA KEMASAN DINAMIS ===================== --}}
+                {{-- ===================== ➕ Data Kemasan ===================== --}}
                 <div class="card mb-4 shadow-sm border-0">
                     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                        <strong class="fs-5"><i class="bi bi-box-seam"></i> Data Kemasan Dinamis</strong>
+                        <strong class="fs-5"><i class="bi bi-box-seam"></i> Data Kemasan</strong>
                         <button type="button" id="btn-add-kemasan" class="btn btn-success btn-sm fw-bold rounded-pill px-3">
                             <i class="bi bi-plus-circle-fill"></i> Tambah Kemasan
                         </button>
@@ -201,7 +201,7 @@
 
                 {{-- ===================== KETERANGAN GLOBAL ===================== --}}
                 <div class="card mb-4">
-                    <div class="card-header bg-light"><strong>Keterangan (Global)</strong></div>
+                    <div class="card-header bg-light"><strong>Keterangan</strong></div>
                     <div class="card-body">
                         <textarea name="keterangan" class="form-control @error('keterangan') is-invalid @enderror" rows="3" placeholder="Tambahkan keterangan proses packing secara keseluruhan jika ada...">{{ old('keterangan') }}</textarea>
                         @error('keterangan')
@@ -325,7 +325,7 @@
             loadBatches($(this).val());
         });
 
-        
+
 
         if (namaProdukSelect.val()) {
             let oldBatch = "{{ old('kode_toples', '') }}";
@@ -375,7 +375,7 @@
         $(input).removeClass('is-invalid');
         return true;
     }
-    
+
     $(document).on('change', 'input[type="file"]', function () { validateFile(this); });
     $('#pvdcForm').on('submit', function (e) {
         let ok = true;

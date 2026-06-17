@@ -204,7 +204,7 @@
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label for="pic_qc" class="form-label">PIC QC</label>
-                                        <input type="text" class="form-control" id="pic_qc" name="pic_qc" value="{{ old('pic_qc') }}">
+                                        <input type="text" class="form-control" id="pic_qc" name="pic_qc" value="{{ old('pic_qc', $user->name) }}">
                                     </div>
                                     <div class="col-md-4">
                                         <label for="pic_warehouse" class="form-label">PIC Warehouse</label>

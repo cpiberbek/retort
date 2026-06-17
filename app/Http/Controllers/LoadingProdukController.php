@@ -51,7 +51,8 @@ class LoadingProdukController extends Controller
      */
     public function create()
     {
-        return view('loading-produks.create');
+        $user = Auth::user();
+        return view('loading-produks.create', compact('user'));
     }
 
     /**
@@ -128,8 +129,9 @@ class LoadingProdukController extends Controller
      */
     public function show(LoadingProduk $loadingProduk)
     {
+        $user = Auth::user();
         $loadingProduk->load('details', 'creator');
-        return view('loading-produks.show', compact('loadingProduk'));
+        return view('loading-produks.show', compact('loadingProduk', 'user'));
     }
 
     /**
@@ -138,8 +140,9 @@ class LoadingProdukController extends Controller
      */
     public function edit(LoadingProduk $loadingProduk)
     {
+        $user = Auth::user();
         $loadingProduk->load('details');
-        return view('loading-produks.edit', compact('loadingProduk'));
+        return view('loading-produks.edit', compact('loadingProduk', 'user'));
     }
 
     /**
@@ -174,20 +177,20 @@ class LoadingProdukController extends Controller
         ]);
 
         // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
-        $mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
-        $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
+       // $mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
+       // $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
 
         // Jika shift malam dan jam selesai < jam mulai → berarti lewat tengah malam
-        if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
-            $selesai->addDay();
-        }
+       // if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
+       //     $selesai->addDay();
+       // }
 
         // Validasi final
-        if ($selesai->lte($mulai)) {
-            return back()->withErrors([
-                'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
-            ])->withInput();
-        }
+       // if ($selesai->lte($mulai)) {
+       //     return back()->withErrors([
+       //         'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
+       //     ])->withInput();
+       // }
 
         DB::beginTransaction();
         try {

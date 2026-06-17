@@ -73,14 +73,14 @@
                                 <label class="form-label fw-bold d-block mb-3">Status Kalibrasi</label>
                                 <div class="d-flex flex-wrap justify-content-center" style="gap: 20px;">
                                     <div>
-                                        <input type="checkbox" name="kalibrasi" id="kalibrasi_ok" class="hidden-check" value="Ok" 
+                                        <input type="checkbox" name="kalibrasi" id="kalibrasi_ok" class="hidden-check" value="Ok"
                                         {{ old('kalibrasi', $packing->kalibrasi) == 'Ok' ? 'checked' : '' }}>
                                         <label for="kalibrasi_ok" class="custom-check-btn shadow-sm">
                                             <span class="check-box"></span><span class="check-text">OK</span>
                                         </label>
                                     </div>
                                     <div>
-                                        <input type="checkbox" name="kalibrasi" id="kalibrasi_tidak_ok" class="hidden-check" value="Tidak Ok" 
+                                        <input type="checkbox" name="kalibrasi" id="kalibrasi_tidak_ok" class="hidden-check" value="Tidak Ok"
                                         {{ old('kalibrasi', $packing->kalibrasi) == 'Tidak Ok' ? 'checked' : '' }}>
                                         <label for="kalibrasi_tidak_ok" class="custom-check-btn shadow-sm">
                                             <span class="check-box"></span><span class="check-text">Tidak OK</span>
@@ -167,17 +167,17 @@
                     </div>
                 </div>
 
-                {{-- ===================== ➕ DATA KEMASAN DINAMIS ===================== --}}
+                {{-- ===================== ➕ Data Kemasan ===================== --}}
                 <div class="card mb-4 shadow-sm border-0">
                     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                        <strong class="fs-5"><i class="bi bi-box-seam"></i> Data Kemasan Dinamis</strong>
+                        <strong class="fs-5"><i class="bi bi-box-seam"></i> Data Kemasan</strong>
                         <button type="button" id="btn-add-kemasan" class="btn btn-success btn-sm fw-bold rounded-pill px-3">
                             <i class="bi bi-plus-circle-fill"></i> Tambah Kemasan
                         </button>
                     </div>
                     <div class="card-body bg-light-subtle">
                         <div id="wrapper-kemasan">
-                            @php 
+                            @php
                                 $existingKemasan = json_decode($packing->data_kemasan, true) ?? [];
                             @endphp
 
@@ -251,7 +251,7 @@
 
                 {{-- ===================== KETERANGAN GLOBAL ===================== --}}
                 <div class="card mb-4">
-                    <div class="card-header bg-light"><strong>Keterangan (Global)</strong></div>
+                    <div class="card-header bg-light"><strong>Keterangan</strong></div>
                     <div class="card-body">
                         <textarea name="keterangan" class="form-control @error('keterangan') is-invalid @enderror" rows="3" placeholder="Tambahkan keterangan proses packing secara keseluruhan jika ada...">{{ old('keterangan', $packing->keterangan) }}</textarea>
                         @error('keterangan')
@@ -284,7 +284,7 @@
 
         // ===================== LOGIKA REPEATER DATA KEMASAN =====================
         let countIdx = $('.item-kemasan').length || 1;
-        
+
         $('#btn-add-kemasan').on('click', function(){
             let htmlRow = `
             <div class="row border rounded p-3 mb-3 bg-white shadow-sm align-items-end item-kemasan">
@@ -379,7 +379,7 @@
             loadBatches($(this).val());
         });
 
-        
+
 
         if (namaProdukSelect.val() && kodeToplesSelect.is('select')) {
             let oldBatch = "{{ old('kode_toples', $packing->kode_toples ?? '') }}";
@@ -410,7 +410,7 @@
         $(input).removeClass('is-invalid');
         return true;
     }
-    
+
     $(document).on('change', 'input[type="file"]', function () { validateFile(this); });
     $('#pvdcForm').on('submit', function (e) {
         let ok = true;
