@@ -29,6 +29,12 @@ class GmpController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $type_user = Auth::user()->type_user;
+        
+        $masterAreas = Area_hygiene::where('plant', $userPlant)
+            ->orderBy('area', 'asc')
+            ->pluck('area')
+            ->toArray();
+
         $areas = Area_hygiene::where('plant', $userPlant)
             ->orderBy('area', 'asc')
             ->get();
@@ -40,17 +46,17 @@ class GmpController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
-        $data->getCollection()->transform(function ($item) {
-            $decoded = json_decode($item->pemeriksaan, true) ?: [];
+        $data->getCollection()->transform(function ($item) use ($masterAreas) {
+            $pemeriksaanData = is_string($item->pemeriksaan) ? json_decode($item->pemeriksaan, true) : $item->pemeriksaan;
+            $decoded = $pemeriksaanData ?: [];
+            
             $item->pemeriksaan = $decoded;
-
-            $areasFromJson = array_unique(array_map(fn($row) => $row['area'] ?? 'Unknown', $decoded));
-            $item->areas = $areasFromJson;
+            $item->areas = $masterAreas;
 
             return $item;
         });
 
-        return view('form.gmp.index', compact('data', 'search', 'date', 'type_user', 'areas'));
+        return view('form.gmp.index', compact('data', 'search', 'date', 'type_user', 'areas', 'masterAreas'));
     }
 
     public function updateVerification(Request $request, $uuid)
@@ -95,8 +101,7 @@ class GmpController extends Controller
     }
 
     public function store(Request $request)
-    {
-
+    { dd($request->all());
         $request->validate([
             'date' => 'required|date',
         ]);
@@ -112,19 +117,18 @@ class GmpController extends Controller
                 : null,
             'status_produksi' => "1",
             'status_spv' => "0",
-            'catatan' => $request->input('catatan'),
         ];
 
         $pemeriksaanData = [];
 
-        // 🔥 Ambil semua slug area yang valid
+        // Ambil semua slug area yang valid
         $areaSlugs = Area_hygiene::orderBy('area', 'asc')
             ->get()
             ->mapWithKeys(function ($area) {
                 return [Str::slug($area->area, '_') => $area->area];
             });
 
-        // 🔥 Loop hanya area yang sesuai slug (tidak acak semua request)
+        // Loop hanya area yang sesuai slug (tidak acak semua request)
         foreach ($areaSlugs as $slug => $namaAreaAsli) {
 
             if (!$request->has($slug)) {
@@ -167,8 +171,8 @@ class GmpController extends Controller
             }
         }
 
-        // 🔥 Simpan JSON
-        $data['pemeriksaan'] = json_encode($pemeriksaanData);
+        // 🔥 FIX: Langsung simpan Array, jangan gunakan json_encode lagi!
+        $data['pemeriksaan'] = $pemeriksaanData;
 
         $gmp = Gmp::create($data);
         $gmp->update(['tgl_update_produksi' => Carbon::parse($gmp->created_at)->addHour()]);
@@ -183,7 +187,9 @@ class GmpController extends Controller
             ->where('plant', Auth::user()->plant)
             ->firstOrFail();
 
-        $pemeriksaan = json_decode($gmp->pemeriksaan, true) ?? [];
+        // 🔥 FIX: Penanganan ganda memastikan decode aman
+        $pemeriksaanData = is_string($gmp->pemeriksaan) ? json_decode($gmp->pemeriksaan, true) : $gmp->pemeriksaan;
+        $pemeriksaan = $pemeriksaanData ?? [];
 
         $karyawanByArea = [];
         $oldDataPerArea = [];
@@ -233,19 +239,18 @@ class GmpController extends Controller
             'nama_produksi' => session()->has('selected_produksi')
                 ? User::where('uuid', session('selected_produksi'))->first()->name
                 : null,
-            'catatan' => $request->input('catatan'),
         ];
 
         $pemeriksaanData = [];
 
-        // 🔥 Ambil semua slug area yang valid
+        // Ambil semua slug area yang valid
         $areaSlugs = Area_hygiene::orderBy('area', 'asc')
             ->get()
             ->mapWithKeys(function ($area) {
                 return [Str::slug($area->area, '_') => $area->area];
             });
 
-        // 🔥 Loop hanya area yang sesuai slug (tidak acak semua request)
+        // Loop hanya area yang sesuai slug (tidak acak semua request)
         foreach ($areaSlugs as $slug => $namaAreaAsli) {
 
             if (!$request->has($slug)) {
@@ -288,7 +293,8 @@ class GmpController extends Controller
             }
         }
 
-        $data['pemeriksaan'] = json_encode($pemeriksaanData);
+        // 🔥 FIX: Langsung simpan Array, jangan gunakan json_encode lagi!
+        $data['pemeriksaan'] = $pemeriksaanData;
 
         $gmp->update($data);
         $gmp->update(['tgl_update_produksi' => Carbon::parse($gmp->updated_at)->addHour()]);
@@ -319,7 +325,10 @@ class GmpController extends Controller
         // Transform data dari $gmp
         $gmp->getCollection()->transform(function ($item) {
 
-            $decoded = json_decode($item->pemeriksaan, true) ?: [];
+            // 🔥 FIX: Cegah double decode
+            $pemeriksaanData = is_string($item->pemeriksaan) ? json_decode($item->pemeriksaan, true) : $item->pemeriksaan;
+            $decoded = $pemeriksaanData ?: [];
+            
             $item->pemeriksaan = $decoded;
 
             $areasFromJson = array_unique(
@@ -388,36 +397,18 @@ class GmpController extends Controller
             }
 
             $attributes = [
-                'anting',
-                'kalung',
-                'cincin',
-                'jam_tangan',
-                'peniti',
-                'bros',
-                'payet',
-                'softlens',
-                'eyelashes',
-                'seragam',
-                'boot',
-                'masker',
-                'ciput_hairnet',
-                'kuku',
-                'parfum',
-                'make_up',
-                'diare',
-                'demam',
-                'luka_bakar',
-                'batuk',
-                'radang',
-                'influenza',
-                'sakit_mata'
+                'anting', 'kalung', 'cincin', 'jam_tangan', 'peniti', 'bros', 'payet',
+                'softlens', 'eyelashes', 'seragam', 'boot', 'masker', 'ciput_hairnet',
+                'kuku', 'parfum', 'make_up', 'diare', 'demam', 'luka_bakar', 'batuk',
+                'radang', 'influenza', 'sakit_mata'
             ];
 
             $rekap = [];
 
             foreach ($gmpRows as $row) {
 
-                $json = json_decode($row->pemeriksaan, true);
+                // 🔥 FIX: Cegah double decode
+                $json = is_string($row->pemeriksaan) ? json_decode($row->pemeriksaan, true) : $row->pemeriksaan;
                 if (!$json) continue;
 
                 foreach ($json as $entry) {

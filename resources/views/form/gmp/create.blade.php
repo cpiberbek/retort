@@ -25,7 +25,8 @@
                     </ul>
                 </div>
 
-                <form method="POST" action="{{ route('gmp.store') }}" enctype="multipart/form-data">
+                {{-- 🔥 FIX: Tambahkan id="gmpForm" untuk intercept JavaScript --}}
+                <form id="gmpForm" method="POST" action="{{ route('gmp.store') }}" enctype="multipart/form-data">
                     @csrf
 
                     {{-- WAKTU PEMERIKSAAN --}}
@@ -187,7 +188,7 @@
                     {{-- AKSI --}}
                     <div class="d-flex justify-content-between">
                         <button type="submit" class="btn btn-success" {{ $areas->count() == 0 ? 'disabled' : '' }}>
-                            <i class="bi bi-save"></i> Simpan
+                            <i class="bi bi-save"></i> Simpan Area Terpilih
                         </button>
                         <a href="{{ route('gmp.index') }}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Kembali
@@ -199,13 +200,29 @@
         </div>
     </div>
 
-    {{-- AUTO TANGGAL --}}
+    {{-- AUTO TANGGAL & INTERCEPT SUBMIT --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Set Auto Tanggal Hari Ini
             const date = document.getElementById("dateInput");
             if (!date.value) {
                 date.value = new Date().toISOString().slice(0, 10);
             }
+
+            // 🔥 FIX LOGIK: Hanya kirim data dari TAB YANG SEDANG AKTIF
+            const form = document.getElementById("gmpForm");
+            form.addEventListener("submit", function(e) {
+                // Cari semua tab yang TIDAK aktif (.tab-pane yang tidak punya class .active)
+                const inactiveTabs = document.querySelectorAll(".tab-pane:not(.active)");
+                
+                inactiveTabs.forEach(function(tab) {
+                    // Disable seluruh elemen input & checkbox di dalam tab non-aktif
+                    // agar tidak ikut terkirim ke server Laravel
+                    tab.querySelectorAll("input").forEach(function(input) {
+                        input.disabled = true;
+                    });
+                });
+            });
         });
     </script>
 

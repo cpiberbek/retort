@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid py-0">
+<div class="container-fluid py-4 px-3">
 
     {{-- ================= Alert ================= --}}
     @if(session('success'))
@@ -36,7 +36,7 @@
 
     {{-- Filter Tanggal --}}
     <form id="filterForm" method="GET" action="{{ route('gmp.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
+        <div class="row w-100">
             <div class="col-md-4">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
@@ -57,7 +57,7 @@
                         </span>
                     </div>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Area...">
+                    value="{{ request('search') }}" placeholder="Cari PIC / Karyawan...">
                 </div>
             </div>
             <div class="col-md-4 align-self-end">
@@ -87,38 +87,16 @@
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <div class="table-responsive">
-                <table class="table">
+                <table class="table table-bordered table-hover">
                     <thead class="table-secondary text-center">
                         <tr>
-                            <th>NO.</th>
-                            <th>Date</th>
-
-                            @php
-                            // Normalisasi & hilangkan duplikasi area
-                            $allAreas = [];
-
-                            foreach($data as $d){
-                                foreach($d->areas as $a){
-
-                                    // Key normalisasi: lowercase + trim
-                                    $key = strtolower(trim($a));
-
-                                    // Simpan tampilan asli hanya jika belum ada
-                                    if(!isset($allAreas[$key])){
-                                        $allAreas[$key] = strtoupper(trim($a));
-                                    }
-                                }
-                            }
-                            @endphp
-
-                            {{-- Header area --}}
-                            @foreach($allAreas as $area)
-                            <th>{{ $area }}</th>
-                            @endforeach
-                            <th>QC</th>
-                            <th>Produksi</th>
-                            <th>SPV</th>
-                            <th>Action</th>
+                            <th class="align-middle" style="width: 5%">NO.</th>
+                            <th class="align-middle" style="width: 12%">Date</th>
+                            <th class="align-middle" style="width: 35%">Area Hygiene</th>
+                            <th class="align-middle">QC</th>
+                            <th class="align-middle">Produksi</th>
+                            <th class="align-middle">SPV</th>
+                            <th class="align-middle" style="width: 20%">Action</th>
                         </tr>
                     </thead>
 
@@ -129,84 +107,91 @@
                         <tr>
                             <td class="text-center align-middle">{{ $no++ }}</td>
                             <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }}</td>
-                            {{-- Kolom area --}}
-                            @foreach($allAreas as $key => $areaLabel)
-                            <td class="text-center align-middle">
-
+                            
+                            <td class="text-start align-middle">
                                 @php
-                                $targetArea = $key; // lowercase normalized
-                                $scores = [];
-                                $totalAttr = 0;
-                                $countChecked = 0;
+                                    $pemeriksaan = is_array($dep->pemeriksaan) ? $dep->pemeriksaan : (json_decode($dep->pemeriksaan, true) ?: []);
+                                    
+                                    // Kelompokkan baris pemeriksaan berdasarkan nama area asli dari JSON
+                                    $groupedByArea = [];
+                                    foreach($pemeriksaan as $row){
+                                        $areaName = strtoupper(trim($row['area'] ?? 'Unknown'));
+                                        $groupedByArea[$areaName][] = $row;
+                                    }
+                                @endphp
 
-                                foreach($dep->pemeriksaan as $row){
+                                @foreach($groupedByArea as $areaName => $rows)
+                                    @php
+                                        $scores = [];
+                                        $totalAttr = 0;
+                                        $countChecked = 0;
 
-                                    if(strtolower(trim($row['area'] ?? '')) === $targetArea){
+                                        foreach($rows as $row){
+                                            $attrKeys = array_diff(
+                                                array_keys($row),
+                                                ['nama_karyawan','pukul','keterangan','area']
+                                            );
 
-                                        $attrKeys = array_diff(
-                                        array_keys($row),
-                                        ['nama_karyawan','pukul','keterangan','area']
-                                        );
+                                            $rowTotal = count($attrKeys);
+                                            $rowCount = 0;
 
-                                        $rowTotal = count($attrKeys);
-                                        $rowCount = 0;
-
-                                        foreach($attrKeys as $keyAttr){
-                                            if((int)($row[$keyAttr] ?? 0) === 1){
-                                                $rowCount++;
+                                            foreach($attrKeys as $keyAttr){
+                                                if((int)($row[$keyAttr] ?? 0) === 1){
+                                                    $rowCount++;
+                                                }
                                             }
+
+                                            $scores[] = [
+                                                'nama' => $row['nama_karyawan'],
+                                                'nilai' => $rowCount
+                                            ];
+
+                                            $totalAttr += $rowTotal;
+                                            $countChecked += $rowCount;
                                         }
 
-                                        $scores[] = [
-                                        'nama' => $row['nama_karyawan'],
-                                        'nilai' => $rowCount
-                                        ];
-
-                                        $totalAttr += $rowTotal;
-                                        $countChecked += $rowCount;
-                                    }
-                                }
-
-                                $persen = $totalAttr > 0 
-                                ? round(($countChecked/$totalAttr)*100, 1)
-                                : 0;
-
-                                usort($scores, fn($a,$b) => $b['nilai'] <=> $a['nilai']);
-                                    $top = array_slice($scores, 0, 3);
+                                        $persen = $totalAttr > 0 ? round(($countChecked / $totalAttr) * 100, 1) : 0;
+                                        usort($scores, fn($a, $b) => $b['nilai'] <=> $a['nilai']);
+                                        $top = array_slice($scores, 0, 3);
                                     @endphp
 
-                                    {{ $persen }} %
-                                    <br>
-                                    <small>
-                                        @foreach($top as $s)
-                                        • {{ $s['nama'] }} ({{ $s['nilai'] }})<br>
-                                        @endforeach
-                                    </small>
-                                </td>
+                                    {{-- Render Data Berurutan ke Bawah --}}
+                                    <div class="p-2 {{ !$loop->last ? 'border-bottom mb-2 pb-2' : '' }}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fw-bold text-dark"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ $areaName }}</span>
+                                            <span class="badge bg-info text-dark fw-bold">{{ $persen }} %</span>
+                                        </div>
+                                        <div class="text-muted mt-1 ps-3" style="font-size: 0.8rem; line-height: 1.4;">
+                                            @foreach($top as $s)
+                                                • {{ $s['nama'] }} ({{ $s['nilai'] }})<br>
+                                            @endforeach
+                                        </div>
+                                    </div>
                                 @endforeach
-                                <td class="text-center align-middle">{{ $dep->username }}</td>
-                                <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
-                                <td class="text-center align-middle">
-                                    @if ($dep->status_spv == 0)
-                                    <span class="fw-bold text-secondary">Created</span>
-                                    @elseif ($dep->status_spv == 1)
-                                    <span class="fw-bold text-success">Verified</span>
-                                    @elseif ($dep->status_spv == 2)
-                                    <!-- Link buka modal -->
+                            </td>
+
+                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center align-middle">{{ $dep->nama_produksi ?? '-' }}</td>
+                            <td class="text-center align-middle">
+                                @if ($dep->status_spv == 0)
+                                    <span>Created</span>
+                                @elseif ($dep->status_spv == 1)
+                                    <span class="badge bg-success">Verified</span>
+                                @elseif ($dep->status_spv == 2)
                                     <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#revisionModal{{ $dep->uuid }}" 
-                                     class="text-danger fw-bold text-decoration-none" style="cursor: pointer;">Revision</a>
-                                     <!-- Modal -->
-                                     <div class="modal fade" id="revisionModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="revisionModalLabel{{ $dep->uuid }}" aria-hidden="true">
+                                       class="badge bg-danger text-decoration-none" style="cursor: pointer;">Revision</a>
+                                     
+                                    <div class="modal fade" id="revisionModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="revisionModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                         <div class="modal-dialog modal-dialog-centered">
                                             <div class="modal-content">
                                                 <div class="modal-header bg-danger text-white">
                                                     <h5 class="modal-title" id="revisionModalLabel{{ $dep->uuid }}">Detail Revisi</h5>
                                                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
-                                                <div class="modal-body">
+                                                <div class="modal-body text-start text-dark">
                                                     <ul class="list-unstyled mb-0">
-                                                        <li><strong>Status:</strong> Revision</li>
-                                                        <li><strong>Catatan:</strong> {{ $dep->catatan_spv ?? '-' }}</li>
+                                                        <li><strong>Status:</strong> <span class="text-danger">Revision</span></li>
+                                                        <li class="mt-2"><strong>Catatan SPV:</strong><br> {{ $dep->catatan_spv ?? '-' }}</li>
                                                     </ul>
                                                 </div>
                                                 <div class="modal-footer">
@@ -215,134 +200,123 @@
                                             </div>
                                         </div>
                                     </div>
-                                    @endif
-                                </td>
-                                <td class="text-center align-middle">
+                                @endif
+                            </td>
+                            <td class="text-center align-middle">
+                                {{-- FIX TOMBOL ACTION: Diberi class m-1 agar ada margin di tiap sisinya dan memecah tumpukan --}}
+                                <div class="d-flex flex-wrap justify-content-center">
                                     @can('can access verification button')
-                                    <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mb-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
-                                        <i class="bi bi-shield-check me-1"></i> Verifikasi
+                                    <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm m-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
+                                        <i class="bi bi-shield-check"></i> Verifikasi
                                     </button>
                                     @endcan
                                     @can('can access edit button')
-                                    <a href="{{ route('gmp.edit', $dep->uuid) }}" class="btn btn-warning btn-sm me-1 mb-1">
-                                        <i class="bi bi-pencil-square"></i> Edit Data
+                                    <a href="{{ route('gmp.edit', $dep->uuid) }}" class="btn btn-warning btn-sm m-1 text-dark fw-bold">
+                                        <i class="bi bi-pencil-square"></i> Edit
                                     </a>
                                     @endcan
                                     @can('can access update button')
-                                    <a href="{{ route('gmp.edit', $dep->uuid) }}" class="btn btn-info btn-sm me-1 mb-1">
+                                    <a href="{{ route('gmp.edit', $dep->uuid) }}" class="btn btn-info btn-sm m-1 text-white fw-bold">
                                         <i class="bi bi-pencil"></i> Update
                                     </a>
                                     @endcan
                                     @can('can access delete button')
-                                    <form action="{{ route('gmp.destroy', $dep->uuid) }}" method="POST" class="d-inline">
+                                    <form action="{{ route('gmp.destroy', $dep->uuid) }}" method="POST" class="d-inline m-1">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm mb-1"
-                                        onclick="return confirm('Yakin ingin menghapus?')">
-                                        <i class="bi bi-trash"></i> Hapus
-                                    </button>
-                                </form>
-                                @endcan
+                                        <button type="submit" class="btn btn-danger btn-sm shadow-sm" onclick="return confirm('Yakin ingin menghapus data ini?')">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </form>
+                                    @endcan
+                                </div>
+
                                 <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1">
                                     <div class="modal-dialog modal-dialog-centered modal-md">
-
                                         <form action="{{ route('gmp.updateVerification', $dep->uuid) }}" method="POST">
                                             @csrf
                                             @method('PUT')
-
                                             <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                             style="background: linear-gradient(145deg, #7a1f12, #9E3419);">
-
-                                            <!-- HEADER -->
-                                            <div class="modal-header">
-                                                <h5 class="modal-title">VERIFICATION</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">VERIFICATION</h5>
+                                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                                </div>
+                                                <div class="modal-body text-start text-dark">
+                                                    <label class="form-label fw-bold text-white">Status Verifikasi</label>
+                                                    <select name="status_spv" class="form-select" required>
+                                                        <option value="1">Verified</option>
+                                                        <option value="2">Revision</option>
+                                                    </select>
+                                                    <label class="form-label mt-3 fw-bold text-white">Catatan SPV</label>
+                                                    <textarea name="catatan_spv" class="form-control" rows="3" placeholder="Masukkan catatan revisi jika ada...">{{ trim($dep->catatan_spv) }}</textarea>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Submit</button>
+                                                </div>
                                             </div>
-
-                                            <!-- BODY -->
-                                            <div class="modal-body">
-                                                <select name="status_spv" class="form-select" required>
-                                                    <option value="1">Verified</option>
-                                                    <option value="2">Revision</option>
-                                                </select>
-
-                                                <textarea name="catatan_spv" class="form-control mt-3">
-                                                    {{ $dep->catatan_spv }}
-                                                </textarea>
-                                            </div>
-
-                                            <!-- FOOTER -->
-                                            <div class="modal-footer">
-                                                <button type="submit" class="btn btn-success">Submit</button>
-                                            </div>
-
-                                        </div>
-                                    </form>
-
+                                        </form>
+                                    </div>
                                 </div>
-                            </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">Belum ada data GMP karyawan pada list ini.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
 
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="{{ 6 + count($allAreas) }}" class="text-center">Belum ada data GMP karyawan.</td>
-                    </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-
-        {{-- Pagination --}}
-        <div class="mt-3">
-            {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
-        </div>
-        @can('can access export')
-        <div class="card shadow-sm mb-3">
-            <div class="card-body">
-                <form action="{{ route('gmp.export') }}" method="GET" class="row g-2 align-items-center">
-
-                    {{-- Pilih Tanggal --}}
-                    <div class="col-auto">
-                        <label for="date" class="col-form-label fw-semibold">Pilih Tanggal</label>
-                    </div>
-                    <div class="col-auto">
-                        <input type="date" id="date" name="date"
-                        class="form-control form-control-sm"
-                        value="{{ request('date') }}" required>
-                    </div>
-
-                    {{-- Pilih Area --}}
-                    <div class="col-auto">
-                        <label for="atribut" class="col-form-label fw-semibold">Area</label>
-                    </div>
-
-                    <div class="col-auto">
-                        <select id="atribut" name="atribut" class="form-control form-control-sm" required>
-                            <option value="">-- Pilih Area --</option>
-
-                            @foreach ($areas as $area)
-                            <option value="{{ $area->area }}"
-                                {{ request('atribut') == $area->area ? 'selected' : '' }}>
-                                {{ strtoupper($area->area) }}
-                            </option>
-                            @endforeach
-                        </select>
-                    </div>
-
-                    {{-- Button --}}
-                    <div class="col-auto">
-                        <button type="submit" class="btn btn-success btn-sm">
-                            <i class="bi bi-file-earmark-excel"></i> Export Excel
-                        </button>
-                    </div>
-
-                </form>
+            {{-- Pagination --}}
+            <div class="mt-3">
+                {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
             </div>
         </div>
-        @endcan
-
     </div>
+
+    @can('can access export')
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <form action="{{ route('gmp.export') }}" method="GET" class="row g-2 align-items-center">
+                {{-- Pilih Tanggal --}}
+                <div class="col-auto">
+                    <label for="date" class="col-form-label fw-semibold">Pilih Tanggal</label>
+                </div>
+                <div class="col-auto">
+                    <input type="date" id="date" name="date"
+                    class="form-control form-control-sm"
+                    value="{{ request('date') }}" required>
+                </div>
+
+                {{-- Pilih Area --}}
+                <div class="col-auto">
+                    <label for="atribut" class="col-form-label fw-semibold">Area</label>
+                </div>
+                <div class="col-auto">
+                    <select id="atribut" name="atribut" class="form-control form-control-sm" required>
+                        <option value="">-- Pilih Area --</option>
+                        @foreach ($areas as $area)
+                        <option value="{{ $area->area }}"
+                            {{ request('atribut') == $area->area ? 'selected' : '' }}>
+                            {{ strtoupper($area->area) }}
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Button --}}
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    @endcan
+
 </div>
 
 {{-- Auto-hide alert --}}
@@ -355,22 +329,19 @@
         }
     }, 3000);
 </script>
+
 <style>
     .table td, .table th {
         font-size: 0.85rem;
-        white-space: nowrap; 
-    }
-    .text-danger {
-        font-weight: bold;
+        white-space: normal; /* Biarkan tombol membungkus ke baris baru jika kolom terlalu sempit */
     }
     .text-muted.fst-italic {
         color: #6c757d !important;
         font-style: italic !important;
     }
-    .container {
-        padding-left: 2px !important;
-        padding-right: 2px !important;
+    .badge {
+        font-size: 0.85em;
+        padding: 0.4em 0.6em;
     }
 </style>
-</div>
 @endsection

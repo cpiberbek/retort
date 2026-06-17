@@ -925,6 +925,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
     Route::resource('raw-material', MasterRawMaterialController::class);
 });
+Route::get('/test-limit', function() {
+    return 'Max Input Vars: ' . ini_get('max_input_vars');
+});
 
 //Biarkan dibawah ini tetap di paling bawah written by Joe
 Route::fallback(function () {
