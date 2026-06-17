@@ -147,7 +147,7 @@
                             <td class="text-center align-middle">
                                 @if($dep)
                                 <a href="#" data-bs-toggle="modal" data-bs-target="#packingModal{{ $dep->uuid }}" class="fw-bold text-decoration-underline text-primary">Result</a>
-                                
+
                                 {{-- Modal Pemeriksaan Packing --}}
                                 <div class="modal fade" id="packingModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="packingModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                     <div class="modal-dialog modal-xl">
@@ -223,7 +223,7 @@
                                                     </table>
                                                 </div>
                                                 <div class="mt-3">
-                                                    <strong>Keterangan (Global): </strong> {{ $dep->keterangan ?? '-' }}
+                                                    <strong>Keterangan: </strong> {{ $dep->keterangan ?? '-' }}
                                                 </div>
                                             </div>
                                             <div class="modal-footer">
@@ -269,7 +269,7 @@
                                 </div>
                                 @endif
                             </td>
-                            
+
                             <td class="text-center align-middle">
                                 @can('can access verification button')
                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mb-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
@@ -295,14 +295,14 @@
                                 </button>
                             </form>
                             @endcan
-                            
+
                             {{-- Modal Verify --}}
                             <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                 <div class="modal-dialog modal-dialog-centered modal-md">
                                     <form action="{{ route('packing.verification.update', $dep->uuid) }}" method="POST">
                                         @csrf
                                         @method('PUT')
-                                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" 
+                                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                         style="background: linear-gradient(145deg, #7a1f12, #9E3419); box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
                                         <div class="modal-header border-bottom border-light-subtle p-4" style="border-bottom-width: 3px !important;">
                                             <h5 class="modal-title fw-bolder fs-3 text-uppercase" id="verifyModalLabel{{ $dep->uuid }}" style="color: #00ffc4;">
@@ -317,7 +317,7 @@
                                             </p>
                                             <div class="row g-4">
                                                 <div class="col-md-12">
-                                                    <label for="status_spv_{{ $dep->uuid }}" class="form-label fw-bold mb-2 text-center d-block" 
+                                                    <label for="status_spv_{{ $dep->uuid }}" class="form-label fw-bold mb-2 text-center d-block"
                                                         style="color: #FFE5DE; font-size: 0.95rem;">
                                                         Pilih Status Verifikasi
                                                     </label>
@@ -331,9 +331,9 @@
                                                     <label for="catatan_spv_{{ $dep->uuid }}" class="form-label fw-bold text-light mb-2">
                                                         Catatan Tambahan (Opsional)
                                                     </label>
-                                                    <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4" 
-                                                        class="form-control text-dark border-0 shadow-none" 
-                                                        placeholder="Masukkan catatan, misalnya alasan revisi..." 
+                                                    <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4"
+                                                        class="form-control text-dark border-0 shadow-none"
+                                                        placeholder="Masukkan catatan, misalnya alasan revisi..."
                                                         style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
                                                 </div>
                                             </div>
@@ -383,7 +383,7 @@
 <style>
     .table td, .table th {
         font-size: 0.85rem;
-        white-space: nowrap; 
+        white-space: nowrap;
     }
     .text-danger {
         font-weight: bold;

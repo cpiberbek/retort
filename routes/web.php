@@ -569,7 +569,7 @@ Route::middleware('auth')->group(function () {
     // Sampling FG
     Route::get('/get-palet', [App\Http\Controllers\Sampling_fgController::class, 'getPalet'])->name('get.palet');
     Route::get('/sampling_fg/export-pdf', [Sampling_fgController::class, 'exportPdf'])->name('sampling_fg.exportPdf');
-    Route::get('/get-jumlah-box', [App\Http\Controllers\sampling_fgController::class, 'getJumlahBox'])->name('get.jumlah.box');
+    Route::get('/get-jumlah-box', [App\Http\Controllers\Sampling_fgController::class, 'getJumlahBox'])->name('get.jumlah.box');
     Route::get('/sampling_fg', [Sampling_fgController::class, 'index'])->name('sampling_fg.index');
     Route::get('/sampling_fg/create', [Sampling_fgController::class, 'create'])->name('sampling_fg.create');
     Route::post('/sampling_fg', [Sampling_fgController::class, 'store'])->name('sampling_fg.store');

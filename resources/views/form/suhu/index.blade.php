@@ -192,8 +192,9 @@
                                                                                     $matched = collect(
                                                                                         $hasilSuhu,
                                                                                     )->firstWhere('area', $area->area);
-                                                                                    $nilai = isset($matched['nilai'])
-                                                                                        ? floatval($matched['nilai'])
+
+                                                                                    $nilai = isset($matched['suhu'])
+                                                                                        ? floatval($matched['suhu'])
                                                                                         : null;
                                                                                     $min = $area->standar_min;
                                                                                     $max = $area->standar_max;

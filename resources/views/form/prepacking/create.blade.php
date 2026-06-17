@@ -120,7 +120,7 @@
                                                     min="0"></td>
                                             <td><input type="number" name="kondisi_produk[kering_air_ujung]"
                                                     id="kering_air_ujung" class="form-control form-control-sm text-center"
-                                                    min="0"></td>
+                                                    min="0" readonly></td>
                                         </tr>
                                         <tr>
                                             <td class="text-start">Seal</td>
@@ -129,7 +129,7 @@
                                                     min="0"></td>
                                             <td><input type="number" name="kondisi_produk[kering_air_seal]"
                                                     id="kering_air_seal" class="form-control form-control-sm text-center"
-                                                    min="0"></td>
+                                                    min="0" readonly></td>
                                         </tr>
                                         <tr>
                                             <td class="text-start">Total</td>
@@ -165,7 +165,8 @@
                                                     class="form-control form-control-sm text-center" min="0"></td>
                                             <td><input type="number" name="kondisi_produk[kering_minyak_ujung]"
                                                     id="kering_minyak_ujung"
-                                                    class="form-control form-control-sm text-center" min="0"></td>
+                                                    class="form-control form-control-sm text-center" min="0"
+                                                    readonly></td>
                                         </tr>
                                         <tr>
                                             <td class="text-start">Seal</td>
@@ -174,7 +175,8 @@
                                                     class="form-control form-control-sm text-center" min="0"></td>
                                             <td><input type="number" name="kondisi_produk[kering_minyak_seal]"
                                                     id="kering_minyak_seal"
-                                                    class="form-control form-control-sm text-center" min="0"></td>
+                                                    class="form-control form-control-sm text-center" min="0"
+                                                    readonly></td>
                                         </tr>
                                         <tr>
                                             <td class="text-start">Total</td>
@@ -311,23 +313,59 @@
             // HITUNG AIR & MINYAK
             // =========================
             function hitungTotalAirMinyak(type) {
+
                 let basahUjung = parseFloat($(`#basah_${type}_ujung`).val()) || 0;
                 let basahSeal = parseFloat($(`#basah_${type}_seal`).val()) || 0;
 
+                // Kering per bagian = 100 - basah
+                const inputUjung = $(`#basah_${type}_ujung`).val();
+                const inputSeal = $(`#basah_${type}_seal`).val();
+
+                if (inputUjung === '') {
+                    $(`#kering_${type}_ujung`).val('');
+                } else {
+                    $(`#kering_${type}_ujung`).val(
+                        Math.max(0, 100 - basahUjung).toFixed(2)
+                    );
+                }
+
+                if (inputSeal === '') {
+                    $(`#kering_${type}_seal`).val('');
+                } else {
+                    $(`#kering_${type}_seal`).val(
+                        Math.max(0, 100 - basahSeal).toFixed(2)
+                    );
+                }
+
+                // Total basah
                 let totalBasah = basahUjung + basahSeal;
 
-                // Set total basah
-                $(`#basah_${type}_total`).val(totalBasah);
-
-                // Hitung kering = 100 - basah
+                // Total kering = 100 - total basah
                 let totalKering = 100 - totalBasah;
 
-                // Prevent minus
-                if (totalKering < 0) totalKering = 0;
+                if (totalKering < 0) {
+                    totalKering = 0;
+                }
 
-                $(`#kering_${type}_total`).val(totalKering);
+                // Jika kedua input kosong
+                if (inputUjung === '' && inputSeal === '') {
 
-                // Optional warning
+                    $(`#basah_${type}_total`).val('');
+                    $(`#kering_${type}_total`).val('');
+
+                } else {
+
+                    $(`#basah_${type}_total`).val(
+                        totalBasah.toFixed(2)
+                    );
+
+                    $(`#kering_${type}_total`).val(
+                        totalKering.toFixed(2)
+                    );
+
+                }
+
+                // Warning jika melebihi 100%
                 if (totalBasah > 100) {
                     alert('Total basah tidak boleh lebih dari 100%');
                 }
@@ -335,10 +373,16 @@
 
             // Event input untuk AIR & MINYAK
             ['air', 'minyak'].forEach(type => {
+
                 $(`#basah_${type}_ujung, #basah_${type}_seal`).on('input', function() {
                     hitungTotalAirMinyak(type);
                 });
+
             });
+
+            // Hitung saat halaman pertama kali dibuka
+            hitungTotalAirMinyak('air');
+            hitungTotalAirMinyak('minyak');
 
         });
     </script>
@@ -354,7 +398,7 @@
                 return;
             }
             let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
-            
+
             $.ajax({
                 url: url,
                 type: 'GET',
