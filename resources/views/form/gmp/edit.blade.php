@@ -9,10 +9,10 @@ use Illuminate\Support\Str;
     <div class="card shadow-sm">
         <div class="card-body">
             <h4 class="mb-4">
-                <i class="bi bi-pencil-square"></i> Edit Pemeriksaan Personal Hygiene dan Kesehatan Karyawan
+                <i class="bi bi-pencil-square"></i> Edit Pemeriksaan Personal Hygiene dan Kesehatan Karyawan (SPV)
             </h4>
 
-            <form method="POST" action="{{ route('gmp.update', $gmp->uuid) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('gmp.edit_spv', $gmp->uuid) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 

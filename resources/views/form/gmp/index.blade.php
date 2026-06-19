@@ -211,12 +211,12 @@
                                     </button>
                                     @endcan
                                     @can('can access edit button')
-                                    <a href="{{ route('gmp.edit', $dep->uuid) }}" class="btn btn-warning btn-sm m-1 text-dark fw-bold">
+                                    <a href="{{ route('gmp.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm m-1 text-dark fw-bold">
                                         <i class="bi bi-pencil-square"></i> Edit
                                     </a>
                                     @endcan
                                     @can('can access update button')
-                                    <a href="{{ route('gmp.edit', $dep->uuid) }}" class="btn btn-info btn-sm m-1 text-white fw-bold">
+                                    <a href="{{ route('gmp.update.form', $dep->uuid) }}" class="btn btn-info btn-sm m-1 text-white fw-bold">
                                         <i class="bi bi-pencil"></i> Update
                                     </a>
                                     @endcan

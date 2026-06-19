@@ -884,7 +884,12 @@ Route::middleware('auth')->group(function () {
 
     /*SUHU DAN SANITASI*/
     // Resource GMP tanpa show
-    Route::resource('gmp', GmpController::class)->parameters(['gmp' => 'uuid'])->except(['show']);
+    Route::get('/gmp/update/{uuid}', [GmpController::class, 'updateForm'])->name('gmp.update.form');
+    Route::put('/gmp/update_qc/{uuid}', [GmpController::class, 'update_qc'])->name('gmp.update_qc');
+    Route::get('/gmp/edit/{uuid}', [GmpController::class, 'edit'])->name('gmp.edit.form');
+    Route::put('/gmp/edit_spv/{uuid}', [GmpController::class, 'edit_spv'])->name('gmp.edit_spv');
+    Route::resource('gmp', GmpController::class)->parameters(['gmp' => 'uuid'])->except(['show', 'edit', 'update']);
+
     Route::get('/gmp/export', [GmpController::class, 'export'])->name('gmp.export');
     Route::put('/gmp/{uuid}/update-verification', [GmpController::class, 'updateVerification'])->name('gmp.updateVerification');
 

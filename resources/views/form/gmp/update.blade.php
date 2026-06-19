@@ -9,10 +9,10 @@ use Illuminate\Support\Str;
     <div class="card shadow-sm">
         <div class="card-body">
             <h4 class="mb-4">
-                <i class="bi bi-pencil-square"></i> Edit Pemeriksaan Personal Hygiene dan Kesehatan Karyawan
+                <i class="bi bi-pencil-square"></i> Update Pemeriksaan Personal Hygiene dan Kesehatan Karyawan (QC)
             </h4>
 
-            <form method="POST" action="{{ route('gmp.update', $gmp->uuid) }}" enctype="multipart/form-data">
+            <form method="POST" action="{{ route('gmp.update_qc', $gmp->uuid) }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -26,7 +26,7 @@ use Illuminate\Support\Str;
                             <div class="col-md-4">
                                 <label for="dateInput" class="form-label">Tanggal</label>
                                 <input type="date" id="dateInput" name="date" class="form-control"
-                                       value="{{ old('date', $gmp->date) }}" required>
+                                       value="{{ old('date', $gmp->date) }}" readonly required>
                             </div>
                         </div>
                     </div>
@@ -136,18 +136,29 @@ use Illuminate\Support\Str;
                                                             'diare','demam','luka_bakar','batuk','radang','influenza','sakit_mata'
                                                         ] as $attr)
                                                             <td>
-                                                                <input type="hidden" name="{{ $slugArea }}[{{ $i }}][{{ $attr }}]" value="0">
-                                                                <input type="checkbox" name="{{ $slugArea }}[{{ $i }}][{{ $attr }}]" value="1"
-                                                                       {{ isset($rowData[$attr]) && $rowData[$attr] == 1 ? 'checked' : '' }}>
+                                                                @php
+                                                                    $isFilled = isset($rowData[$attr]) && $rowData[$attr] == 1;
+                                                                @endphp
+                                                                @if($isFilled)
+                                                                    <input type="checkbox" checked disabled onclick="return false;">
+                                                                    <input type="hidden" name="{{ $slugArea }}[{{ $i }}][{{ $attr }}]" value="1">
+                                                                @else
+                                                                    <input type="hidden" name="{{ $slugArea }}[{{ $i }}][{{ $attr }}]" value="0">
+                                                                    <input type="checkbox" name="{{ $slugArea }}[{{ $i }}][{{ $attr }}]" value="1">
+                                                                @endif
                                                             </td>
                                                         @endforeach
 
                                                         {{-- Kolom Keterangan --}}
                                                         <td class="text-start">
+                                                            @php
+                                                                $hasKeterangan = !empty($rowData['keterangan']);
+                                                            @endphp
                                                             <input type="text" 
                                                                    class="form-control form-control-sm w-100"
                                                                    name="{{ $slugArea }}[{{ $i }}][keterangan]"
-                                                                   value="{{ $rowData['keterangan'] ?? '' }}">
+                                                                   value="{{ $rowData['keterangan'] ?? '' }}"
+                                                                   {{ $hasKeterangan ? 'readonly' : '' }}>
                                                         </td>
                                                     </tr>
                                                 @endforeach

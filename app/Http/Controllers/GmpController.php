@@ -214,6 +214,39 @@ class GmpController extends Controller
         return view('form.gmp.edit', compact('gmp', 'areas', 'karyawanByArea', 'oldDataPerArea'));
     }
 
+    public function updateForm(string $uuid)
+    {
+        $gmp = Gmp::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->firstOrFail();
+
+        // Penanganan ganda memastikan decode aman
+        $pemeriksaanData = is_string($gmp->pemeriksaan) ? json_decode($gmp->pemeriksaan, true) : $gmp->pemeriksaan;
+        $pemeriksaan = $pemeriksaanData ?? [];
+
+        $karyawanByArea = [];
+        $oldDataPerArea = [];
+
+        foreach ($pemeriksaan as $row) {
+            $areaName = $row['area'] ?? 'Unknown';
+            $namaKaryawan = $row['nama_karyawan'] ?? 'Unknown';
+
+            if (!isset($karyawanByArea[$areaName])) {
+                $karyawanByArea[$areaName] = [];
+                $oldDataPerArea[$areaName] = [];
+            }
+
+            $karyawanByArea[$areaName][] = $namaKaryawan;
+            $oldDataPerArea[$areaName][$namaKaryawan] = $row;
+        }
+
+        $areas = array_map(function ($areaName) {
+            return (object)['area' => $areaName];
+        }, array_keys($karyawanByArea));
+
+        return view('form.gmp.update', compact('gmp', 'areas', 'karyawanByArea', 'oldDataPerArea'));
+    }
+
     public function update(Request $request, string $uuid)
     {
         $userPlant = Auth::user()->plant;
@@ -300,6 +333,16 @@ class GmpController extends Controller
         $gmp->update(['tgl_update_produksi' => Carbon::parse($gmp->updated_at)->addHour()]);
 
         return redirect()->route('gmp.index')->with('success', 'Data GMP berhasil diperbarui.');
+    }
+
+    public function update_qc(Request $request, string $uuid)
+    {
+        return $this->update($request, $uuid);
+    }
+
+    public function edit_spv(Request $request, string $uuid)
+    {
+        return $this->update($request, $uuid);
     }
 
     public function destroy($uuid)
