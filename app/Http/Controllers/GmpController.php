@@ -183,66 +183,74 @@ class GmpController extends Controller
 
     public function edit(string $uuid)
     {
+        $userPlant = Auth::user()->plant;
+
         $gmp = Gmp::where('uuid', $uuid)
-            ->where('plant', Auth::user()->plant)
+            ->where('plant', $userPlant)
             ->firstOrFail();
 
-        // 🔥 FIX: Penanganan ganda memastikan decode aman
+        // Decode data pemeriksaan yang tersimpan
         $pemeriksaanData = is_string($gmp->pemeriksaan) ? json_decode($gmp->pemeriksaan, true) : $gmp->pemeriksaan;
         $pemeriksaan = $pemeriksaanData ?? [];
 
-        $karyawanByArea = [];
+        // Bangun oldDataPerArea dari data yang sudah tersimpan
         $oldDataPerArea = [];
-
         foreach ($pemeriksaan as $row) {
-            $areaName = $row['area'] ?? 'Unknown';
+            $areaName     = $row['area'] ?? 'Unknown';
             $namaKaryawan = $row['nama_karyawan'] ?? 'Unknown';
-
-            if (!isset($karyawanByArea[$areaName])) {
-                $karyawanByArea[$areaName] = [];
-                $oldDataPerArea[$areaName] = [];
-            }
-
-            $karyawanByArea[$areaName][] = $namaKaryawan;
             $oldDataPerArea[$areaName][$namaKaryawan] = $row;
         }
 
-        $areas = array_map(function ($areaName) {
-            return (object)['area' => $areaName];
-        }, array_keys($karyawanByArea));
+        // Ambil semua area dari master (sama seperti create)
+        $areas = Area_hygiene::where('plant', $userPlant)
+            ->orderBy('area', 'asc')
+            ->get();
+
+        // Ambil semua karyawan per area dari master Produksi (sama seperti create)
+        $karyawanByArea = [];
+        foreach ($areas as $area) {
+            $karyawanByArea[$area->area] = Produksi::where('area', $area->area)
+                ->where('plant', $userPlant)
+                ->pluck('nama_karyawan')
+                ->toArray();
+        }
 
         return view('form.gmp.edit', compact('gmp', 'areas', 'karyawanByArea', 'oldDataPerArea'));
     }
 
     public function updateForm(string $uuid)
     {
+        $userPlant = Auth::user()->plant;
+
         $gmp = Gmp::where('uuid', $uuid)
-            ->where('plant', Auth::user()->plant)
+            ->where('plant', $userPlant)
             ->firstOrFail();
 
-        // Penanganan ganda memastikan decode aman
+        // Decode data pemeriksaan yang tersimpan
         $pemeriksaanData = is_string($gmp->pemeriksaan) ? json_decode($gmp->pemeriksaan, true) : $gmp->pemeriksaan;
         $pemeriksaan = $pemeriksaanData ?? [];
 
-        $karyawanByArea = [];
+        // Bangun oldDataPerArea dari data yang sudah tersimpan
         $oldDataPerArea = [];
-
         foreach ($pemeriksaan as $row) {
-            $areaName = $row['area'] ?? 'Unknown';
+            $areaName     = $row['area'] ?? 'Unknown';
             $namaKaryawan = $row['nama_karyawan'] ?? 'Unknown';
-
-            if (!isset($karyawanByArea[$areaName])) {
-                $karyawanByArea[$areaName] = [];
-                $oldDataPerArea[$areaName] = [];
-            }
-
-            $karyawanByArea[$areaName][] = $namaKaryawan;
             $oldDataPerArea[$areaName][$namaKaryawan] = $row;
         }
 
-        $areas = array_map(function ($areaName) {
-            return (object)['area' => $areaName];
-        }, array_keys($karyawanByArea));
+        // Ambil semua area dari master (sama seperti create)
+        $areas = Area_hygiene::where('plant', $userPlant)
+            ->orderBy('area', 'asc')
+            ->get();
+
+        // Ambil semua karyawan per area dari master Produksi (sama seperti create)
+        $karyawanByArea = [];
+        foreach ($areas as $area) {
+            $karyawanByArea[$area->area] = Produksi::where('area', $area->area)
+                ->where('plant', $userPlant)
+                ->pluck('nama_karyawan')
+                ->toArray();
+        }
 
         return view('form.gmp.update', compact('gmp', 'areas', 'karyawanByArea', 'oldDataPerArea'));
     }
@@ -274,59 +282,92 @@ class GmpController extends Controller
                 : null,
         ];
 
-        $pemeriksaanData = [];
+        // ─── Ambil data LAMA yang tersimpan ───
+        $oldPemeriksaan = is_string($gmp->pemeriksaan)
+            ? json_decode($gmp->pemeriksaan, true)
+            : $gmp->pemeriksaan;
+        $oldPemeriksaan = $oldPemeriksaan ?? [];
 
-        // Ambil semua slug area yang valid
-        $areaSlugs = Area_hygiene::orderBy('area', 'asc')
+        // Kelompokkan data lama berdasarkan nama area
+        $oldByArea = [];
+        foreach ($oldPemeriksaan as $row) {
+            $areaName     = $row['area'] ?? 'Unknown';
+            $namaKaryawan = $row['nama_karyawan'] ?? 'Unknown';
+            $oldByArea[$areaName][$namaKaryawan] = $row;
+        }
+
+        // ─── Ambil semua slug area yang valid ───
+        $areaSlugs = Area_hygiene::where('plant', $userPlant)
+            ->orderBy('area', 'asc')
             ->get()
             ->mapWithKeys(function ($area) {
                 return [Str::slug($area->area, '_') => $area->area];
             });
 
-        // Loop hanya area yang sesuai slug (tidak acak semua request)
+        // Tandai area mana saja yang dikirim (tab yang disubmit)
+        $submittedAreas = [];
         foreach ($areaSlugs as $slug => $namaAreaAsli) {
-
-            if (!$request->has($slug)) {
-                continue; // skip kalau area tidak dikirim
+            if ($request->has($slug)) {
+                $submittedAreas[$namaAreaAsli] = $slug;
             }
+        }
 
+        // ─── Build data pemeriksaan hasil MERGE ───
+        $pemeriksaanData = [];
+
+        // 1. Proses area yang DIKIRIM: gunakan data baru dari request
+        foreach ($submittedAreas as $namaAreaAsli => $slug) {
             foreach ($request->$slug as $row) {
+                $namaKaryawan = $row['nama_karyawan'] ?? '';
+
+                // Pertahankan pukul lama jika sudah ada, atau gunakan waktu sekarang
+                $pukulLama = $oldByArea[$namaAreaAsli][$namaKaryawan]['pukul'] ?? now()->format('H:i');
+
                 $pemeriksaanData[] = [
-                    'area' => $namaAreaAsli,
-                    'nama_karyawan' => $row['nama_karyawan'] ?? '',
-                    'pukul' => now()->format('H:i'),
+                    'area'          => $namaAreaAsli,
+                    'nama_karyawan' => $namaKaryawan,
+                    'pukul'         => $pukulLama,
 
-                    'anting' => $row['anting'] ?? 0,
-                    'kalung' => $row['kalung'] ?? 0,
-                    'cincin' => $row['cincin'] ?? 0,
-                    'jam_tangan' => $row['jam_tangan'] ?? 0,
-                    'peniti' => $row['peniti'] ?? 0,
-                    'bros' => $row['bros'] ?? 0,
-                    'payet' => $row['payet'] ?? 0,
-                    'softlens' => $row['softlens'] ?? 0,
-                    'eyelashes' => $row['eyelashes'] ?? 0,
-                    'seragam' => $row['seragam'] ?? 0,
-                    'boot' => $row['boot'] ?? 0,
-                    'masker' => $row['masker'] ?? 0,
+                    'anting'        => $row['anting'] ?? 0,
+                    'kalung'        => $row['kalung'] ?? 0,
+                    'cincin'        => $row['cincin'] ?? 0,
+                    'jam_tangan'    => $row['jam_tangan'] ?? 0,
+                    'peniti'        => $row['peniti'] ?? 0,
+                    'bros'          => $row['bros'] ?? 0,
+                    'payet'         => $row['payet'] ?? 0,
+                    'softlens'      => $row['softlens'] ?? 0,
+                    'eyelashes'     => $row['eyelashes'] ?? 0,
+                    'seragam'       => $row['seragam'] ?? 0,
+                    'boot'          => $row['boot'] ?? 0,
+                    'masker'        => $row['masker'] ?? 0,
                     'ciput_hairnet' => $row['ciput_hairnet'] ?? 0,
-                    'kuku' => $row['kuku'] ?? 0,
-                    'parfum' => $row['parfum'] ?? 0,
-                    'make_up' => $row['make_up'] ?? 0,
+                    'kuku'          => $row['kuku'] ?? 0,
+                    'parfum'        => $row['parfum'] ?? 0,
+                    'make_up'       => $row['make_up'] ?? 0,
 
-                    'diare' => $row['diare'] ?? 0,
-                    'demam' => $row['demam'] ?? 0,
-                    'luka_bakar' => $row['luka_bakar'] ?? 0,
-                    'batuk' => $row['batuk'] ?? 0,
-                    'radang' => $row['radang'] ?? 0,
-                    'influenza' => $row['influenza'] ?? 0,
-                    'sakit_mata' => $row['sakit_mata'] ?? 0,
+                    'diare'         => $row['diare'] ?? 0,
+                    'demam'         => $row['demam'] ?? 0,
+                    'luka_bakar'    => $row['luka_bakar'] ?? 0,
+                    'batuk'         => $row['batuk'] ?? 0,
+                    'radang'        => $row['radang'] ?? 0,
+                    'influenza'     => $row['influenza'] ?? 0,
+                    'sakit_mata'    => $row['sakit_mata'] ?? 0,
 
-                    'keterangan' => $row['keterangan'] ?? null,
+                    'keterangan'    => $row['keterangan'] ?? null,
                 ];
             }
         }
 
-        // 🔥 FIX: Langsung simpan Array, jangan gunakan json_encode lagi!
+        // 2. Pertahankan data area LAMA yang TIDAK dikirim (merge akumulatif)
+        foreach ($oldByArea as $namaAreaLama => $karyawanData) {
+            if (!isset($submittedAreas[$namaAreaLama])) {
+                // Area ini tidak dikirim → pertahankan data lama apa adanya
+                foreach ($karyawanData as $row) {
+                    $pemeriksaanData[] = $row;
+                }
+            }
+        }
+
         $data['pemeriksaan'] = $pemeriksaanData;
 
         $gmp->update($data);

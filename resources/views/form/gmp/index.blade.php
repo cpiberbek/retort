@@ -81,6 +81,18 @@
             });
 
             date.addEventListener('change', () => form.submit());
+
+            // Inisialisasi tooltip — container:'body' agar tooltip di-render di luar
+            // pill sehingga tidak ada reflow yang memicu flicker.
+            // fallbackPlacements:[] mencegah Bootstrap flip tooltip dari top → bottom
+            // (flip ke bawah menyebabkan tooltip menimpa mouse → flicker loop)
+            const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            tooltipEls.forEach(el => new bootstrap.Tooltip(el, {
+                trigger          : 'hover',
+                container        : 'body',
+                delay            : { show: 80, hide: 80 },
+                fallbackPlacements: []        // <-- kunci: matikan flip placement
+            }));
         });
     </script>
 
@@ -91,8 +103,8 @@
                     <thead class="table-secondary text-center">
                         <tr>
                             <th class="align-middle" style="width: 5%">NO.</th>
-                            <th class="align-middle" style="width: 12%">Date</th>
-                            <th class="align-middle" style="width: 35%">Area Hygiene</th>
+                            <th class="align-middle" style="width: 10%">Date</th>
+                            <th class="align-middle">Area Hygiene</th>
                             <th class="align-middle">QC</th>
                             <th class="align-middle">Produksi</th>
                             <th class="align-middle">SPV</th>
@@ -108,10 +120,10 @@
                             <td class="text-center align-middle">{{ $no++ }}</td>
                             <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }}</td>
                             
-                            <td class="text-start align-middle">
+                            <td class="align-middle py-2">
                                 @php
                                     $pemeriksaan = is_array($dep->pemeriksaan) ? $dep->pemeriksaan : (json_decode($dep->pemeriksaan, true) ?: []);
-                                    
+
                                     // Kelompokkan baris pemeriksaan berdasarkan nama area asli dari JSON
                                     $groupedByArea = [];
                                     foreach($pemeriksaan as $row){
@@ -120,9 +132,10 @@
                                     }
                                 @endphp
 
+                                <div class="d-flex flex-wrap gap-1">
                                 @foreach($groupedByArea as $areaName => $rows)
                                     @php
-                                        $scores = [];
+                                        $scores    = [];
                                         $totalAttr = 0;
                                         $countChecked = 0;
 
@@ -131,43 +144,42 @@
                                                 array_keys($row),
                                                 ['nama_karyawan','pukul','keterangan','area']
                                             );
-
                                             $rowTotal = count($attrKeys);
                                             $rowCount = 0;
-
                                             foreach($attrKeys as $keyAttr){
-                                                if((int)($row[$keyAttr] ?? 0) === 1){
-                                                    $rowCount++;
-                                                }
+                                                if((int)($row[$keyAttr] ?? 0) === 1) $rowCount++;
                                             }
-
-                                            $scores[] = [
-                                                'nama' => $row['nama_karyawan'],
-                                                'nilai' => $rowCount
-                                            ];
-
-                                            $totalAttr += $rowTotal;
+                                            $scores[] = ['nama' => $row['nama_karyawan'], 'nilai' => $rowCount];
+                                            $totalAttr    += $rowTotal;
                                             $countChecked += $rowCount;
                                         }
 
                                         $persen = $totalAttr > 0 ? round(($countChecked / $totalAttr) * 100, 1) : 0;
-                                        usort($scores, fn($a, $b) => $b['nilai'] <=> $a['nilai']);
+                                        usort($scores, fn($a,$b) => $b['nilai'] <=> $a['nilai']);
                                         $top = array_slice($scores, 0, 3);
+
+                                        // Warna pill berdasarkan persentase pelanggaran
+                                        $pillClass = $persen == 0
+                                            ? 'area-pill-ok'
+                                            : ($persen <= 20 ? 'area-pill-low' : ($persen <= 50 ? 'area-pill-mid' : 'area-pill-high'));
+
+                                        // Tooltip: daftar top 3 karyawan bermasalah
+                                        $tipLines = count($scores) > 0
+                                            ? implode('&#10;', array_map(fn($s) => '• '.$s['nama'].' ('.$s['nilai'].')', $top))
+                                            : 'Semua sesuai standar';
+                                        $tooltipText = $areaName . ' — ' . $persen . '%&#10;' . $tipLines;
                                     @endphp
 
-                                    {{-- Render Data Berurutan ke Bawah --}}
-                                    <div class="p-2 {{ !$loop->last ? 'border-bottom mb-2 pb-2' : '' }}">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="fw-bold text-dark"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ $areaName }}</span>
-                                            <span class="badge bg-info text-dark fw-bold">{{ $persen }} %</span>
-                                        </div>
-                                        <div class="text-muted mt-1 ps-3" style="font-size: 0.8rem; line-height: 1.4;">
-                                            @foreach($top as $s)
-                                                • {{ $s['nama'] }} ({{ $s['nilai'] }})<br>
-                                            @endforeach
-                                        </div>
-                                    </div>
+                                    <span class="area-pill {{ $pillClass }}"
+                                          data-bs-toggle="tooltip"
+                                          data-bs-placement="top"
+                                          data-bs-html="false"
+                                          title="{{ strip_tags(html_entity_decode($tooltipText)) }}">
+                                        <span class="area-pill-name">{{ $areaName }}</span>
+                                        <span class="area-pill-pct">{{ $persen }}%</span>
+                                    </span>
                                 @endforeach
+                                </div>
                             </td>
 
                             <td class="text-center align-middle">{{ $dep->username }}</td>
@@ -329,19 +341,83 @@
         }
     }, 3000);
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const search = document.getElementById('search');
+        const date = document.getElementById('filter_date');
+        const form = document.getElementById('filterForm');
+        let timer;
 
+        search.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => form.submit(), 500);
+        });
+
+        date.addEventListener('change', () => form.submit());
+
+        // Inisialisasi tooltip
+        const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipEls.forEach(el => new bootstrap.Tooltip(el, {
+            trigger           : 'hover',
+            container         : 'body',
+            delay             : { show: 80, hide: 80 },
+            offset            : [0, 8], // <-- TAMBAHKAN INI: Jarak offset [skala_X, skala_Y]
+            fallbackPlacements: [] 
+        }));
+    });
+</script>
 <style>
     .table td, .table th {
         font-size: 0.85rem;
-        white-space: normal; /* Biarkan tombol membungkus ke baris baru jika kolom terlalu sempit */
-    }
-    .text-muted.fst-italic {
-        color: #6c757d !important;
-        font-style: italic !important;
+        white-space: normal;
     }
     .badge {
-        font-size: 0.85em;
-        padding: 0.4em 0.6em;
+        font-size: 0.82em;
+        padding: 0.35em 0.55em;
     }
+
+    /* ── Area Pill ── */
+    .area-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        border-radius: 20px;
+        padding: 3px 10px 3px 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: default;
+        white-space: nowrap;
+        border: 1.5px solid transparent;
+        transition: transform .15s, box-shadow .15s;
+        line-height: 1.4;
+    }
+    .area-pill:hover {
+        opacity: 0.85;
+    }
+    /* 0% pelanggaran → hijau */
+    .area-pill-ok   { background:#d1fae5; border-color:#6ee7b7; color:#065f46; }
+    /* 1-20% → kuning */
+    .area-pill-low  { background:#fef9c3; border-color:#fde047; color:#713f12; }
+    /* 21-50% → oranye */
+    .area-pill-mid  { background:#ffedd5; border-color:#fb923c; color:#7c2d12; }
+    /* >50% → merah */
+    .area-pill-high { background:#fee2e2; border-color:#f87171; color:#7f1d1d; }
+
+    .area-pill-name {
+        max-width: 130px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .area-pill-pct {
+        background: rgba(0,0,0,.08);
+        border-radius: 10px;
+        padding: 1px 6px;
+        font-size: 0.7rem;
+        flex-shrink: 0;
+    }
+    .tooltip {
+    pointer-events: none !important;
+}
 </style>
 @endsection
