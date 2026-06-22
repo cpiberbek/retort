@@ -913,6 +913,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/suhu/verification/{uuid}', [SuhuController::class, 'updateVerification'])
         ->name('suhu.verification.update');
     Route::get('/suhu/export-pdf', [SuhuController::class, 'exportPdf'])->name('suhu.exportPdf');
+    Route::get('/suhu/export-excel', [SuhuController::class, 'exportExcel'])->name('suhu.exportExcel');
     Route::delete('/suhu/{uuid}', [SuhuController::class, 'destroy'])->name('suhu.destroy');
 
     // Kontrol Sanitasi

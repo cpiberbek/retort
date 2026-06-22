@@ -88,10 +88,11 @@
             // (flip ke bawah menyebabkan tooltip menimpa mouse → flicker loop)
             const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
             tooltipEls.forEach(el => new bootstrap.Tooltip(el, {
-                trigger          : 'hover',
-                container        : 'body',
-                delay            : { show: 80, hide: 80 },
-                fallbackPlacements: []        // <-- kunci: matikan flip placement
+                trigger           : 'hover',
+                container         : 'body',
+                delay             : { show: 80, hide: 80 },
+                offset            : [0, 8],           // <-- jarak ekstra agar tooltip tidak bertabrakan dengan mouse
+                fallbackPlacements: []                // <-- kunci: matikan flip placement
             }));
         });
     </script>
@@ -341,32 +342,13 @@
         }
     }, 3000);
 </script>
-<script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const search = document.getElementById('search');
-        const date = document.getElementById('filter_date');
-        const form = document.getElementById('filterForm');
-        let timer;
 
-        search.addEventListener('input', () => {
-            clearTimeout(timer);
-            timer = setTimeout(() => form.submit(), 500);
-        });
-
-        date.addEventListener('change', () => form.submit());
-
-        // Inisialisasi tooltip
-        const tooltipEls = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-        tooltipEls.forEach(el => new bootstrap.Tooltip(el, {
-            trigger           : 'hover',
-            container         : 'body',
-            delay             : { show: 80, hide: 80 },
-            offset            : [0, 8], // <-- TAMBAHKAN INI: Jarak offset [skala_X, skala_Y]
-            fallbackPlacements: [] 
-        }));
-    });
-</script>
 <style>
+    /* ── Tambahan untuk Mencegah Tooltip Flicker ── */
+    .tooltip {
+        pointer-events: none !important;
+    }
+
     .table td, .table th {
         font-size: 0.85rem;
         white-space: normal;
@@ -416,8 +398,5 @@
         font-size: 0.7rem;
         flex-shrink: 0;
     }
-    .tooltip {
-    pointer-events: none !important;
-}
 </style>
 @endsection

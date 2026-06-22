@@ -249,7 +249,7 @@
                                     <input type="number" step="0.01"
                                         class="form-control @error('analisa_ka_ffa') is-invalid @enderror"
                                         id="analisa_ka_ffa" name="analisa_ka_ffa"
-                                        value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" required
+                                        value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}"
                                         min="0">
                                     @error('analisa_ka_ffa')
                                         <span class="invalid-feedback"

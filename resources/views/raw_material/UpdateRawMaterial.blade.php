@@ -234,7 +234,7 @@
                                     id="analisa_ka_ffa" 
                                     name="analisa_ka_ffa" 
                                     value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" 
-                                    required min="0"
+                                    min="0"
                                     {{ $isKaFfaFilled ? 'readonly' : '' }}>
                                 @error('analisa_ka_ffa') 
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
