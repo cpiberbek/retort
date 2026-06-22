@@ -225,9 +225,16 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="label-premium">Waktu (Pukul)</label>
-                            <input type="time" name="pukul" id="timeInput"
-                                class="form-control form-control-solid rounded-3" step="3600" value="{{ $suhu->pukul }}"
-                                required onkeydown="return false">
+                            <select name="pukul" id="timeInput"
+                                class="form-select form-select-solid rounded-3" required>
+                                <option value="" disabled>Pilih Pukul...</option>
+                                @for ($h = 0; $h < 24; $h++)
+                                    @php $optVal = str_pad($h, 2, '0', STR_PAD_LEFT) . ':00'; @endphp
+                                    <option value="{{ $optVal }}" {{ substr($suhu->pukul, 0, 5) === $optVal ? 'selected' : '' }}>
+                                        {{ $optVal }}
+                                    </option>
+                                @endfor
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -453,16 +460,8 @@
                     });
                 });
 
-                // Pastikan format waktu selalu diakhiri dengan ':00' (Menit di-lock)
-                const timeInput = document.getElementById("timeInput");
-                if (timeInput) {
-                    timeInput.addEventListener('input', function() {
-                        if (this.value) {
-                            const hh = this.value.split(':')[0].padStart(2, '0');
-                            this.value = `${hh}:00`;
-                        }
-                    });
-                }
+                // Tidak perlu lagi event listener reset menit,
+                // karena timeInput sudah diganti ke <select> yang hanya berisi pilihan :00
             });
 
             document.querySelectorAll('.rh-input').forEach(input => {

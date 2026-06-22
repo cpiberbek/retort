@@ -220,7 +220,16 @@
                     </div>
                     <div class="col-12 col-md-4">
                         <label class="label-premium">Waktu (Pukul)</label>
-                        <input type="time" name="pukul" class="form-control form-control-solid rounded-3" value="{{ $suhu->pukul }}" readonly>
+                        {{-- Hidden input agar nilai tetap tersubmit meskipun select-nya disabled --}}
+                        <input type="hidden" name="pukul" value="{{ $suhu->pukul }}">
+                        <select class="form-select form-select-solid rounded-3" disabled>
+                            @for ($h = 0; $h < 24; $h++)
+                                @php $optVal = str_pad($h, 2, '0', STR_PAD_LEFT) . ':00'; @endphp
+                                <option value="{{ $optVal }}" {{ substr($suhu->pukul, 0, 5) === $optVal ? 'selected' : '' }}>
+                                    {{ $optVal }}
+                                </option>
+                            @endfor
+                        </select>
                     </div>
                 </div>
             </div>

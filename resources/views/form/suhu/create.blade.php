@@ -221,9 +221,15 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="label-premium">Waktu (Pukul)</label>
-                            <input type="time" name="pukul" id="timeInput"
-                                class="form-control form-control-solid rounded-3" step="3600" required
-                                onkeydown="return false">
+                            <select name="pukul" id="timeInput"
+                                class="form-select form-select-solid rounded-3" required>
+                                <option value="" disabled selected>Pilih Pukul...</option>
+                                @for ($h = 0; $h < 24; $h++)
+                                    <option value="{{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00">
+                                        {{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00
+                                    </option>
+                                @endfor
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -404,7 +410,16 @@
                 const now = new Date();
 
                 if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-                if (timeInput && !timeInput.value) timeInput.value = `${pad(now.getHours())}:00`;
+                if (timeInput) {
+                    const currentHour = `${pad(now.getHours())}:00`;
+                    // Auto-select current hour in the dropdown
+                    for (let i = 0; i < timeInput.options.length; i++) {
+                        if (timeInput.options[i].value === currentHour) {
+                            timeInput.selectedIndex = i;
+                            break;
+                        }
+                    }
+                }
 
                 if (shiftInput) {
                     const hh = now.getHours();
