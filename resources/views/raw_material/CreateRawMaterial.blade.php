@@ -390,7 +390,7 @@
                                     <label for="suhu_mobil" class="form-label">Suhu Mobil (°C)</label>
                                     <input type="number" step="0.01"
                                         class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil"
-                                        name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" required>
+                                        name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}">
                                     @error('suhu_mobil')
                                         <span class="invalid-feedback"
                                             role="alert"><strong>{{ $message }}</strong></span>
@@ -470,7 +470,7 @@
                                     <label for="suhu_daging" class="form-label">Suhu Daging/Bahan (°C)</label>
                                     <input type="number" step="0.01"
                                         class="form-control @error('suhu_daging') is-invalid @enderror" id="suhu_daging"
-                                        name="suhu_daging" value="{{ old('suhu_daging') }}" required>
+                                        name="suhu_daging" value="{{ old('suhu_daging') }}">
                                     @error('suhu_daging')
                                         <span class="invalid-feedback"
                                             role="alert"><strong>{{ $message }}</strong></span>

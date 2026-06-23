@@ -347,9 +347,8 @@
                                     id="suhu_mobil" 
                                     name="suhu_mobil" 
                                     value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" 
-                                    required 
                                     min="-50" max="50"
-                                    {{ $inspection->suhu_mobil ? 'readonly' : '' }}>
+                                    {{ !is_null($inspection->suhu_mobil) ? 'readonly' : '' }}>
                                 @error('suhu_mobil') 
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
                                 @enderror
@@ -419,10 +418,10 @@
                             </div>
                             <div class="col-md-6">
                                 <label for="suhu_daging" class="form-label">Suhu Daging/Bahan (°C)</label>
-                                <input type="number" step="0.01" class="form-control" id="suhu_daging" name="suhu_daging" 
+                                <input type="number" step="0.01" class="form-control @error('suhu_daging') is-invalid @enderror" id="suhu_daging" name="suhu_daging" 
                                     value="{{ old('suhu_daging', $inspection->suhu_daging) }}" 
-                                    required min="-50" max="50"
-                                    {{ $inspection->suhu_daging ? 'readonly' : '' }}>
+                                    min="-50" max="50"
+                                    {{ !is_null($inspection->suhu_daging) ? 'readonly' : '' }}>
                             </div>
                             <div class="col-12">
                                 <label for="keterangan" class="form-label">Keterangan (Optional)</label>
