@@ -107,13 +107,13 @@ class SuhuController extends Controller
             $nilai_suhu = $nilai_suhu_raw === ''
                 ? null
                 : ($nilai_suhu_raw === '-'
-                    ? '-'
+                    ? null
                     : (float) str_replace(',', '.', $nilai_suhu_raw));
 
             $nilai_rh = $nilai_rh_raw === ''
                 ? null
                 : ($nilai_rh_raw === '-'
-                    ? '-'
+                    ? null
                     : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
@@ -197,11 +197,11 @@ class SuhuController extends Controller
 
             $nilai_suhu = $nilai_suhu_raw === ''
                 ? null
-                : ($nilai_suhu_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_suhu_raw));
+                : ($nilai_suhu_raw === '-' ? null : (float) str_replace(',', '.', $nilai_suhu_raw));
 
             $nilai_rh = $nilai_rh_raw === ''
                 ? null
-                : ($nilai_rh_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_rh_raw));
+                : ($nilai_rh_raw === '-' ? null : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
                 'area' => $area,
@@ -282,11 +282,11 @@ class SuhuController extends Controller
 
             $nilai_suhu = $nilai_suhu_raw === ''
                 ? null
-                : ($nilai_suhu_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_suhu_raw));
+                : ($nilai_suhu_raw === '-' ? null : (float) str_replace(',', '.', $nilai_suhu_raw));
 
             $nilai_rh = $nilai_rh_raw === ''
                 ? null
-                : ($nilai_rh_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_rh_raw));
+                : ($nilai_rh_raw === '-' ? null : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
                 'area' => $area,

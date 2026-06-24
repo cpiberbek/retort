@@ -110,6 +110,12 @@ class RawMaterialInspectionController extends Controller
             $validationRules[$field] = $booleanFieldRule;
         }
 
+        // Ubah '-' menjadi null sebelum validasi agar lolos regex (yang butuh digit)
+        $request->merge([
+            'suhu_mobil' => $request->suhu_mobil === '-' ? null : $request->suhu_mobil,
+            'suhu_daging' => $request->suhu_daging === '-' ? null : $request->suhu_daging,
+        ]);
+
         $request->validate($validationRules);
 
         DB::beginTransaction();
@@ -228,6 +234,12 @@ class RawMaterialInspectionController extends Controller
         foreach ($this->booleanFields as $field) {
             $validationRules[$field] = $booleanFieldRule;
         }
+
+        // Ubah '-' menjadi null sebelum validasi agar lolos regex (yang butuh digit)
+        $request->merge([
+            'suhu_mobil' => $request->suhu_mobil === '-' ? null : $request->suhu_mobil,
+            'suhu_daging' => $request->suhu_daging === '-' ? null : $request->suhu_daging,
+        ]);
 
         $request->validate($validationRules);
 

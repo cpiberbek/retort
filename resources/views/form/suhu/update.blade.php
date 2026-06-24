@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 
@@ -282,15 +282,18 @@
                                         <td data-label="Hasil Pengukuran">
                                             <div class="position-relative w-100">
                                                 {{-- Diubah ke type text inputmode decimal agar support tanda minus --}}
-                                                <input type="text" inputmode="decimal"
-                                                    name="hasil_suhu[{{ $index }}][nilai]"
-                                                    value="{{ $nilai }}"
-                                                    class="form-control form-control-solid suhu-input check-old rounded-3"
-                                                    data-min="{{ $area->standar_min }}"
-                                                    data-max="{{ $area->standar_max }}"
-                                                    placeholder="Masukkan suhu"
-                                                    {{ $nilai !== '' && $nilai !== null ? 'readonly' : '' }}>
-
+                                                <div class="input-group">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1" title="Toggle minus"
+                                                        {{ ($nilai !== '' && $nilai !== null) ? 'disabled' : '' }}>±</button>
+                                                    <input type="text" inputmode="decimal"
+                                                        name="hasil_suhu[{{ $index }}][nilai]"
+                                                        value="{{ $nilai }}"
+                                                        class="form-control form-control-solid suhu-input check-old rounded-0"
+                                                        data-min="{{ $area->standar_min }}"
+                                                        data-max="{{ $area->standar_max }}"
+                                                       
+                                                        {{ $nilai !== '' && $nilai !== null ? 'readonly' : '' }}>
+                                                </div>
                                                 <div class="text-danger warning-msg d-none mt-1"
                                                     style="font-size: 0.75rem; font-weight: 500;">
                                                     <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
@@ -473,6 +476,21 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
+});
+</script>
+
+<script>
+// --- Tombol ± Toggle Minus ---
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.btn-toggle-minus');
+    if (!btn) return;
+    const input = btn.closest('.input-group').querySelector('input');
+    if (!input) return;
+    input.value = input.value.startsWith('-')
+        ? input.value.slice(1)
+        : '-' + input.value;
+    input.dispatchEvent(new Event('input'));
+    input.focus();
 });
 </script>
 @endpush

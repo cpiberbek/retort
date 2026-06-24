@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
     @push('styles')
@@ -279,19 +279,19 @@
                                         </td>
 
                                         <td data-label="Hasil Pengukuran">
-                                            <div class="position-relative w-100">
-                                                {{-- Type diubah ke text agar bisa menerima karakter '-' dengan mulus --}}
+                                            {{-- Type diubah ke text agar bisa menerima karakter '-' dengan mulus --}}
+                                            <div class="input-group">
+                                                <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1" title="Toggle minus">±</button>
                                                 <input type="text" inputmode="decimal"
                                                     name="hasil_suhu[a{{ $index }}][nilai]"
                                                     value="{{ $nilai }}"
-                                                    class="form-control form-control-solid suhu-input rounded-3"
+                                                    class="form-control form-control-solid suhu-input rounded-0"
                                                     data-min="{{ $area->standar_min }}"
-                                                    data-max="{{ $area->standar_max }}" placeholder="Masukkan suhu">
-
-                                                <div class="text-danger warning-msg d-none mt-1"
-                                                    style="font-size: 0.75rem; font-weight: 500;">
-                                                    <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
-                                                </div>
+                                                    data-max="{{ $area->standar_max }}">
+                                            </div>
+                                            <div class="text-danger warning-msg d-none mt-1"
+                                                style="font-size: 0.75rem; font-weight: 500;">
+                                                <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
                                             </div>
                                         </td>
                                     </tr>
@@ -487,6 +487,19 @@
                         }
                     }
                 });
+            });
+
+            // --- Tombol ± Toggle Minus ---
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-toggle-minus');
+                if (!btn) return;
+                const input = btn.closest('.input-group').querySelector('input');
+                if (!input) return;
+                input.value = input.value.startsWith('-')
+                    ? input.value.slice(1)
+                    : '-' + input.value;
+                input.dispatchEvent(new Event('input'));
+                input.focus();
             });
         </script>
     @endpush

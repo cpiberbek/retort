@@ -161,11 +161,13 @@
                                                                 value="{{ $np['inspection_uuid'] }}">
                                                         @endif
                                                     </td>
-                                                    <td><input type="number"
+                                                    <td><div class="input-group input-group-sm">
+                                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                        <input type="text" inputmode="decimal"
                                                             name="non_premix[{{ $i }}][suhu_bahan]"
-                                                            step="0.01"
                                                             value="{{ old("non_premix.$i.suhu_bahan", $np['suhu_bahan'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"></td>
+                                                            class="form-control form-control-sm text-center suhu-number-input">
+                                                    </div></td>
                                                     <td><input type="number"
                                                             name="non_premix[{{ $i }}][ph_bahan]" step="0.01"
                                                             value="{{ old("non_premix.$i.ph_bahan", $np['ph_bahan'] ?? '') }}"
@@ -215,8 +217,11 @@
 
                                                     </select>
                                                 </td>
-                                                <td><input type="number" name="non_premix[0][suhu_bahan]" step="0.01"
-                                                        class="form-control form-control-sm text-center"></td>
+                                                <td><div class="input-group input-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="non_premix[0][suhu_bahan]"
+                                                        class="form-control form-control-sm text-center suhu-number-input">
+                                                </div></td>
                                                 <td><input type="number" name="non_premix[0][ph_bahan]" step="0.01"
                                                         class="form-control form-control-sm text-center"></td>
                                                 <td><input type="number" name="non_premix[0][berat_bahan]"
@@ -356,11 +361,14 @@
                                                                     </select>
                                                                 </td>
                                                                 <td style="width: 45%;">
-                                                                    <input type="number"
-                                                                        name="suhu_grinding_input[{{ $key }}][suhu]"
-                                                                        value="{{ $item['suhu'] ?? '' }}" step="0.01"
-                                                                        class="form-control form-control-sm text-center"
-                                                                        placeholder="0.00">
+                                                                    <div class="input-group input-group-sm">
+                                                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                                        <input type="text" inputmode="decimal"
+                                                                            name="suhu_grinding_input[{{ $key }}][suhu]"
+                                                                            value="{{ $item['suhu'] ?? '' }}"
+                                                                            class="form-control form-control-sm text-center suhu-number-input"
+                                                                           >
+                                                                    </div>
                                                                 </td>
                                                                 <td style="width: 10%;">
                                                                     <button type="button"
@@ -383,10 +391,13 @@
                                                                     </select>
                                                                 </td>
                                                                 <td style="width: 45%;">
-                                                                    <input type="number"
-                                                                        name="suhu_grinding_input[0][suhu]" step="0.01"
-                                                                        class="form-control form-control-sm text-center"
-                                                                        placeholder="0.00">
+                                                                    <div class="input-group input-group-sm">
+                                                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                                        <input type="text" inputmode="decimal"
+                                                                            name="suhu_grinding_input[0][suhu]"
+                                                                            class="form-control form-control-sm text-center suhu-number-input"
+                                                                           >
+                                                                    </div>
                                                                 </td>
                                                                 <td style="width: 10%;">
                                                                     <button type="button"
@@ -465,9 +476,14 @@
 
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsi Gel (Std &lt;5°C)</td>
-                                            <td colspan="3"><input type="number" name="suhu_akhir_emulsi_gel"
-                                                    step="0.01" class="form-control form-control-sm text-center"
-                                                    value="{{ old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel) }}">
+                                            <td colspan="3">
+                                                <div class="input-group input-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="suhu_akhir_emulsi_gel"
+                                                        class="form-control form-control-sm text-center suhu-number-input"
+                                                        value="{{ old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel) }}"
+                                                       >
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -493,16 +509,26 @@
                                         </tr>
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Mixing (Std 2–5°C)</td>
-                                            <td><input type="number" name="suhu_akhir_mixing" step="0.01"
-                                                    class="form-control form-control-sm text-center"
-                                                    value="{{ old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing) }}">
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="suhu_akhir_mixing"
+                                                        class="form-control form-control-sm text-center suhu-number-input"
+                                                        value="{{ old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing) }}"
+                                                       >
+                                                </div>
                                             </td>
                                         </tr>
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsifying (Std 14±2°C)</td>
-                                            <td><input type="number" name="suhu_akhir_emulsi" step="0.01"
-                                                    class="form-control form-control-sm text-center"
-                                                    value="{{ old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi) }}">
+                                            <td>
+                                                <div class="input-group input-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="suhu_akhir_emulsi"
+                                                        class="form-control form-control-sm text-center suhu-number-input"
+                                                        value="{{ old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi) }}"
+                                                       >
+                                                </div>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -680,11 +706,13 @@
             </td>
 
             <td>
-                <input
-                    type="number"
-                    name="non_premix[${indexNon}][suhu_bahan]"
-                    step="0.01"
-                    class="form-control form-control-sm text-center">
+                <div class="input-group input-group-sm">
+                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                    <input
+                        type="text" inputmode="decimal"
+                        name="non_premix[${indexNon}][suhu_bahan]"
+                        class="form-control form-control-sm text-center suhu-number-input">
+                </div>
             </td>
 
             <td>
@@ -789,7 +817,10 @@
                     </select>
                 </td>
                 <td style="width: 45%;">
-                    <input type="number" name="suhu_grinding_input[${indexSuhu}][suhu]" step="0.01" class="form-control form-control-sm text-center" placeholder="0.00">
+                    <div class="input-group input-group-sm">
+                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                        <input type="text" inputmode="decimal" name="suhu_grinding_input[${indexSuhu}][suhu]" class="form-control form-control-sm text-center suhu-number-input">
+                    </div>
                 </td>
                 <td style="width: 10%;">
                     <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
@@ -815,4 +846,35 @@
         });
     </script>
 
+    <script>
+        // --- Script Input Suhu (mendukung nilai minus di HP) ---
+        document.addEventListener('input', function(e) {
+            if (!e.target.classList.contains('suhu-number-input')) return;
+            let val = e.target.value;
+            val = val.replace(/[^0-9.,-]/g, '');
+            val = val.replace(',', '.');
+            if (val.indexOf('-') > 0) {
+                val = val.replace(/-/g, '');
+                val = '-' + val;
+            }
+            const parts = val.split('.');
+            if (parts.length > 2) {
+                val = parts[0] + '.' + parts.slice(1).join('');
+            }
+            e.target.value = val;
+        });
+
+        // --- Tombol ± Toggle Minus ---
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-toggle-minus');
+            if (!btn) return;
+            const input = btn.closest('.input-group').querySelector('input');
+            if (!input) return;
+            input.value = input.value.startsWith('-')
+                ? input.value.slice(1)
+                : '-' + input.value;
+            input.dispatchEvent(new Event('input'));
+            input.focus();
+        });
+    </script>
 @endsection

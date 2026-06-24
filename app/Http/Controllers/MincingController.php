@@ -169,6 +169,12 @@ class MincingController extends Controller
         $nama_produksi = session()->has('selected_produksi')
             ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
             : 'Produksi RTT';
+        // Ubah '-' menjadi null sebelum validasi agar lolos rule 'numeric'
+        $request->merge([
+            'suhu_akhir_emulsi_gel' => $request->suhu_akhir_emulsi_gel === '-' ? null : $request->suhu_akhir_emulsi_gel,
+            'suhu_akhir_mixing'     => $request->suhu_akhir_mixing === '-' ? null : $request->suhu_akhir_mixing,
+            'suhu_akhir_emulsi'     => $request->suhu_akhir_emulsi === '-' ? null : $request->suhu_akhir_emulsi,
+        ]);
 
         $request->validate([
             'date'          => 'required|date',
@@ -198,6 +204,29 @@ class MincingController extends Controller
             'catatan'                    => 'nullable|string',
         ]);
 
+        // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
+        $sanitasiSuhu = function ($val) {
+            return ($val === '' || $val === null || $val === '-') ? null : $val;
+        };
+
+        // Sanitasi suhu_bahan di dalam non_premix
+        $nonPremix = $request->input('non_premix', []);
+        foreach ($nonPremix as &$np) {
+            if (isset($np['suhu_bahan'])) {
+                $np['suhu_bahan'] = $sanitasiSuhu($np['suhu_bahan']);
+            }
+        }
+        unset($np);
+
+        // Sanitasi suhu di dalam suhu_grinding_input
+        $suhuGrinding = $request->input('suhu_grinding_input', []);
+        foreach ($suhuGrinding as &$sg) {
+            if (isset($sg['suhu'])) {
+                $sg['suhu'] = $sanitasiSuhu($sg['suhu']);
+            }
+        }
+        unset($sg);
+
         $data = $request->only([
             'date',
             'shift',
@@ -214,14 +243,15 @@ class MincingController extends Controller
             'waktu_bowl_cutter_end',
             'waktu_aging_emulsi_awal',
             'waktu_aging_emulsi_akhir',
-            'suhu_akhir_emulsi_gel',
             'waktu_mixing',
             'waktu_mixing_start',
             'waktu_mixing_end',
-            'suhu_akhir_mixing',
-            'suhu_akhir_emulsi',
             'catatan',
         ]);
+
+        $data['suhu_akhir_emulsi_gel'] = $sanitasiSuhu($request->suhu_akhir_emulsi_gel);
+        $data['suhu_akhir_mixing']     = $sanitasiSuhu($request->suhu_akhir_mixing);
+        $data['suhu_akhir_emulsi']     = $sanitasiSuhu($request->suhu_akhir_emulsi);
 
         $data['username']            = $username;
         $data['plant']               = $userPlant;
@@ -230,8 +260,8 @@ class MincingController extends Controller
         $data['tgl_update_produksi'] = now()->addHour();
         $data['status_spv']          = "0";
         $data['premix']             = json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE);
-        $data['non_premix']             = json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE);
-        $data['suhu_sebelum_grinding'] = json_encode($request->input('suhu_grinding_input', []), JSON_UNESCAPED_UNICODE);
+        $data['non_premix']             = json_encode($nonPremix, JSON_UNESCAPED_UNICODE);
+        $data['suhu_sebelum_grinding'] = json_encode($suhuGrinding, JSON_UNESCAPED_UNICODE);
         Mincing::create($data);
 
         return redirect()->route('mincing.index')->with('success', 'Pengecekan mincing berhasil disimpan');
@@ -298,6 +328,29 @@ class MincingController extends Controller
             'catatan'                    => 'nullable|string',
         ]);
 
+        // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
+        $sanitasiSuhu = function ($val) {
+            return ($val === '' || $val === null || $val === '-') ? null : $val;
+        };
+
+        // Sanitasi suhu_bahan di dalam non_premix
+        $nonPremix = $request->input('non_premix', []);
+        foreach ($nonPremix as &$np) {
+            if (isset($np['suhu_bahan'])) {
+                $np['suhu_bahan'] = $sanitasiSuhu($np['suhu_bahan']);
+            }
+        }
+        unset($np);
+
+        // Sanitasi suhu di dalam suhu_grinding_input
+        $suhuGrinding = $request->input('suhu_grinding_input', []);
+        foreach ($suhuGrinding as &$sg) {
+            if (isset($sg['suhu'])) {
+                $sg['suhu'] = $sanitasiSuhu($sg['suhu']);
+            }
+        }
+        unset($sg);
+
         $data = [
             'date'             => $request->date,
             'shift'            => $request->shift,
@@ -306,7 +359,7 @@ class MincingController extends Controller
             'waktu_mulai'      => $request->waktu_mulai,
             'waktu_selesai'    => $request->waktu_selesai,
             'daging'           => $request->daging,
-            'suhu_sebelum_grinding'    => json_encode($request->input('suhu_grinding_input', []), JSON_UNESCAPED_UNICODE),
+            'suhu_sebelum_grinding'    => json_encode($suhuGrinding, JSON_UNESCAPED_UNICODE),
             'waktu_mixing_premix'        => $request->waktu_mixing_premix,
             'waktu_mixing_premix_start'  => $request->waktu_mixing_premix_start,
             'waktu_mixing_premix_end'    => $request->waktu_mixing_premix_end,
@@ -315,16 +368,16 @@ class MincingController extends Controller
             'waktu_bowl_cutter_end'      => $request->waktu_bowl_cutter_end,
             'waktu_aging_emulsi_awal'    => $request->waktu_aging_emulsi_awal,
             'waktu_aging_emulsi_akhir'   => $request->waktu_aging_emulsi_akhir,
-            'suhu_akhir_emulsi_gel'      => $request->suhu_akhir_emulsi_gel,
+            'suhu_akhir_emulsi_gel'      => $sanitasiSuhu($request->suhu_akhir_emulsi_gel),
             'waktu_mixing'               => $request->waktu_mixing,
             'waktu_mixing_start'         => $request->waktu_mixing_start,
             'waktu_mixing_end'           => $request->waktu_mixing_end,
-            'suhu_akhir_mixing'          => $request->suhu_akhir_mixing,
-            'suhu_akhir_emulsi'          => $request->suhu_akhir_emulsi,
+            'suhu_akhir_mixing'          => $sanitasiSuhu($request->suhu_akhir_mixing),
+            'suhu_akhir_emulsi'          => $sanitasiSuhu($request->suhu_akhir_emulsi),
             'catatan'                    => $request->catatan,
             'username_updated'           => $username_updated,
             'premix'                     => json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE),
-            'non_premix'                 => json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE),
+            'non_premix'                 => json_encode($nonPremix, JSON_UNESCAPED_UNICODE),
         ];
 
         $mincing->update($data);
@@ -386,32 +439,55 @@ class MincingController extends Controller
             'catatan'                    => 'nullable|string',
         ]);
 
+        // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
+        $sanitasiSuhu = function ($val) {
+            return ($val === '' || $val === null || $val === '-') ? null : $val;
+        };
+
+        // Sanitasi suhu_bahan di dalam non_premix
+        $nonPremix = $request->input('non_premix', []);
+        foreach ($nonPremix as &$np) {
+            if (isset($np['suhu_bahan'])) {
+                $np['suhu_bahan'] = $sanitasiSuhu($np['suhu_bahan']);
+            }
+        }
+        unset($np);
+
+        // Sanitasi suhu di dalam suhu_grinding_input
+        $suhuGrinding = $request->input('suhu_grinding_input', []);
+        foreach ($suhuGrinding as &$sg) {
+            if (isset($sg['suhu'])) {
+                $sg['suhu'] = $sanitasiSuhu($sg['suhu']);
+            }
+        }
+        unset($sg);
+
         $data = [
-            'date'                     => $request->date,
-            'shift'                    => $request->shift,
-            'nama_produk'              => $request->nama_produk,
-            'kode_produksi'            => $request->kode_produksi,
-            'waktu_mulai'              => $request->waktu_mulai,
-            'waktu_selesai'            => $request->waktu_selesai,
-            'daging'                   => $request->daging,
-            'suhu_sebelum_grinding'    => json_encode($request->input('suhu_grinding_input', []), JSON_UNESCAPED_UNICODE),
-            'waktu_mixing_premix'        => $request->waktu_mixing_premix, // Diperbaiki dari _awal dan _akhir
+            'date'                       => $request->date,
+            'shift'                      => $request->shift,
+            'nama_produk'                => $request->nama_produk,
+            'kode_produksi'              => $request->kode_produksi,
+            'waktu_mulai'                => $request->waktu_mulai,
+            'waktu_selesai'              => $request->waktu_selesai,
+            'daging'                     => $request->daging,
+            'suhu_sebelum_grinding'      => json_encode($suhuGrinding, JSON_UNESCAPED_UNICODE),
+            'waktu_mixing_premix'        => $request->waktu_mixing_premix,
             'waktu_mixing_premix_start'  => $request->waktu_mixing_premix_start,
             'waktu_mixing_premix_end'    => $request->waktu_mixing_premix_end,
-            'waktu_bowl_cutter'          => $request->waktu_bowl_cutter,   // Diperbaiki dari _awal dan _akhir
+            'waktu_bowl_cutter'          => $request->waktu_bowl_cutter,
             'waktu_bowl_cutter_start'    => $request->waktu_bowl_cutter_start,
             'waktu_bowl_cutter_end'      => $request->waktu_bowl_cutter_end,
             'waktu_aging_emulsi_awal'    => $request->waktu_aging_emulsi_awal,
             'waktu_aging_emulsi_akhir'   => $request->waktu_aging_emulsi_akhir,
-            'suhu_akhir_emulsi_gel'      => $request->waktu_aging_emulsi_gel,
+            'suhu_akhir_emulsi_gel'      => $sanitasiSuhu($request->suhu_akhir_emulsi_gel),
             'waktu_mixing'               => $request->waktu_mixing,
             'waktu_mixing_start'         => $request->waktu_mixing_start,
             'waktu_mixing_end'           => $request->waktu_mixing_end,
-            'suhu_akhir_mixing'          => $request->suhu_akhir_mixing,
-            'suhu_akhir_emulsi'          => $request->suhu_akhir_emulsi,
+            'suhu_akhir_mixing'          => $sanitasiSuhu($request->suhu_akhir_mixing),
+            'suhu_akhir_emulsi'          => $sanitasiSuhu($request->suhu_akhir_emulsi),
             'catatan'                    => $request->catatan,
             'premix'                     => json_encode($request->input('premix', []), JSON_UNESCAPED_UNICODE),
-            'non_premix'                 => json_encode($request->input('non_premix', []), JSON_UNESCAPED_UNICODE),
+            'non_premix'                 => json_encode($nonPremix, JSON_UNESCAPED_UNICODE),
         ];
 
         $mincing->update($data);
