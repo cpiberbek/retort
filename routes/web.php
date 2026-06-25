@@ -884,7 +884,12 @@ Route::middleware('auth')->group(function () {
 
     /*SUHU DAN SANITASI*/
     // Resource GMP tanpa show
-    Route::resource('gmp', GmpController::class)->parameters(['gmp' => 'uuid'])->except(['show']);
+    Route::get('/gmp/update/{uuid}', [GmpController::class, 'updateForm'])->name('gmp.update.form');
+    Route::put('/gmp/update_qc/{uuid}', [GmpController::class, 'update_qc'])->name('gmp.update_qc');
+    Route::get('/gmp/edit/{uuid}', [GmpController::class, 'edit'])->name('gmp.edit.form');
+    Route::put('/gmp/edit_spv/{uuid}', [GmpController::class, 'edit_spv'])->name('gmp.edit_spv');
+    Route::resource('gmp', GmpController::class)->parameters(['gmp' => 'uuid'])->except(['show', 'edit', 'update']);
+
     Route::get('/gmp/export', [GmpController::class, 'export'])->name('gmp.export');
     Route::put('/gmp/{uuid}/update-verification', [GmpController::class, 'updateVerification'])->name('gmp.updateVerification');
 
@@ -908,6 +913,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/suhu/verification/{uuid}', [SuhuController::class, 'updateVerification'])
         ->name('suhu.verification.update');
     Route::get('/suhu/export-pdf', [SuhuController::class, 'exportPdf'])->name('suhu.exportPdf');
+    Route::get('/suhu/export-excel', [SuhuController::class, 'exportExcel'])->name('suhu.exportExcel');
     Route::delete('/suhu/{uuid}', [SuhuController::class, 'destroy'])->name('suhu.destroy');
 
     // Kontrol Sanitasi
@@ -924,6 +930,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/sanitasi/export-pdf', [SanitasiController::class, 'exportPdf'])->name('sanitasi.exportPdf');
     Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
     Route::resource('raw-material', MasterRawMaterialController::class);
+});
+Route::get('/test-limit', function() {
+    return 'Max Input Vars: ' . ini_get('max_input_vars');
 });
 
 //Biarkan dibawah ini tetap di paling bawah written by Joe

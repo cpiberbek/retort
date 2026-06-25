@@ -25,7 +25,8 @@
                     </ul>
                 </div>
 
-                <form method="POST" action="{{ route('gmp.store') }}" enctype="multipart/form-data">
+                {{-- 🔥 FIX: Tambahkan id="gmpForm" untuk intercept JavaScript --}}
+                <form id="gmpForm" method="POST" action="{{ route('gmp.store') }}" enctype="multipart/form-data">
                     @csrf
 
                     {{-- WAKTU PEMERIKSAAN --}}
@@ -187,7 +188,7 @@
                     {{-- AKSI --}}
                     <div class="d-flex justify-content-between">
                         <button type="submit" class="btn btn-success" {{ $areas->count() == 0 ? 'disabled' : '' }}>
-                            <i class="bi bi-save"></i> Simpan
+                            <i class="bi bi-save"></i> Simpan Area Terpilih
                         </button>
                         <a href="{{ route('gmp.index') }}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Kembali
@@ -199,13 +200,29 @@
         </div>
     </div>
 
-    {{-- AUTO TANGGAL --}}
+    {{-- AUTO TANGGAL & INTERCEPT SUBMIT --}}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Set Auto Tanggal Hari Ini
             const date = document.getElementById("dateInput");
             if (!date.value) {
                 date.value = new Date().toISOString().slice(0, 10);
             }
+
+            // 🔥 FIX LOGIK: Hanya kirim data dari TAB YANG SEDANG AKTIF
+            const form = document.getElementById("gmpForm");
+            form.addEventListener("submit", function(e) {
+                // Cari semua tab yang TIDAK aktif (.tab-pane yang tidak punya class .active)
+                const inactiveTabs = document.querySelectorAll(".tab-pane:not(.active)");
+                
+                inactiveTabs.forEach(function(tab) {
+                    // Disable seluruh elemen input & checkbox di dalam tab non-aktif
+                    // agar tidak ikut terkirim ke server Laravel
+                    tab.querySelectorAll("input").forEach(function(input) {
+                        input.disabled = true;
+                    });
+                });
+            });
         });
     </script>
 
@@ -231,6 +248,53 @@
         input[type="checkbox"] {
             width: 1rem;
             height: 1rem;
+        }
+
+        /* =========================================================
+           🔥 FIX STICKY COLUMN NAMA KARYAWAN (RESPONSIVE ALL DEVICES) 
+           ========================================================= */
+        
+        /* 1. Reset posisi th agar tidak bertumpuk */
+        .compact-table th {
+            position: static;
+        }
+
+        /* 2. Hanya kunci Nama Karyawan (baris pertama thead) dan kolom pertama tbody */
+        .compact-table thead tr:first-child th:first-child,
+        .compact-table tbody td:first-child {
+            position: -webkit-sticky; /* Support untuk Safari/iOS */
+            position: sticky;
+            left: 0;
+            z-index: 2;
+        }
+
+        /* 3. Background untuk Header Nama Karyawan agar tidak tembus */
+        .compact-table thead tr:first-child th:first-child {
+            background-color: #e2e3e5 !important; /* Warna table-secondary */
+            z-index: 3; /* Lebih tinggi agar tidak tertimpa baris di bawahnya */
+        }
+
+        /* 4. Background untuk Body Nama Karyawan + Efek Shadow */
+        .compact-table tbody td:first-child {
+            background-color: #ffffff !important;
+            box-shadow: inset -3px 0 5px -3px rgba(0,0,0,0.15);
+        }
+
+        /* =========================================================
+           🔥 FIX SCROLL MOBILE & TABLET (SWIPE TANPA BLOCK TEKS)
+           ========================================================= */
+        .table-responsive {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important; 
+            touch-action: pan-x pan-y; 
+        }
+
+        .compact-table thead tr:first-child th:first-child,
+        .compact-table tbody td:first-child {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none; 
         }
     </style>
 @endsection

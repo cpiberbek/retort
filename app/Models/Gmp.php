@@ -12,14 +12,12 @@ class Gmp extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'gmps';
-
     protected $primaryKey = 'uuid';  
-
     public $incrementing = false;
     protected $keyType   = 'string';
-
+    
     protected $fillable = [
-        'date', 'area', 'pemeriksaan',
+        'date', 'pemeriksaan', 
         'username', 'nama_produksi', 'status_produksi',  'nama_spv', 'status_spv', 'catatan_spv', 
         'username_updated', 'tgl_update_produksi', 'tgl_update_spv', 'plant'
     ];
