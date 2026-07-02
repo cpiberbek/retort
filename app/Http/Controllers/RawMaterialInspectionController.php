@@ -319,8 +319,12 @@ class RawMaterialInspectionController extends Controller
         try {
             DB::beginTransaction();
 
-            Storage::disk('public')->delete($inspection->dokumen_halal_file);
-            Storage::disk('public')->delete($inspection->dokumen_coa_file);
+            if ($inspection->dokumen_halal_file) {
+                Storage::disk('public')->delete($inspection->dokumen_halal_file);
+            }
+            if ($inspection->dokumen_coa_file) {
+                Storage::disk('public')->delete($inspection->dokumen_coa_file);
+            }
 
             $inspection->productDetails()->delete();
             $inspection->delete();

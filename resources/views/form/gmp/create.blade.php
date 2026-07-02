@@ -208,21 +208,6 @@
             if (!date.value) {
                 date.value = new Date().toISOString().slice(0, 10);
             }
-
-            // 🔥 FIX LOGIK: Hanya kirim data dari TAB YANG SEDANG AKTIF
-            const form = document.getElementById("gmpForm");
-            form.addEventListener("submit", function(e) {
-                // Cari semua tab yang TIDAK aktif (.tab-pane yang tidak punya class .active)
-                const inactiveTabs = document.querySelectorAll(".tab-pane:not(.active)");
-                
-                inactiveTabs.forEach(function(tab) {
-                    // Disable seluruh elemen input & checkbox di dalam tab non-aktif
-                    // agar tidak ikut terkirim ke server Laravel
-                    tab.querySelectorAll("input").forEach(function(input) {
-                        input.disabled = true;
-                    });
-                });
-            });
         });
     </script>
 
