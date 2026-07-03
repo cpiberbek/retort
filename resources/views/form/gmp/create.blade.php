@@ -100,7 +100,7 @@
                                                     <table class="table table-sm table-bordered compact-table">
                                                         <thead class="table-secondary text-center">
                                                             <tr>
-                                                                <th rowspan="3">Nama Karyawan</th>
+                                                                <th rowspan="3" style="text-align: left; width: 1%; white-space: nowrap;">Nama<br>Karyawan</th>
                                                                 <th colspan="16">Personal Hygiene</th>
                                                                 <th colspan="7">Kesehatan</th>
                                                                 <th rowspan="3">Keterangan</th>
@@ -222,7 +222,7 @@
         }
 
         .compact-table td:first-child {
-            min-width: 230px;
+            white-space: nowrap;
             text-align: left;
         }
 
