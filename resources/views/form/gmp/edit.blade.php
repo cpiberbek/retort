@@ -104,7 +104,7 @@ use Illuminate\Support\Str;
                                                 <table class="table table-sm table-bordered compact-table">
                                                     <thead class="table-secondary text-center">
                                                         <tr>
-                                                            <th rowspan="3">Nama Karyawan</th>
+                                                            <th rowspan="3" style="text-align: left; width: 1%; white-space: nowrap;">Nama<br>Karyawan</th>
                                                             <th colspan="16">Personal Hygiene</th>
                                                             <th colspan="7">Kesehatan Karyawan</th>
                                                             <th rowspan="3">Keterangan</th>
@@ -212,7 +212,7 @@ use Illuminate\Support\Str;
 
 <style>
     .compact-table td, .compact-table th { padding: 0.3rem !important; font-size: 0.85rem; line-height: 1.2; vertical-align: middle; }
-    .compact-table tbody td:first-child { min-width: 250px !important; width: 250px !important; text-align: left !important; padding-left: 8px !important; }
+    .compact-table tbody td:first-child { white-space: nowrap !important; text-align: left !important; padding-left: 8px !important; }
     .compact-table tbody td:last-child { min-width: 220px !important; width: 220px !important; text-align: left !important; }
     .nav-tabs .nav-link { font-weight: 600; }
     .table thead th { text-align: center; vertical-align: middle; white-space: nowrap; }

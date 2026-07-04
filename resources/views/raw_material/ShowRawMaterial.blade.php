@@ -171,7 +171,7 @@
                         <dl class="detail-list">
                             <div class="detail-item">
                                 <dt>K.A / FFA</dt>
-                                <dd>{!! renderStatus($inspection->analisa_ka_ffa) !!}</dd>
+                                <dd>{{ $inspection->analisa_ka_ffa }}</dd>
                             </div>
                             <div class="detail-item">
                                 <dt>Logo Halal</dt>

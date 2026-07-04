@@ -26,7 +26,7 @@ class RawMaterialInspection extends Model
         'mobil_check_aroma' => 'boolean',
         'mobil_check_kemasan' => 'boolean',
         'suhu_daging' => 'decimal:2',
-        'analisa_ka_ffa' => 'boolean',
+        'analisa_ka_ffa' => 'float',
         'analisa_logo_halal' => 'boolean',
         'dokumen_halal_berlaku' => 'boolean',
     ];
