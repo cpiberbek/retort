@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-0">
@@ -39,7 +39,7 @@
     </div>
 
     {{-- Filter dan Live Search --}}
-    <form id="filterForm" method="GET" action="{{ route('packing.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
+    <form id="filterForm" method="GET" action="{{ route('packing.index') }}" class="d-flex flex-wrap align-items-center gap-5 MB-3 p-3 border rounded bg-white shadow-sm">
         <div class="row w-100">
             <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
@@ -164,7 +164,7 @@
                                                         <table class="table table-sm table-bordered">
                                                             <tr><th>Waktu</th><td>{{ \Carbon\Carbon::parse($dep->waktu)->format('H:i') }}</td></tr>
                                                             <tr><th>Kode Toples (Batch)</th><td>{{ $dep->kode_toples ?? '-' }}</td></tr>
-                                                            <tr><th>Suhu</th><td>{{ $dep->suhu ?? '-' }} °C</td></tr>
+                                                            <tr><th>Suhu</th><td>{{ $dep->suhu ?? '-' }} Â°C</td></tr>
                                                             <tr><th>Jml Produk</th><td>{{ $dep->jumlah_produk ?? '-' }}</td></tr>
                                                             <tr>
                                                                 <th>QR Code</th>
@@ -323,8 +323,8 @@
                                                     </label>
                                                     <select name="status_spv" id="status_spv_{{ $dep->uuid }}" class="form-select form-select-lg fw-bold text-center mx-auto"
                                                     style="background: linear-gradient(135deg, #fff1f0, #ffe5de); border: 2px solid #dc3545; border-radius: 12px; color: #dc3545; height: 55px; font-size: 1.1rem; box-shadow: 0 6px 12px rgba(0,0,0,0.1); width: 85%; transition: all 0.3s ease;" required>
-                                                        <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
-                                                        <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
+                                                        <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} style="color: #198754; font-weight: 600;">âœ… Verified (Disetujui)</option>
+                                                        <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} style="color: #dc3545; font-weight: 600;">âŒ Revision (Perlu Perbaikan)</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-12 mt-3 text-start">

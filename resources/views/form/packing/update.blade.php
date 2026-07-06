@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -126,7 +126,7 @@
                                     <small class="text-muted d-block">Kosongkan jika tidak ingin mengubah gambar.</small>
                                 @endif
                                 <input type="file" name="qrcode" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 2 MB | Kosongkan jika tidak diubah</small>
+                                <small class="text-muted">Max 5 MB | Kosongkan jika tidak diubah</small>
                             </div>
 
                             <div class="col-md-6 file-wrapper">
@@ -137,7 +137,7 @@
                                     <small class="text-muted d-block">Kosongkan jika tidak ingin mengubah gambar.</small>
                                 @endif
                                 <input type="file" name="kode_printing" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 2 MB | Kosongkan jika tidak diubah</small>
+                                <small class="text-muted">Max 5 MB | Kosongkan jika tidak diubah</small>
                             </div>
                         </div>
 
@@ -226,7 +226,7 @@
                     </div>
                 </div>
 
-                {{-- ===================== ➕ Data Kemasan ===================== --}}
+                {{-- ===================== âž• Data Kemasan ===================== --}}
                 <div class="card mb-4 shadow-sm border-0">
                     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                         <strong class="fs-5"><i class="bi bi-box-seam"></i> Data Kemasan</strong>
@@ -296,7 +296,7 @@
                                     <label class="form-label fw-bold">Tanggal Kedatangan</label>
                                     <input type="date" name="data_kemasan[0][tgl_kedatangan]" class="form-control">
                                 </div>
-                                <div class="col-md-2 mb-2">
+                                <div class="col-md-5 MB-2">
                                     <label class="form-label fw-bold">Supplier</label>
                                     <select name="data_kemasan[0][nama_supplier]" class="form-control">
                                         <option value="">-- Pilih Supplier --</option>
@@ -371,7 +371,7 @@
                     <label class="form-label fw-bold">Tanggal Kedatangan</label>
                     <input type="date" name="data_kemasan[${countIdx}][tgl_kedatangan]" class="form-control">
                 </div>
-                <div class="col-md-2 mb-2">
+                <div class="col-md-5 MB-2">
                     <label class="form-label fw-bold">Supplier</label>
                     <select name="data_kemasan[${countIdx}][nama_supplier]" class="form-control">
                         <option value="">-- Pilih Supplier --</option>
@@ -464,13 +464,13 @@
 
     function validateFile(input) {
         const file = input.files[0];
-        const max = 2 * 1024 * 1024;
+        const max = 5 * 1024 * 1024;
         const wrap = $(input).closest('.file-wrapper');
         wrap.find('.file-error').remove();
 
         if (file && file.size > max) {
             $(input).addClass('is-invalid');
-            wrap.append('<div class="text-danger file-error mt-1" style="font-size:0.8rem;">Ukuran file maksimal 2 MB</div>');
+            wrap.append('<div class="text-danger file-error mt-1" style="font-size:0.8rem;">Ukuran file maksimal 5 MB</div>');
             return false;
         }
         $(input).removeClass('is-invalid');
@@ -481,7 +481,7 @@
     $('#pvdcForm').on('submit', function (e) {
         let ok = true;
         $('input[type="file"]').each(function () { if (!validateFile(this)) ok = false; });
-        if (!ok) { e.preventDefault(); alert('Periksa ukuran file, maksimal 2 MB.'); }
+        if (!ok) { e.preventDefault(); alert('Periksa ukuran file, maksimal 5 MB.'); }
     });
 </script>
 @endpush

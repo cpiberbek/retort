@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
     <div class="container-fluid py-4">
@@ -309,7 +309,7 @@
                 const bulanChar = value.charAt(1);
                 const validBulan = /^[A-L]$/;
                 if (!validBulan.test(bulanChar)) {
-                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
+                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (Aâ€“L).";
                     kodeError.classList.remove('d-none');
                     return false;
                 }
@@ -317,7 +317,7 @@
                 const hariStr = value.substr(2, 2);
                 const hari = parseInt(hariStr, 10);
                 if (isNaN(hari) || hari < 1 || hari > 31) {
-                    kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
+                    kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01â€“31).";
                     kodeError.classList.remove('d-none');
                     return false;
                 }
@@ -325,8 +325,8 @@
                 return true;
             }
 
-            // Validasi File Upload ≤ 2MB
-            const maxFileSize = 2 * 1024 * 1024;
+            // Validasi File Upload â‰¤ 5MB
+            const maxFileSize = 5 * 1024 * 1024;
             const fileInput = document.getElementById("kode_karton");
             const fileError = document.getElementById("kode-karton-error");
 
@@ -336,7 +336,7 @@
 
                 if (!file) return;
                 if (file.size > maxFileSize) {
-                    fileError.textContent = "Ukuran file maksimal 2MB.";
+                    fileError.textContent = "Ukuran file maksimal 5MB.";
                     this.value = "";
                 }
             });
