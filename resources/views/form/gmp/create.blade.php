@@ -100,7 +100,7 @@
                                                     <table class="table table-sm table-bordered compact-table">
                                                         <thead class="table-secondary text-center">
                                                             <tr>
-                                                                <th rowspan="3">Nama Karyawan</th>
+                                                                <th rowspan="3" style="text-align: left; width: 1%; white-space: nowrap;">Nama<br>Karyawan</th>
                                                                 <th colspan="16">Personal Hygiene</th>
                                                                 <th colspan="7">Kesehatan</th>
                                                                 <th rowspan="3">Keterangan</th>
@@ -208,21 +208,6 @@
             if (!date.value) {
                 date.value = new Date().toISOString().slice(0, 10);
             }
-
-            // 🔥 FIX LOGIK: Hanya kirim data dari TAB YANG SEDANG AKTIF
-            const form = document.getElementById("gmpForm");
-            form.addEventListener("submit", function(e) {
-                // Cari semua tab yang TIDAK aktif (.tab-pane yang tidak punya class .active)
-                const inactiveTabs = document.querySelectorAll(".tab-pane:not(.active)");
-                
-                inactiveTabs.forEach(function(tab) {
-                    // Disable seluruh elemen input & checkbox di dalam tab non-aktif
-                    // agar tidak ikut terkirim ke server Laravel
-                    tab.querySelectorAll("input").forEach(function(input) {
-                        input.disabled = true;
-                    });
-                });
-            });
         });
     </script>
 
@@ -237,7 +222,7 @@
         }
 
         .compact-table td:first-child {
-            min-width: 230px;
+            white-space: nowrap;
             text-align: left;
         }
 
