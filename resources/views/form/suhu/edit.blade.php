@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
     @push('styles')
@@ -225,9 +225,16 @@
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="label-premium">Waktu (Pukul)</label>
-                            <input type="time" name="pukul" id="timeInput"
-                                class="form-control form-control-solid rounded-3" step="3600" value="{{ $suhu->pukul }}"
-                                required onkeydown="return false">
+                            <select name="pukul" id="timeInput"
+                                class="form-select form-select-solid rounded-3" required>
+                                <option value="" disabled>Pilih Pukul...</option>
+                                @for ($h = 0; $h < 24; $h++)
+                                    @php $optVal = str_pad($h, 2, '0', STR_PAD_LEFT) . ':00'; @endphp
+                                    <option value="{{ $optVal }}" {{ substr($suhu->pukul, 0, 5) === $optVal ? 'selected' : '' }}>
+                                        {{ $optVal }}
+                                    </option>
+                                @endfor
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -280,13 +287,15 @@
                                         <td data-label="Hasil Pengukuran">
                                             <div class="position-relative w-100">
                                                 {{-- Diubah ke type text inputmode decimal agar support tanda minus --}}
-                                                <input type="text" inputmode="decimal"
-                                                    name="hasil_suhu[{{ $index }}][nilai]"
-                                                    value="{{ $nilai }}"
-                                                    class="form-control form-control-solid suhu-input rounded-3"
-                                                    data-min="{{ $area->standar_min }}"
-                                                    data-max="{{ $area->standar_max }}" placeholder="Masukkan suhu">
-
+                                                <div class="input-group">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1" title="Toggle minus">±</button>
+                                                    <input type="text" inputmode="decimal"
+                                                        name="hasil_suhu[{{ $index }}][nilai]"
+                                                        value="{{ $nilai }}"
+                                                        class="form-control form-control-solid suhu-input rounded-0"
+                                                        data-min="{{ $area->standar_min }}"
+                                                        data-max="{{ $area->standar_max }}">
+                                                </div>
                                                 <div class="text-danger warning-msg d-none mt-1"
                                                     style="font-size: 0.75rem; font-weight: 500;">
                                                     <i class="bi bi-exclamation-circle-fill me-1"></i> Suhu di luar standar!
@@ -453,16 +462,8 @@
                     });
                 });
 
-                // Pastikan format waktu selalu diakhiri dengan ':00' (Menit di-lock)
-                const timeInput = document.getElementById("timeInput");
-                if (timeInput) {
-                    timeInput.addEventListener('input', function() {
-                        if (this.value) {
-                            const hh = this.value.split(':')[0].padStart(2, '0');
-                            this.value = `${hh}:00`;
-                        }
-                    });
-                }
+                // Tidak perlu lagi event listener reset menit,
+                // karena timeInput sudah diganti ke <select> yang hanya berisi pilihan :00
             });
 
             document.querySelectorAll('.rh-input').forEach(input => {
@@ -489,6 +490,19 @@
                         }
                     }
                 });
+            });
+
+            // --- Tombol ± Toggle Minus ---
+            document.addEventListener('click', function(e) {
+                const btn = e.target.closest('.btn-toggle-minus');
+                if (!btn) return;
+                const input = btn.closest('.input-group').querySelector('input');
+                if (!input) return;
+                input.value = input.value.startsWith('-')
+                    ? input.value.slice(1)
+                    : '-' + input.value;
+                input.dispatchEvent(new Event('input'));
+                input.focus();
             });
         </script>
     @endpush

@@ -30,6 +30,10 @@
                         target="_blank" class="btn btn-danger">
                         <i class="bi bi-file-earmark-pdf"></i> Export PDF
                     </a>
+                    <a href="{{ route('suhu.exportExcel', ['date' => request('date'), 'shift' => request('shift')]) }}"
+                        class="btn btn-success">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel
+                    </a>
                 @endcan
                 @can('can access recycle')
                     <a href="{{ route('suhu.recyclebin') }}" class="btn btn-secondary">

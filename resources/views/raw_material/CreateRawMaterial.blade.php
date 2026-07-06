@@ -1,4 +1,4 @@
-{{-- resources/views/raw_material/CreateRawMaterial.blade.php --}}
+﻿{{-- resources/views/raw_material/CreateRawMaterial.blade.php --}}
 
 @extends('layouts.app') {{-- Menggunakan layout utama Anda --}}
 
@@ -249,7 +249,7 @@
                                     <input type="number" step="0.01"
                                         class="form-control @error('analisa_ka_ffa') is-invalid @enderror"
                                         id="analisa_ka_ffa" name="analisa_ka_ffa"
-                                        value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" required
+                                        value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}"
                                         min="0">
                                     @error('analisa_ka_ffa')
                                         <span class="invalid-feedback"
@@ -388,11 +388,14 @@
                                 </div>
                                 <div class="col-md-4">
                                     <label for="suhu_mobil" class="form-label">Suhu Mobil (°C)</label>
-                                    <input type="number" step="0.01"
-                                        class="form-control @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil"
-                                        name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}" required>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1" title="Toggle minus">±</button>
+                                        <input type="text" inputmode="decimal"
+                                            class="form-control suhu-number-input @error('suhu_mobil') is-invalid @enderror" id="suhu_mobil"
+                                            name="suhu_mobil" value="{{ old('suhu_mobil', $inspection->suhu_mobil ?? '') }}">
+                                    </div>
                                     @error('suhu_mobil')
-                                        <span class="invalid-feedback"
+                                        <span class="invalid-feedback d-block"
                                             role="alert"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
@@ -468,11 +471,14 @@
                                 </div>
                                 <div class="col-md-6">
                                     <label for="suhu_daging" class="form-label">Suhu Daging/Bahan (°C)</label>
-                                    <input type="number" step="0.01"
-                                        class="form-control @error('suhu_daging') is-invalid @enderror" id="suhu_daging"
-                                        name="suhu_daging" value="{{ old('suhu_daging') }}" required>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1" title="Toggle minus">±</button>
+                                        <input type="text" inputmode="decimal"
+                                            class="form-control suhu-number-input @error('suhu_daging') is-invalid @enderror" id="suhu_daging"
+                                            name="suhu_daging" value="{{ old('suhu_daging') }}">
+                                    </div>
                                     @error('suhu_daging')
-                                        <span class="invalid-feedback"
+                                        <span class="invalid-feedback d-block"
                                             role="alert"><strong>{{ $message }}</strong></span>
                                     @enderror
                                 </div>
@@ -549,6 +555,37 @@
                     this.value = min;
                 }
             });
+        });
+
+        // --- Script Input Suhu (mendukung nilai minus di HP) ---
+        document.querySelectorAll('.suhu-number-input').forEach(function(input) {
+            input.addEventListener('input', function() {
+                let val = this.value;
+                val = val.replace(/[^0-9.,-]/g, '');
+                val = val.replace(',', '.');
+                if (val.indexOf('-') > 0) {
+                    val = val.replace(/-/g, '');
+                    val = '-' + val;
+                }
+                const parts = val.split('.');
+                if (parts.length > 2) {
+                    val = parts[0] + '.' + parts.slice(1).join('');
+                }
+                this.value = val;
+            });
+        });
+
+        // --- Tombol ± Toggle Minus ---
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-toggle-minus');
+            if (!btn) return;
+            const input = btn.closest('.input-group').querySelector('input');
+            if (!input) return;
+            input.value = input.value.startsWith('-')
+                ? input.value.slice(1)
+                : '-' + input.value;
+            input.dispatchEvent(new Event('input'));
+            input.focus();
         });
         document.addEventListener('DOMContentLoaded', function() {
 

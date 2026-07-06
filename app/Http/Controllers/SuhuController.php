@@ -7,6 +7,8 @@ use App\Models\Produk;
 use App\Models\Area_suhu;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Exports\SuhuExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SuhuController extends Controller
 {
@@ -105,13 +107,13 @@ class SuhuController extends Controller
             $nilai_suhu = $nilai_suhu_raw === ''
                 ? null
                 : ($nilai_suhu_raw === '-'
-                    ? '-'
+                    ? null
                     : (float) str_replace(',', '.', $nilai_suhu_raw));
 
             $nilai_rh = $nilai_rh_raw === ''
                 ? null
                 : ($nilai_rh_raw === '-'
-                    ? '-'
+                    ? null
                     : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
@@ -195,11 +197,11 @@ class SuhuController extends Controller
 
             $nilai_suhu = $nilai_suhu_raw === ''
                 ? null
-                : ($nilai_suhu_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_suhu_raw));
+                : ($nilai_suhu_raw === '-' ? null : (float) str_replace(',', '.', $nilai_suhu_raw));
 
             $nilai_rh = $nilai_rh_raw === ''
                 ? null
-                : ($nilai_rh_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_rh_raw));
+                : ($nilai_rh_raw === '-' ? null : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
                 'area' => $area,
@@ -280,11 +282,11 @@ class SuhuController extends Controller
 
             $nilai_suhu = $nilai_suhu_raw === ''
                 ? null
-                : ($nilai_suhu_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_suhu_raw));
+                : ($nilai_suhu_raw === '-' ? null : (float) str_replace(',', '.', $nilai_suhu_raw));
 
             $nilai_rh = $nilai_rh_raw === ''
                 ? null
-                : ($nilai_rh_raw === '-' ? '-' : (float) str_replace(',', '.', $nilai_rh_raw));
+                : ($nilai_rh_raw === '-' ? null : (float) str_replace(',', '.', $nilai_rh_raw));
 
             $hasil_terstruktur[] = [
                 'area' => $area,
@@ -442,5 +444,33 @@ class SuhuController extends Controller
         $filename = 'Pemeriksaan_Suhu_RH_' . date('d-m-Y_His') . '.pdf';
         $pdf->Output($filename, 'I');
         exit();
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $date      = $request->input('date');
+        $shift     = $request->input('shift');
+        $userPlant = Auth::user()->plant;
+
+        $items = Suhu::query()
+            ->where('plant', $userPlant)
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('pukul', 'asc')
+            ->get();
+
+        $areaSuhus = Area_suhu::where('plant', $userPlant)
+            ->orderBy('area')
+            ->get();
+
+        $dateLabel  = $date  ? \Carbon\Carbon::parse($date)->format('d-m-Y') : 'Semua_Tanggal';
+        $shiftLabel = $shift ? 'Shift' . $shift : 'Semua_Shift';
+        $filename   = "Pemeriksaan_Suhu_RH_{$dateLabel}_{$shiftLabel}.xlsx";
+
+        return Excel::download(new SuhuExport($items, $areaSuhus, $date, $shift), $filename);
     }
 }

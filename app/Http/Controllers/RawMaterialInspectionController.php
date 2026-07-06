@@ -88,7 +88,7 @@ class RawMaterialInspectionController extends Controller
             'suhu_mobil' => ['nullable', 'regex:/^-?\d+(\.\d+)?$/'],
             'kondisi_mobil' => 'required|array|min:1',
             'kondisi_mobil.*' => 'string',
-            'analisa_ka_ffa' => 'required|numeric',
+            'analisa_ka_ffa' => 'nullable|numeric',
             'no_segel' => 'required|string|max:255',
             'suhu_daging' => ['nullable', 'regex:/^-?\d+(\.\d+)?$/'],
             'analisa_negara_asal' => 'required|string|max:255',
@@ -109,6 +109,12 @@ class RawMaterialInspectionController extends Controller
         foreach ($this->booleanFields as $field) {
             $validationRules[$field] = $booleanFieldRule;
         }
+
+        // Ubah '-' menjadi null sebelum validasi agar lolos regex (yang butuh digit)
+        $request->merge([
+            'suhu_mobil' => $request->suhu_mobil === '-' ? null : $request->suhu_mobil,
+            'suhu_daging' => $request->suhu_daging === '-' ? null : $request->suhu_daging,
+        ]);
 
         $request->validate($validationRules);
 
@@ -200,7 +206,7 @@ class RawMaterialInspectionController extends Controller
             'supplier' => 'required|string|max:255',
             'nopol_mobil' => 'required|string|max:255',
             'suhu_mobil' => ['nullable', 'regex:/^-?\d+(\.\d+)?$/'],
-            'analisa_ka_ffa' => 'required|numeric',
+            'analisa_ka_ffa' => 'nullable|numeric',
             'kondisi_mobil' => 'required|array|min:1',
             'kondisi_mobil.*' => 'string',
             'no_segel' => 'required|string|max:255',
@@ -228,6 +234,12 @@ class RawMaterialInspectionController extends Controller
         foreach ($this->booleanFields as $field) {
             $validationRules[$field] = $booleanFieldRule;
         }
+
+        // Ubah '-' menjadi null sebelum validasi agar lolos regex (yang butuh digit)
+        $request->merge([
+            'suhu_mobil' => $request->suhu_mobil === '-' ? null : $request->suhu_mobil,
+            'suhu_daging' => $request->suhu_daging === '-' ? null : $request->suhu_daging,
+        ]);
 
         $request->validate($validationRules);
 
@@ -307,8 +319,12 @@ class RawMaterialInspectionController extends Controller
         try {
             DB::beginTransaction();
 
-            Storage::disk('public')->delete($inspection->dokumen_halal_file);
-            Storage::disk('public')->delete($inspection->dokumen_coa_file);
+            if ($inspection->dokumen_halal_file) {
+                Storage::disk('public')->delete($inspection->dokumen_halal_file);
+            }
+            if ($inspection->dokumen_coa_file) {
+                Storage::disk('public')->delete($inspection->dokumen_coa_file);
+            }
 
             $inspection->productDetails()->delete();
             $inspection->delete();
