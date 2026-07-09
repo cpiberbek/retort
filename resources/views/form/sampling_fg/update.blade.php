@@ -47,9 +47,12 @@
                                 <input type="text" class="form-control" value="{{ $sampling_fg->nama_produk }}" readonly>
                                 <input type="hidden" name="nama_produk" id="nama_produk" value="{{ $sampling_fg->nama_produk }}">
                             </div>
+                            @php
+                                $kode_batch_text = \App\Models\Mincing::where('uuid', $sampling_fg->kode_produksi)->value('kode_produksi') ?? $sampling_fg->kode_produksi;
+                            @endphp
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <input type="text" class="form-control" value="{{ $sampling_fg->kode_produksi }}" readonly>
+                                <input type="text" class="form-control" value="{{ $kode_batch_text }}" readonly>
                                 <input type="hidden" name="kode_produksi" id="kode_produksi" value="{{ $sampling_fg->kode_produksi }}">
                             </div>
                         </div>

@@ -92,7 +92,13 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="text" name="data_pvdc[{{ $i }}][kode_batch]" class="form-control form-control-sm" value="{{ $row['kode_batch'] }}" required>
+                                        <select name="data_pvdc[{{ $i }}][kode_batch]" class="form-control form-control-sm batchSelect" required>
+                                            @if(!empty($row['kode_batch']))
+                                                <option value="{{ $row['kode_batch'] }}" selected>{{ $row['kode_produksi_display'] ?? $row['kode_batch'] }}</option>
+                                            @else
+                                                <option value="">-- Pilih Batch --</option>
+                                            @endif
+                                        </select>
                                     </td>
                                     <td>
                                         <input type="file" name="data_pvdc[{{ $i }}][kode_produksi]" class="form-control form-control-sm" accept="image/*">
@@ -139,51 +145,77 @@
     </div>
 </div>
 
+@endsection
+
+@push('scripts')
 {{-- JS --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 $(document).ready(function(){
     $('.selectpicker').selectpicker();
 
-    // VALIDASI KODE BATCH
-    function validateKodeBatch(input){
-        let value = input.val().toUpperCase().replace(/\s+/g,'');
-        input.val(value);
-        input.next(".invalid-feedback").remove();
-        input.removeClass("is-invalid");
-
-        if(value.length !== 10){
-            showError(input,"Kode batch harus terdiri dari 10 karakter.");
-            return false;
+    function initBatchSelect(select, produk) {
+        if (select.data('select2')) {
+            select.select2('destroy');
         }
-        const format = /^[A-Z0-9]+$/;
-        if(!format.test(value)){
-            showError(input,"Kode batch hanya boleh huruf besar dan angka.");
-            return false;
+        
+        if (!produk) {
+            select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+            select.prop("disabled", true);
+            return;
         }
-        const bulanChar = value.charAt(1);
-        if(!/^[A-L]$/.test(bulanChar)){
-            showError(input,"Karakter ke-2 harus huruf bulan (A–L).");
-            return false;
-        }
-        const rework = value.charAt(9);
-        if(!["0","1"].includes(rework)){
-            showError(input,"Karakter terakhir harus 0 (belum rework) atau 1 (rework).");
-            return false;
-        }
-        return true;
+        
+        select.prop("disabled", false);
+        
+        select.select2({
+            theme: "bootstrap-5",
+            width: '100%',
+            placeholder: "-- Pilih Batch --",
+            allowClear: true,
+            ajax: {
+                url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produk),
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return { results: data };
+                },
+                cache: true
+            }
+        });
     }
 
-    function showError(input,msg){
-        input.addClass("is-invalid");
-        input.after(`<div class="invalid-feedback">${msg}</div>`);
+    function loadBatchForAllRows() {
+        const produkValue = $('select[name="nama_produk"]').val();
+        if (!produkValue) return;
+
+        $('.batchSelect').each(function() {
+            let select = $(this);
+            
+            if (!select.val()) {
+                select.html('<option value="">-- Pilih Batch --</option>');
+            }
+            
+            initBatchSelect(select, produkValue);
+        });
     }
 
-    $(document).on("input blur",'input[name$="[kode_batch]"]', function(){
-        validateKodeBatch($(this));
+    // Initialize select2 on load
+    loadBatchForAllRows();
+
+    $('select[name="nama_produk"]').on('change', function() {
+        $(".batchSelect").empty().trigger('change');
+        loadBatchForAllRows();
     });
 
     // TAMBAH BARIS
@@ -199,7 +231,9 @@ $(document).ready(function(){
                 </select>
             </td>
             <td>
-                <input type="text" name="data_pvdc[${index}][kode_batch]" class="form-control form-control-sm" required>
+                <select name="data_pvdc[${index}][kode_batch]" class="form-control form-control-sm batchSelect" required>
+                    <option value="">-- Pilih Batch --</option>
+                </select>
             </td>
             <td>
                 <input type="file" name="data_pvdc[${index}][kode_produksi]" class="form-control form-control-sm" accept="image/*">
@@ -213,6 +247,7 @@ $(document).ready(function(){
             </td>
         </tr>`);
         index++;
+        loadBatchForAllRows();
     });
 
     // HAPUS BARIS
@@ -258,4 +293,15 @@ $(document).ready(function(){
 
 });
 </script>
-@endsection
+@endpush
+
+@push('styles')
+<style>
+    /* Select2 bootstrap 5 styling override untuk form ini */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: calc(1.5em + .5rem + 2px) !important;
+        border-radius: .25rem !important;
+        font-size: .875rem;
+    }
+</style>
+@endpush

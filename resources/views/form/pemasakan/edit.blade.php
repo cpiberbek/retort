@@ -81,8 +81,12 @@
                             <div class="row mb-3 batch-row">
                                 <div class="col-md-6">
                                     <label class="form-label">Kode Batch</label>
-                                    <select name="kode_produksi[]" class="form-control kode_produksi" data-old="{{ $kp }}" required>
-                                        <option value="{{ $kp }}">{{ $kp }}</option>
+                                    @php
+                                        $mincing = \App\Models\Mincing::where('uuid', $kp)->first();
+                                        $batchText = $mincing ? $mincing->kode_produksi : $kp;
+                                    @endphp
+                                    <select name="kode_produksi[]" class="form-control kode_produksi" required>
+                                        <option value="{{ $kp }}" selected>{{ $batchText }}</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4">
@@ -580,8 +584,17 @@
 </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@endsection
+
+@push('scripts')
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+{{-- Bootstrap Select CSS & JS --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
 <script>
@@ -590,46 +603,59 @@
             $('.selectpicker').selectpicker();
         }
 
-        let batchedData = [];
-        
-        // Ambil data reject yang sudah tersimpan untuk proses initial load
-        // Menggunakan total_reject sesuai dengan kolom database yang baru
+        // === Select2 Batch Integration ===
+        const produkSelect = $('#nama_produk');
         let initialRejects = @json(is_array($pemasakan->total_reject) ? $pemasakan->total_reject : (json_decode($pemasakan->total_reject, true) ?? []));
         let isFirstLoad = true;
 
-        function populateBatches() {
-            let options = '<option value="">-- Pilih Batch --</option>';
-            if (batchedData.length === 0) {
-                options = '<option value="">Batch Tidak Ditemukan / Pilih Varian</option>';
-            } else {
-                batchedData.forEach(item => {
-                    options += `<option value="${item.uuid}">${item.kode_produksi}</option>`;
-                });
+        function initBatchSelect(selectElem) {
+            let produkValue = produkSelect.val();
+            
+            if (selectElem.data('select2')) {
+                selectElem.select2('destroy');
             }
-
-            $('.kode_produksi').each(function() {
-                let oldVal = $(this).attr('data-old');
-                let currentValue = $(this).val();
-                $(this).html(options).prop('disabled', batchedData.length === 0);
-
-                if (currentValue) {
-                    $(this).val(currentValue);
-                } else if (oldVal) {
-                    $(this).val(oldVal);
+            
+            if (!produkValue) {
+                selectElem.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                selectElem.prop("disabled", true);
+                return;
+            }
+            
+            selectElem.prop("disabled", false);
+            
+            selectElem.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
                 }
             });
         }
 
+        // Initialize select2 for existing kode_produksi selects
+        $('.kode_produksi').each(function() {
+            initBatchSelect($(this));
+        });
+
         // LOGIC UNTUK RENDER TABEL REJECT
         function renderRejectTable() {
-            // Ambil data input saat ini supaya tidak hilang saat di-render ulang
             let currentRejects = [];
             $('.reject-input').each(function() {
                 let idx = $(this).data('index');
                 currentRejects[idx] = $(this).val();
             });
 
-            // Timpa dengan data dari database saat halaman pertama kali load
             if (isFirstLoad) {
                 currentRejects = initialRejects;
                 isFirstLoad = false;
@@ -646,7 +672,6 @@
                 if (value && value !== "") {
                     hasData = true;
                     
-                    // Ambil isi reject dan cegah angka 0 muncul akibat nilai null
                     let rawVal = currentRejects[index];
                     let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
 
@@ -681,41 +706,19 @@
 
         $('#nama_produk').on('change', function() {
             let namaProduk = $(this).val();
-            
-            $('.kode_produksi').attr('data-old', '');
 
             if (!namaProduk) {
-                batchedData = [];
-                populateBatches();
+                $('.kode_produksi').html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
                 renderRejectTable();
                 return;
             }
-
-            $('.kode_produksi').html('<option value="">Mencari Batch...</option>').prop('disabled', false);
-
-            $.ajax({
-                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent(namaProduk),
-                type: 'GET',
-                success: function(data) {
-                    batchedData = data;
-                    populateBatches();
-                    renderRejectTable(); // Reset/render tabel reject
-                }
+            
+            $('.kode_produksi').each(function() {
+                initBatchSelect($(this));
             });
+            
+            renderRejectTable();
         });
-
-        // Trigger AJAX Saat Load Pertama (untuk mengisi batch lama dan data reject)
-        if ($('#nama_produk').val()) {
-            $.ajax({
-                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent($('#nama_produk').val()),
-                type: 'GET',
-                success: function(data) {
-                    batchedData = data;
-                    populateBatches();
-                    renderRejectTable();
-                }
-            });
-        }
 
         // Trigger render saat opsi batch dipilih manual
         $(document).on('change', '.kode_produksi', function() {
@@ -724,7 +727,12 @@
 
         // Tambah Row
         $(document).on('click', '.addRow', function() {
-            let rowCount = $('.batch-row').length;
+            // Destroy select2 before clone
+            const firstSelect = $('.batch-row:first').find('.kode_produksi');
+            if (firstSelect.hasClass('select2-hidden-accessible')) {
+                firstSelect.select2('destroy');
+            }
+
             let row = `
             <div class="row mb-3 batch-row">
                 <div class="col-md-6">
@@ -742,8 +750,13 @@
                 </div>
             </div>`;
             $('#batchContainer').append(row);
-            populateBatches(); 
-            renderRejectTable(); // Pastikan tabel reject ikut di-update
+            
+            // Re-initialize select2 for all selects
+            $('.kode_produksi').each(function() {
+                initBatchSelect($(this));
+            });
+            
+            renderRejectTable();
         });
 
         // Hapus Row
@@ -826,4 +839,4 @@
     });
 </script>
 
-@endsection
+@endpush

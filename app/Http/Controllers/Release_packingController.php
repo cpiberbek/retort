@@ -68,6 +68,13 @@ class Release_packingController extends Controller
             'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
         ]);
 
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $data['kode_produksi'])) {
+            $batchText = \App\Models\Mincing::where('uuid', $data['kode_produksi'])->value('kode_produksi');
+            if ($batchText) {
+                $data['kode_produksi'] = $batchText;
+            }
+        }
+
     // Tambahan default
         $data['username']            = $username;
         $data['plant']               = $userPlant;
@@ -107,6 +114,13 @@ class Release_packingController extends Controller
             'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
         ]);
 
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $data['kode_produksi'])) {
+            $batchText = \App\Models\Mincing::where('uuid', $data['kode_produksi'])->value('kode_produksi');
+            if ($batchText) {
+                $data['kode_produksi'] = $batchText;
+            }
+        }
+
         $data['username_updated'] = $username_updated;
 
         $release_packing->update($data);
@@ -141,6 +155,13 @@ class Release_packingController extends Controller
         $data = $request->only([
             'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
         ]);
+
+        if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $data['kode_produksi'])) {
+            $batchText = \App\Models\Mincing::where('uuid', $data['kode_produksi'])->value('kode_produksi');
+            if ($batchText) {
+                $data['kode_produksi'] = $batchText;
+            }
+        }
 
         $release_packing->update($data);
 

@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -144,10 +144,13 @@
                         <div class="row mb-3">
                             <div class="col-md-12">
                                 <label class="form-label fw-bold">Kode Toples (Batch) <span class="text-danger">*</span></label>
-                                @php $hasToples = !empty($packing->kode_toples); @endphp
+                                @php 
+                                    $hasToples = !empty($packing->kode_toples); 
+                                    $kode_batch_text = $hasToples ? (\App\Models\Mincing::where('uuid', $packing->kode_toples)->value('kode_produksi') ?? $packing->kode_toples) : '';
+                                @endphp
                                 <select name="kode_toples" id="kode_toples" class="form-control" {{ $hasToples ? 'disabled' : '' }} required>
                                     @if($hasToples)
-                                        <option value="{{ $packing->kode_toples }}" selected>{{ $packing->kode_toples }}</option>
+                                        <option value="{{ $packing->kode_toples }}" selected>{{ $kode_batch_text }}</option>
                                     @else
                                         <option value="">Pilih Varian Terlebih Dahulu</option>
                                     @endif

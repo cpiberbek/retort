@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
     <div class="container-fluid py-4">
@@ -7,6 +7,16 @@
                 <h4 class="mb-4">
                     <i class="bi bi-pencil-square"></i> Edit Kontrol Labelisasi Karton
                 </h4>
+
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
 
                 <form id="samplingForm" action="{{ route('karton.update_qc', $karton->uuid) }}" method="POST"
                     enctype="multipart/form-data">
@@ -50,7 +60,7 @@
                                 </div>
 
                                 @php
-                                    $kode = \App\Models\Mincing::where('uuid', $karton->kode_produksi)->value('kode_produksi');
+                                    $kode = \App\Models\Mincing::where('uuid', $karton->kode_produksi)->value('kode_produksi') ?? $karton->kode_produksi;
                                 @endphp
 
                                 <div class="col-md-6">

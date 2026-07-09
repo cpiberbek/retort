@@ -286,7 +286,7 @@
                         }
 
                         return $.ajax({
-                            url: `/lookup/batch-packing/${produk}`,
+                            url: `{{ url('/lookup/batch-packing') }}/${encodeURIComponent(produk)}`,
                             data: { q: params.data.term },
                             success,
                             error: failure

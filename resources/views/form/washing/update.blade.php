@@ -48,10 +48,14 @@
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Kode Batch</label>
-                        <input type="text" name="kode_produksi" id="kode_produksi" maxlength="10" class="form-control" 
-                        value="{{ old('kode_produksi', $washing->kode_produksi) }}"
-                        @if($washing->kode_produksi) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif
-                        required>
+                        @if($washing->kode_produksi)
+                            <input type="text" class="form-control" value="{{ $washing->mincing->kode_produksi ?? $washing->kode_produksi }}" readonly style="background-color:#e9ecef;cursor:not-allowed;">
+                            <input type="hidden" name="kode_produksi" id="kode_produksi" value="{{ $washing->kode_produksi }}">
+                        @else
+                            <select name="kode_produksi" id="kode_produksi" class="form-control" required>
+                                <option value="">Pilih Varian Terlebih Dahulu</option>
+                            </select>
+                        @endif
                         <small id="kodeError" class="text-danger d-none"></small>
                     </div>
                 </div>
@@ -268,53 +272,79 @@
 </div>
 </div>
 
+@endsection
+
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
-
-    // Validasi kode produksi hanya jika tidak readonly
     $(document).ready(function(){ 
-        const kodeInput = $('#kode_produksi');
-        const kodeError = $('#kodeError');
-        const form = $('#washingForm');
-
-        function validateKode() {
-            if(kodeInput.is('[readonly]')) return true;
-
-            let value = kodeInput.val().toUpperCase().replace(/\s+/g, '');
-            kodeInput.val(value);
-            kodeError.text('').addClass('d-none');
-
-            if(value.length !== 10) {
-                kodeError.text('Kode batch harus terdiri dari 10 karakter').removeClass('d-none');
-                return false;
-            }
-            if(!/^[A-Z0-9]+$/.test(value)) {
-                kodeError.text('Kode batch hanya boleh huruf besar dan angka').removeClass('d-none');
-                return false;
-            }
-            if(!/^[A-L]$/.test(value.charAt(1))) {
-                kodeError.text('Karakter ke-2 harus huruf bulan (A-L)').removeClass('d-none');
-                return false;
-            }
-            let hari = parseInt(value.substr(2,2),10);
-            if(isNaN(hari) || hari < 1 || hari > 31) {
-                kodeError.text('Karakter ke-3 dan ke-4 harus tanggal valid (01-31)').removeClass('d-none');
-                return false;
-            }
-            return true;
+        if (typeof $.fn.selectpicker === 'function') {
+            $('.selectpicker').selectpicker();
         }
 
-        kodeInput.on('input', validateKode);
+        const produkSelect = $('select[name="nama_produk"], input[name="nama_produk"]');
+        const batchSelect = $('select#kode_produksi');
 
-        form.on('submit', function(e){
-            if(!validateKode()){
-                e.preventDefault();
-                alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
-                kodeInput.focus();
+        if (batchSelect.length > 0) {
+            function initBatchSelect(produkValue) {
+                if (batchSelect.data('select2')) {
+                    batchSelect.select2('destroy');
+                }
+                
+                if (!produkValue) {
+                    batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    batchSelect.prop("disabled", true);
+                    return;
+                }
+                
+                batchSelect.prop("disabled", false);
+                
+                batchSelect.select2({
+                    theme: "bootstrap-5",
+                    width: '100%',
+                    placeholder: "-- Pilih Batch --",
+                    allowClear: true,
+                    ajax: {
+                        url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { q: params.term };
+                        },
+                        processResults: function (data) {
+                            return { results: data };
+                        },
+                        cache: true
+                    }
+                });
             }
-        });
+
+            // Initialize on load
+            if (produkSelect.val()) {
+                initBatchSelect(produkSelect.val());
+            }
+
+            produkSelect.on('change', function () {
+                let namaProduk = $(this).val();
+                
+                if (!namaProduk) {
+                    batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    batchSelect.prop("disabled", true);
+                    return;
+                }
+
+                batchSelect.html('<option value="">-- Pilih Batch --</option>');
+                initBatchSelect(namaProduk);
+            });
+        }
     });
 </script>
-@endsection
+@endpush

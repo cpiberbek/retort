@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -225,6 +225,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     $(document).ready(function(){
         if($.fn.selectpicker){
@@ -284,52 +289,58 @@
             }
         }
 
-        // ===================== LOGIKA AJAX BATCH MINCING =====================
+        // ===================== LOGIKA AJAX BATCH MINCING DENGAN SELECT2 =====================
         const namaProdukSelect = $('#nama_produk');
         const kodeToplesSelect = $('#kode_toples');
 
-        function loadBatches(namaProduk, oldBatch = '') {
-            if (!namaProduk) {
-                kodeToplesSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
+        function initBatchSelect() {
+            let produkValue = namaProdukSelect.val();
+            
+            if (kodeToplesSelect.data('select2')) {
+                kodeToplesSelect.select2('destroy');
+            }
+            
+            if (!produkValue) {
+                kodeToplesSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                kodeToplesSelect.prop("disabled", true);
                 return;
             }
-
-            kodeToplesSelect.prop('disabled', false).html('<option value="">Mencari Batch...</option>');
-
-            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
-            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    kodeToplesSelect.html('<option value="">-- Pilih Kode Toples (Batch) --</option>');
-                    if (!Array.isArray(data) || data.length === 0) {
-                        kodeToplesSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
-                        return;
-                    }
-
-                    data.forEach(function(batch) {
-                        let isSelected = (oldBatch === batch.kode_produksi) ? 'selected' : '';
-                        kodeToplesSelect.append(`<option value="${batch.kode_produksi}" data-uuid="${batch.uuid}" ${isSelected}>${batch.kode_produksi}</option>`);
-                    });
-                },
-                error: function() {
-                    kodeToplesSelect.html('<option value="">Gagal memuat data</option>');
+            
+            kodeToplesSelect.html('<option value="">-- Pilih Kode Toples (Batch) --</option>');
+            kodeToplesSelect.prop("disabled", false);
+            
+            kodeToplesSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Kode Toples (Batch) --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
                 }
             });
         }
 
         namaProdukSelect.on('change', function() {
-            loadBatches($(this).val());
+            initBatchSelect();
         });
 
-
-
         if (namaProdukSelect.val()) {
+            initBatchSelect();
+            // Jika ada old value, set opsi pre-selected
             let oldBatch = "{{ old('kode_toples', '') }}";
-            loadBatches(namaProdukSelect.val(), oldBatch);
+            if(oldBatch){
+                let newOption = new Option(oldBatch, oldBatch, true, true);
+                kodeToplesSelect.append(newOption).trigger('change');
+            }
         }
     });
 

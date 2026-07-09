@@ -121,10 +121,21 @@
 
                                     <tr>
                                         <td>
-                                            <input type="text" name="sensori[{{ $i }}][kode_produksi]"
-                                                class="form-control form-control-sm b kode_produksi"
-                                                value="{{ $sensori['kode_produksi'] ?? '' }}" maxlength="10" required>
-                                            <small class="kodeError text-danger d-none"></small>
+                                            @php
+                                                $kpValue = $sensori['kode_produksi'] ?? '';
+                                                $kpText = $kpValue;
+                                                if ($kpValue) {
+                                                    $mincing = \App\Models\Mincing::where('uuid', $kpValue)->first();
+                                                    if ($mincing) {
+                                                        $kpText = $mincing->kode_produksi;
+                                                    }
+                                                }
+                                            @endphp
+                                            <select name="sensori[{{ $i }}][kode_produksi]"
+                                                class="form-select select2 form-control-sm b kode_produksi_Select"
+                                                required>
+                                                <option value="{{ $kpValue }}" selected>{{ $kpText }}</option>
+                                            </select>
                                         </td>
 
                                         {{-- Input nilai sensori (bisa tetap seperti sebelumnya, tapi ditambah min-max)
@@ -189,20 +200,25 @@
     </div>
 </div>
 
-{{-- ========== JS & LOGIKA SAMA DENGAN CREATE ========== --}}
+@endsection
+
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     $(document).ready(function(){
-        $('.selectpicker').selectpicker();
-    });
-</script>
-<script>
-    $(function() {
-    // ========== Set tanggal & shift otomatis ==========
+        if (typeof $.fn.selectpicker === 'function') {
+            $('.selectpicker').selectpicker();
+        }
+
+        // ========== Set tanggal & shift otomatis ==========
         const dateInput = $('#dateInput');
         const shiftInput = $('#shiftInput');
         const now = new Date();
@@ -210,12 +226,17 @@
         const mm = String(now.getMonth() + 1).padStart(2, '0');
         const dd = String(now.getDate()).padStart(2, '0');
         const hh = now.getHours();
-        dateInput.val(`${yyyy}-${mm}-${dd}`);
-        if (hh >= 7 && hh < 15) shiftInput.val('1');
-        else if (hh >= 15 && hh < 23) shiftInput.val('2');
-        else shiftInput.val('3');
 
-    // ========== Fungsi hitung rata-rata ==========
+        if(!dateInput.val()){
+            dateInput.val(`${yyyy}-${mm}-${dd}`);
+        }
+        if(!shiftInput.val()){
+            if (hh >= 7 && hh < 15) shiftInput.val('1');
+            else if (hh >= 15 && hh < 23) shiftInput.val('2');
+            else shiftInput.val('3');
+        }
+
+        // ========== Fungsi hitung rata-rata ==========
         function hitungRata(row) {
             const nilai = $(row).find('.sensori').map(function(){ 
                 return parseFloat($(this).val()) || 0;
@@ -235,53 +256,88 @@
             }
         }
 
-    // ========== Event input nilai sensori ==========
+        // ========== Event input nilai sensori ==========
         $(document).on('input', '.sensori', function(){
             const row = $(this).closest('tr');
             hitungRata(row);
         });
 
-    // ========== Validasi kode produksi ==========
-        function validateKode(value) {
-            if (!value) return { valid: false, message: "Kode batch wajib diisi." };
-            value = value.toUpperCase().replace(/\s+/g,'');
-            if (value.length !== 10) return { valid:false, message: "Kode batch harus 10 karakter." };
-            const format = /^[A-Z0-9]+$/;
-            if (!format.test(value)) return { valid:false, message: "Kode batch hanya boleh huruf besar dan angka." };
-            const pattern = /^[A-Z0-9][A-L](0[1-9]|[12][0-9]|3[01])[A-Z0-9]{6}$/;
-            if (!pattern.test(value)) return { valid:false, message: "Format: ke-2 A–L, ke-3/4 tanggal 01–31." };
-            return { valid:true, message:"✔ Kode batch valid." };
-        }
-
-    // ========== Event input kode produksi ==========
-        $(document).on('input', '.kode_produksi', function() {
-            const $this = $(this);
-            const row = $this.closest('tr');
-            const val = $this.val().toUpperCase().replace(/\s+/g,'');
-            $this.val(val);
-
-            const result = validateKode(val);
-            const $err = row.find('.kodeError');
-
-            if (!result.valid) {
-                $err.text(result.message).removeClass('d-none text-success').addClass('text-danger');
-                $this.addClass('is-invalid').removeClass('is-valid');
-            } else {
-                $err.text(result.message).removeClass('d-none text-danger').addClass('text-success');
-                $this.addClass('is-valid').removeClass('is-invalid');
-            }
+        // ========== Load batch berdasarkan produk ==========
+        $('#nama_produk').select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: 'Ketik untuk mencari varian...',
+            allowClear: true
         });
 
-    // ========== Tambah baris baru (HANYA SATU EVENT) ==========
+        const produkSelect = $("#nama_produk");
+
+        function initializeSelect2ForKodeProduksi(select) {
+            select.select2({
+                theme: 'bootstrap-5',
+                width: '100%',
+                placeholder: 'ketik kode batch',
+                allowClear: true,
+                ajax: {
+                    delay: 300,
+                    transport: function (params, success, failure) {
+                        const produk = $('#nama_produk').val();
+                        if (!produk) {
+                            return;
+                        }
+
+                        return $.ajax({
+                            url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produk),
+                            data: { q: params.data.term },
+                            success,
+                            error: failure
+                        });
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    }
+                }
+            });
+        }
+
+        // Initialize select2 for existing kode_produksi selects
+        $('.kode_produksi_Select').each(function() {
+            initializeSelect2ForKodeProduksi($(this));
+        });
+
+        function updateKodeProduksiState() {
+            let produk = produkSelect.val();
+            let kode_produksi_Selects = $(".kode_produksi_Select");
+
+            if (!produk) {
+                kode_produksi_Selects.prop("disabled", true).val(null).trigger('change');
+            } else {
+                kode_produksi_Selects.prop("disabled", false);
+            }
+        }
+
+        produkSelect.on("change", function () {
+            const kode_produksi_Selects = $(".kode_produksi_Select");
+            kode_produksi_Selects.val(null).trigger('change');
+            kode_produksi_Selects.prop("disabled", !$(this).val());
+        });
+
+        // ========== Tambah baris baru (HANYA SATU EVENT) ==========
         $(document).off('click', '#addRow').on('click', '#addRow', function(){
             const table = $('#pemeriksaanTable tbody');
             const index = table.find('tr').length;
+
+            // Destroy select2 on first row before cloning to get clean select elements
+            const firstSelect = table.find('tr:first .kode_produksi_Select');
+            if (firstSelect.hasClass('select2-hidden-accessible')) {
+                firstSelect.select2('destroy');
+            }
+
             const clone = table.find('tr:first').clone();
 
-            clone.find('input, small').each(function(){
+            clone.find('input, select, small').each(function(){
                 const name = $(this).attr('name');
                 if (name) {
-        // Ambil key kolom seperti "penampilan", "aroma", dst.
                     const key = name.match(/\[([a-zA-Z0-9_]+)\]$/);
                     if (key && key[1]) {
                         $(this).attr('name', `sensori[${index}][${key[1]}]`);
@@ -289,14 +345,24 @@
                 }
 
                 if ($(this).is('input')) $(this).val('').removeClass('is-valid is-invalid');
+                if ($(this).is('select')) {
+                    $(this).removeAttr('id');
+                    $(this).val('').removeClass('is-valid is-invalid');
+                }
                 if ($(this).is('small')) $(this).text('').addClass('d-none').removeClass('text-success text-danger');
             });
 
-
             table.append(clone);
+
+            // Re-initialize select2 on all kode_produksi_Select elements
+            $('.kode_produksi_Select').each(function() {
+                initializeSelect2ForKodeProduksi($(this));
+            });
+
+            updateKodeProduksiState(); // Update disabled state for new row
         });
 
-    // ========== Hapus baris ==========
+        // ========== Hapus baris ==========
         $(document).on('click', '.removeRow', function(){
             if ($('#pemeriksaanTable tbody tr').length > 1) {
                 $(this).closest('tr').remove();
@@ -304,31 +370,6 @@
                 alert('Minimal harus ada satu baris pemeriksaan.');
             }
         });
-
-    // ========== Prevent submit jika ada kode tidak valid ==========
-        $('form').on('submit', function(e) {
-            let firstInvalid = null;
-            $('#pemeriksaanTable tbody tr').each(function() {
-                const $kode = $(this).find('.kode_produksi');
-                const res = validateKode(($kode.val() || '').toUpperCase().replace(/\s+/g,''));
-                const $err = $(this).find('.kodeError');
-                if (!res.valid) {
-                    $err.text(res.message).removeClass('d-none text-success').addClass('text-danger');
-                    $kode.addClass('is-invalid').removeClass('is-valid');
-                    if (!firstInvalid) firstInvalid = $kode;
-                } else {
-                    $err.text(res.message).removeClass('d-none text-danger').addClass('text-success');
-                    $kode.addClass('is-valid').removeClass('is-invalid');
-                }
-            });
-
-            if (firstInvalid) {
-                e.preventDefault();
-                firstInvalid.focus();
-                alert('Terdapat kode batch tidak valid. Periksa kembali baris yang berwarna merah.');
-            }
-        });
-
     });
 </script>
 
@@ -355,4 +396,4 @@
         text-align: center;
     }
 </style>
-@endsection
+@endpush

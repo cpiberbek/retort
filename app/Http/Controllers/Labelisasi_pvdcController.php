@@ -307,6 +307,12 @@ class Labelisasi_pvdcController extends Controller
         $labelisasi_pvdcData = json_decode($labelisasi_pvdc->labelisasi, true) ?? [];
         foreach ($labelisasi_pvdcData as &$row) {
             $row['file'] = $this->normalizeFilePath($row['file'] ?? null);
+            if (!empty($row['kode_batch'])) {
+                $mincing = Mincing::where('uuid', $row['kode_batch'])->first();
+                if ($mincing) {
+                    $row['kode_produksi_display'] = $mincing->kode_produksi;
+                }
+            }
         }
         session()->put('pvdc_temp', $labelisasi_pvdcData);
 

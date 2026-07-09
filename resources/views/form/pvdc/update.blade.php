@@ -229,220 +229,247 @@
         </div>
     </div>
 
-    {{-- ===================== SCRIPT ===================== --}}
+@endsection
+
+@push('scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
-
+    
+    {{-- Select2 CSS & JS --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            if (typeof $.fn.selectpicker === 'function') {
-                $('.selectpicker').selectpicker();
-            }
+            $('.selectpicker').selectpicker();
         });
     </script>
-
     <script>
         $(document).ready(function() {
-            // =================== VALIDASI KODE BATCH ===================
+
             const produkValue = "{{ $pvdc->nama_produk }}";
 
-            // Initialize batch loading if product exists
-            if (produkValue) {
-                loadBatchForAllRows();
+            const mesinOptions = `{!! collect($mesins)->map(fn($m) => "<option value='{$m->nama_mesin}'>{$m->nama_mesin}</option>")->implode('') !!}`;
+
+            const tableBody = $('#pvdcBody');
+            let mesinIndex = {{ count($pvdcData) }};
+
+            // ==========================
+            // LOAD BATCH
+            // ==========================
+            function initBatchSelect(select, produk) {
+                if (select.data('select2')) {
+                    select.select2('destroy');
+                }
+                
+                if (!produk) {
+                    select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    select.prop("disabled", true);
+                    return;
+                }
+                
+                select.prop("disabled", false);
+                
+                select.select2({
+                    theme: "bootstrap-5",
+                    width: '100%',
+                    placeholder: "-- Pilih Batch --",
+                    allowClear: true,
+                    ajax: {
+                        url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produk),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { q: params.term };
+                        },
+                        processResults: function (data) {
+                            return { results: data };
+                        },
+                        cache: true
+                    }
+                });
             }
 
             function loadBatchForAllRows() {
-                let batchSelects = $(".batchSelect");
+                // Gunakan produkValue dari blade, karena di form update tidak ada input #nama_produk
+                if (!produkValue) return;
 
-                // Store current selections before clearing
-                let currentSelections = {};
-                batchSelects.each(function(index) {
+                $('.batchSelect').each(function() {
                     let select = $(this);
-                    currentSelections[index] = select.val();
-                });
-
-                batchSelects.each(function(index) {
-                    let select = $(this);
-                    select.html("");
-                    select.prop("disabled", true);
-
-                    if (!produkValue) {
-                        select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
-                        return;
+                    
+                    if (!select.val()) {
+                        select.html('<option value="">-- Pilih Batch --</option>');
                     }
-
-                    fetch(`/lookup/batch/${produkValue}`)
-                        .then(res => res.json())
-                        .then(data => {
-
-                            if (data.length === 0) {
-                                select.html('<option value="">Batch Tidak Ditemukan</option>');
-                                select.prop("disabled", true);
-                                return;
-                            }
-
-                            select.prop("disabled", false);
-                            select.html('<option value="">-- Pilih Batch --</option>');
-
-                            data.forEach(batch => {
-                                select.append(`
-                            <option value="${batch.uuid}" kode_batch="${batch.kode_produksi}">
-                                ${batch.kode_produksi}
-                            </option>
-                        `);
-                            });
-
-                            // Restore previous selection if it still exists
-                            if (currentSelections[index] && select.find(
-                                    `option[value="${currentSelections[index]}"]`).length > 0) {
-                                select.val(currentSelections[index]);
-                            }
-                        });
+                    
+                    initBatchSelect(select, produkValue);
                 });
             }
-            let mesinIndex = {{ count($pvdcData) }};
 
-            // Tambah Mesin Baru
-            document.getElementById('addMesinRow').addEventListener('click', function() {
-                const produkValue = "{{ $pvdc->nama_produk }}";
-                const disabledAttr = produkValue ? '' : 'disabled';
-                const initialOption = produkValue ? '<option value="">-- Pilih Batch --</option>' :
-                    '<option value="">Pilih Varian Terlebih Dahulu</option>';
+            // Load pertama kali
+            loadBatchForAllRows();
+
+            // ==========================
+            // TAMBAH MESIN
+            // ==========================
+            $('#addMesinRow').on('click', function() {
 
                 const newRow = `
-            <tr class="mesin-row">
-                <td rowspan="1" class="mesin-cell">
-                    <select name="data_pvdc[${mesinIndex}][mesin]" class="form-control form-control-sm mesin-input">
-                        <option value="">-- Pilih Mesin --</option>
-                        @foreach ($mesins as $m)
-                            <option value="{{ $m->nama_mesin }}">{{ $m->nama_mesin }}</option>
-                        @endforeach
-                    </select>
-                </td>
-                <td>
-                    <select name="data_pvdc[${mesinIndex}][detail][0][batch]" class="form-control form-control-sm batchSelect" ${disabledAttr}>
-                        ${initialOption}
-                    </select>
-                </td>
-                <td><input type="text" name="data_pvdc[${mesinIndex}][detail][0][no_lot]" class="form-control form-control-sm"></td>
-                <td><input type="time" name="data_pvdc[${mesinIndex}][detail][0][waktu]" class="form-control form-control-sm"></td>
-                <td>
-                    <button type="button" class="btn btn-success btn-sm addBatchRow">+ Batch</button>
-                    <button type="button" class="btn btn-danger btn-sm removeRow">Hapus</button>
-                </td>
-            </tr>
-            `;
-                document.querySelector('#pvdcBody').insertAdjacentHTML('beforeend', newRow);
+        <tr class="mesin-row">
+            <td rowspan="1" class="mesin-cell">
+                <select name="data_pvdc[${mesinIndex}][mesin]"
+                        class="form-control form-control-sm"
+                        required>
+                    <option value="">-- Pilih Mesin --</option>
+                    ${mesinOptions}
+                </select>
+            </td>
+
+            <td>
+                <select
+                    name="data_pvdc[${mesinIndex}][detail][0][batch]"
+                    class="form-control form-control-sm batchSelect">
+                    <option value="">-- Pilih Batch --</option>
+                </select>
+            </td>
+
+            <td>
+                <input type="text"
+                    name="data_pvdc[${mesinIndex}][detail][0][no_lot]"
+                    class="form-control form-control-sm">
+            </td>
+
+            <td>
+                <input type="time"
+                    name="data_pvdc[${mesinIndex}][detail][0][waktu]"
+                    class="form-control form-control-sm">
+            </td>
+
+            <td>
+                <button type="button"
+                    class="btn btn-success btn-sm addBatchRow">
+                    + Batch
+                </button>
+
+                <button type="button"
+                    class="btn btn-danger btn-sm removeRow">
+                    Hapus
+                </button>
+            </td>
+        </tr>`;
+
+                tableBody.append(newRow);
+
                 loadBatchForAllRows();
+
                 mesinIndex++;
             });
 
-            // Delegasi Event
-            document.querySelector('#pvdcBody').addEventListener('click', function(e) {
-                const target = e.target;
+            // ==========================
+            // TAMBAH BATCH
+            // ==========================
+            tableBody.on('click', '.addBatchRow', function() {
 
-                // Tambah Batch Baru
-                // Tambah Batch Baru
-                if (target.classList.contains('addBatchRow')) {
-                    const mesinRow = target.closest('.mesin-row');
-                    const mesinCell = mesinRow.querySelector('.mesin-cell');
-                    const currentRowspan = parseInt(mesinCell.getAttribute('rowspan')) || 1;
-                    const mesinIdx = mesinRow.querySelector('.mesin-input').name.match(/\d+/)[0];
-                    const batchIdx = currentRowspan;
+                const mesinRow = $(this).closest('tr');
+                const mesinCell = mesinRow.find('.mesin-cell');
 
-                    const produkValue = "{{ $pvdc->nama_produk }}";
-                    const disabledAttr = produkValue ? '' : 'disabled';
-                    const initialOption = produkValue ?
-                        '<option value="">-- Pilih Batch --</option>' :
-                        '<option value="">Pilih Produk Terlebih Dahulu</option>';
+                const mesinIdx = mesinRow
+                    .find('select[name*="[mesin]"]')
+                    .attr('name')
+                    .match(/\[(\d+)\]/)[1];
 
-                    const newBatchRow = `
-                            <tr class="batch-row">
-                                <td>
-                                    <select name="data_pvdc[${mesinIdx}][detail][${batchIdx}][batch]"
-                                        class="form-control form-control-sm batchSelect"
-                                        ${disabledAttr}>
-                                        ${initialOption}
-                                    </select>
-                                </td>
+                const currentBatchRows = tableBody.find(
+                    `select[name^="data_pvdc[${mesinIdx}][detail]"][name$="[batch]"]`
+                ).length;
 
-                                <td>
-                                    <input type="text"
-                                        name="data_pvdc[${mesinIdx}][detail][${batchIdx}][no_lot]"
-                                        class="form-control form-control-sm">
-                                </td>
+                const batchIndex = currentBatchRows;
 
-                                <td>
-                                    <input type="time"
-                                        name="data_pvdc[${mesinIdx}][detail][${batchIdx}][waktu]"
-                                        class="form-control form-control-sm">
-                                </td>
+                const newBatchRow = `
+        <tr class="batch-row">
 
-                                <td>
-                                    <button type="button"
-                                        class="btn btn-danger btn-sm removeRow">
-                                        Hapus
-                                    </button>
-                                </td>
-                            </tr>
-                            `;
+            <td>
+                <select
+                    name="data_pvdc[${mesinIdx}][detail][${batchIndex}][batch]"
+                    class="form-control form-control-sm batchSelect">
+                    <option value="">-- Pilih Batch --</option>
+                </select>
+            </td>
 
-                    let lastBatchRow = mesinRow;
-                    let nextRow = mesinRow.nextElementSibling;
+            <td>
+                <input type="text"
+                    name="data_pvdc[${mesinIdx}][detail][${batchIndex}][no_lot]"
+                    class="form-control form-control-sm">
+            </td>
 
-                    while (nextRow && !nextRow.classList.contains('mesin-row')) {
-                        lastBatchRow = nextRow;
-                        nextRow = nextRow.nextElementSibling;
-                    }
+            <td>
+                <input type="time"
+                    name="data_pvdc[${mesinIdx}][detail][${batchIndex}][waktu]"
+                    class="form-control form-control-sm">
+            </td>
 
-                    lastBatchRow.insertAdjacentHTML('afterend', newBatchRow);
+            <td>
+                <button type="button"
+                    class="btn btn-danger btn-sm removeRow">
+                    Hapus
+                </button>
+            </td>
 
-                    mesinCell.setAttribute('rowspan', currentRowspan + 1);
+        </tr>`;
 
-                    // ✅ INI YANG KURANG
-                    loadBatchForAllRows();
+                let lastBatchRow = mesinRow;
+
+                while (lastBatchRow.next().hasClass('batch-row')) {
+                    lastBatchRow = lastBatchRow.next();
                 }
 
-                // Hapus Baris
-                if (target.classList.contains('removeRow')) {
-                    const row = target.closest('tr');
-                    const mesinRow = row.classList.contains('mesin-row') ? row : row.previousElementSibling
-                        .closest('.mesin-row');
+                lastBatchRow.after(newBatchRow);
 
-                    if (row.classList.contains('mesin-row')) {
-                        // Hapus semua batch milik mesin tersebut
-                        let nextRow = row.nextElementSibling;
-                        while (nextRow && !nextRow.classList.contains('mesin-row')) {
-                            const temp = nextRow.nextElementSibling;
-                            nextRow.remove();
-                            nextRow = temp;
-                        }
-                        row.remove();
-                    } else {
-                        row.remove();
-                        const mesinCell = mesinRow.querySelector('.mesin-cell');
-                        mesinCell.setAttribute('rowspan', parseInt(mesinCell.getAttribute('rowspan')) - 1);
-                    }
+                mesinCell.attr(
+                    'rowspan',
+                    parseInt(mesinCell.attr('rowspan')) + 1
+                );
+
+                loadBatchForAllRows();
+            });
+
+            // ==========================
+            // HAPUS BARIS
+            // ==========================
+            tableBody.on('click', '.removeRow', function() {
+
+                const tr = $(this).closest('tr');
+
+                if (tr.hasClass('mesin-row')) {
+
+                    const rowspan = parseInt(
+                        tr.find('.mesin-cell').attr('rowspan')
+                    );
+
+                    tr.nextAll(':lt(' + (rowspan - 1) + ')').remove();
+
+                    tr.remove();
+
+                } else {
+
+                    const mesinRow = tr.prevAll('.mesin-row:first');
+                    const mesinCell = mesinRow.find('.mesin-cell');
+
+                    mesinCell.attr(
+                        'rowspan',
+                        parseInt(mesinCell.attr('rowspan')) - 1
+                    );
+
+                    tr.remove();
                 }
             });
+
         });
     </script>
-    {{-- ===================== SCRIPT TOGGLE ===================== --}}
-    <script>
-        document.getElementById('toggleOldData').addEventListener('click', function() {
-            const section = document.getElementById('oldPvdcSection');
-            const icon = this.querySelector('i');
-            if (section.style.display === 'none') {
-                section.style.display = '';
-                this.innerHTML = '<i class="bi bi-eye-slash"></i> Sembunyikan Data Sebelumnya';
-            } else {
-                section.style.display = 'none';
-                this.innerHTML = '<i class="bi bi-eye"></i> Tampilkan Data Sebelumnya';
-            }
-        });
-    </script>
+
+@endpush
+
+@push('styles')
     <style>
         .table-bordered th,
         .table-bordered td {
@@ -453,14 +480,12 @@
         .form-control-sm {
             min-width: 120px;
         }
-
-        .bg-light input[readonly] {
-            background-color: #f8f9fa !important;
-            color: #555;
-        }
-
-        .table-active td {
-            background-color: #fff3cd !important;
+        
+        /* Select2 bootstrap 5 styling override untuk form ini */
+        .select2-container--bootstrap-5 .select2-selection {
+            min-height: calc(1.5em + .5rem + 2px) !important;
+            border-radius: .25rem !important;
+            font-size: .875rem;
         }
     </style>
-@endsection
+@endpush

@@ -167,7 +167,7 @@
                             <td class="text-center">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | {{ $dep->shift }}</td>
                             <td class="text-center">{{ $dep->palet }}</td>
                             <td class="text-center">{{ $dep->nama_produk }}</td>
-                            <td class="text-center">{{ $dep->kode_produksi }}</td>
+                            <td class="text-center">{{ Str::isUuid($dep->kode_produksi) ? (\App\Models\Mincing::where('uuid', $dep->kode_produksi)->value('kode_produksi') ?? $dep->kode_produksi) : $dep->kode_produksi }}</td>
                             <td class="text-center">{{ \Carbon\Carbon::parse($dep->exp_date)->format('d-m-Y') }}</td>
                             <td class="text-center">{{ \Carbon\Carbon::parse($dep->pukul)->format('H:i') }}</td>
                             <td class="text-center">
