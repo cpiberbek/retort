@@ -134,7 +134,7 @@
                                             }}</td>
                                             <td class="text-center align-middle">{{ $dep->jenis_kemasan }}</td>
                                             <td class="text-center align-middle">{{ $dep->nama_produk }}</td>
-                                            <td class="text-center align-middle">{{ $dep->mincing->kode_produksi ?? '-'}}</td>
+                                            <td class="text-center align-middle">{{ Str::isUuid($dep->kode_produksi) ? ($dep->mincing->kode_produksi ?? '-') : $dep->kode_produksi }}</td>
                                             <td class="text-center align-middle">{{\Carbon\Carbon::parse($dep->expired_date)->format('d-m-Y') }}</td>
                                             <td class="text-center align-middle">{{ $dep->no_palet }}</td>
                                             <td class="text-center align-middle">{{ $dep->release }}</td>

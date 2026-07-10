@@ -8,6 +8,16 @@
                     <i class="bi bi-pencil-square"></i> Edit Kontrol Labelisasi Karton
                 </h4>
 
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form id="samplingForm" action="{{ route('karton.edit_spv', $karton->uuid) }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
@@ -41,17 +51,17 @@
                             </div>
 
                             @php
-                                $batches = collect();
+                                $kode_batch_text = \App\Models\Mincing::where('uuid', $karton->kode_produksi)->value('kode_produksi') ?? $karton->kode_produksi;
                             @endphp
 
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
                                 <select name="kode_produksi" class="form-control" id="kode_batch" required>
-                                    @foreach($batches as $batch)
-                                        <option value="{{ $batch->uuid }}" {{ $karton->kode_produksi == $batch->uuid ? 'selected' : '' }}>
-                                            {{ $batch->kode_produksi }}
-                                        </option>
-                                    @endforeach
+                                    @if($karton->kode_produksi)
+                                        <option value="{{ $karton->kode_produksi }}" selected>{{ $kode_batch_text }}</option>
+                                    @else
+                                        <option value="">Pilih Varian Terlebih Dahulu</option>
+                                    @endif
                                 </select>
                             </div>
                         </div>
@@ -256,19 +266,23 @@
             </div>
         </div>
     </div>
+@endsection
 
-    {{-- ===================== SCRIPT ===================== --}}
+@push('scripts')
+    {{-- Include jQuery (Select2 depends on it) --}}
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <script>
         $(document).ready(function() {
-            $('.selectpicker').selectpicker();
-        });
-
-        $(document).ready(function() {
+            if (typeof $.fn.selectpicker === 'function') {
+                $('.selectpicker').selectpicker();
+            }
             const kodeInput = document.getElementById('kode_produksi');
             const kodeError = document.getElementById('kodeError');
             const form = document.getElementById('samplingForm');
@@ -309,7 +323,7 @@
                 const bulanChar = value.charAt(1);
                 const validBulan = /^[A-L]$/;
                 if (!validBulan.test(bulanChar)) {
-                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
+                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (Aâ€“L).";
                     kodeError.classList.remove('d-none');
                     return false;
                 }
@@ -317,7 +331,7 @@
                 const hariStr = value.substr(2, 2);
                 const hari = parseInt(hariStr, 10);
                 if (isNaN(hari) || hari < 1 || hari > 31) {
-                    kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
+                    kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01â€“31).";
                     kodeError.classList.remove('d-none');
                     return false;
                 }
@@ -325,8 +339,8 @@
                 return true;
             }
 
-            // Validasi File Upload ≤ 2MB
-            const maxFileSize = 2 * 1024 * 1024;
+            // Validasi File Upload â‰¤ 5MB
+            const maxFileSize = 5 * 1024 * 1024;
             const fileInput = document.getElementById("kode_karton");
             const fileError = document.getElementById("kode-karton-error");
 
@@ -336,7 +350,7 @@
 
                 if (!file) return;
                 if (file.size > maxFileSize) {
-                    fileError.textContent = "Ukuran file maksimal 2MB.";
+                    fileError.textContent = "Ukuran file maksimal 5MB.";
                     this.value = "";
                 }
             });
@@ -344,41 +358,65 @@
     </script>
     <script>
 $(function () {
-
+    const namaProdukSelect = $('#nama_produk');
     const batchSelect = $('#kode_batch');
+    
+    let initialBatch = "{{ $karton->kode_produksi ?? '' }}";
+    let isFirstLoad = true;
 
-    function loadBatch(namaProduk, selected = null) {
-
-        batchSelect.prop('disabled', true);
-        batchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-        if (!namaProduk) return;
-
-        let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
-
-        $.get(url, function (data) {
-
-            data.forEach(function (item) {
-                batchSelect.append(
-                    `<option value="${item.uuid}" ${selected == item.uuid ? 'selected' : ''}>${item.kode_produksi}</option>`
-                );
-            });
-
-            batchSelect.prop('disabled', false);
+    function initBatchSelect() {
+        let produkValue = namaProdukSelect.val();
+        
+        if (batchSelect.data('select2')) {
+            batchSelect.select2('destroy');
+        }
+        
+        if (!produkValue) {
+            batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+            batchSelect.prop("disabled", true);
+            return;
+        }
+        
+        if (!isFirstLoad) {
+            batchSelect.html('<option value="">-- Pilih Kode Batch --</option>');
+        }
+        batchSelect.prop("disabled", false);
+        
+        batchSelect.select2({
+            theme: "bootstrap-5",
+            width: '100%',
+            placeholder: "-- Pilih Kode Batch --",
+            allowClear: true,
+            ajax: {
+                url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return { results: data };
+                },
+                cache: true
+            }
         });
+        isFirstLoad = false;
     }
 
-    $('#nama_produk').on('change', function () {
-        loadBatch($(this).val());
+    namaProdukSelect.on('change', function () {
+        isFirstLoad = false;
+        initBatchSelect();
     });
 
-    let initialProduk = $('#nama_produk').val();
-    let initialBatch = "{{ $karton->kode_produksi ?? '' }}";
-
+    let initialProduk = namaProdukSelect.val();
     if (initialProduk) {
-        loadBatch(initialProduk, initialBatch);
+        initBatchSelect();
+        if(initialBatch){
+            let newOption = new Option(initialBatch, initialBatch, true, true);
+            batchSelect.append(newOption).trigger('change');
+        }
     }
 
 });
 </script>
-@endsection
+@endpush

@@ -69,15 +69,16 @@
 
                     <div class="col-md-6">
                         <label class="form-label">Kode Batch</label>
+                        @php
+                            $kode_batch_text = \App\Models\Mincing::where('uuid', $release_packing->kode_produksi)->value('kode_produksi') ?? $release_packing->kode_produksi;
+                        @endphp
                         <input
                         type="text"
-                        name="kode_produksi"
-                        id="kode_produksi"
                         class="form-control"
-                        value="{{ old('kode_produksi', $release_packing->mincing->kode_produksi) }}"
-                        maxlength="10"
-                        {{ $release_packing->kode_produksi ? 'readonly' : '' }}
+                        value="{{ old('kode_produksi', $kode_batch_text) }}"
+                        readonly
                         required>
+                        <input type="hidden" name="kode_produksi" value="{{ $release_packing->kode_produksi }}">
                         <small id="kodeError" class="text-danger d-none"></small>
                     </div>
                 </div>

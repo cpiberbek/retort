@@ -30,4 +30,9 @@ class Prepacking extends Model
     ];
     
     protected $dates = ['deleted_at'];
+
+    public function mincing()
+    {
+        return $this->belongsTo(Mincing::class, 'kode_produksi', 'uuid');
+    }
 }

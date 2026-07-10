@@ -45,12 +45,13 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Kode Batch</label>
                                     <select name="kode_produksi" class="form-control" id="kode_batch" required>
-                                        @foreach ($batches as $batch)
-                                            <option value="{{ $batch->uuid }}"
-                                                {{ $prepacking->kode_produksi == $batch->uuid ? 'selected' : '' }}>
-                                                {{ $batch->kode_produksi }}
+                                        @if($prepacking->kode_produksi)
+                                            <option value="{{ $prepacking->kode_produksi }}" selected>
+                                                {{ $prepacking->mincing->kode_produksi ?? $prepacking->kode_produksi }}
                                             </option>
-                                        @endforeach
+                                        @else
+                                            <option value="">Pilih Varian Terlebih Dahulu</option>
+                                        @endif
                                     </select>
                                 </div>
                             </div>
@@ -269,14 +270,24 @@
             </div>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+    {{-- Select2 CSS & JS --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
         $(document).ready(function() {
-            $('.selectpicker').selectpicker();
+            if (typeof $.fn.selectpicker === 'function') {
+                $('.selectpicker').selectpicker();
+            }
         });
     </script>
     <script>
@@ -395,44 +406,60 @@
             hitungTotalAirMinyak('minyak');
         });
     </script>
-
     <script>
         $(function() {
-
+            const produkSelect = $('#nama_produk');
             const batchSelect = $('#kode_batch');
 
-            function loadBatch(namaProduk, selected = null) {
-
-                batchSelect.prop('disabled', true);
-                batchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-                if (!namaProduk) return;
-
-                let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
-
-                $.get(url, function(data) {
-
-                    data.forEach(function(item) {
-                        batchSelect.append(
-                            `<option value="${item.uuid}" ${selected == item.uuid ? 'selected' : ''}>${item.kode_produksi}</option>`
-                        );
-                    });
-
-                    batchSelect.prop('disabled', false);
+            function initBatchSelect(produkValue) {
+                if (batchSelect.data('select2')) {
+                    batchSelect.select2('destroy');
+                }
+                
+                if (!produkValue) {
+                    batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    batchSelect.prop("disabled", true);
+                    return;
+                }
+                
+                batchSelect.prop("disabled", false);
+                
+                batchSelect.select2({
+                    theme: "bootstrap-5",
+                    width: '100%',
+                    placeholder: "-- Pilih Batch --",
+                    allowClear: true,
+                    ajax: {
+                        url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { q: params.term };
+                        },
+                        processResults: function (data) {
+                            return { results: data };
+                        },
+                        cache: true
+                    }
                 });
             }
 
-            $('#nama_produk').on('change', function() {
-                loadBatch($(this).val());
-            });
-
-            let initialProduk = $('#nama_produk').val();
-            let initialBatch = "{{ $prepacking->kode_produksi ?? '' }}";
-
-            if (initialProduk) {
-                loadBatch(initialProduk, initialBatch);
+            if (produkSelect.val()) {
+                initBatchSelect(produkSelect.val());
             }
 
+            produkSelect.on('change', function () {
+                let namaProduk = $(this).val();
+                
+                if (!namaProduk) {
+                    batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    batchSelect.prop("disabled", true);
+                    return;
+                }
+
+                batchSelect.html('<option value="">-- Pilih Batch --</option>');
+                initBatchSelect(namaProduk);
+            });
         });
     </script>
-@endsection
+@endpush

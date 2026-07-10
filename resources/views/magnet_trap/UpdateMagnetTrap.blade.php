@@ -119,31 +119,21 @@
                         <div class="mb-3">
                             <label for="kode_batch" class="form-label">{{ __('Kode Batch') }}</label>
 
-                            <input
-                                id="kode_batch"
-                                type="text"
-                                class="form-control @error('kode_batch') is-invalid @enderror {{ !empty($checklistmagnettrap->kode_batch) ? 'bg-body-secondary' : '' }}"
-                                name="kode_batch"
-                                value="{{ old('kode_batch', $checklistmagnettrap->mincing->kode_produksi) }}"
-                                required
-                                autocomplete="off"
-                                placeholder="Sesuai data mincing"
-                                maxlength="10"
-                                list="batch_suggestions"
-                                {{ !empty($checklistmagnettrap->kode_batch) ? 'readonly' : '' }}
-                            >
-
-                            <datalist id="batch_suggestions"></datalist>
+                            <select name="kode_batch" id="kode_batch"
+                                class="form-control select2-batch @error('kode_batch') is-invalid @enderror" 
+                                required {{ !empty($checklistmagnettrap->kode_batch) ? 'disabled' : '' }}>
+                                @if($checklistmagnettrap->kode_batch)
+                                    <option value="{{ $checklistmagnettrap->kode_batch }}" selected>{{ $checklistmagnettrap->mincing->kode_produksi ?? $checklistmagnettrap->kode_batch }}</option>
+                                @endif
+                            </select>
+                            
+                            @if(!empty($checklistmagnettrap->kode_batch))
+                                <input type="hidden" name="kode_batch" value="{{ $checklistmagnettrap->kode_batch }}">
+                            @endif
 
                             @error('kode_batch')
                                 <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                             @enderror
-
-                            @if(empty($checklistmagnettrap->kode_batch))
-                                <small class="text-muted d-block mt-1" style="font-size: 0.8em;">
-                                    *Auto uppercase, max 10 digit, dilarang spasi/simbol.
-                                </small>
-                            @endif
                         </div>
 
                         <div class="row">
@@ -334,58 +324,58 @@
             placeholder: "Ketik untuk mencari varian...",
         });
 
-        // --- 2. LOGIC KODE BATCH ---
-        // Cek apakah input readonly? Jika readonly, script tidak perlu jalan
-        if ($('#kode_batch').prop('readonly') === false) {
-
-            $('#kode_batch').on('input', function() {
-                let input = $(this);
-                let value = input.val();
-
-                // A. Auto Uppercase
-                value = value.toUpperCase();
-
-                // B. Hapus Karakter Terlarang (Spasi, $, %, #, *)
-                value = value.replace(/[\s$#%*]/g, '');
-
-                // C. Safety Net Max 10 Karakter (selain maxlength di HTML)
-                if (value.length > 10) {
-                    value = value.substring(0, 10);
-                }
-
-                // Update value di input
-                input.val(value);
-
-                // D. Auto Suggestion (AJAX)
-                if (value.length >= 2) {
-                    $.ajax({
-                        url: "{{ route('ajax.search.batch') }}", // Pastikan route ini ada
-                        type: "GET",
-                        data: { q: value },
-                        success: function(data) {
-                            let dataList = $('#batch_suggestions');
-                            dataList.empty();
-
-                            $.each(data, function(key, item) {
-                                dataList.append('<option value="' + item + '">');
-                            });
-                        }
-                    });
-                }
-            });
-
-            // E. Validasi saat user pindah kursor (Blur)
-            $('#kode_batch').on('blur', function() {
-                let value = $(this).val();
-                // Jika terisi tapi kurang dari 10 karakter, beri peringatan
-                if(value.length > 0 && value.length < 10) {
-                    alert('Format Salah: Kode Batch harus tepat 10 karakter!');
-                    $(this).addClass('is-invalid');
-                } else {
-                    $(this).removeClass('is-invalid');
+        function initBatchSelect(namaProduk) {
+            let batchSelect = $('#kode_batch');
+            
+            // Cek apakah select dalam keadaan disabled/terkunci, jika ya lewati inisialisasi Select2 pencarian
+            if (batchSelect.prop('disabled')) {
+                return;
+            }
+            
+            if (batchSelect.data('select2')) {
+                batchSelect.select2('destroy');
+            }
+            
+            if (!namaProduk) {
+                batchSelect.prop('disabled', true);
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                return;
+            }
+            
+            batchSelect.prop('disabled', false);
+            
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(namaProduk),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
                 }
             });
         }
+        
+        let initialProduk = $('#nama_produk').val();
+        if(initialProduk) {
+            initBatchSelect(initialProduk);
+        }
+        
+        $('#nama_produk').on('change', function() {
+            // Hanya ubah batch jika form kode_batch aktif
+            if (!$('#kode_batch').prop('disabled')) {
+                $('#kode_batch').empty().trigger('change');
+                initBatchSelect($(this).val());
+            }
+        });
     });
 </script>
 @endpush
