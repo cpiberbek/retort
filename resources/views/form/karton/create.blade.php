@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 @section('content')
     <div class="container-fluid py-4">
         <div class="card shadow-sm">
@@ -237,7 +237,7 @@
             const form = document.getElementById('samplingForm');
             const fileInput = document.getElementById('kode_karton');
             const fileError = document.getElementById('kode-karton-error');
-            const maxFileSize = 2 * 1024 * 1024; // 2MB
+            const maxFileSize = 5 * 1024 * 1024; // 5MB
 
             // Disable batch saat awal load (jika tidak ada old value)
             $('#nama_produk').select2({
@@ -297,7 +297,7 @@
                 fileError.textContent = "";
                 const file = fileInput.files[0];
                 if (file && file.size > maxFileSize) {
-                    fileError.textContent = "Ukuran file maksimal 2MB.";
+                    fileError.textContent = "Ukuran file maksimal 5MB.";
                     fileInput.value = "";
                 }
             });
@@ -316,7 +316,7 @@
 
                 if (file.size > maxFileSize) {
                     e.preventDefault();
-                    fileError.textContent = "Ukuran file maksimal 2MB.";
+                    fileError.textContent = "Ukuran file maksimal 5MB.";
                     fileInput.value = "";
                     return;
                 }

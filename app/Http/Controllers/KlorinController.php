@@ -59,8 +59,8 @@ class KlorinController extends Controller
             'date'      => 'required|date',
             'pukul'     => 'required|string|max:255',
             'lokasi' => 'required|string',
-            'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'catatan'   => 'nullable|string',
         ]);
 
@@ -105,8 +105,8 @@ class KlorinController extends Controller
             'date'      => 'required|date',
             'pukul'     => 'required|string|max:255',
             'lokasi'    => 'required|string',
-            'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'catatan'   => 'nullable|string',
         ]);
 
@@ -155,8 +155,8 @@ class KlorinController extends Controller
             'date'      => 'required|date',
             'pukul'     => 'required|string|max:255',
             'lokasi'    => 'required|string',
-            'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'footbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'handbasin' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'catatan'   => 'nullable|string',
         ]);
 
@@ -335,7 +335,7 @@ class KlorinController extends Controller
 
         $image = $manager->read($file)
             ->scale(width: 1280) // ubah resolusi ke max 1280px
-            ->toJpeg(quality: 75); // kompres kualitas 75%
+            ->toJpeg(quality: 90); // kompres kualitas 90%
 
         Storage::put("$path/$filename", (string) $image);
 

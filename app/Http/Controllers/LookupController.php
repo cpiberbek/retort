@@ -39,10 +39,10 @@ class LookupController extends Controller
             ->where('nama_produk', $nama_produk)
             ->where('plant', $userPlant)
             ->when($search, function ($q) use ($search) {
-                $q->where('kode_produksi', 'like', "%{$search}%");
+                $q->whereRaw('LOWER(kode_produksi) LIKE ?', ['%' . strtolower($search) . '%']);
             })
             ->orderBy('created_at', 'desc')
-            ->limit(10)
+            ->limit($search ? 20 : 6)
             ->get();
 
         return response()->json(

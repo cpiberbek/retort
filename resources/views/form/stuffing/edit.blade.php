@@ -56,8 +56,10 @@
 
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <select name="kode_produksi" id="kode_produksi" class="form-control" required>
-                                    <option value="{{ $stuffing->kode_produksi }}" selected>{{ $stuffing->mincing->kode_produksi ?? '-' }}</option>
+                                <select name="kode_produksi" id="kode_produksi" class="form-control select2-batch" required>
+                                    @if($stuffing->kode_produksi)
+                                        <option value="{{ $stuffing->kode_produksi }}" selected>{{ $stuffing->mincing->kode_produksi ?? '-' }}</option>
+                                    @endif
                                 </select>
                             </div>
 
@@ -252,9 +254,17 @@
     </div>
 </template>
 
+@endsection
+
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
     $(document).ready(function() {
@@ -264,37 +274,48 @@
         const expDateInput = $('#exp_date');
         const namaProdukInput = $('#nama_produk');
 
-        function loadBatches(namaProduk, oldBatch = '') {
-            if (!namaProduk) return;
+        function initBatchSelect(namaProduk) {
+            let batchSelect = $('#kode_produksi');
+            
+            if (batchSelect.data('select2')) {
+                batchSelect.select2('destroy');
+            }
+            
+            if (!namaProduk) {
+                batchSelect.prop('disabled', true);
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                return;
+            }
+            
             batchSelect.prop('disabled', false);
-            batchSelect.html('<option value="">Mencari Batch...</option>');
-
-            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
-            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
-                    if (!data || data.length === 0) {
-                        batchSelect.html('<option value="">Batch Tidak Ditemukan</option>');
-                        return;
-                    }
-                    data.forEach(function(batch) {
-                        let isSelected = (oldBatch === batch.uuid || oldBatch === batch.kode_produksi) ? 'selected' : '';
-                        batchSelect.append(`<option value="${batch.uuid}" ${isSelected}>${batch.kode_produksi}</option>`);
-                    });
-                    if (oldBatch) { batchSelect.trigger('change'); }
+            
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(namaProduk),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
                 }
             });
         }
 
-        $(document).on('change', '#nama_produk', function() { loadBatches($(this).val()); });
-        if (namaProdukInput.val() && !batchSelect.val()) {
-            let oldBatch = "{{ old('kode_produksi', $stuffing->kode_produksi ?? '') }}";
-            loadBatches(namaProdukInput.val(), oldBatch);
+        $(document).on('change', '#nama_produk', function() { 
+            $('#kode_produksi').empty().trigger('change');
+            initBatchSelect($(this).val()); 
+        });
+        
+        if (namaProdukInput.val()) {
+            initBatchSelect(namaProdukInput.val());
         }
 
         $(document).on('change', '#kode_produksi', function() {
@@ -332,6 +353,9 @@
     });
 </script>
 
+@endpush
+
+@push('styles')
 <style>
     .accordion-item { border-radius: 12px !important; overflow: hidden; margin-bottom: 12px; border: 1px solid #e9ecef; }
     .accordion-button { font-weight: 600; background: #f8f9fa; box-shadow: none !important; }
@@ -339,6 +363,13 @@
     .accordion-body { background: #fff; padding: 20px; }
     .form-label { font-weight: 600; margin-bottom: 6px; }
     .form-control { border-radius: 10px; min-height: 42px; }
+    
+    /* Select2 bootstrap 5 styling override */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: calc(2.25rem + 2px) !important;
+        border-radius: 10px !important;
+    }
+    
     .card { border-radius: 14px; overflow: hidden; }
 </style>
-@endsection
+@endpush

@@ -91,7 +91,7 @@ class Labelisasi_pvdcController extends Controller
             $request->validate([
                 'mesin' => 'required|string',
                 'kode_batch' => 'required|string',
-                'file' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+                'file' => 'required|image|mimes:jpeg,png,jpg|max:5120',
                 'keterangan' => 'nullable|string',
             ]);
 
@@ -143,15 +143,17 @@ class Labelisasi_pvdcController extends Controller
             'data_pvdc' => 'required|array|min:1',
             'data_pvdc.*.mesin' => 'required|string',
             'data_pvdc.*.kode_batch' => 'required|string',
-            'data_pvdc.*.kode_produksi' => 'required|file|image|mimes:jpg,jpeg,png|max:2048',
+            'data_pvdc.*.kode_produksi' => 'required|file|image|mimes:jpg,jpeg,png|max:5120',
         ]);
 
         $dataPvdc = [];
         foreach ($request->data_pvdc as $item) {
             $file = $item['kode_produksi'];
-            $filename = time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-            $relativePath = "uploads/pvdc/{$filename}";
-            $file->storeAs('uploads/pvdc', $filename, 'public');
+            $filename = time() . '_' . Str::random(8) . '.jpg';
+            $path = 'uploads/pvdc';
+            $relativePath = "{$path}/{$filename}";
+            
+            $this->compressAndStore($file, $path, $filename);
 
             $dataPvdc[] = [
                 'mesin' => $item['mesin'],
@@ -245,7 +247,7 @@ class Labelisasi_pvdcController extends Controller
                 if (isset($row['kode_produksi']) && $row['kode_produksi'] instanceof \Illuminate\Http\UploadedFile) {
                     $file = $row['kode_produksi'];
 
-                    $path = 'uploads/pvdc_temp';
+                    $path = 'uploads/pvdc';
                     $filename = time() . '_' . Str::random(8) . '.jpg';
                     $this->compressAndStore($file, $path, $filename);
 
@@ -305,6 +307,12 @@ class Labelisasi_pvdcController extends Controller
         $labelisasi_pvdcData = json_decode($labelisasi_pvdc->labelisasi, true) ?? [];
         foreach ($labelisasi_pvdcData as &$row) {
             $row['file'] = $this->normalizeFilePath($row['file'] ?? null);
+            if (!empty($row['kode_batch'])) {
+                $mincing = Mincing::where('uuid', $row['kode_batch'])->first();
+                if ($mincing) {
+                    $row['kode_produksi_display'] = $mincing->kode_produksi;
+                }
+            }
         }
         session()->put('pvdc_temp', $labelisasi_pvdcData);
 
@@ -341,7 +349,7 @@ class Labelisasi_pvdcController extends Controller
                 if (isset($row['kode_produksi']) && $row['kode_produksi'] instanceof \Illuminate\Http\UploadedFile) {
                     $file = $row['kode_produksi'];
 
-                    $path = 'uploads/pvdc_temp';
+                    $path = 'uploads/pvdc';
                     $filename = time() . '_' . Str::random(8) . '.jpg';
                     $this->compressAndStore($file, $path, $filename);
 
@@ -463,7 +471,7 @@ class Labelisasi_pvdcController extends Controller
         $manager = new ImageManager(new Driver());
         $image = $manager->read($file)
         ->scale(width: 1280)
-        ->toJpeg(quality: 75);
+        ->toJpeg(quality: 90);
 
         Storage::disk('public')->put("{$path}/{$filename}", (string) $image);
     }

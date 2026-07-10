@@ -94,13 +94,13 @@
                             <div class="col-md-6 file-wrapper">
                                 <label class="form-label fw-bold">QR Code (Upload Gambar)</label>
                                 <input type="file" name="qrcode" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 2 MB</small>
+                                <small class="text-muted">Max 5 MB</small>
                             </div>
 
                             <div class="col-md-6 file-wrapper">
                                 <label class="form-label fw-bold">Kode Printing (Upload Gambar)</label>
                                 <input type="file" name="kode_printing" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 2 MB</small>
+                                <small class="text-muted">Max 5 MB</small>
                             </div>
                         </div>
 
@@ -154,7 +154,7 @@
                     </div>
                 </div>
 
-                {{-- ===================== ➕ Data Kemasan ===================== --}}
+                {{-- ===================== âž• Data Kemasan ===================== --}}
                 <div class="card mb-4 shadow-sm border-0">
                     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
                         <strong class="fs-5"><i class="bi bi-box-seam"></i> Data Kemasan</strong>
@@ -182,7 +182,7 @@
                                     <label class="form-label fw-bold">Tanggal Kedatangan</label>
                                     <input type="date" name="data_kemasan[0][tgl_kedatangan]" class="form-control">
                                 </div>
-                                <div class="col-md-2 mb-2">
+                                <div class="col-md-5 MB-2">
                                     <label class="form-label fw-bold">Supplier</label>
                                     <select name="data_kemasan[0][nama_supplier]" class="form-control">
                                         <option value="">-- Pilih Supplier --</option>
@@ -225,6 +225,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     $(document).ready(function(){
         if($.fn.selectpicker){
@@ -253,7 +258,7 @@
                     <label class="form-label fw-bold">Tanggal Kedatangan</label>
                     <input type="date" name="data_kemasan[${countIdx}][tgl_kedatangan]" class="form-control">
                 </div>
-                <div class="col-md-2 mb-2">
+                <div class="col-md-5 MB-2">
                     <label class="form-label fw-bold">Supplier</label>
                     <select name="data_kemasan[${countIdx}][nama_supplier]" class="form-control">
                         <option value="">-- Pilih Supplier --</option>
@@ -284,52 +289,58 @@
             }
         }
 
-        // ===================== LOGIKA AJAX BATCH MINCING =====================
+        // ===================== LOGIKA AJAX BATCH MINCING DENGAN SELECT2 =====================
         const namaProdukSelect = $('#nama_produk');
         const kodeToplesSelect = $('#kode_toples');
 
-        function loadBatches(namaProduk, oldBatch = '') {
-            if (!namaProduk) {
-                kodeToplesSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
+        function initBatchSelect() {
+            let produkValue = namaProdukSelect.val();
+            
+            if (kodeToplesSelect.data('select2')) {
+                kodeToplesSelect.select2('destroy');
+            }
+            
+            if (!produkValue) {
+                kodeToplesSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                kodeToplesSelect.prop("disabled", true);
                 return;
             }
-
-            kodeToplesSelect.prop('disabled', false).html('<option value="">Mencari Batch...</option>');
-
-            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
-            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    kodeToplesSelect.html('<option value="">-- Pilih Kode Toples (Batch) --</option>');
-                    if (!Array.isArray(data) || data.length === 0) {
-                        kodeToplesSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
-                        return;
-                    }
-
-                    data.forEach(function(batch) {
-                        let isSelected = (oldBatch === batch.kode_produksi) ? 'selected' : '';
-                        kodeToplesSelect.append(`<option value="${batch.kode_produksi}" data-uuid="${batch.uuid}" ${isSelected}>${batch.kode_produksi}</option>`);
-                    });
-                },
-                error: function() {
-                    kodeToplesSelect.html('<option value="">Gagal memuat data</option>');
+            
+            kodeToplesSelect.html('<option value="">-- Pilih Kode Toples (Batch) --</option>');
+            kodeToplesSelect.prop("disabled", false);
+            
+            kodeToplesSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Kode Toples (Batch) --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
                 }
             });
         }
 
         namaProdukSelect.on('change', function() {
-            loadBatches($(this).val());
+            initBatchSelect();
         });
 
-
-
         if (namaProdukSelect.val()) {
+            initBatchSelect();
+            // Jika ada old value, set opsi pre-selected
             let oldBatch = "{{ old('kode_toples', '') }}";
-            loadBatches(namaProdukSelect.val(), oldBatch);
+            if(oldBatch){
+                let newOption = new Option(oldBatch, oldBatch, true, true);
+                kodeToplesSelect.append(newOption).trigger('change');
+            }
         }
     });
 
@@ -363,13 +374,13 @@
 
     function validateFile(input) {
         const file = input.files[0];
-        const max = 2 * 1024 * 1024;
+        const max = 5 * 1024 * 1024;
         const wrap = $(input).closest('.file-wrapper');
         wrap.find('.file-error').remove();
 
         if (file && file.size > max) {
             $(input).addClass('is-invalid');
-            wrap.append('<div class="text-danger file-error mt-1" style="font-size:0.8rem;">Ukuran file maksimal 2 MB</div>');
+            wrap.append('<div class="text-danger file-error mt-1" style="font-size:0.8rem;">Ukuran file maksimal 5 MB</div>');
             return false;
         }
         $(input).removeClass('is-invalid');

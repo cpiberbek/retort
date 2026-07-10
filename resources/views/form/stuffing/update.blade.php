@@ -172,7 +172,7 @@
                                             <div class="card mt-4">
                                                 <div class="card-header bg-light"><strong>Catatan</strong></div>
                                                 <div class="card-body">
-                                                    <textarea name="stuffing[{{ $index }}][catatan]" class="form-control" rows="3" {{ $isReadonly ? 'readonly' : '' }}>{{ $item['catatan'] ?? '' }}</textarea>
+                                                    <textarea name="stuffing[{{ $index }}][catatan]" class="form-control" rows="3">{{ $item['catatan'] ?? '' }}</textarea>
                                                 </div>
                                             </div>
 

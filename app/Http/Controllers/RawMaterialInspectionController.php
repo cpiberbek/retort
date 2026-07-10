@@ -98,8 +98,7 @@ class RawMaterialInspectionController extends Controller
 
             'details' => 'required|array|min:1',
             'details.*.kode_batch' => 'required|string',
-            'details.*.tanggal_produksi' => 'required|date',
-            'details.*.exp' => 'required|date|after:details.*.tanggal_produksi',
+            'details.*.exp' => 'required|date',
             'details.*.jumlah' => 'required|numeric|min:0',
             'details.*.jumlah_sampel' => 'required|numeric|min:0',
             'details.*.jumlah_reject' => 'required|numeric|min:0',
@@ -222,8 +221,7 @@ class RawMaterialInspectionController extends Controller
             // Validasi untuk detail produk (repeatable items)
             'details' => 'required|array|min:1',
             'details.*.kode_batch' => 'required|string',
-            'details.*.tanggal_produksi' => 'required|date',
-            'details.*.exp' => 'required|date|after:details.*.tanggal_produksi',
+            'details.*.exp' => 'required|date',
             'details.*.jumlah' => 'required|numeric|min:0',
             'details.*.jumlah_sampel' => 'required|numeric|min:0',
             'details.*.jumlah_reject' => 'required|numeric|min:0',

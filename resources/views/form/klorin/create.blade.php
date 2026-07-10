@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
     <div class="container-fluid py-4">
@@ -8,7 +8,7 @@
                     <i class="bi bi-plus-circle"></i> Form Input Pengecekan Klorin
                 </h4>
 
-                {{-- ✅ Tampilkan error validasi dari backend --}}
+                {{-- âœ… Tampilkan error validasi dari backend --}}
                 @if ($errors->any())
                     <div class="alert alert-danger">
                         <ul class="mb-0">
@@ -131,7 +131,7 @@
             dateInput.value = now.toISOString().split("T")[0];
             timeInput.value = now.toTimeString().slice(0, 5);
 
-            const maxFileSize = 2 * 1024 * 1024; // 2 MB
+            const maxFileSize = 5 * 1024 * 1024; // 5 MB
             const submitBtn = document.getElementById("submitBtn");
 
             function validateFile(inputId, errorId) {
@@ -143,12 +143,12 @@
                     const file = input.files[0];
 
                     if (!file) {
-                        error.textContent = "Upload File maksimal 2MB.";
+                        error.textContent = "Upload File maksimal 5MB.";
                         return;
                     }
 
                     if (file.size > maxFileSize) {
-                        error.textContent = "Ukuran file maksimal 2MB.";
+                        error.textContent = "Ukuran file maksimal 5MB.";
                         input.value = "";
                     }
                 });

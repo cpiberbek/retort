@@ -227,46 +227,6 @@
             }
         });
 
-    // ===== Validasi Kode Produksi =====
-        const kodeInput = $('#kode_produksi');
-        const kodeError = $('#kodeError');
-        const form = $('#prepackingForm');
-
-    // readonly kalau sudah ada nilai
-        if(kodeInput.val() !== ''){
-            kodeInput.prop('readonly', true);
-        }
-
-        function validateKode() {
-            let value = kodeInput.val().toUpperCase().replace(/\s+/g,'');
-            kodeInput.val(value);
-            kodeError.text('').addClass('d-none');
-
-            if(value.length !== 10){
-                kodeError.text('Kode batch harus 10 karakter').removeClass('d-none'); return false;
-            }
-            if(!/^[A-Z0-9]+$/.test(value)){
-                kodeError.text('Hanya huruf besar dan angka').removeClass('d-none'); return false;
-            }
-            if(!/^[A-L]$/.test(value.charAt(1))){
-                kodeError.text('Karakter ke-2 harus A-L').removeClass('d-none'); return false;
-            }
-            let hari = parseInt(value.substr(2,2),10);
-            if(isNaN(hari) || hari < 1 || hari > 31){
-                kodeError.text('Karakter ke-3 & 4 harus tanggal valid').removeClass('d-none'); return false;
-            }
-            return true;
-        }
-
-        kodeInput.on('input', validateKode);
-
-        form.on('submit', function(e){
-            if(!validateKode()){
-                e.preventDefault();
-                alert('Kode batch tidak valid!'); 
-                kodeInput.focus();
-            }
-        });
     });
 </script>
 @endsection

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-0">
@@ -17,7 +17,7 @@
             </div>
 
             {{-- Filter dan Live Search --}}
-            <form id="filterForm" method="GET" action="{{ route('karton.verification') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-2 border rounded bg-light shadow-sm">
+            <form id="filterForm" method="GET" action="{{ route('karton.verification') }}" class="d-flex flex-wrap align-items-center gap-5 MB-3 p-2 border rounded bg-light shadow-sm">
 
                 <div class="input-group" style="max-width: 220px;">
                     <span class="input-group-text bg-white border-end-0">
@@ -195,9 +195,9 @@
                                                     required
                                                     >
                                                     <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }}
-                                                        style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
+                                                        style="color: #198754; font-weight: 600;">âœ… Verified (Disetujui)</option>
                                                         <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }}
-                                                            style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
+                                                            style="color: #dc3545; font-weight: 600;">âŒ Revision (Perlu Perbaikan)</option>
                                                         </select>
                                                     </div>
 

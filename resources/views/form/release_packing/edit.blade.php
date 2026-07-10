@@ -38,7 +38,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
+                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                     <option value="">-- Pilih Varian --</option>
                                     @foreach($produks as $produk)
                                     <option value="{{ $produk->nama_produk }}"
@@ -49,10 +49,19 @@
                                 </select>
                             </div>
 
+                            @php
+                                $kode_batch_text = \App\Models\Mincing::where('uuid', $release_packing->kode_produksi)->value('kode_produksi') ?? $release_packing->kode_produksi;
+                            @endphp
+
                             <div class="col-md-6">
                                 <label class="form-label">Kode Batch</label>
-                                <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
-                                value="{{ old('kode_produksi', $release_packing->mincing->kode_produksi) }}" maxlength="10" required>
+                                <select name="kode_produksi" class="form-control" id="kode_produksi" required>
+                                    @if($release_packing->kode_produksi)
+                                        <option value="{{ $release_packing->kode_produksi }}" selected>{{ $kode_batch_text }}</option>
+                                    @else
+                                        <option value="">Pilih Varian Terlebih Dahulu</option>
+                                    @endif
+                                </select>
                                 <small id="kodeError" class="text-danger d-none"></small>
                             </div>
                         </div>
@@ -115,63 +124,61 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     $(document).ready(function () {
-        $('.selectpicker').selectpicker();
-    });
-
-    // Validasi kode produksi dan generate Exp Date otomatis
-    const kodeInput = document.getElementById('kode_produksi');
-    const expDateInput = document.getElementById('expired_date');
-    const kodeError = document.getElementById('kodeError');
-
-    kodeInput.addEventListener('input', function () {
-        let value = this.value.toUpperCase().replace(/\s+/g, '');
-        this.value = value;
-        kodeError.textContent = '';
-        kodeError.classList.add('d-none');
-        expDateInput.value = '';
-
-        if (value.length !== 10) {
-            kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
-            kodeError.classList.remove('d-none');
-            return;
+        if (typeof $.fn.selectpicker === 'function') {
+            $('.selectpicker').selectpicker();
         }
 
-        const format = /^[A-Z0-9]+$/;
-        if (!format.test(value)) {
-            kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-            kodeError.classList.remove('d-none');
-            return;
+        // ===================== LOGIKA AJAX BATCH MINCING DENGAN SELECT2 =====================
+        let produkSelect = $('#nama_produk');
+        let batchSelect  = $('#kode_produksi');
+        
+        let initialBatch = "{{ $release_packing->kode_produksi ?? '' }}";
+        let initialBatchText = "{{ $kode_batch_text ?? '' }}";
+
+        batchSelect.select2({
+            theme: "bootstrap-5",
+            width: '100%',
+            placeholder: "-- Pilih Kode Batch --",
+            allowClear: true,
+            ajax: {
+                delay: 250,
+                transport: function (params, success, failure) {
+                    let produkValue = produkSelect.val();
+                    if (!produkValue) return;
+
+                    return $.ajax({
+                        url: "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produkValue)),
+                        dataType: 'json',
+                        data: { q: params.data.term },
+                        success: success,
+                        error: failure
+                    });
+                },
+                processResults: function (data) {
+                    return { results: data };
+                }
+            }
+        });
+
+        produkSelect.on('change', function () {
+            batchSelect.prop('disabled', !this.value).val(null).trigger('change');
+        });
+
+        if (produkSelect.val()) {
+            batchSelect.prop('disabled', false);
+            if(initialBatch){
+                let newOption = new Option(initialBatchText || initialBatch, initialBatch, true, true);
+                batchSelect.append(newOption).trigger('change');
+            }
+        } else {
+            batchSelect.prop('disabled', true);
         }
-
-        const bulanChar = value.charAt(1);
-        const validBulan = /^[A-L]$/;
-        if (!validBulan.test(bulanChar)) {
-            kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
-            kodeError.classList.remove('d-none');
-            return;
-        }
-
-        const hariStr = value.substr(2, 2);
-        const hari = parseInt(hariStr, 10);
-        if (isNaN(hari) || hari < 1 || hari > 31) {
-            kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
-            kodeError.classList.remove('d-none');
-            return;
-        }
-
-        const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
-        const bulanIndex = bulanMap[bulanChar];
-        const tahun = new Date().getFullYear();
-
-        let expDate = new Date(tahun, bulanIndex, hari);
-        expDate.setMonth(expDate.getMonth() + 7);
-
-        const yyyy = expDate.getFullYear();
-        const mm = String(expDate.getMonth() + 1).padStart(2, '0');
-        const dd = String(expDate.getDate()).padStart(2, '0');
-        expDateInput.value = `${yyyy}-${mm}-${dd}`;
     });
 </script>
 @endpush

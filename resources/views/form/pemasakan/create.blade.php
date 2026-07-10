@@ -705,14 +705,22 @@
     </div>
 </div>
 
+@endsection
+
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     $(document).ready(function() {
 
-        if ($.fn.selectpicker) {
+        if (typeof $.fn.selectpicker === 'function') {
             $('.selectpicker').selectpicker();
         }
 
@@ -738,27 +746,48 @@
             }
         }
 
-        // BATCH LOGIC
-        let batchedData = [];
+        // === Select2 Batch Integration ===
+        const produkSelect = $('#nama_produk');
 
-        function populateBatches() {
-            let options = '<option value="">-- Pilih Batch --</option>';
-            if (batchedData.length === 0) {
-                options = '<option value="">Batch Tidak Ditemukan / Pilih Varian</option>';
-            } else {
-                batchedData.forEach(item => {
-                    options += `<option value="${item.uuid}">${item.kode_produksi}</option>`;
-                });
+        function initBatchSelect(selectElem) {
+            let produkValue = produkSelect.val();
+            
+            if (selectElem.data('select2')) {
+                selectElem.select2('destroy');
             }
-
-            $('.kode_produksi').each(function() {
-                let currentValue = $(this).val();
-                $(this).html(options).prop('disabled', batchedData.length === 0);
-                if (currentValue) {
-                    $(this).val(currentValue);
+            
+            if (!produkValue) {
+                selectElem.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                selectElem.prop("disabled", true);
+                return;
+            }
+            
+            selectElem.prop("disabled", false);
+            
+            selectElem.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data }; // data already has id=uuid and text=kode_produksi
+                    },
+                    cache: true
                 }
             });
         }
+
+        // Initialize select2 for existing kode_produksi selects
+        $('.kode_produksi').each(function() {
+            initBatchSelect($(this));
+        });
 
         // LOGIC UNTUK RENDER TABEL REJECT
         function renderRejectTable() {
@@ -817,23 +846,18 @@
             let namaProduk = $(this).val();
 
             if (!namaProduk) {
-                batchedData = [];
-                populateBatches();
+                $('.kode_produksi').html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
                 renderRejectTable();
                 return;
             }
 
-            $('.kode_produksi').html('<option value="">Mencari Batch...</option>').prop('disabled', false);
-
-            $.ajax({
-                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent(namaProduk),
-                type: 'GET',
-                success: function(data) {
-                    batchedData = data;
-                    populateBatches();
-                    renderRejectTable(); // Reset/update tabel reject saat varian diubah
-                }
+            $('.kode_produksi').html('<option value="">-- Pilih Batch --</option>').prop('disabled', false);
+            
+            $('.kode_produksi').each(function() {
+                initBatchSelect($(this));
             });
+            
+            renderRejectTable();
         });
 
         // Trigger render saat opsi batch dipilih manual
@@ -843,6 +867,12 @@
 
         // TAMBAH ROW
         $(document).on('click', '.addRow', function() {
+            // Destroy select2 before clone
+            const firstSelect = $('.batch-row:first').find('.kode_produksi');
+            if (firstSelect.hasClass('select2-hidden-accessible')) {
+                firstSelect.select2('destroy');
+            }
+
             let row = `
             <div class="row mb-3 batch-row">
                 <div class="col-md-6">
@@ -861,7 +891,12 @@
             </div>`;
 
             $('#batchContainer').append(row);
-            populateBatches(); 
+            
+            // Re-initialize select2 for all selects
+            $('.kode_produksi').each(function() {
+                initBatchSelect($(this));
+            });
+            
             // Render dipanggil agar tabel reject mengikuti jumlah baris baru
             renderRejectTable();
         });
@@ -946,4 +981,4 @@
         }
     });
 </script>
-@endsection
+@endpush
