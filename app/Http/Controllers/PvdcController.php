@@ -224,6 +224,24 @@ class PvdcController extends Controller
 
         $pvdcData = !empty($pvdc->data_pvdc) ? json_decode($pvdc->data_pvdc, true) : [];
 
+        foreach ($pvdcData as &$mesinRow) {
+            if (empty($mesinRow['detail'])) {
+                continue;
+            }
+            $details = is_array($mesinRow['detail']) ? array_values($mesinRow['detail']) : [];
+
+            foreach ($details as &$detailRow) {
+                if (empty($detailRow['batch'])) {
+                    continue;
+                }
+                $mincing = Mincing::where('uuid', $detailRow['batch'])->first();
+                if ($mincing) {
+                    $detailRow['batch_display'] = $mincing->kode_produksi;
+                }
+            }
+            $mesinRow['detail'] = $details;
+        }
+
         return view('form.pvdc.edit', compact('pvdc', 'produks', 'pvdcData', 'mesins', 'suppliers'));
     }
 

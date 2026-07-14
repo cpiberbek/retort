@@ -96,28 +96,16 @@
                         <div class="mb-3">
                             <label for="kode_batch" class="form-label">{{ __('Kode Batch') }}</label>
 
-                            <input
-                                id="kode_batch"
-                                type="text"
-                                class="form-control @error('kode_batch') is-invalid @enderror"
-                                name="kode_batch"
-                                value="{{ old('kode_batch', $checklistmagnettrap->mincing->kode_produksi) }}"
-                                required
-                                autocomplete="off"
-                                placeholder="Sesuai data mincing"
-                                maxlength="10"
-                                list="batch_suggestions"
-                            >
-
-                            <datalist id="batch_suggestions"></datalist>
+                            <select name="kode_batch" id="kode_batch"
+                                class="form-control select2-batch @error('kode_batch') is-invalid @enderror" required>
+                                @if($checklistmagnettrap->kode_batch)
+                                    <option value="{{ $checklistmagnettrap->kode_batch }}" selected>{{ $checklistmagnettrap->mincing->kode_produksi ?? $checklistmagnettrap->kode_batch }}</option>
+                                @endif
+                            </select>
 
                             @error('kode_batch')
                                 <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                             @enderror
-
-                            <small class="text-muted d-block mt-1" style="font-size: 0.8em;">
-                                *Otomatis kapital, max 10 karakter, tanpa spasi/simbol.
-                            </small>
                         </div>
 
                         <div class="row">
@@ -239,56 +227,49 @@
             placeholder: "Ketik untuk mencari varian...",
         });
 
-        // --- 2. BARU: Logic untuk Kode Batch ---
-        $('#kode_batch').on('input', function() {
-            let input = $(this);
-            let value = input.val();
-
-            // A. Auto Uppercase
-            value = value.toUpperCase();
-
-            // B. Hapus Karakter Terlarang (Spasi, $, %, #, *)
-            value = value.replace(/[\s$#%*]/g, '');
-
-            // C. Paksa Max 10 Karakter (Backup selain maxlength HTML)
-            if (value.length > 10) {
-                value = value.substring(0, 10);
+        function initBatchSelect(namaProduk) {
+            let batchSelect = $('#kode_batch');
+            
+            if (batchSelect.data('select2')) {
+                batchSelect.select2('destroy');
             }
-
-            // Kembalikan nilai bersih ke input
-            input.val(value);
-
-            // D. Auto Suggestion (AJAX Call)
-            // Trigger hanya jika panjang >= 2 karakter
-            if (value.length >= 2) {
-                $.ajax({
-                    url: "{{ route('ajax.search.batch') }}", // Pastikan route ini ada di web.php
-                    type: "GET",
-                    data: { q: value },
-                    success: function(data) {
-                        let dataList = $('#batch_suggestions');
-                        dataList.empty(); // Bersihkan list lama
-
-                        $.each(data, function(key, item) {
-                            // Tambah opsi baru
-                            dataList.append('<option value="' + item + '">');
-                        });
-                    }
-                });
+            
+            if (!namaProduk) {
+                batchSelect.prop('disabled', true);
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                return;
             }
-        });
-
-        // E. Validasi Akhir saat kursor keluar (Blur)
-        // Mengecek apakah karakter kurang dari 10 (karena max sudah dihandle)
-        $('#kode_batch').on('blur', function() {
-            let value = $(this).val();
-            if(value.length > 0 && value.length < 10) {
-                // Tampilkan alert atau feedback visual
-                alert('Perhatian: Kode Batch harus terdiri dari 10 karakter!');
-                $(this).addClass('is-invalid');
-            } else {
-                $(this).removeClass('is-invalid');
-            }
+            
+            batchSelect.prop('disabled', false);
+            
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(namaProduk),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
+                }
+            });
+        }
+        
+        let initialProduk = $('#nama_produk').val();
+        if(initialProduk) {
+            initBatchSelect(initialProduk);
+        }
+        
+        $('#nama_produk').on('change', function() {
+            $('#kode_batch').empty().trigger('change');
+            initBatchSelect($(this).val());
         });
 
     });

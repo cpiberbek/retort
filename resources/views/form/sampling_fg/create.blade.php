@@ -201,29 +201,35 @@
 
     {{-- ===================== SCRIPT ===================== --}}
     @push('scripts')
-        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-        <link rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+    {{-- Include jQuery (Select2 depends on it) --}}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
-        <script>
-            $(document).ready(function() {
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            if (typeof $.fn.selectpicker === 'function') {
                 $('.selectpicker').selectpicker();
+            }
 
-                // Set tanggal, waktu, dan shift otomatis
-                const dateInput = document.getElementById("dateInput");
-                const shiftInput = document.getElementById("shiftInput");
-                const timeInput = document.getElementById("timeInput");
+            // Atur Tanggal, Waktu & Shift Otomatis
+            const dateInput = document.getElementById("dateInput");
+            const timeInput = document.getElementById("timeInput");
+            const shiftInput = document.getElementById("shiftInput");
 
-                const now = new Date();
-                const yyyy = now.getFullYear();
-                const mm = String(now.getMonth() + 1).padStart(2, '0');
-                const dd = String(now.getDate()).padStart(2, '0');
-                const hh = String(now.getHours()).padStart(2, '0');
-                const min = String(now.getMinutes()).padStart(2, '0');
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            const hh = String(now.getHours()).padStart(2, '0');
+            const min = String(now.getMinutes()).padStart(2, '0');
 
-                if(dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
-                if(timeInput) timeInput.value = `${hh}:${min}`;
+            if(dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
+            if(timeInput) timeInput.value = `${hh}:${min}`;
 
                 const hour = parseInt(hh);
                 if (hour >= 7 && hour < 15) shiftInput.value = "1";
@@ -239,49 +245,61 @@
                 let currentMincingUuid = null;
 
                 // 1. AJAX LOAD BATCH BERDASARKAN VARIAN
-                namaProdukSelect.on('change', function() {
-                    let namaProduk = $(this).val();
+                function initBatchSelect() {
+                    let produkValue = namaProdukSelect.val();
+                    
+                    if (kodeBatchSelect.data('select2')) {
+                        kodeBatchSelect.select2('destroy');
+                    }
                     
                     currentMincingUuid = null;
-                    kodeBatchSelect.html('<option value="">Pilih Varian terlebih dahulu</option>').prop('disabled', true);
                     paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);
                     jumlahBoxInput.val('');
                     expDateInput.val('');
-
-                    if (!namaProduk) return;
-
-                    let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
-                    url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-                    $.ajax({
-                        url: url,
-                        type: 'GET',
-                        dataType: 'json',
-                        success: function(data) {
-                            kodeBatchSelect.prop('disabled', false);
-                            kodeBatchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-                            if (!Array.isArray(data) || data.length === 0) {
-                                kodeBatchSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
-                                return;
-                            }
-
-                            data.forEach(function(item) {
-                                kodeBatchSelect.append(`<option value="${item.kode_produksi}" data-uuid="${item.uuid}">${item.kode_produksi}</option>`);
-                            });
-                        },
-                        error: function() {
-                            kodeBatchSelect.html('<option value="">Gagal memuat data</option>').prop('disabled', true);
+                    
+                    if (!produkValue) {
+                        kodeBatchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                        kodeBatchSelect.prop("disabled", true);
+                        return;
+                    }
+                    
+                    kodeBatchSelect.html('<option value="">-- Pilih Kode Batch --</option>');
+                    kodeBatchSelect.prop("disabled", false);
+                    
+                    kodeBatchSelect.select2({
+                        theme: "bootstrap-5",
+                        width: '100%',
+                        placeholder: "-- Pilih Kode Batch --",
+                        allowClear: true,
+                        ajax: {
+                            url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                            dataType: 'json',
+                            delay: 250,
+                            data: function (params) {
+                                return { q: params.term };
+                            },
+                            processResults: function (data) {
+                                return { results: data };
+                            },
+                            cache: true
                         }
                     });
+                }
+
+                namaProdukSelect.on('change', function() {
+                    initBatchSelect();
                 });
+
+                if (namaProdukSelect.val()) {
+                    initBatchSelect();
+                }
 
                 
 
                 // 2. AJAX LOAD PALET & HITUNG EXPIRED BERDASARKAN BATCH
                 kodeBatchSelect.on('change', function() {
-                    let kode_produksi = $(this).val();
-                    let uuid_produksi = $(this).find("option:selected").data("uuid");
+                    let uuid_produksi = $(this).val();
+                    let kode_produksi = $(this).select2('data')[0]?.text;
 
                     currentMincingUuid = uuid_produksi || null;
                     paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);

@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-4">
@@ -8,7 +8,7 @@
                 <i class="bi bi-pencil-square"></i> Edit Data Pengecekan Klorin
             </h4>
 
-            {{-- ✅ Error dari backend --}}
+            {{-- âœ… Error dari backend --}}
             @if ($errors->any())
             <div class="alert alert-danger">
                 <ul class="mb-0">
@@ -127,7 +127,7 @@
 
             {{-- ===================== TOMBOL ===================== --}}
             <div class="d-flex justify-content-between mt-3">
-                {{-- ✅ Tombol tetap aktif --}}
+                {{-- âœ… Tombol tetap aktif --}}
                 <button type="submit" class="btn btn-success" id="submitBtn">
                     <i class="bi bi-save"></i> Simpan Perubahan
                 </button>
@@ -145,7 +145,7 @@
     document.addEventListener("DOMContentLoaded", function () {
         const form = document.getElementById("klorinEditForm");
         const submitBtn = document.getElementById("submitBtn");
-        const maxFileSize = 2 * 1024 * 1024; // 2 MB
+        const maxFileSize = 5 * 1024 * 1024; // 5 MB
 
         const footInput = document.getElementById("footbasin");
         const handInput = document.getElementById("handbasin");
@@ -157,7 +157,7 @@
             if (input.files.length > 0) {
                 const file = input.files[0];
                 if (file.size > maxFileSize) {
-                    errorEl.textContent = "❌ Ukuran file maksimal 2MB. Pilih file lain.";
+                    errorEl.textContent = "âŒ Ukuran file maksimal 5MB. Pilih file lain.";
                     return false;
                 }
             }

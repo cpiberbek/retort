@@ -128,7 +128,7 @@
                         <div class="mb-3">
                             <label for="kode_batch" class="form-label">{{ __('Kode Batch') }}</label>
                             <select name="kode_batch" id="kode_batch"
-                                class="form-control @error('kode_batch') is-invalid @enderror" required disabled>
+                                class="form-control select2-batch @error('kode_batch') is-invalid @enderror" required disabled>
                                 <option value="">Pilih Varian Terlebih Dahulu</option>
                             </select>
                             @error('kode_batch')
@@ -269,42 +269,48 @@
         });
     
     // const produkSelect = document.querySelector('select[name="nama_produk"]');
-    const batchSelect = document.getElementById('kode_batch');
-
-    // Disable batch saat awal load (jika tidak ada old value)
-    // if (!produkSelect.value) {
-    //     batchSelect.disabled = true;
-    // }
+    const batchSelect = $('#kode_batch');
 
     $('select[name="nama_produk"]').on('change', function (e) {
         let namaProduk = $(this).val();
-        console.log("Selected Varian:", namaProduk);
+        
+        batchSelect.empty().trigger('change');
+        
         if (!namaProduk) {
-            batchSelect.innerHTML = '<option value="">Pilih Varian Terlebih Dahulu</option>';
-            batchSelect.disabled = true;
-            expDateInput.value = '';
+            batchSelect.prop('disabled', true);
+            batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
             return;
         }
 
-        const url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
-        fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            batchSelect.disabled = false; 
-            batchSelect.innerHTML = ""; // bersihkan dulu
+        batchSelect.prop('disabled', false);
 
-            if (data.length === 0) {
-                batchSelect.innerHTML = '<option value="">Batch Tidak Ditemukan</option>';
-                batchSelect.disabled = true;
-                return;
+        if (batchSelect.data('select2')) {
+            batchSelect.select2('destroy');
+        }
+        
+        batchSelect.html('<option value="">-- Pilih Batch --</option>');
+
+        batchSelect.select2({
+            theme: "bootstrap-5",
+            width: '100%',
+            placeholder: "-- Pilih Batch --",
+            allowClear: true,
+            ajax: {
+                url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(namaProduk),
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function (data) {
+                    return {
+                        results: data
+                    };
+                },
+                cache: true
             }
-
-            // Jika ada data, baru tampilkan default option
-            batchSelect.innerHTML = '<option value="">-- Pilih Batch --</option>';
-
-            data.forEach(batch => {
-                batchSelect.innerHTML += `<option value="${batch.uuid}">${batch.kode_produksi}</option>`;
-            });
         });
     });
 

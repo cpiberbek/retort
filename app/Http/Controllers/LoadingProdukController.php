@@ -52,7 +52,8 @@ class LoadingProdukController extends Controller
     public function create()
     {
         $user = Auth::user();
-        return view('loading-produks.create', compact('user'));
+        $produks = \App\Models\Produk::where('plant', $user->plant)->get();
+        return view('loading-produks.create', compact('user', 'produks'));
     }
 
     /**
@@ -108,6 +109,12 @@ class LoadingProdukController extends Controller
             $loadingProduk = LoadingProduk::create($loadingProdukData); // Model akan otomatis mengisi created_by dan uuid
 
             foreach ($validatedData['details'] as $detail) {
+                if (strlen($detail['kode_produksi']) === 36) {
+                    $mincing = \App\Models\Mincing::where('uuid', $detail['kode_produksi'])->first();
+                    if ($mincing) {
+                        $detail['kode_produksi'] = $mincing->kode_produksi;
+                    }
+                }
                 $loadingProduk->details()->create($detail);
             }
 
@@ -142,7 +149,8 @@ class LoadingProdukController extends Controller
     {
         $user = Auth::user();
         $loadingProduk->load('details');
-        return view('loading-produks.edit', compact('loadingProduk', 'user'));
+        $produks = \App\Models\Produk::where('plant', $user->plant)->get();
+        return view('loading-produks.edit', compact('loadingProduk', 'user', 'produks'));
     }
 
     /**
@@ -322,8 +330,10 @@ class LoadingProdukController extends Controller
     public function updateDetails(LoadingProduk $loadingProduk)
     {
         // Pastikan relasi details dimuat
+        $user = Auth::user();
         $loadingProduk->load('details');
-        return view('loading-produks.update-details', compact('loadingProduk'));
+        $produks = \App\Models\Produk::where('plant', $user->plant)->get();
+        return view('loading-produks.update-details', compact('loadingProduk', 'produks'));
     }
 
     public function exportPdf(Request $request)

@@ -123,8 +123,8 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script> --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 <script>
     // Set tanggal, waktu, dan shift otomatis
     // document.addEventListener("DOMContentLoaded", function () {
@@ -143,91 +143,76 @@
 
         // const produkSelect = document.querySelector('select[name="nama_produk"]');
         // const batchSelect = document.getElementById('kode_produksi');
-        let produkSelect = document.getElementById('nama_produk');
+    // ===================== LOGIKA AJAX BATCH MINCING DENGAN SELECT2 =====================
+    let produkSelect = $('#nama_produk');
     let batchSelect  = $('#kode_produksi');
 
-    batchSelect.select2({
-        placeholder: "Pilih Varian Terlebih Dahulu",
-        width: '100%'
-    });
-
-    // Disable di awal jika belum ada produk dipilih
-    if (!produkSelect.value) {
-        batchSelect.prop('disabled', true);
+    function initBatchSelect() {
+        let produkValue = produkSelect.val();
+        
+        if (batchSelect.data('select2')) {
+            batchSelect.select2('destroy');
+        }
+        
+        if (!produkValue) {
+            batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+            batchSelect.prop("disabled", true);
+            return;
+        }
+        
+        batchSelect.html('<option value="">-- Pilih Batch --</option>');
+        batchSelect.prop("disabled", false);
+        
+        batchSelect.select2({
+            theme: "bootstrap-5",
+            width: '100%',
+            placeholder: "-- Pilih Batch --",
+            allowClear: true,
+            ajax: {
+                url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return { results: data };
+                },
+                cache: true
+            }
+        });
     }
 
-    produkSelect.addEventListener('change', function () {
-    let namaProduk = this.value;
-
-    if (!namaProduk) {
-        batchSelect
-            .prop('disabled', true)
-            .html('<option value="">Pilih Varian Terlebih Dahulu</option>')
-            .trigger('change');
-        return;
-    }
-
-    // Bisa diganti pakai Blade route juga kalau mau:
-    // let url = "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}"
-    //             .replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-    let url = "{{ route('lookup.batch_packing', ['nama_produk' => '__PRODUK__']) }}"
-                .replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-    fetch(url)
-            .then(res => res.json())
-            .then(data => {
-
-                batchSelect.prop('disabled', false).html('');
-
-                if (data.length === 0) {
-                    console.log('Tidak ada batch ditemukan untuk varian ini.');
-
-                    batchSelect
-                        .html('<option value="">Batch Tidak Ditemukan</option>')
-                        .prop('disabled', true)
-                        .select2({
-                            placeholder: "Batch Tidak Ditemukan"
-                        })
-                        .val("")
-                        .trigger('change');
-                    return;
-                }
-
-                batchSelect.append('<option value="">-- Pilih Batch --</option>');
-
-                // gunakan key yang sesuai JSON
-                data.forEach(batch => {
-                    batchSelect.append(new Option(batch.text, batch.id));
-                });
-
-                batchSelect.trigger('change');
-            })
-            .catch(err => console.error(err));
+    produkSelect.on('change', function() {
+        initBatchSelect();
     });
 
+    if (produkSelect.val()) {
+        initBatchSelect();
+    }
 
-        // const expDateInput = document.getElementById('expired_date');
-        // // Exp date update ketika batch dipilih
-        // batchSelect.on('change', function () {
-        //     let selectedText = this.options[this.selectedIndex]?.text;
-        //     let kodeProduksi = selectedText?.split(" - ")[0]?.trim();
 
-        //     if (!kodeProduksi) {
-        //         expDateInput.value = '';
-        //         return;
-        //     }
-        //     const bulanChar = kodeProduksi.charAt(1);
-        //     const hari = parseInt(kodeProduksi.substr(2, 2));
-        //     const bulanMap = {A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,I:8,J:9,K:10,L:11};
-        //     let kodeBulan = bulanMap[bulanChar];
-        //     let now = new Date();
-        //     let tahun = now.getFullYear();
-        //     if (kodeBulan < now.getMonth()) tahun++;
-        //     let expDate = new Date(tahun, kodeBulan, hari);
-        //     expDate.setMonth(expDate.getMonth() + 7);
-        //     expDateInput.value = expDate.toISOString().slice(0, 10);
-        // });
+        const expDateInput = document.getElementById('expired_date');
+        // Exp date update ketika batch dipilih
+        batchSelect.on('change', function () {
+            let selectedText = this.options[this.selectedIndex]?.text;
+            let kodeProduksi = selectedText?.split(" - ")[0]?.trim();
+
+            if (!kodeProduksi) {
+                expDateInput.value = '';
+                return;
+            }
+            const bulanChar = kodeProduksi.charAt(1);
+            const hari = parseInt(kodeProduksi.substr(2, 2));
+            const bulanMap = {A:0,B:1,C:2,D:3,E:4,F:5,G:6,H:7,I:8,J:9,K:10,L:11};
+            let kodeBulan = bulanMap[bulanChar];
+            let now = new Date();
+            let tahun = now.getFullYear();
+            if (kodeBulan < now.getMonth()) tahun++;
+            let expDate = new Date(tahun, kodeBulan, hari);
+            expDate.setMonth(expDate.getMonth() + 7);
+            expDateInput.value = expDate.toISOString().slice(0, 10);
+        });
     });
 
 

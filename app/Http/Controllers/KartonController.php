@@ -98,7 +98,7 @@ class KartonController extends Controller
             'date'      => 'required|date',
             'nama_produk'     => 'required|string',
             'kode_produksi'     => 'required|string',
-            'kode_karton' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+            'kode_karton' => 'required|image|mimes:jpeg,png,jpg|max:5120',
             'waktu_mulai'     => 'nullable',
             'waktu_selesai'     => 'nullable',
             'jumlah'     => 'nullable',
@@ -175,13 +175,13 @@ class KartonController extends Controller
             'date'           => 'required|date',
             'nama_produk'    => 'required|string',
             'kode_produksi'  => 'required|string',
-            'kode_karton'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'kode_karton'    => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'waktu_mulai'    => 'required',
             'waktu_selesai'  => 'nullable',
             'jumlah'         => 'nullable',
-            'tgl_kedatangan' => 'required|date',
-            'nama_supplier'  => 'required|string',
-            'no_lot'         => 'required|string',
+            'tgl_kedatangan' => 'nullable|date',
+            'nama_supplier'  => 'nullable|string',
+            'no_lot'         => 'nullable|string',
             'nama_operator'  => 'nullable|string',
             'nama_koordinator' => 'nullable|string',
             'keterangan'     => 'nullable|string',
@@ -250,13 +250,13 @@ class KartonController extends Controller
             'date'           => 'required|date',
             'nama_produk'    => 'required|string',
             'kode_produksi'  => 'required|string',
-            'kode_karton'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'kode_karton'    => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'waktu_mulai'    => 'required',
             'waktu_selesai'  => 'nullable',
             'jumlah'         => 'nullable',
-            'tgl_kedatangan' => 'required|date',
-            'nama_supplier'  => 'required|string',
-            'no_lot'         => 'required|string',
+            'tgl_kedatangan' => 'nullable|date',
+            'nama_supplier'  => 'nullable|string',
+            'no_lot'         => 'nullable|string',
             'nama_operator'  => 'nullable|string',
             'nama_koordinator' => 'nullable|string',
             'keterangan'     => 'nullable|string',
@@ -461,7 +461,7 @@ private function compressAndStore($file, $prefix)
 
     $image = $manager->read($file)
     ->scale(width: 1280)
-    ->toJpeg(quality: 75);
+    ->toJpeg(quality: 90);
 
     Storage::put("$path/$filename", (string) $image);
 

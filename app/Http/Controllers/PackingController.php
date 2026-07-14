@@ -74,8 +74,8 @@ class PackingController extends Controller
             'nama_produk'   => 'required',
             'waktu'         => 'required',
             'kalibrasi'     => 'nullable|string',
-            'qrcode'        => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'kode_printing' => 'nullable',
+            'qrcode'        => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'kode_printing' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'kode_toples'   => 'required|string',
             'suhu'          => 'nullable|numeric',
             'speed'         => 'nullable|numeric',
@@ -151,7 +151,8 @@ class PackingController extends Controller
             'nama_produk'   => 'required',
             'waktu'         => 'required',
             'kalibrasi'     => 'nullable|string',
-            'qrcode'        => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'qrcode'        => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            'kode_printing' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'kode_toples'   => 'required|string',
             'data_kemasan'  => 'nullable|array',
             'keterangan'    => 'nullable|string',
@@ -398,7 +399,7 @@ class PackingController extends Controller
 
         if (!Storage::exists($path)) { Storage::makeDirectory($path, 0755, true); }
 
-        $image = $manager->read($file)->scale(width: 1280)->toJpeg(quality: 75);
+        $image = $manager->read($file)->scale(width: 1280)->toJpeg(quality: 90);
         Storage::put("$path/$filename", (string) $image);
 
         return "storage/uploads/packing/$filename";

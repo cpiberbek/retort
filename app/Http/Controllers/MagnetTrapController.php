@@ -183,7 +183,7 @@ class MagnetTrapController extends Controller
     {
        $request->validate([
         'nama_produk' => 'required',
-        'kode_batch' => 'required|string|max:10',
+        'kode_batch' => 'required|string',
         'pukul' => 'required',
         'jumlah_temuan' => 'required|integer|min:0',
         'status' => 'required|in:v,x',

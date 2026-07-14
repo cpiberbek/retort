@@ -334,73 +334,97 @@
     </div>
 </div>
 
+@endsection
+
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     $(document).ready(function(){ 
         
-    // $('.selectpicker').selectpicker();
-
-    const dateInput = document.getElementById("dateInput");
-    const shiftInput = document.getElementById("shiftInput");
-    const timeInput = document.getElementById("jamMulaiInput");
-
-    if(!dateInput.value){
-        let now = new Date();
-        dateInput.value = now.toISOString().slice(0,10);
-        timeInput.value = now.toTimeString().slice(0,5);
-
-        let hour = now.getHours();
-        if(hour >= 7 && hour < 15) shiftInput.value = "1";
-        else if(hour >= 15 && hour < 23) shiftInput.value = "2";
-        else shiftInput.value = "3";
-    }
-
-    const produkSelect = document.querySelector('select[name="nama_produk"]');
-    const batchSelect = document.getElementById('kode_produksi');
-    const expDateInput = document.getElementById('exp_date');
-
-    // Disable batch saat awal load (jika tidak ada old value)
-    if (!produkSelect.value) {
-        batchSelect.disabled = true;
-    }
-
-    produkSelect.addEventListener('change', function () {
-        let namaProduk = this.value;
-        // console.log("Nama Produk dipilih:", namaProduk);
-
-        // Jika user mengosongkan nama produk
-        if (!namaProduk) {
-            batchSelect.innerHTML = '<option value="">Pilih Varian Terlebih Dahulu</option>';
-            batchSelect.disabled = true;
-            expDateInput.value = '';
-            return;
+        if (typeof $.fn.selectpicker === 'function') {
+            $('.selectpicker').selectpicker();
         }
 
-        const url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
-        fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            batchSelect.disabled = false; 
-            batchSelect.innerHTML = ""; // bersihkan dulu
+        const dateInput = document.getElementById("dateInput");
+        const shiftInput = document.getElementById("shiftInput");
+        const timeInput = document.getElementById("jamMulaiInput");
 
-            if (data.length === 0) {
-                batchSelect.innerHTML = '<option value="">Batch Tidak Ditemukan</option>';
-                batchSelect.disabled = true;
+        if(!dateInput.value){
+            let now = new Date();
+            dateInput.value = now.toISOString().slice(0,10);
+            if(timeInput) timeInput.value = now.toTimeString().slice(0,5);
+
+            let hour = now.getHours();
+            if(hour >= 7 && hour < 15) shiftInput.value = "1";
+            else if(hour >= 15 && hour < 23) shiftInput.value = "2";
+            else shiftInput.value = "3";
+        }
+
+        const produkSelect = $('select[name="nama_produk"]');
+        const batchSelect = $('#kode_produksi');
+
+        function initBatchSelect(produkValue) {
+            if (batchSelect.data('select2')) {
+                batchSelect.select2('destroy');
+            }
+            
+            if (!produkValue) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                batchSelect.prop("disabled", true);
+                return;
+            }
+            
+            batchSelect.prop("disabled", false);
+            
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
+                }
+            });
+        }
+
+        // Disable batch saat awal load (jika tidak ada old value)
+        if (!produkSelect.val()) {
+            batchSelect.prop("disabled", true);
+        } else {
+            initBatchSelect(produkSelect.val());
+        }
+
+        produkSelect.on('change', function () {
+            let namaProduk = $(this).val();
+            
+            if (!namaProduk) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                batchSelect.prop("disabled", true);
                 return;
             }
 
-            // Jika ada data, baru tampilkan default option
-            batchSelect.innerHTML = '<option value="">-- Pilih Batch --</option>';
-
-            data.forEach(batch => {
-                batchSelect.innerHTML += `<option value="${batch.kode_produksi}">${batch.kode_produksi}</option>`;
-            });
+            batchSelect.html('<option value="">-- Pilih Batch --</option>');
+            initBatchSelect(namaProduk);
         });
-    });
 
     });
 </script>
-@endsection
+@endpush

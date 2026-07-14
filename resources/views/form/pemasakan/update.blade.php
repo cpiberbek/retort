@@ -695,8 +695,17 @@
 </div>
 </div>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+@endsection
+
+@push('scripts')
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+
+{{-- Bootstrap Select CSS & JS --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
 <script>
@@ -705,26 +714,50 @@
             $('.selectpicker').selectpicker();
         }
 
-        let batchedData = [];
-        let namaProduk = $('#nama_produk_hidden').val();
-        
-        // Ambil data reject dari database
         let initialRejects = @json(is_array($pemasakan->total_reject) ? $pemasakan->total_reject : (json_decode($pemasakan->total_reject, true) ?? []));
-        let isFirstLoad = true;
+        
+        // === Select2 Batch Integration ===
+        const produkSelect = $('#nama_produk_hidden');
 
-        // 1. Tarik data batch via AJAX saat halaman dimuat (berdasarkan varian yg readonly)
-        if (namaProduk) {
-            $.ajax({
-                url: '{{ url('/lookup/batch') }}/' + encodeURIComponent(namaProduk),
-                type: 'GET',
-                success: function(data) {
-                    batchedData = data;
-                    renderRejectTable(); // Render tabel reject saat data siap
+        function initBatchSelect(selectElem) {
+            let produkValue = produkSelect.val();
+            
+            if (selectElem.data('select2')) {
+                selectElem.select2('destroy');
+            }
+            
+            if (!produkValue) {
+                selectElem.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                selectElem.prop("disabled", true);
+                return;
+            }
+            
+            selectElem.prop("disabled", false);
+            
+            selectElem.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
                 }
             });
-        } else {
-            renderRejectTable();
         }
+
+        // Initialize select2 for any existing .kode_produksi selects
+        $('.kode_produksi').each(function() {
+            initBatchSelect($(this));
+        });
 
         // 2. Fungsi merender Tabel Reject (Gabungan Batch Lama + Batch Baru)
         function renderRejectTable() {
@@ -733,11 +766,6 @@
                 let idx = $(this).data('index');
                 currentRejects[idx] = $(this).val();
             });
-
-            if (isFirstLoad) {
-                currentRejects = initialRejects;
-                isFirstLoad = false;
-            }
 
             let tbody = $('#rejectTableBody');
             tbody.empty();
@@ -748,48 +776,46 @@
             $('.existing_kode_produksi').each(function() {
                 let value = $(this).val();
                 let text = $(this).attr('data-text');
-                
-                if (value) {
-                    hasData = true;
-                    // Mencegah nilai null merender "0"
-                    let rawVal = currentRejects[globalIndex];
-                    let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
-                    
-                    tbody.append(`
-                        <tr>
-                            <td class="text-start fw-semibold">${text} <span class="badge bg-secondary ms-2">Lama</span></td>
-                            <td>Kg</td>
-                            <td>
-                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}" placeholder="">
-                            </td>
-                        </tr>
-                    `);
-                }
-                globalIndex++;
-            });
 
-            // Proses Batch BARU (dinamis)
-            $('.new_kode_produksi').each(function() {
-                let value = $(this).val();
-                let text = $(this).find('option:selected').text();
-                
                 if (value && value !== "") {
                     hasData = true;
-                    // Mencegah nilai null merender "0"
                     let rawVal = currentRejects[globalIndex];
                     let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
-                    
+
                     tbody.append(`
                         <tr>
-                            <td class="text-start fw-semibold">${text} <span class="badge bg-success ms-2">Baru</span></td>
+                            <td class="text-start fw-semibold">${text} (Lama)</td>
                             <td>Kg</td>
                             <td>
-                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}" placeholder="">
+                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}">
                             </td>
                         </tr>
                     `);
+                    globalIndex++;
                 }
-                globalIndex++;
+            });
+
+            // Proses Batch BARU (Select2 dropdown)
+            $('.kode_produksi').each(function() {
+                let value = $(this).val();
+                let text = $(this).find('option:selected').text();
+
+                if (value && value !== "") {
+                    hasData = true;
+                    let rawVal = currentRejects[globalIndex];
+                    let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
+
+                    tbody.append(`
+                        <tr>
+                            <td class="text-start fw-semibold">${text}</td>
+                            <td>Kg</td>
+                            <td>
+                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}">
+                            </td>
+                        </tr>
+                    `);
+                    globalIndex++;
+                }
             });
 
             if (!hasData) {
@@ -797,27 +823,32 @@
             }
         }
 
-        // 3. Trigger render saat opsi batch baru dipilih
-        $(document).on('change', '.new_kode_produksi', function() {
+        renderRejectTable();
+
+        // Trigger render saat opsi batch dipilih manual (batch baru)
+        $(document).on('change', '.kode_produksi', function() {
             renderRejectTable();
         });
 
         // 4. Tambah Baris Batch Baru
         $(document).on('click', '.addRow', function() {
-            let options = '<option value="">-- Pilih Batch --</option>';
-            batchedData.forEach(item => {
-                options += `<option value="${item.uuid}">${item.kode_produksi}</option>`;
-            });
+            // Destroy select2 on first row if it exists
+            const firstSelect = $('.batch-row').not('.existing-batch').first().find('.kode_produksi');
+            if (firstSelect.length > 0 && firstSelect.hasClass('select2-hidden-accessible')) {
+                firstSelect.select2('destroy');
+            }
 
             let row = `
-            <div class="row mb-3 batch-row new-batch">
+            <div class="row mb-3 batch-row">
                 <div class="col-md-6">
-                    <select name="kode_produksi[]" class="form-control kode_produksi new_kode_produksi" required>
-                        ${options}
+                    <label class="form-label">Kode Batch Baru</label>
+                    <select name="kode_produksi[]" class="form-control kode_produksi" required>
+                        <option value="">-- Pilih Batch --</option>
                     </select>
                 </div>
                 <div class="col-md-4">
-                    <input type="text" name="jumlah_tray[]" class="form-control jumlah_tray" placeholder="Jml Tray" required>
+                    <label class="form-label">Jumlah Tray</label>
+                    <input type="number" name="jumlah_tray[]" class="form-control jumlah_tray" required>
                 </div>
                 <div class="col-md-2 d-flex align-items-end">
                     <button type="button" class="btn btn-danger w-100 removeRow"><i class="bi bi-trash"></i> Hapus</button>
@@ -825,6 +856,12 @@
             </div>`;
             
             $('#batchContainer').append(row);
+            
+            // Re-initialize select2 for all selects
+            $('.kode_produksi').each(function() {
+                initBatchSelect($(this));
+            });
+            
             renderRejectTable();
         });
 
@@ -917,4 +954,4 @@
     });
 </script>
 
-@endsection
+@endpush

@@ -252,7 +252,11 @@
 @push('scripts')
 {{-- 1. Include jQuery (Select2 depends on it) --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 {{-- 2. Include Select2 JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
@@ -298,11 +302,20 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label class="form-label">Nama Produk (Varian) <span class="text-danger">*</span></label>
-                        <input type="text" name="details[${i}][nama_produk]" class="form-control" value="${nama_produk}" required>
+                        <select name="details[${i}][nama_produk]" class="form-control var-produk-select" required>
+                            <option value="">-- Pilih Varian --</option>
+                            @foreach($produks as $produk)
+                                <option value="{{ $produk->nama_produk }}" ${nama_produk === '{{ $produk->nama_produk }}' ? 'selected' : ''}>
+                                    {{ $produk->nama_produk }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
-                        <input type="text" name="details[${i}][kode_produksi]" class="form-control" value="${kode_produksi}" required>
+                        <select name="details[${i}][kode_produksi]" class="form-control var-batch-select" required>
+                            <option value="">Pilih Varian Terlebih Dahulu</option>
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Kode Expired</label>
@@ -319,7 +332,66 @@
                 </div>
             `;
 
+            // Untuk UUID hidden bila edit mode
+            if (data?.uuid) {
+                newDetail.innerHTML += `<input type="hidden" name="details[${i}][uuid]" value="${data.uuid}">`;
+            }
+
             container.appendChild(newDetail);
+
+            let produkSelect = $(newDetail).find('.var-produk-select');
+            let batchSelect = $(newDetail).find('.var-batch-select');
+
+            // Initialize produk as Select2 (with search)
+            produkSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Varian --",
+                allowClear: true
+            });
+
+            // Initialize batch as Select2 with dynamic AJAX
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Kode Batch --",
+                allowClear: true,
+                ajax: {
+                    url: function () {
+                        let produkValue = produkSelect.val();
+                        if (!produkValue) return '';
+                        return "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue);
+                    },
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
+                }
+            });
+
+            // Set old batch value if exists
+            if (kode_produksi) {
+                let newOption = new Option(kode_produksi, kode_produksi, true, true);
+                batchSelect.append(newOption).trigger('change');
+            }
+
+            // Set initial disabled state
+            if (!produkSelect.val()) {
+                batchSelect.prop('disabled', true);
+            }
+
+            // When produk changes, clear batch and enable/disable
+            produkSelect.on('change', function() {
+                let currentVal = $(this).val();
+                batchSelect.val(null).trigger('change');
+                batchSelect.prop('disabled', !currentVal);
+            });
+
             detailIndex++;
         }
 

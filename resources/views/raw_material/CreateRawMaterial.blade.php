@@ -1,4 +1,4 @@
-﻿{{-- resources/views/raw_material/CreateRawMaterial.blade.php --}}
+{{-- resources/views/raw_material/CreateRawMaterial.blade.php --}}
 
 @extends('layouts.app') {{-- Menggunakan layout utama Anda --}}
 
@@ -626,10 +626,6 @@
                     <div class="col-md-4">
                         <label class="form-label">Kode Batch</label>
                         <input type="text" name="details[${detailIndex}][kode_batch]" class="form-control" required value="${oldData.kode_batch || ''}">
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Tanggal Produksi</label>
-                        <input type="date" name="details[${detailIndex}][tanggal_produksi]" class="form-control" required value="${oldData.tanggal_produksi || ''}">
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">EXP Date</label>

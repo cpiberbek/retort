@@ -120,7 +120,11 @@
                                                         name="data_pvdc[{{ $mi }}][detail][{{ $bi }}][batch]"
                                                         class="form-control form-control-sm batchSelect"
                                                         data-selected="{{ $batch['batch'] ?? '' }}">
-                                                        <option value="">-- Pilih Batch --</option>
+                                                        @if(!empty($batch['batch']))
+                                                            <option value="{{ $batch['batch'] }}" selected>{{ $batch['batch_display'] ?? $batch['batch'] }}</option>
+                                                        @else
+                                                            <option value="">-- Pilih Batch --</option>
+                                                        @endif
                                                     </select>
                                                 </td>
                                                 <td><input type="text"
@@ -190,10 +194,18 @@
         </div>
     </div>
 
+@endsection
+
+@push('scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+    
+    {{-- Select2 CSS & JS --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
             $('.selectpicker').selectpicker();
@@ -212,42 +224,59 @@
             // ==========================
             // LOAD BATCH
             // ==========================
-            function loadBatchForAllRows() {
+            function initBatchSelect(select, produk) {
+                if (select.data('select2')) {
+                    select.select2('destroy');
+                }
+                
+                if (!produk) {
+                    select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    select.prop("disabled", true);
+                    return;
+                }
+                
+                select.prop("disabled", false);
+                
+                select.select2({
+                    theme: "bootstrap-5",
+                    width: '100%',
+                    placeholder: "-- Pilih Batch --",
+                    allowClear: true,
+                    ajax: {
+                        url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produk),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { q: params.term };
+                        },
+                        processResults: function (data) {
+                            return { results: data };
+                        },
+                        cache: true
+                    }
+                });
+            }
 
+            function loadBatchForAllRows() {
+                const produkValue = $('#nama_produk').val();
+                
                 if (!produkValue) return;
 
-                fetch(`/lookup/batch/${produkValue}`)
-                    .then(res => res.json())
-                    .then(data => {
-
-                        $('.batchSelect').each(function() {
-
-                            const select = $(this);
-                            const selectedValue =
-                                select.data('selected') ||
-                                select.attr('data-selected') ||
-                                select.val();
-
-                            select.html('<option value="">-- Pilih Batch --</option>');
-
-                            data.forEach(batch => {
-                                select.append(`
-                            <option value="${batch.uuid}">
-                                ${batch.kode_produksi}
-                            </option>
-                        `);
-                            });
-
-                            if (selectedValue) {
-                                select.val(selectedValue);
-                            }
-                        });
-
-                    })
-                    .catch(err => {
-                        console.error('Gagal load batch:', err);
-                    });
+                $('.batchSelect').each(function() {
+                    let select = $(this);
+                    
+                    if (!select.val()) {
+                        select.html('<option value="">-- Pilih Batch --</option>');
+                    }
+                    
+                    initBatchSelect(select, produkValue);
+                });
             }
+
+            $('#nama_produk').on('change', function() {
+                $(".batchSelect").empty().trigger('change');
+                loadBatchForAllRows();
+            });
 
             // Load pertama kali
             loadBatchForAllRows();
@@ -409,6 +438,9 @@
         });
     </script>
 
+@endpush
+
+@push('styles')
     <style>
         .table-bordered th,
         .table-bordered td {
@@ -419,5 +451,12 @@
         .form-control-sm {
             min-width: 120px;
         }
+        
+        /* Select2 bootstrap 5 styling override untuk form ini */
+        .select2-container--bootstrap-5 .select2-selection {
+            min-height: calc(1.5em + .5rem + 2px) !important;
+            border-radius: .25rem !important;
+            font-size: .875rem;
+        }
     </style>
-@endsection
+@endpush

@@ -196,9 +196,15 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     $(document).ready(function () {
-        $('.selectpicker').selectpicker();
+        if (typeof $.fn.selectpicker === 'function') {
+            $('.selectpicker').selectpicker();
+        }
 
         const namaProdukSelect = $('#nama_produk');
         const batchSelect = $('#kode_produksi');
@@ -230,50 +236,49 @@
             return localExp.toISOString().slice(0, 10);
         }
 
-        // Fungsi Load Batches
-        function loadBatches(namaProduk, oldBatch = '') {
-            if (!namaProduk) {
-                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
+        // Fungsi Load Batches via Select2
+        function initBatchSelect(oldBatch = '', oldBatchText = '') {
+            let produkValue = namaProdukSelect.val();
+            
+            if (batchSelect.data('select2')) {
+                batchSelect.select2('destroy');
+            }
+            
+            if (!produkValue) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                batchSelect.prop("disabled", true);
+                paletSelect.html('<option value="">Pilih Batch Terlebih Dahulu</option>').prop('disabled', true);
                 return;
             }
-
-            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    batchSelect.prop('disabled', false);
-                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
-                    
-                    if(!Array.isArray(data) || data.length === 0){
-                        batchSelect.html('<option value="">Batch Tidak Ditemukan</option>').prop('disabled', true);
-                        return;
-                    }
-
-                    data.forEach(function(item) {
-                        let isSelected = (oldBatch === item.kode_produksi) ? 'selected' : '';
-                        batchSelect.append(`<option value="${item.kode_produksi}" data-uuid="${item.uuid}" ${isSelected}>${item.kode_produksi}</option>`);
-                    });
-
-                    // Jika sedang edit mode, set uuid dan load palet
-                    if (oldBatch) {
-                        let uuid = batchSelect.find('option:selected').data('uuid');
-                        currentMincingUuid = uuid;
-                        
-                        // Hitung exp date
-                        expDateInput.val(calculateExpDate(oldBatch));
-                        
-                        // Load palet dengan oldPalet
-                        let oldPalet = "{{ old('palet', $sampling_fg->palet ?? '') }}";
-                        loadPalet(uuid, oldPalet);
-                    }
-                },
-                error: function() {
-                    batchSelect.html('<option value="">Gagal memuat data</option>').prop('disabled', true);
+            
+            batchSelect.html('<option value="">-- Pilih Kode Batch --</option>');
+            batchSelect.prop("disabled", false);
+            
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Kode Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        return { results: data };
+                    },
+                    cache: true
                 }
             });
+
+            if (oldBatch) {
+                let newOption = new Option(oldBatchText, oldBatch, true, true);
+                batchSelect.append(newOption).trigger('change.select2');
+                currentMincingUuid = oldBatch;
+                // Jangan trigger 'change' di sini agar palet load ditangani oleh fungsi inisialisasi di bawah
+            }
         }
 
         // Fungsi Load Palet
@@ -321,29 +326,25 @@
             let namaProduk = $(this).val();
             
             currentMincingUuid = null;
-            batchSelect.html('<option value="">-- Pilih Batch --</option>').prop('disabled', false);
             paletSelect.html('<option value="">Pilih Batch Terlebih Dahulu</option>').prop('disabled', true);
             jumlahBoxInput.val('');
             expDateInput.val('');
 
-            if (!namaProduk) {
-                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>').prop('disabled', true);
-                return;
-            }
-
-            loadBatches(namaProduk);
+            initBatchSelect();
         });
 
         
 
         // Event: Change Batch (user manual change atau programmatic)
-        batchSelect.on('change', function() {
-            let kode_produksi = $(this).val();
-            let uuid_produksi = $(this).find("option:selected").data("uuid");
+        batchSelect.on('change', function(e) {
+            let uuid_produksi = $(this).val();
+            let kode_produksi = $(this).select2('data')[0]?.text;
 
             currentMincingUuid = uuid_produksi || null;
             jumlahBoxInput.val('');
-            expDateInput.val(calculateExpDate(kode_produksi));
+            if (kode_produksi) {
+                expDateInput.val(calculateExpDate(kode_produksi));
+            }
             
             // Update hidden input untuk kode_produksi
             $('input[name="kode_produksi"]').val(kode_produksi);
@@ -386,8 +387,20 @@
 
         // Init pada page load (Edit mode)
         let oldBatch = "{{ old('kode_produksi', $sampling_fg->kode_produksi ?? '') }}";
-        if (namaProdukSelect.val() && oldBatch) {
-            loadBatches(namaProdukSelect.val(), oldBatch);
+        @php
+            $kode_batch_text_val = \App\Models\Mincing::where('uuid', old('kode_produksi', $sampling_fg->kode_produksi ?? ''))->value('kode_produksi') ?? old('kode_produksi', $sampling_fg->kode_produksi ?? '');
+        @endphp
+        let oldBatchText = "{{ $kode_batch_text_val }}";
+
+        if (namaProdukSelect.val()) {
+            if (oldBatch) {
+                initBatchSelect(oldBatch, oldBatchText);
+                let oldPalet = "{{ old('palet', $sampling_fg->palet ?? '') }}";
+                loadPalet(oldBatch, oldPalet);
+                expDateInput.val(calculateExpDate(oldBatchText));
+            } else {
+                initBatchSelect();
+            }
         }
     });
 </script>

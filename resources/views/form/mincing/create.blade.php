@@ -76,11 +76,11 @@
                                     <tbody>
                                         <tr>
                                             <td class="text-start fw-semibold">
-                                                Waktu Mulai <span class="text-danger">*</span>
+                                                Waktu Mulai
                                             </td>
                                             <td>
                                                 <input type="time" name="waktu_mulai"
-                                                    class="form-control form-control-sm text-center" required>
+                                                    class="form-control form-control-sm text-center">
                                             </td>
                                             <td class="fw-bold">s/d</td>
                                             <td>

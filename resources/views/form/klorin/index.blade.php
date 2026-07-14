@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('content')
 <div class="container-fluid py-0">
@@ -41,7 +41,7 @@
     </div>
 
     {{-- Filter dan Live Search --}}
-    <form id="filterForm" method="GET" action="{{ route('klorin.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
+    <form id="filterForm" method="GET" action="{{ route('klorin.index') }}" class="d-flex flex-wrap align-items-center gap-5 MB-3 p-3 border rounded bg-white shadow-sm">
         <div class="row">
             <div class="col-md-4">
                 <div class="mb-1">Pilih Tanggal</div>
@@ -282,9 +282,9 @@
                                                 required
                                                 >
                                                 <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }}
-                                                    style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
+                                                    style="color: #198754; font-weight: 600;">âœ… Verified (Disetujui)</option>
                                                     <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }}
-                                                        style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
+                                                        style="color: #dc3545; font-weight: 600;">âŒ Revision (Perlu Perbaikan)</option>
                                                     </select>
                                                 </div>
 

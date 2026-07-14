@@ -8,6 +8,16 @@
                     <i class="bi bi-pencil-square"></i> Edit Kontrol Labelisasi Karton
                 </h4>
 
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
                 <form id="samplingForm" action="{{ route('karton.update_qc', $karton->uuid) }}" method="POST"
                     enctype="multipart/form-data">
                     @csrf
@@ -50,7 +60,7 @@
                                 </div>
 
                                 @php
-                                    $kode = \App\Models\Mincing::where('uuid', $karton->kode_produksi)->value('kode_produksi');
+                                    $kode = \App\Models\Mincing::where('uuid', $karton->kode_produksi)->value('kode_produksi') ?? $karton->kode_produksi;
                                 @endphp
 
                                 <div class="col-md-6">
@@ -325,14 +335,14 @@
 
                 const bulanChar = value.charAt(1);
                 if (!/^[A-L]$/.test(bulanChar)) {
-                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
+                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (Aâ€“L).";
                     kodeError.classList.remove('d-none');
                     return false;
                 }
 
                 const hari = parseInt(value.substr(2, 2), 10);
                 if (isNaN(hari) || hari < 1 || hari > 31) {
-                    kodeError.textContent = "Tanggal tidak valid (01–31).";
+                    kodeError.textContent = "Tanggal tidak valid (01â€“31).";
                     kodeError.classList.remove('d-none');
                     return false;
                 }
@@ -340,16 +350,16 @@
                 return true;
             }
 
-            // Validasi file 2MB
+            // Validasi file 5MB
             const fileInput = document.getElementById("kode_karton");
             const fileError = document.getElementById("kode-karton-error");
-            const maxFileSize = 2 * 1024 * 1024;
+            const maxFileSize = 5 * 1024 * 1024;
 
             fileInput.addEventListener("change", function() {
                 fileError.textContent = "";
                 const file = this.files[0];
                 if (file && file.size > maxFileSize) {
-                    fileError.textContent = "Maksimal 2MB.";
+                    fileError.textContent = "Maksimal 5MB.";
                     this.value = "";
                 }
             });

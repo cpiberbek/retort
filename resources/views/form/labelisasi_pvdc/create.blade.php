@@ -137,10 +137,18 @@
         </div>
     </div>
 </div>
+@endsection
+
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet"
     href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function(){
         $('.selectpicker').selectpicker();
@@ -211,60 +219,55 @@
         loadBatchForAllRows();
     });
 
+    function initBatchSelect(select, produk) {
+        if (select.data('select2')) {
+            select.select2('destroy');
+        }
+        
+        select.html("");
+        select.prop("disabled", true);
+
+        if (!produk) {
+            select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+            return;
+        }
+
+        select.prop("disabled", false);
+        select.html('<option value="">-- Pilih Batch --</option>');
+        
+        select.select2({
+            theme: "bootstrap-5",
+            width: '100%',
+            placeholder: "-- Pilih Batch --",
+            allowClear: true,
+            ajax: {
+                url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produk),
+                dataType: 'json',
+                delay: 250,
+                data: function (params) {
+                    return { q: params.term };
+                },
+                processResults: function (data) {
+                    return { results: data };
+                },
+                cache: true
+            }
+        });
+    }
+
     function loadBatchForAllRows() {
         let produk = produkSelect.val();
         let batchSelects = $(".batchSelect");
 
-        // Store current selections before clearing
-        let currentSelections = {};
-        batchSelects.each(function (index) {
-            let select = $(this);
-            currentSelections[index] = select.val();
-        });
-
-        batchSelects.each(function (index) {
-            let select = $(this);
-            select.html("");
-            select.prop("disabled", true);
-
-            if (!produk) {
-                select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
-                return;
-            }
-
-            const url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}".replace('__PRODUK__', encodeURIComponent(produk));
-                fetch(url)
-                .then(res => res.json())
-                .then(data => {
-
-                    if (data.length === 0) {
-                        select.html('<option value="">Batch Tidak Ditemukan</option>');
-                        select.prop("disabled", true);
-                        return;
-                    }
-
-                    select.prop("disabled", false);
-                    select.html('<option value="">-- Pilih Batch --</option>');
-
-                    data.forEach(batch => {
-                        select.append(`
-                            <option value="${batch.uuid}" kode_batch="${batch.kode_produksi}">
-                                ${batch.kode_produksi}
-                            </option>
-                        `);
-                    });
-
-                    // Restore previous selection if it still exists
-                    if (currentSelections[index] && select.find(`option[value="${currentSelections[index]}"]`).length > 0) {
-                        select.val(currentSelections[index]);
-                    }
-                });
+        batchSelects.each(function () {
+            $(this).empty().trigger('change');
+            initBatchSelect($(this), produk);
         });
     }
 
     // Trigger saat batch dipilih → isi kode batch pada input text (jika dipakai)
     $(document).on("change", ".batchSelect", function () {
-        let kode = $(this).find(":selected").data("kode") ?? "";
+        let kode = $(this).find(":selected").text() ?? "";
         $(this).closest("tr").find(".kodeBatchText").val(kode);
     });
 
@@ -391,4 +394,16 @@
 
     });
 </script>
-@endsection
+
+@endpush
+
+@push('styles')
+<style>
+    /* Select2 bootstrap 5 styling override untuk form ini */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: calc(1.5em + .5rem + 2px) !important;
+        border-radius: .25rem !important;
+        font-size: .875rem;
+    }
+</style>
+@endpush

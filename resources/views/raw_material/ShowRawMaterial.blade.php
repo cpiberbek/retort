@@ -269,7 +269,6 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th scope="col">Kode Batch</th>
-                                        <th scope="col">Tgl Produksi</th>
                                         <th scope="col">Tgl Kadaluarsa</th>
                                         <th scope="col" class="text-end">Jumlah</th>
                                         <th scope="col" class="text-end">Sampel</th>
@@ -280,8 +279,6 @@
                                     @forelse($inspection->productDetails as $detail)
                                         <tr>
                                             <td>{{ $detail->kode_batch }}</td>
-                                            <td>{{ $detail->tanggal_produksi ? \Carbon\Carbon::parse($detail->tanggal_produksi)->format('d M Y') : '-' }}
-                                            </td>
                                             <td>{{ $detail->exp ? \Carbon\Carbon::parse($detail->exp)->format('d M Y') : '-' }}
                                             </td>
                                             <td class="text-end">{{ $detail->jumlah }}</td>
@@ -290,7 +287,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center text-muted">Tidak ada data detail produk.
+                                            <td colspan="5" class="text-center text-muted">Tidak ada data detail produk.
                                             </td>
                                         </tr>
                                     @endforelse

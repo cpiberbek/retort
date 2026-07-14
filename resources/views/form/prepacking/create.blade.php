@@ -26,7 +26,7 @@
                                     <label for="nama_produk" class="form-label fw-semibold">
                                         Nama Varian <span class="text-danger">*</span>
                                     </label>
-                                    <select name="nama_produk" id="nama_produk" class="form-control" required>
+                                    <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
                                         <option value="">-- Pilih Varian --</option>
                                         @foreach ($produks as $produk)
                                             <option value="{{ $produk->nama_produk }}">
@@ -42,7 +42,7 @@
                                     <label for="kode_batch" class="form-label fw-semibold">
                                         Kode Batch <span class="text-danger">*</span>
                                     </label>
-                                    <select name="kode_produksi" id="kode_batch" class="form-control" disabled required>
+                                    <select name="kode_produksi" id="kode_batch" class="form-control" required>
                                         <option value="">Pilih Varian terlebih dahulu</option>
                                     </select>
                                     <small class="text-muted">
@@ -243,18 +243,24 @@
             </div>
         </div>
     </div>
+@endsection
 
+@push('scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+
+    {{-- Select2 CSS & JS --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
         $(document).ready(function() {
-            $('.selectpicker').selectpicker();
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
+            if (typeof $.fn.selectpicker === 'function') {
+                $('.selectpicker').selectpicker();
+            }
 
             // =========================
             // DEFAULT TANGGAL
@@ -309,112 +315,108 @@
                 }
             });
 
-            // =========================
-            // HITUNG AIR & MINYAK
-            // =========================
+            // =====================================
+            // FUNGSI HITUNG TOTAL BASAH & KERING
+            // =====================================
             function hitungTotalAirMinyak(type) {
+                let inputUjung = $(`#basah_${type}_ujung`).val();
+                let inputSeal  = $(`#basah_${type}_seal`).val();
 
-                let basahUjung = parseFloat($(`#basah_${type}_ujung`).val()) || 0;
-                let basahSeal = parseFloat($(`#basah_${type}_seal`).val()) || 0;
+                let basahUjung = parseFloat(inputUjung) || 0;
+                let basahSeal  = parseFloat(inputSeal) || 0;
 
-                // Kering per bagian = 100 - basah
-                const inputUjung = $(`#basah_${type}_ujung`).val();
-                const inputSeal = $(`#basah_${type}_seal`).val();
+                let totalBasah = basahUjung + basahSeal;
+                let totalKering = 100 - totalBasah;
+                if (totalKering < 0) totalKering = 0;
 
                 if (inputUjung === '') {
                     $(`#kering_${type}_ujung`).val('');
                 } else {
-                    $(`#kering_${type}_ujung`).val(
-                        Math.max(0, 100 - basahUjung).toFixed(2)
-                    );
+                    $(`#kering_${type}_ujung`).val(Math.max(0, 100 - basahUjung).toFixed(2));
                 }
 
                 if (inputSeal === '') {
                     $(`#kering_${type}_seal`).val('');
                 } else {
-                    $(`#kering_${type}_seal`).val(
-                        Math.max(0, 100 - basahSeal).toFixed(2)
-                    );
+                    $(`#kering_${type}_seal`).val(Math.max(0, 100 - basahSeal).toFixed(2));
                 }
 
-                // Total basah
-                let totalBasah = basahUjung + basahSeal;
-
-                // Total kering = 100 - total basah
-                let totalKering = 100 - totalBasah;
-
-                if (totalKering < 0) {
-                    totalKering = 0;
-                }
-
-                // Jika kedua input kosong
                 if (inputUjung === '' && inputSeal === '') {
-
                     $(`#basah_${type}_total`).val('');
                     $(`#kering_${type}_total`).val('');
-
                 } else {
-
-                    $(`#basah_${type}_total`).val(
-                        totalBasah.toFixed(2)
-                    );
-
-                    $(`#kering_${type}_total`).val(
-                        totalKering.toFixed(2)
-                    );
-
+                    $(`#basah_${type}_total`).val(totalBasah.toFixed(2));
+                    $(`#kering_${type}_total`).val(totalKering.toFixed(2));
                 }
 
-                // Warning jika melebihi 100%
                 if (totalBasah > 100) {
                     alert('Total basah tidak boleh lebih dari 100%');
                 }
             }
 
-            // Event input untuk AIR & MINYAK
             ['air', 'minyak'].forEach(type => {
-
                 $(`#basah_${type}_ujung, #basah_${type}_seal`).on('input', function() {
                     hitungTotalAirMinyak(type);
                 });
-
+                hitungTotalAirMinyak(type);
             });
 
-            // Hitung saat halaman pertama kali dibuka
-            hitungTotalAirMinyak('air');
-            hitungTotalAirMinyak('minyak');
+            // === Select2 Batch Integration ===
+            const produkSelect = $('#nama_produk');
+            const batchSelect = $('#kode_batch');
 
-        });
-    </script>
-    <script>
-        $('#nama_produk').on('change', function() {
-
-            let namaProduk = $(this).val();
-            let batchSelect = $('#kode_batch');
-
-            if (!namaProduk) {
-                batchSelect.html('<option>Pilih Varian dulu</option>');
-                batchSelect.prop('disabled', true);
-                return;
-            }
-            let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function(data) {
-
-                    batchSelect.prop('disabled', false);
-                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-                    data.forEach(function(item) {
-                        batchSelect.append(
-                            `<option value="${item.uuid}">${item.kode_produksi}</option>`
-                        );
-                    });
+            function initBatchSelect(produkValue) {
+                if (batchSelect.data('select2')) {
+                    batchSelect.select2('destroy');
                 }
+                
+                if (!produkValue) {
+                    batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    batchSelect.prop("disabled", true);
+                    return;
+                }
+                
+                batchSelect.html('<option value="">-- Pilih Batch --</option>');
+                batchSelect.prop("disabled", false);
+                
+                batchSelect.select2({
+                    theme: "bootstrap-5",
+                    width: '100%',
+                    placeholder: "-- Pilih Batch --",
+                    allowClear: true,
+                    ajax: {
+                        url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return { q: params.term };
+                        },
+                        processResults: function (data) {
+                            return { results: data };
+                        },
+                        cache: true
+                    }
+                });
+            }
+
+            if (produkSelect.val()) {
+                initBatchSelect(produkSelect.val());
+            } else {
+                batchSelect.prop("disabled", true);
+            }
+
+            produkSelect.on('change', function () {
+                let namaProduk = $(this).val();
+                
+                if (!namaProduk) {
+                    batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                    batchSelect.prop("disabled", true);
+                    return;
+                }
+
+                initBatchSelect(namaProduk);
             });
 
         });
     </script>
-@endsection
+@endpush

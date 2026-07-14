@@ -147,15 +147,22 @@
     </div>
 </div>
 
-{{-- ===================== SCRIPT ===================== --}}
+@endsection
+
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
+{{-- Select2 CSS & JS --}}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
     $(document).ready(function(){
         // Inisialisasi Selectpicker
-        if ($.fn.selectpicker) {
+        if (typeof $.fn.selectpicker === 'function') {
             $('.selectpicker').selectpicker();
         }
 
@@ -176,61 +183,65 @@
             else shiftInput.value = "3";
         }
 
-        // --- AJAX LOAD BATCH ---
+        // === Select2 Batch Integration ===
+        const produkSelect = $('#nama_produk');
         const batchSelect = $('#kode_produksi');
-        const namaProdukInput = $('#nama_produk');
 
-        function loadBatches(namaProduk, oldBatch = '') {
-            if (!namaProduk) {
+        function initBatchSelect(produkValue) {
+            if (batchSelect.data('select2')) {
+                batchSelect.select2('destroy');
+            }
+            
+            if (!produkValue) {
                 batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
-                batchSelect.prop('disabled', true);
+                batchSelect.prop("disabled", true);
                 return;
             }
-
-            batchSelect.prop('disabled', false);
-            batchSelect.html('<option value="">Mencari Batch...</option>');
-
-            let url = "{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}";
-            url = url.replace('__PRODUK__', encodeURIComponent(namaProduk));
-
-            $.ajax({
-                url: url,
-                type: 'GET',
-                dataType: 'json',
-                success: function(data) {
-                    batchSelect.html('<option value="">-- Pilih Batch --</option>');
-
-                    if (!data || data.length === 0) {
-                        batchSelect.html('<option value="">Batch Tidak Ditemukan</option>');
-                        batchSelect.prop('disabled', true);
-                        return;
-                    }
-
-                    data.forEach(function(batch) {
-                        let isSelected = (oldBatch === batch.kode_produksi) ? 'selected' : '';
-                        batchSelect.append(`<option value="${batch.kode_produksi}" ${isSelected}>${batch.kode_produksi}</option>`);
-                    });
-                },
-                error: function(xhr, status, error) {
-                    alert("Gagal mengambil data Batch dari server!");
-                    batchSelect.html('<option value="">Gagal Terhubung ke Server</option>');
-                    batchSelect.prop('disabled', true);
+            
+            batchSelect.prop("disabled", false);
+            
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: '100%',
+                placeholder: "-- Pilih Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return { q: params.term };
+                    },
+                    processResults: function (data) {
+                        var processedData = $.map(data, function(obj) {
+                            obj.id = obj.text; // Mapping UUID ke String Batch karena db nyimpan string!
+                            return obj;
+                        });
+                        return { results: processedData };
+                    },
+                    cache: true
                 }
             });
         }
 
-        // Trigger saat produk diganti
-        $(document).on('change', '#nama_produk', function() {
-            loadBatches($(this).val());
-        });
-
-        // Load awal saat halaman dibuka
-        if (namaProdukInput.val()) {
-            let oldBatch = "{{ old('kode_produksi', $sampling->kode_produksi ?? '') }}";
-            if (batchSelect.children('option').length <= 1) {
-                loadBatches(namaProdukInput.val(), oldBatch);
-            }
+        if (produkSelect.val()) {
+            initBatchSelect(produkSelect.val());
+        } else {
+            batchSelect.prop("disabled", true);
         }
+
+        produkSelect.on('change', function () {
+            let namaProduk = $(this).val();
+            
+            if (!namaProduk) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                batchSelect.prop("disabled", true);
+                return;
+            }
+
+            batchSelect.html('<option value="">-- Pilih Batch --</option>');
+            initBatchSelect(namaProduk);
+        });
     });
 </script>
-@endsection
+@endpush

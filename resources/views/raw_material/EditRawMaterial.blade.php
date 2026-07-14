@@ -502,7 +502,6 @@
             newDetail.classList.add('product-detail-item', 'border', 'p-3', 'mb-3', 'rounded', 'shadow-sm');
 
             const kodeBatch = data ? (data.kode_batch || '') : '';
-            const tglProduksi = data ? (data.tanggal_produksi || '') : '';
             const exp = data ? (data.exp || '') : '';
             const jumlah = data ? (data.jumlah || '') : '';
             const jumlahSampel = data ? (data.jumlah_sampel || '') : '';
@@ -517,10 +516,6 @@
                     <div class="col-md-4">
                         <label class="form-label">Kode Batch</label>
                         <input type="text" name="details[${i}][kode_batch]" class="form-control" value="${kodeBatch}" required>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Tanggal Produksi</label>
-                        <input type="date" name="details[${i}][tanggal_produksi]" class="form-control" value="${tglProduksi}" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">EXP Date</label>

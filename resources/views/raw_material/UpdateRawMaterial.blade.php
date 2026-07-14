@@ -1,4 +1,4 @@
-﻿{{-- resources/views/raw_material/UpdateRawMaterial.blade.php --}}
+{{-- resources/views/raw_material/UpdateRawMaterial.blade.php --}}
 
 @extends('layouts.app') 
 
@@ -522,7 +522,6 @@
             const deleteBtn = isReadOnly ? '' : `<button type="button" class="btn btn-danger btn-sm remove-detail-btn"><i class="bi bi-trash"></i> Hapus</button>`;
 
             const kodeBatch = data ? (data.kode_batch || '') : '';
-            const tglProduksi = data ? (data.tanggal_produksi || '') : '';
             const exp = data ? (data.exp || '') : '';
             const jumlah = data ? (data.jumlah || '') : '';
             const jumlahSampel = data ? (data.jumlah_sampel || '') : '';
@@ -540,10 +539,6 @@
                     <div class="col-md-4">
                         <label class="form-label">Kode Batch</label>
                         <input type="text" name="details[${i}][kode_batch]" class="form-control" value="${kodeBatch}" required ${readOnlyAttr}>
-                    </div>
-                    <div class="col-md-4">
-                        <label class="form-label">Tanggal Produksi</label>
-                        <input type="date" name="details[${i}][tanggal_produksi]" class="form-control" value="${tglProduksi}" required ${readOnlyAttr}>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">EXP Date</label>
