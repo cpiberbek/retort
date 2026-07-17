@@ -99,14 +99,12 @@
                                         <tr>
                                             <td class="text-start fw-semibold">Waktu Mulai</td>
                                             <td><input type="time" name="waktu_mulai"
-                                                    class="form-control form-control-sm text-center"
-                                                    value="{{ old('waktu_mulai', $mincing->waktu_mulai) }}"
-                                                    {{ $mincing->waktu_mulai ? 'readonly' : '' }}></td>
+                                                class="form-control form-control-sm text-center"
+                                                value="{{ old('waktu_mulai', $mincing->waktu_mulai) }}">
                                             <td class="fw-bold">s/d</td>
                                             <td><input type="time" name="waktu_selesai"
-                                                    class="form-control form-control-sm text-center"
-                                                    value="{{ old('waktu_selesai', $mincing->waktu_selesai) }}"
-                                                    {{ $mincing->waktu_selesai ? 'readonly' : '' }}></td>
+                                                class="form-control form-control-sm text-center"
+                                                value="{{ old('waktu_selesai', $mincing->waktu_selesai) }}">
                                         </tr>
                                     </tbody>
                                 </table>

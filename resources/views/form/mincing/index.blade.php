@@ -524,8 +524,8 @@
             
             {{-- Pagination Component (Opsional: Jika ada fitur paginasi di controller) --}}
             @if(method_exists($data, 'links'))
-                <div class="d-flex justify-content-center mt-3">
-                    {{ $data->links() }}
+                <div class="mt-3 d-flex justify-content-end">
+                    {{ $data->links('pagination::bootstrap-4') }}
                 </div>
             @endif
         </div>
