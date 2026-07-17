@@ -315,13 +315,24 @@
                             <option value="">Pilih Varian Terlebih Dahulu</option>
                         </select>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-2">
                         <label class="form-label">Kode Expired</label>
                         <input type="date" name="details[${i}][kode_expired]" class="form-control" value="${kode_expired}">
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Jumlah <span class="text-danger">*</span></label>
                         <input type="number" name="details[${i}][jumlah]" class="form-control" value="${jumlah}" min="1" required>
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label">Satuan <span class="text-danger">*</span></label>
+                        <select name="details[${i}][satuan]" class="form-control" required>
+                            <option value="">-- Pilih Satuan --</option>
+                            <option value="kg">Kg</option>
+                            <option value="pcs">Pcs</option>
+                            <option value="roll">Roll</option>
+                            <option value="box">Box</option>
+                        </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Keterangan</label>

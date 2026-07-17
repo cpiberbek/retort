@@ -321,13 +321,17 @@
                                         <label class="form-label">Kode Batch</label>
                                         <input type="text" name="details[{{$index}}][kode_produksi]" class="form-control" value="{{ $detail->kode_produksi }}" readonly>
                                     </div>
-                                    <div class="col-md-4">
+                                    <div class="col-md-2">
                                         <label class="form-label">Kode Expired</label>
                                         <input type="date" name="details[{{$index}}][kode_expired]" class="form-control" value="{{ $detail->kode_expired }}" readonly>
                                     </div>
                                     <div class="col-md-2">
                                         <label class="form-label">Jumlah</label>
                                         <input type="number" name="details[{{$index}}][jumlah]" class="form-control" value="{{ $detail->jumlah }}" readonly>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label">Satuan</label>
+                                        <input type="text" name="details[{{$index}}][satuan]" class="form-control" value="{{ $detail->satuan }}" readonly>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label">Keterangan</label>

@@ -85,6 +85,7 @@ class LoadingProdukController extends Controller
             'details.*.kode_expired' => 'nullable|date',
             'details.*.jumlah' => 'required|integer|min:1',
             'details.*.keterangan' => 'nullable|string|max:255',
+            'details.*.satuan' => 'required|string|max:50',
         ]);
 
         // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
@@ -182,6 +183,7 @@ class LoadingProdukController extends Controller
             'details.*.kode_expired' => 'nullable|date',
             'details.*.jumlah' => 'required|integer|min:1',
             'details.*.keterangan' => 'nullable|string|max:255',
+            'details.*.satuan' => 'required|string|max:50',
         ]);
 
         // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)

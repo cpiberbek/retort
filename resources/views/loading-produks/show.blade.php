@@ -286,7 +286,7 @@
                             <td>{{ $detail->nama_produk }}</td>
                             <td>{{ $detail->kode_produksi }}</td>
                             <td>{{ $detail->kode_expired ? \Carbon\Carbon::parse($detail->kode_expired)->format('d/m/Y') : '-' }}</td>
-                            <td>{{ $detail->jumlah }}</td>
+                            <td>{{ $detail->jumlah }}{{ $detail->satuan ? ' (' . $detail->satuan . ')' : '' }}</td>
                             <td>{{ $detail->keterangan ?? '-' }}</td>
                         </tr>
                     @empty
