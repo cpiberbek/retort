@@ -94,13 +94,13 @@
                             <div class="col-md-6 file-wrapper">
                                 <label class="form-label fw-bold">QR Code (Upload Gambar)</label>
                                 <input type="file" name="qrcode" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 5 MB</small>
+                                <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah.</small>
                             </div>
 
                             <div class="col-md-6 file-wrapper">
                                 <label class="form-label fw-bold">Kode Printing (Upload Gambar)</label>
                                 <input type="file" name="kode_printing" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 5 MB</small>
+                                <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah.</small>
                             </div>
                         </div>
 
@@ -344,6 +344,59 @@
         }
     });
 
+    async function compressImage(file) {
+        if (!file.type.startsWith('image/')) return file;
+        if (file.size <= 5 * 1024 * 1024) return file;
+
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const img = new Image();
+
+                img.onload = function () {
+                    let width = img.width;
+                    let height = img.height;
+                    const maxWidth = 1920;
+
+                    if (width > maxWidth) {
+                        height = Math.round(height * (maxWidth / width));
+                        width = maxWidth;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let quality = 0.9;
+
+                    const exportBlob = () => {
+                        canvas.toBlob(function (blob) {
+                            if (blob.size <= 5 * 1024 * 1024 || quality <= 0.4) {
+                                resolve(new File([blob], file.name, {
+                                    type: 'image/jpeg',
+                                    lastModified: Date.now()
+                                }));
+                            } else {
+                                quality -= 0.1;
+                                exportBlob();
+                            }
+                        }, 'image/jpeg', quality);
+                    };
+
+                    exportBlob();
+                };
+
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const dateInput = document.getElementById("dateInput");
         const timeInput = document.getElementById("timeInput");
@@ -372,26 +425,49 @@
         }
     });
 
-    function validateFile(input) {
-        const file = input.files[0];
-        const max = 5 * 1024 * 1024;
-        const wrap = $(input).closest('.file-wrapper');
-        wrap.find('.file-error').remove();
+    // function validateFile(input) {
+    //     const file = input.files[0];
+    //     const max = 5 * 1024 * 1024;
+    //     const wrap = $(input).closest('.file-wrapper');
+    //     wrap.find('.file-error').remove();
 
-        if (file && file.size > max) {
-            $(input).addClass('is-invalid');
-            wrap.append('<div class="text-danger file-error mt-1" style="font-size:0.8rem;">Ukuran file maksimal 5 MB</div>');
-            return false;
+    //     if (file && file.size > max) {
+    //         $(input).addClass('is-invalid');
+    //         wrap.append('<div class="text-danger file-error mt-1" style="font-size:0.8rem;">Ukuran file maksimal 5 MB</div>');
+    //         return false;
+    //     }
+    //     $(input).removeClass('is-invalid');
+    //     return true;
+    // }
+
+    // $(document).on('change', 'input[type="file"]', function () { validateFile(this); });
+    // $('#pvdcForm').on('submit', function (e) {
+    //     let ok = true;
+    //     $('input[type="file"]').each(function () { if (!validateFile(this)) ok = false; });
+    //     if (!ok) e.preventDefault();
+    // });
+
+    $('#pvdcForm').on('submit', async function (e) {
+        e.preventDefault();
+
+        const files = [
+            $('input[name="qrcode"]')[0],
+            $('input[name="kode_printing"]')[0]
+        ];
+
+        for (const input of files) {
+            if (!input.files.length) continue;
+
+            const compressed = await compressImage(input.files[0]);
+
+            if (compressed !== input.files[0]) {
+                const dt = new DataTransfer();
+                dt.items.add(compressed);
+                input.files = dt.files;
+            }
         }
-        $(input).removeClass('is-invalid');
-        return true;
-    }
 
-    $(document).on('change', 'input[type="file"]', function () { validateFile(this); });
-    $('#pvdcForm').on('submit', function (e) {
-        let ok = true;
-        $('input[type="file"]').each(function () { if (!validateFile(this)) ok = false; });
-        if (!ok) e.preventDefault();
+        this.submit();
     });
 </script>
 @endpush
