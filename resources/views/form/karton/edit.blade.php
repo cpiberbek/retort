@@ -185,21 +185,18 @@
                                     <input type="file" id="kode_karton" name="kode_karton" class="form-control"
                                         accept="image/*">
 
-                                    @if ($karton->kode_karton)
-                                        @php
-                                            $kartonPath = str_replace('public/', 'storage/', $karton->kode_karton);
-                                        @endphp
+                                    <div class="mt-2">
+                                        <a id="kode-karton-link"
+                                            href="{{ $karton->kode_karton ? asset(str_replace('public/', 'storage/', $karton->kode_karton)) : '#' }}"
+                                            target="_blank">
 
-                                        <small class="d-block mt-2">
-                                            <a href="{{ asset($kartonPath) }}" target="_blank"
-                                                class="text-primary text-decoration-none fw-semibold">
-
-                                                <i class="bi bi-image me-1"></i>
-                                                Lihat Gambar Sebelumnya
-                                            </a>
-                                        </small>
-                                    @endif
-
+                                            <img id="kode-karton-preview"
+                                                src="{{ $karton->kode_karton ? asset(str_replace('public/', 'storage/', $karton->kode_karton)) : '#' }}"
+                                                class="img-fluid {{ $karton->kode_karton ? '' : 'd-none' }}"
+                                                style="max-height:100px">
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah.</small>
                                     <small id="kode-karton-error" class="text-danger"></small>
                                 </div>
 
@@ -279,144 +276,175 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
     <script>
-        $(document).ready(function() {
-            if (typeof $.fn.selectpicker === 'function') {
-                $('.selectpicker').selectpicker();
-            }
-            const kodeInput = document.getElementById('kode_produksi');
-            const kodeError = document.getElementById('kodeError');
-            const form = document.getElementById('samplingForm');
+    $(document).ready(function() {
+        $('.selectpicker').selectpicker();
 
-            // validasi langsung saat input
-            kodeInput.addEventListener('input', function() {
-                validateKode();
-            });
+        const maxFileSize = 5 * 1024 * 1024;
+        const fileInput = document.getElementById("kode_karton");
+        const fileError = document.getElementById("kode-karton-error");
+        const preview = document.getElementById("kode-karton-preview");
+        const previewLink = document.getElementById("kode-karton-link");
 
-            // blok kirim form jika kode tidak valid
-            form.addEventListener('submit', function(e) {
-                if (!validateKode()) {
-                    e.preventDefault();
-                    alert('Kode batch tidak valid! Periksa kembali sebelum menyimpan.');
-                    kodeInput.focus();
-                }
-            });
+        fileInput.addEventListener("change", function() {
+            fileError.textContent = "";
 
-            function validateKode() {
-                let value = kodeInput.value.toUpperCase().replace(/\s+/g, '');
-                kodeInput.value = value;
-                kodeError.textContent = '';
-                kodeError.classList.add('d-none');
+            const file = this.files[0];
 
-                if (value.length !== 10) {
-                    kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
-                    kodeError.classList.remove('d-none');
-                    return false;
-                }
+            if (!file) return;
 
-                const format = /^[A-Z0-9]+$/;
-                if (!format.test(value)) {
-                    kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-                    kodeError.classList.remove('d-none');
-                    return false;
-                }
+            if (file.size > maxFileSize) {
+                compressImage(file, maxFileSize, function(compressedFile) {
 
-                const bulanChar = value.charAt(1);
-                const validBulan = /^[A-L]$/;
-                if (!validBulan.test(bulanChar)) {
-                    kodeError.textContent = "Karakter ke-2 harus huruf bulan (Aâ€“L).";
-                    kodeError.classList.remove('d-none');
-                    return false;
-                }
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(compressedFile);
 
-                const hariStr = value.substr(2, 2);
-                const hari = parseInt(hariStr, 10);
-                if (isNaN(hari) || hari < 1 || hari > 31) {
-                    kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01â€“31).";
-                    kodeError.classList.remove('d-none');
-                    return false;
-                }
+                    fileInput.value = "";
+                    fileInput.files = dataTransfer.files;
 
-                return true;
-            }
-
-            // Validasi File Upload â‰¤ 5MB
-            const maxFileSize = 5 * 1024 * 1024;
-            const fileInput = document.getElementById("kode_karton");
-            const fileError = document.getElementById("kode-karton-error");
-
-            fileInput.addEventListener("change", function() {
-                fileError.textContent = "";
-                const file = this.files[0];
-
-                if (!file) return;
-                if (file.size > maxFileSize) {
-                    fileError.textContent = "Ukuran file maksimal 5MB.";
-                    this.value = "";
-                }
-            });
-        });
-    </script>
-    <script>
-$(function () {
-    const namaProdukSelect = $('#nama_produk');
-    const batchSelect = $('#kode_batch');
-    
-    let initialBatch = "{{ $karton->kode_produksi ?? '' }}";
-    let isFirstLoad = true;
-
-    function initBatchSelect() {
-        let produkValue = namaProdukSelect.val();
-        
-        if (batchSelect.data('select2')) {
-            batchSelect.select2('destroy');
-        }
-        
-        if (!produkValue) {
-            batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
-            batchSelect.prop("disabled", true);
-            return;
-        }
-        
-        if (!isFirstLoad) {
-            batchSelect.html('<option value="">-- Pilih Kode Batch --</option>');
-        }
-        batchSelect.prop("disabled", false);
-        
-        batchSelect.select2({
-            theme: "bootstrap-5",
-            width: '100%',
-            placeholder: "-- Pilih Kode Batch --",
-            allowClear: true,
-            ajax: {
-                url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
-                dataType: 'json',
-                delay: 250,
-                data: function (params) {
-                    return { q: params.term };
-                },
-                processResults: function (data) {
-                    return { results: data };
-                },
-                cache: true
+                    setPreview(compressedFile);
+                });
+            } else {
+                setPreview(file);
             }
         });
-        isFirstLoad = false;
-    }
 
-    namaProdukSelect.on('change', function () {
-        isFirstLoad = false;
-        initBatchSelect();
+        function setPreview(file) {
+            const url = URL.createObjectURL(file);
+
+            preview.removeAttribute('src');
+            preview.src = url;
+
+            previewLink.href = url;
+            preview.classList.remove('d-none');
+        }
+
+        function compressImage(file, maxSize, callback) {
+            const img = new Image();
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+
+                let width = img.width;
+                let height = img.height;
+
+                const maxDimension = 1920;
+
+                if (width > maxDimension || height > maxDimension) {
+                    if (width > height) {
+                        height = height * maxDimension / width;
+                        width = maxDimension;
+                    } else {
+                        width = width * maxDimension / height;
+                        height = maxDimension;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+
+                canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+
+                let quality = 0.9;
+
+                function compress() {
+                    canvas.toBlob(function(blob) {
+
+                        if (blob.size > maxSize && quality > 0.1) {
+                            quality -= 0.1;
+                            compress();
+                            return;
+                        }
+
+                        callback(new File([blob], file.name, {
+                            type: 'image/jpeg'
+                        }));
+
+                    }, 'image/jpeg', quality);
+                }
+
+                compress();
+            };
+
+            reader.readAsDataURL(file);
+        }
+
+
+        const namaProdukSelect = $('#nama_produk');
+        const batchSelect = $('#kode_batch');
+
+        let initialBatch = "{{ $kode_batch_text ?? '' }}";
+        let initialValue = "{{ $karton->kode_produksi ?? '' }}";
+        let isFirstLoad = true;
+
+        function initBatchSelect() {
+            let produkValue = namaProdukSelect.val();
+
+            if (batchSelect.data('select2')) {
+                batchSelect.select2('destroy');
+            }
+
+            if (!produkValue) {
+                batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
+                batchSelect.prop("disabled", true);
+                return;
+            }
+
+            if (!isFirstLoad) {
+                batchSelect.html('<option value="">-- Pilih Kode Batch --</option>');
+            }
+
+            batchSelect.prop("disabled", false);
+
+            batchSelect.select2({
+                theme: "bootstrap-5",
+                width: "100%",
+                placeholder: "-- Pilih Kode Batch --",
+                allowClear: true,
+                ajax: {
+                    url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
+                    dataType: "json",
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            q: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+            isFirstLoad = false;
+        }
+
+        namaProdukSelect.on('change', function() {
+            isFirstLoad = false;
+            initBatchSelect();
+        });
+
+        if (namaProdukSelect.val()) {
+            initBatchSelect();
+
+            if (initialBatch) {
+                let option = new Option(
+                    initialBatch,
+                    initialValue,
+                    true,
+                    true
+                );
+
+                batchSelect.append(option).trigger('change');
+            }
+        }
     });
-
-    let initialProduk = namaProdukSelect.val();
-    if (initialProduk) {
-        initBatchSelect();
-        if(initialBatch){
-            let newOption = new Option(initialBatch, initialBatch, true, true);
-            batchSelect.append(newOption).trigger('change');
-        }
-    }
-
-});
-</script>
+    </script>
 @endpush
