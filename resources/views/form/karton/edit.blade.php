@@ -196,7 +196,7 @@
                                                 style="max-height:100px">
                                         </a>
                                     </div>
-                                    <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah.</small>
+                                    <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah. | Kosongkan jika tidak diubah</small>
                                     <small id="kode-karton-error" class="text-danger"></small>
                                 </div>
 
