@@ -40,33 +40,34 @@
                         </div>
 
                         <div class="row mb-4">
-                            {{-- Input Kode Internal --}}
                             <div class="col-md-6">
                                 <label for="kode_internal" class="form-label">Kode Internal</label>
                                 <input
-                                type="text"
-                                name="kode_internal"
-                                id="kode_internal"
-                                class="form-control @error('kode_internal') is-invalid @enderror"
-                                placeholder="Contoh: RM-001"
-                                value="{{ old('kode_internal') }}">
+                                    type="text"
+                                    name="kode_internal"
+                                    id="kode_internal"
+                                    class="form-control @error('kode_internal') is-invalid @enderror"
+                                    placeholder="Contoh: RM-001"
+                                    value="{{ old('kode_internal') }}">
                                 @error('kode_internal')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
 
-                            {{-- Dropdown Satuan --}}
-                            <div class="col-md-6 mt-3 mt-md-0">
-                                <label for="satuan" class="form-label">Satuan</label>
-                                <select name="satuan" id="satuan" class="form-select @error('satuan') is-invalid @enderror" required>
+                            <div class="col-md-6">
+                                <label for="satuan" class="form-label">Satuan</label><br>
+                                <select name="satuan" id="satuan" class="form-select @error('satuan') is-invalid @enderror" style="height: 38px;" required>
                                     <option value="" selected disabled>-- Pilih Satuan --</option>
                                     <option value="kg" {{ old('satuan') == 'kg' ? 'selected' : '' }}>Kilogram (kg)</option>
                                     <option value="gr" {{ old('satuan') == 'gr' ? 'selected' : '' }}>Gram (gr)</option>
                                     <option value="liter" {{ old('satuan') == 'liter' ? 'selected' : '' }}>Liter (L)</option>
                                     <option value="sak" {{ old('satuan') == 'sak' ? 'selected' : '' }}>Sak</option>
+                                    <option value="box" {{ old('satuan') == 'box' ? 'selected' : '' }}>Box</option>
+                                    <option value="pail" {{ old('satuan') == 'pail' ? 'selected' : '' }}>Pail</option>
+                                    <option value="pcs" {{ old('satuan') == 'pcs' ? 'selected' : '' }}>Pcs</option>
                                 </select>
                                 @error('satuan')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
