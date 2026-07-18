@@ -108,8 +108,7 @@
                                         </span>
 
                                         <input type="time" name="waktu_selesai" class="form-control"
-                                            value="{{ old('waktu_selesai', $karton->waktu_selesai) }}"
-                                            {{ $karton->waktu_selesai ? 'readonly' : '' }}>
+                                            value="{{ old('waktu_selesai', $karton->waktu_selesai) }}">
                                     </div>
                                 </div>
 
@@ -138,8 +137,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Jumlah / Tambahan</label>
                                     <input type="number" name="jumlah" class="form-control"
-                                        value="{{ old('jumlah', $karton->jumlah) }}"
-                                        {{ $karton->jumlah ? 'readonly' : '' }}>
+                                        value="{{ old('jumlah', $karton->jumlah) }}">
                                 </div>
 
                                 <div class="col-md-6">
