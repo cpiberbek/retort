@@ -152,7 +152,7 @@
                             <td class="text-center align-middle">{{ $no++ }}</td>
                             <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift: {{ $dep->shift }}</td>   
                             <td class="text-center align-middle">{{ $dep->nama_produk }}</td>
-                            <td class="text-center align-middle">{{ $dep->kode_produksi }}</td>
+                            <td class="text-center align-middle">{{ $dep->mincing->kode_produksi ?? $dep->kode_produksi }}</td>
                             <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->pukul)->format('H:i') }}</td>
                             
                             {{-- KOLOM PEMERIKSAAN (Menggunakan Modal Detail Versi Server yang Lengkap) --}}
@@ -175,7 +175,7 @@
                                                 <table class="table table-bordered table-sm mb-3">
                                                     <tbody>
                                                         <tr><th style="width: 50%;">Nama Varian</th><td>{{ $dep->nama_produk }}</td></tr>
-                                                        <tr><th>Kode Batch</th><td>{{ $dep->kode_produksi }}</td></tr>
+                                                        <tr><th>Kode Batch</th><td>{{ $dep->mincing->kode_produksi ?? $dep->kode_produksi }}</td></tr>
                                                     </tbody>
                                                 </table>
 
