@@ -63,7 +63,7 @@ class LoadingProdukController extends Controller
     {
         $validatedData = $request->validate([
             'tanggal' => 'required|date',
-            'shift' => 'required|in:Pagi,Malam',
+            'shift' => 'required|in:Pagi,Malam,Shift 1,Shift 2,Shift 3',
             'jenis_aktivitas' => 'required|string|max:255',
             'jam_mulai' => 'nullable|date_format:H:i',
             'jam_selesai' => 'nullable|date_format:H:i',
@@ -161,7 +161,7 @@ class LoadingProdukController extends Controller
     {
         $validatedData = $request->validate([
             'tanggal' => 'required|date',
-            'shift' => 'required|in:Pagi,Malam',
+            'shift' => 'required|in:Pagi,Malam,Shift 1,Shift 2,Shift 3',
             'jenis_aktivitas' => 'required|string|max:255',
             'jam_mulai' => 'nullable|date_format:H:i',
             'jam_selesai' => 'nullable|date_format:H:i',

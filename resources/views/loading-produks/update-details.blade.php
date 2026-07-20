@@ -79,15 +79,16 @@
                             </div>
 
                             {{-- SHIFT --}}
-                            <div class="col-md-4">
+                           <div class="col-md-4">
                                 <label class="form-label">Shift <span class="text-danger">*</span></label>
                                 @if($loadingProduk->shift)
                                     <input type="text" class="form-control" value="{{ $loadingProduk->shift }}" readonly>
                                     <input type="hidden" name="shift" value="{{ $loadingProduk->shift }}">
                                 @else
                                     <select class="form-select select2-static" name="shift" required>
-                                        <option value="Pagi" @selected(old('shift') == 'Pagi')>Pagi</option>
-                                        <option value="Malam" @selected(old('shift') == 'Malam')>Malam</option>
+                                        <option value="Shift 1" @selected(old('shift') == 'Shift 1')>Shift 1</option>
+                                        <option value="Shift 2" @selected(old('shift') == 'Shift 2')>Shift 2</option>
+                                        <option value="Shift 3" @selected(old('shift') == 'Shift 3')>Shift 3</option>
                                     </select>
                                 @endif
                             </div>

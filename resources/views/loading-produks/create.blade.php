@@ -89,8 +89,9 @@
                             <div class="col-md-4">
                                 <label for="shift" class="form-label">Shift <span class="text-danger">*</span></label>
                                 <select class="form-select select2-static" id="shift" name="shift" required>
-                                    <option value="Pagi" @selected(old('shift') == 'Pagi')>Pagi</option>
-                                    <option value="Malam" @selected(old('shift') == 'Malam')>Malam</option>
+                                    <option value="Shift 1" @selected(old('shift') == 'Shift 1')>Shift 1</option>
+                                    <option value="Shift 2" @selected(old('shift') == 'Shift 2')>Shift 2</option>
+                                    <option value="Shift 3" @selected(old('shift') == 'Shift 3')>Shift 3</option>
                                 </select>
                             </div>
                             <div class="col-md-4">

@@ -88,12 +88,22 @@
                                        value="{{ old('tanggal', $loadingProduk->tanggal) }}" required>
                             </div>
                             <div class="col-md-4">
-                                <label for="shift" class="form-label">Shift <span class="text-danger">*</span></label>
-                                <select class="form-select select2-static" id="shift" name="shift" required>
-                                    <option value="Pagi" @selected(old('shift', $loadingProduk->shift) == 'Pagi')>Pagi</option>
-                                    <option value="Malam" @selected(old('shift', $loadingProduk->shift) == 'Malam')>Malam</option>
-                                </select>
-                            </div>
+                            <label for="shift" class="form-label">Shift <span class="text-danger">*</span></label>
+
+                            @php
+                                $shift = old('shift', $loadingProduk->shift);
+                            @endphp
+
+                            <select class="form-select select2-static" id="shift" name="shift" required>
+                                @if(in_array($shift, ['Pagi', 'Malam']))
+                                    <option value="{{ $shift }}" selected>{{ $shift }}</option>
+                                @endif
+
+                                <option value="Shift 1" @selected($shift == 'Shift 1')>Shift 1</option>
+                                <option value="Shift 2" @selected($shift == 'Shift 2')>Shift 2</option>
+                                <option value="Shift 3" @selected($shift == 'Shift 3')>Shift 3</option>
+                            </select>
+                        </div>
                             <div class="col-md-4">
                                 <label for="jenis_aktivitas" class="form-label">Jenis Aktivitas <span class="text-danger">*</span></label>
                                 <select class="form-select select2-static" id="jenis_aktivitas" name="jenis_aktivitas" required>
