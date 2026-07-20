@@ -210,7 +210,7 @@
                                                                 <tr>
                                                                     <td class="text-start fw-bold">Preparation</td>
                                                                     <td colspan="2">{{ $dep->waktu_mulai ?? '-' }}</td>
-                                                                    <td class="text-center">-</td>
+                                                                    <td class="text-center">s/d</td>
                                                                     <td colspan="2">{{ $dep->waktu_selesai ?? '-' }}</td>
                                                                 </tr>
 
@@ -314,12 +314,14 @@
                                                                 <tr>
                                                                     <td class="text-start fw-bold">Waktu Aging Emulsi</td>
                                                                     <td colspan="2">{{ $dep->waktu_aging_emulsi_awal ?? '-' }}</td>
-                                                                    <td class="text-center">-</td>
+                                                                    <td class="text-center">s/d</td>
                                                                     <td colspan="2">{{ $dep->waktu_aging_emulsi_akhir ?? '-' }}</td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-start fw-bold">Suhu Akhir Emulsi Gel</td>
-                                                                    <td colspan="5" class="text-start">{{ $dep->suhu_akhir_emulsi_gel ?? '-' }}</td>
+                                                                    <td colspan="5" class="text-start">
+                                                                        {{ $dep->suhu_akhir_emulsi_gel !== null ? rtrim(rtrim($dep->suhu_akhir_emulsi_gel, '0'), '.') : '-' }}
+                                                                    </td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-start fw-bold">Waktu Mixing</td>
@@ -332,11 +334,15 @@
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-start fw-bold">Suhu Akhir Mixing</td>
-                                                                    <td colspan="5" class="text-start">{{ $dep->suhu_akhir_mixing ?? '-' }}</td>
+                                                                    <td colspan="5" class="text-start">
+                                                                        {{ $dep->suhu_akhir_mixing !== null ? rtrim(rtrim($dep->suhu_akhir_mixing, '0'), '.') : '-' }}
+                                                                    </td>
                                                                 </tr>
                                                                 <tr>
                                                                     <td class="text-start fw-bold">Suhu Akhir Emulsifying</td>
-                                                                    <td colspan="5" class="text-start">{{ $dep->suhu_akhir_emulsi ?? '-' }}</td>
+                                                                    <td colspan="5" class="text-start">
+                                                                        {{ $dep->suhu_akhir_emulsi !== null ? rtrim(rtrim($dep->suhu_akhir_emulsi, '0'), '.') : '-' }}
+                                                                    </td>
                                                                 </tr>
                                                                 
                                                                 {{-- CATATAN --}}

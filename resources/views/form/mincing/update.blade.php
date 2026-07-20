@@ -405,6 +405,9 @@
                                                                         <option value="CCM"
                                                                             {{ ($item['daging'] ?? '') == 'CCM' ? 'selected' : '' }}>
                                                                             CCM</option>
+                                                                        <option value="SURIMI"
+                                                                            {{ ($item['daging'] ?? '') == 'SURIMI' ? 'selected' : '' }}>
+                                                                            SURIMI</option>
                                                                     </select>
                                                                 </td>
                                                                 <td style="width: 45%;">
@@ -438,6 +441,7 @@
                                                                         <option value="SBL">SBL</option>
                                                                         <option value="MDM">MDM</option>
                                                                         <option value="CCM">CCM</option>
+                                                                        <option value="SURIMI">SURIMI</option>
                                                                     </select>
                                                                 </td>
                                                                 <td style="width: 45%;">
@@ -469,20 +473,44 @@
 
                                         {{-- BARIS WAKTU MIXING PREMIX --}}
                                         <tr>
-                                            <td class="text-start fw-semibold bg-light" style="width: 25%;">Waktu Mixing
-                                                Premix</td>
+                                            <td class="text-start fw-semibold bg-light" style="width: 25%;">Waktu Mixing Premix</td>
                                             <td colspan="3">
-                                                <div class="input-group">
-                                                    <input type="number" name="waktu_mixing_premix"
-                                                        class="form-control text-center m-0" placeholder="0"
-                                                        min="0"
-                                                        style="height: 31px; min-height: 31px; border-right: 0;"
-                                                        value="{{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix) }}"
-                                                        {{ $mincing->waktu_mixing_premix ? 'readonly' : '' }}>
-                                                    <span
-                                                        class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
-                                                        style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                                <div class="d-flex align-items-center gap-2">
+
+                                                    <input type="time"
+                                                        id="premix_start"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ old('waktu_mixing_premix_start', $mincing->waktu_mixing_premix_start) }}"
+                                                        disabled>
+
+                                                    <span>-</span>
+
+                                                    <input type="time"
+                                                        id="premix_end"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ old('waktu_mixing_premix_end', $mincing->waktu_mixing_premix_end) }}"
+                                                        disabled>
+
+                                                    <span id="premix_result" class="badge bg-light text-dark">
+                                                        ({{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix ?? 0) }}) Menit
+                                                    </span>
+
                                                 </div>
+
+                                                <input type="hidden"
+                                                    name="waktu_mixing_premix"
+                                                    id="premix_menit"
+                                                    value="{{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix) }}">
+
+                                                <input type="hidden"
+                                                    name="waktu_mixing_premix_start"
+                                                    id="premix_start_hidden"
+                                                    value="{{ old('waktu_mixing_premix_start', $mincing->waktu_mixing_premix_start) }}">
+
+                                                <input type="hidden"
+                                                    name="waktu_mixing_premix_end"
+                                                    id="premix_end_hidden"
+                                                    value="{{ old('waktu_mixing_premix_end', $mincing->waktu_mixing_premix_end) }}">
                                             </td>
                                         </tr>
                                     </tbody>
@@ -499,17 +527,42 @@
                                         <tr>
                                             <td class="text-start fw-semibold" style="width: 25%;">Waktu Bowl Cutter</td>
                                             <td colspan="3">
-                                                <div class="input-group">
-                                                    <input type="number" name="waktu_bowl_cutter"
-                                                        class="form-control text-center m-0" placeholder="0"
-                                                        min="0"
-                                                        style="height: 31px; min-height: 31px; border-right: 0;"
-                                                        value="{{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter) }}"
-                                                        {{ $mincing->waktu_bowl_cutter ? 'readonly' : '' }}>
-                                                    <span
-                                                        class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
-                                                        style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                                <div class="d-flex align-items-center gap-2">
+
+                                                    <input type="time"
+                                                        id="bowl_start"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ old('waktu_bowl_cutter_start', $mincing->waktu_bowl_cutter_start) }}"
+                                                        disabled>
+
+                                                    <span>-</span>
+
+                                                    <input type="time"
+                                                        id="bowl_end"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}"
+                                                        disabled>
+
+                                                    <span id="bowl_result" class="badge bg-light text-dark">
+                                                        ({{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter ?? 0) }}) Menit
+                                                    </span>
+
                                                 </div>
+
+                                                <input type="hidden"
+                                                    name="waktu_bowl_cutter"
+                                                    id="bowl_menit"
+                                                    value="{{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter) }}">
+
+                                                <input type="hidden"
+                                                    name="waktu_bowl_cutter_start"
+                                                    id="bowl_start_hidden"
+                                                    value="{{ old('waktu_bowl_cutter_start', $mincing->waktu_bowl_cutter_start) }}">
+
+                                                <input type="hidden"
+                                                    name="waktu_bowl_cutter_end"
+                                                    id="bowl_end_hidden"
+                                                    value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}">
                                             </td>
                                         </tr>
 
@@ -534,8 +587,7 @@
                                                         {{ $mincing->suhu_akhir_emulsi_gel ? 'disabled' : '' }}>±</button>
                                                     <input type="text" inputmode="decimal" name="suhu_akhir_emulsi_gel"
                                                         class="form-control form-control-sm text-center suhu-number-input"
-                                                        value="{{ old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel) }}"
-                                                       
+                                                        value="{{ rtrim(rtrim(old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel), '0'), '.') }}"
                                                         {{ $mincing->suhu_akhir_emulsi_gel ? 'readonly' : '' }}>
                                                 </div>
                                             </td>
@@ -549,17 +601,32 @@
                                         <tr>
                                             <td class="text-start fw-semibold" style="width: 25%;">Waktu Mixing</td>
                                             <td>
-                                                <div class="input-group">
-                                                    <input type="number" name="waktu_mixing"
-                                                        class="form-control text-center m-0" placeholder="0"
-                                                        min="0"
-                                                        style="height: 31px; min-height: 31px; border-right: 0;"
-                                                        value="{{ old('waktu_mixing', $mincing->waktu_mixing) }}"
-                                                        {{ $mincing->waktu_mixing ? 'readonly' : '' }}>
-                                                    <span
-                                                        class="input-group-text bg-light text-muted d-flex align-items-center justify-content-center"
-                                                        style="height: 31px; min-height: 31px; font-size: 0.875rem;">Menit</span>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <input type="time" id="mixing_start"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ old('waktu_mixing_start', $mincing->waktu_mixing_start) }}"
+                                                        disabled>
+
+                                                    <span>-</span>
+
+                                                    <input type="time" id="mixing_end"
+                                                        class="form-control form-control-sm"
+                                                        value="{{ old('waktu_mixing_end', $mincing->waktu_mixing_end) }}"
+                                                        disabled>
+
+                                                    <span id="mixing_result" class="badge bg-light text-dark">
+                                                        ({{ old('waktu_mixing', $mincing->waktu_mixing ?? 0) }}) Menit
+                                                    </span>
                                                 </div>
+
+                                                <input type="hidden" name="waktu_mixing" id="mixing_menit"
+                                                    value="{{ old('waktu_mixing', $mincing->waktu_mixing) }}">
+
+                                                <input type="hidden" name="waktu_mixing_start" id="mixing_start_hidden"
+                                                    value="{{ old('waktu_mixing_start', $mincing->waktu_mixing_start) }}">
+
+                                                <input type="hidden" name="waktu_mixing_end" id="mixing_end_hidden"
+                                                    value="{{ old('waktu_mixing_end', $mincing->waktu_mixing_end) }}">
                                             </td>
                                         </tr>
                                         <tr>
@@ -568,24 +635,25 @@
                                                 <div class="input-group input-group-sm">
                                                     <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
                                                         {{ $mincing->suhu_akhir_mixing ? 'disabled' : '' }}>±</button>
+
                                                     <input type="text" inputmode="decimal" name="suhu_akhir_mixing"
                                                         class="form-control form-control-sm text-center suhu-number-input"
-                                                        value="{{ old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing) }}"
-                                                       
+                                                        value="{{ rtrim(rtrim(old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing), '0'), '.') }}"
                                                         {{ $mincing->suhu_akhir_mixing ? 'readonly' : '' }}>
                                                 </div>
                                             </td>
                                         </tr>
+
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsifying (Std 14±2°C)</td>
                                             <td>
                                                 <div class="input-group input-group-sm">
                                                     <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
                                                         {{ $mincing->suhu_akhir_emulsi ? 'disabled' : '' }}>±</button>
+
                                                     <input type="text" inputmode="decimal" name="suhu_akhir_emulsi"
                                                         class="form-control form-control-sm text-center suhu-number-input"
-                                                        value="{{ old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi) }}"
-                                                       
+                                                        value="{{ rtrim(rtrim(old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi), '0'), '.') }}"
                                                         {{ $mincing->suhu_akhir_emulsi ? 'readonly' : '' }}>
                                                 </div>
                                             </td>
@@ -822,6 +890,7 @@
                             <option value="SBL">SBL</option>
                             <option value="MDM">MDM</option>
                             <option value="CCM">CCM</option>
+                            <option value="SURIMI">SURIMI</option>
                         </select>
                     </td>
                     <td style="width: 45%;"><div class="input-group input-group-sm">
@@ -879,6 +948,144 @@
                 : '-' + input.value;
             input.dispatchEvent(new Event('input'));
             input.focus();
+        });
+    </script>
+
+    {{-- JS WAKTU MIXING PREMIX --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const start = document.getElementById("premix_start");
+            const end = document.getElementById("premix_end");
+            const result = document.getElementById("premix_result");
+            const menit = document.getElementById("premix_menit");
+            const startHidden = document.getElementById("premix_start_hidden");
+            const endHidden = document.getElementById("premix_end_hidden");
+
+            if (!start || !end) return;
+
+            function hitungPremix() {
+                startHidden.value = start.value;
+                endHidden.value = end.value;
+
+                if (!start.value || !end.value) {
+                    result.textContent = "(0) Menit";
+                    menit.value = "";
+                    return;
+                }
+
+                let [sh, sm] = start.value.split(":").map(Number);
+                let [eh, em] = end.value.split(":").map(Number);
+
+                let mulai = new Date();
+                mulai.setHours(sh, sm, 0, 0);
+
+                let selesai = new Date();
+                selesai.setHours(eh, em, 0, 0);
+
+                if (selesai < mulai) {
+                    selesai.setDate(selesai.getDate() + 1);
+                }
+
+                const diff = Math.round((selesai - mulai) / 60000);
+
+                result.textContent = `(${diff}) Menit`;
+                menit.value = diff;
+            }
+
+            start.addEventListener("change", hitungPremix);
+            end.addEventListener("change", hitungPremix);
+
+            hitungPremix();
+        });
+    </script>
+
+    {{-- JS BOWL CUTTER --}}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const start = document.getElementById("bowl_start");
+            const end = document.getElementById("bowl_end");
+            const result = document.getElementById("bowl_result");
+            const menit = document.getElementById("bowl_menit");
+            const startHidden = document.getElementById("bowl_start_hidden");
+            const endHidden = document.getElementById("bowl_end_hidden");
+
+            if (!start || !end) return;
+
+            function hitungBowl() {
+                startHidden.value = start.value;
+                endHidden.value = end.value;
+
+                if (!start.value || !end.value) {
+                    result.textContent = "(0) Menit";
+                    menit.value = "";
+                    return;
+                }
+
+                let [sh, sm] = start.value.split(":").map(Number);
+                let [eh, em] = end.value.split(":").map(Number);
+
+                let mulai = new Date();
+                mulai.setHours(sh, sm, 0, 0);
+
+                let selesai = new Date();
+                selesai.setHours(eh, em, 0, 0);
+
+                if (selesai < mulai) {
+                    selesai.setDate(selesai.getDate() + 1);
+                }
+
+                const diff = Math.round((selesai - mulai) / 60000);
+
+                result.textContent = `(${diff}) Menit`;
+                menit.value = diff;
+            }
+
+            start.addEventListener("change", hitungBowl);
+            end.addEventListener("change", hitungBowl);
+
+            hitungBowl();
+        });
+    </script>
+
+
+    {{-- JS MIXING --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const start = document.getElementById('mixing_start');
+            const end = document.getElementById('mixing_end');
+
+            const result = document.getElementById('mixing_result');
+            const menit = document.getElementById('mixing_menit');
+            const startHidden = document.getElementById('mixing_start_hidden');
+            const endHidden = document.getElementById('mixing_end_hidden');
+
+            function hitungMixing() {
+                startHidden.value = start.value;
+                endHidden.value = end.value;
+
+                if (!start.value || !end.value) {
+                    menit.value = 0;
+                    result.innerText = '(0) Menit';
+                    return;
+                }
+
+                let mulai = new Date(`2000-01-01T${start.value}`);
+                let selesai = new Date(`2000-01-01T${end.value}`);
+
+                if (selesai < mulai) {
+                    selesai.setDate(selesai.getDate() + 1);
+                }
+
+                let total = Math.floor((selesai - mulai) / 60000);
+
+                menit.value = total;
+                result.innerText = `(${total}) Menit`;
+            }
+
+            start.addEventListener('change', hitungMixing);
+            end.addEventListener('change', hitungMixing);
+
+            hitungMixing();
         });
     </script>
 @endsection
