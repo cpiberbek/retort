@@ -105,17 +105,12 @@ class LoadingProdukController extends Controller
       //  }
 
         DB::beginTransaction();
+
         try {
             $loadingProdukData = Arr::except($validatedData, ['details']);
-            $loadingProduk = LoadingProduk::create($loadingProdukData); // Model akan otomatis mengisi created_by dan uuid
+            $loadingProduk = LoadingProduk::create($loadingProdukData);
 
             foreach ($validatedData['details'] as $detail) {
-                if (strlen($detail['kode_produksi']) === 36) {
-                    $mincing = \App\Models\Mincing::where('uuid', $detail['kode_produksi'])->first();
-                    if ($mincing) {
-                        $detail['kode_produksi'] = $mincing->kode_produksi;
-                    }
-                }
                 $loadingProduk->details()->create($detail);
             }
 
@@ -126,7 +121,9 @@ class LoadingProdukController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error saving loading check: ' . $e->getMessage());
-            return back()->with('error', 'Terjadi kesalahan saat menyimpan data.')->withInput();
+
+            return back()->with('error', 'Terjadi kesalahan saat menyimpan data.')
+                ->withInput();
         }
     }
 
@@ -184,6 +181,7 @@ class LoadingProdukController extends Controller
             'details.*.jumlah' => 'required|integer|min:1',
             'details.*.keterangan' => 'nullable|string|max:255',
             'details.*.satuan' => 'required|string|max:50',
+            'details.*.uuid' => 'nullable|uuid',
         ]);
 
         // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
@@ -206,9 +204,24 @@ class LoadingProdukController extends Controller
         try {
             $loadingProduk->update(Arr::except($validatedData, ['details']));
 
-            $loadingProduk->details()->delete();
+            $existingUuids = collect($validatedData['details'])
+                ->pluck('uuid')
+                ->filter()
+                ->toArray();
+
+            $loadingProduk->details()
+                ->whereNotIn('uuid', $existingUuids)
+                ->delete();
+
             foreach ($validatedData['details'] as $detail) {
-                $loadingProduk->details()->create($detail);
+                if (!empty($detail['uuid'])) {
+                    $loadingProduk->details()
+                        ->where('uuid', $detail['uuid'])
+                        ->firstOrFail()
+                        ->update(Arr::except($detail, ['uuid']));
+                } else {
+                    $loadingProduk->details()->create($detail);
+                }
             }
 
             DB::commit();

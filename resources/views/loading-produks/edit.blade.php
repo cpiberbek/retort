@@ -244,6 +244,15 @@
                         <div id="details-container">
                             {{-- Item dinamis akan ditambahkan di sini oleh JS --}}
                         </div>
+                        <div class="card border-secondary mt-3">
+                            <div class="card-header bg-success text-white">
+                                <strong>Jumlah Total Item Produk</strong><br>
+                                <small><strong>*Total akan dihitung berdasarkan Varian dan Satuan</strong></small>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="mb-0 text-start" id="total-item-display">Data Kosong! tidak bisa disubmit</h5>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -287,19 +296,104 @@
         const addBtn = document.getElementById('add-detail-btn');
         let detailIndex = 0;
 
+        function updateTotalItem() {
+            const totals = {};
+
+            container.querySelectorAll('.dynamic-item-card').forEach(card => {
+                const produk = card.querySelector('select[name$="[nama_produk]"]')?.value;
+                const jumlah = parseFloat(card.querySelector('input[name$="[jumlah]"]')?.value) || 0;
+                const satuan = card.querySelector('select[name$="[satuan]"]')?.value || '';
+
+                if (!produk) return;
+
+                const key = `${produk}|${satuan}`;
+
+                if (!totals[key]) {
+                    totals[key] = {
+                        produk: produk,
+                        jumlah: 0,
+                        satuan: satuan
+                    };
+                }
+
+                totals[key].jumlah += jumlah;
+            });
+
+            const display = document.getElementById('total-item-display');
+
+            if (Object.keys(totals).length === 0) {
+                display.textContent = 'Belum ada data';
+                return;
+            }
+
+            display.style.textAlign = 'left';
+            display.style.display = 'block';
+
+            display.innerHTML = Object.values(totals)
+                .map(data =>
+                    `<div class="badge bg-secondary text-white d-inline-block mb-2">• ${data.produk} [ ${data.jumlah} ${data.satuan} ]</div>`
+                )
+                .join('<br>');
+        }
+
+        function hitungExpired(kode) {
+            kode = kode.toUpperCase();
+
+            const tahunKode = {
+                'O': 2024,'P': 2025,'Q': 2026,'R': 2027,'S': 2028,'T': 2029,
+                'U': 2030,'V': 2031,'W': 2032,'X': 2033,'Y': 2034,'Z': 2035
+            };
+
+            const bulanKode = {
+                'A': 1,'B': 2,'C': 3,'D': 4,'E': 5,'F': 6,
+                'G': 7,'H': 8,'I': 9,'J': 10,'K': 11,'L': 12
+            };
+
+            const format = kode.substring(0,4);
+
+            if (!/^[A-Z]{2}\d{2}$/.test(format)) return null;
+
+            const tahun = tahunKode[format[0]];
+            const bulan = bulanKode[format[1]];
+            const hari = parseInt(format.substring(2,4));
+
+            if (!tahun || !bulan || !hari) return null;
+
+            let date = new Date(tahun, bulan - 1, hari);
+
+            date.setMonth(date.getMonth() + 7);
+
+            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+        }
+
+        function reindexDetails() {
+            const cards = container.querySelectorAll('.dynamic-item-card');
+
+            cards.forEach((card, index) => {
+                card.querySelector('h5').textContent = `Item Produk #${index + 1}`;
+
+                card.querySelectorAll('[name]').forEach(field => {
+                    field.name = field.name.replace(/details\[\d+\]/, `details[${index}]`);
+                });
+            });
+
+            detailIndex = cards.length;
+        }
+
         /**
-         * Fungsi untuk merender form detail, bisa dengan data (untuk old() atau $loadingProduk) atau kosong
+         * Fungsi untuk merender form detail, bisa dengan data (untuk old()) atau kosong
          */
         function renderDetailForm(data = null) {
             const i = detailIndex;
+            const uuid = data?.uuid || '';
 
-            // Siapkan nilai default atau dari 'old' data / $loadingProduk
+            // Siapkan nilai default atau dari 'old' data
             const nama_produk = data?.nama_produk || '';
             const kode_produksi = data?.kode_produksi || '';
             const kode_expired = data?.kode_expired || '';
-            const jumlah = data?.jumlah || 1;
-            const satuan = data?.satuan || '';
+            const jumlah = data?.jumlah || '';
             const keterangan = data?.keterangan || '';
+            const satuan = data?.satuan || '';
 
             const newDetail = document.createElement('div');
             newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded');
@@ -311,7 +405,7 @@
                 </div>
 
                 <div class="row g-3">
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label">Nama Produk (Varian) <span class="text-danger">*</span></label>
                         <select name="details[${i}][nama_produk]" class="form-control var-produk-select" required>
                             <option value="">-- Pilih Varian --</option>
@@ -322,7 +416,7 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-2">
                         <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
                         <select name="details[${i}][kode_produksi]" class="form-control var-batch-select" required>
                             <option value="">Pilih Varian Terlebih Dahulu</option>
@@ -330,39 +424,43 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Kode Expired</label>
-                        <input type="date" name="details[${i}][kode_expired]" class="form-control" value="${kode_expired}">
+                        <input type="date" name="details[${i}][kode_expired]" class="form-control expired-date" value="${kode_expired}" required>
+                        <small class="text-primary exp-warning d-none">Sesuaikan kode produksi manual</small>
                     </div>
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <label class="form-label">Jumlah <span class="text-danger">*</span></label>
                         <input type="number" name="details[${i}][jumlah]" class="form-control" value="${jumlah}" min="1" required>
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-1">
                         <label class="form-label">Satuan <span class="text-danger">*</span></label>
                         <select name="details[${i}][satuan]" class="form-control" required>
-                            <option value="">-- Pilih Satuan --</option>
+                            <option value="">--Pilih--</option>
                             <option value="kg" ${satuan === 'kg' ? 'selected' : ''}>Kg</option>
                             <option value="pcs" ${satuan === 'pcs' ? 'selected' : ''}>Pcs</option>
                             <option value="roll" ${satuan === 'roll' ? 'selected' : ''}>Roll</option>
                             <option value="box" ${satuan === 'box' ? 'selected' : ''}>Box</option>
                         </select>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-3">
                         <label class="form-label">Keterangan</label>
                         <input type="text" name="details[${i}][keterangan]" class="form-control" value="${keterangan}">
                     </div>
                 </div>
             `;
 
-            // Untuk UUID hidden bila edit mode
-            if (data?.uuid) {
-                newDetail.innerHTML += `<input type="hidden" name="details[${i}][uuid]" value="${data.uuid}">`;
+            if (uuid) {
+                newDetail.innerHTML += `
+                    <input type="hidden" name="details[${i}][uuid]" value="${uuid}">
+                `;
             }
 
             container.appendChild(newDetail);
 
             let produkSelect = $(newDetail).find('.var-produk-select');
             let batchSelect = $(newDetail).find('.var-batch-select');
+            let expiredInput = $(newDetail).find('.expired-date');
+            let warning = $(newDetail).find('.exp-warning');
 
             // Initialize produk as Select2 (with search)
             produkSelect.select2({
@@ -390,12 +488,7 @@
                         return { q: params.term };
                     },
                     processResults: function (data) {
-                        return {
-                            results: data.map(item => ({
-                                id: item.text,
-                                text: item.text
-                            }))
-                        };
+                        return { results: data };
                     },
                     cache: true
                 }
@@ -403,8 +496,17 @@
 
             // Set old batch value if exists
             if (kode_produksi) {
-                let newOption = new Option(kode_produksi, kode_produksi, true, true);
-                batchSelect.append(newOption).trigger('change');
+                const isUuid = /^[0-9a-f-]{36}$/i.test(kode_produksi);
+
+                if (isUuid) {
+                    $.get("{{ url('/lookup/batch-packing-by-uuid') }}/" + kode_produksi, function(res) {
+                        let newOption = new Option(res.text, res.id, true, true);
+                        batchSelect.append(newOption).trigger('change');
+                    });
+                } else {
+                    let newOption = new Option(kode_produksi, kode_produksi, true, true);
+                    batchSelect.append(newOption).trigger('change');
+                }
             }
 
             // Set initial disabled state
@@ -417,14 +519,42 @@
                 let currentVal = $(this).val();
                 batchSelect.val(null).trigger('change');
                 batchSelect.prop('disabled', !currentVal);
+
+                updateTotalItem();
             });
+
+            batchSelect.on('select2:select', function() {
+                let kode = $(this).find(':selected').text();
+
+                let expired = hitungExpired(kode);
+
+                if (expired) {
+                    expiredInput.val(expired);
+                    warning.addClass('d-none');
+                } else {
+                    expiredInput.val('');
+                    warning.removeClass('d-none');
+                }
+            });
+
+            newDetail.querySelector('input[name$="[jumlah]"]').addEventListener('input', updateTotalItem);
+            newDetail.querySelector('select[name$="[satuan]"]').addEventListener('change', updateTotalItem);
 
             detailIndex++;
         }
 
-        // --- Event Listener untuk Tombol "Tambah Item" ---
+        // --- Event Listener untuk Tombol "Tambah Item" + copy first index ---
         if (addBtn) {
-            addBtn.addEventListener('click', () => renderDetailForm(null));
+            addBtn.addEventListener('click', () => {
+                let firstProduk = $('.var-produk-select').first().val();
+
+                renderDetailForm({
+                    nama_produk: firstProduk || ''
+                });
+
+                reindexDetails();
+                updateTotalItem();
+            });
         }
 
         // --- Event Listener untuk Tombol Hapus ---
@@ -434,12 +564,13 @@
                 const removeBtn = e.target.closest('.remove-detail-btn');
                 if (removeBtn) {
                     removeBtn.closest('.dynamic-item-card').remove();
+                    reindexDetails();
+                    updateTotalItem();
                 }
             });
         }
 
-        // --- Render data 'old' atau $loadingProduk->details saat halaman dimuat ---
-        // **PERUBAHAN KUNCI DI SINI:**
+        // --- Render data 'old' jika ada (setelah validasi gagal) ---
         const existingDetails = @json(old('details', $loadingProduk->details ?? []));
 
         if (existingDetails.length > 0) {
@@ -447,9 +578,11 @@
                 renderDetailForm(itemData);
             });
         } else {
-            // Tambah satu form kosong jika tidak ada data sama sekali
             renderDetailForm(null);
         }
+
+        reindexDetails();
+        updateTotalItem();
 
     });
 </script>
