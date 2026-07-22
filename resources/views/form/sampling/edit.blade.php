@@ -100,7 +100,7 @@
                             <div class="col-md-6">
                                 <label class="form-label">Jumlah</label>
                                 <input type="number" name="jumlah" id="jumlah" class="form-control"
-                                    value="{{ old('jumlah', $sampling->jumlah) }}" required step="0.01" min="0">
+                                    value="{{ old('jumlah', round($sampling->jumlah)) }}" required step="1" min="0">
                             </div>
                         </div>
 
@@ -117,7 +117,7 @@
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">{{ ucwords(str_replace('_', ' ', $field)) }}</label>
                                 <input type="number" name="{{ $field }}" class="form-control"
-                                    value="{{ old($field, $sampling->$field) }}" step="0.01" min="0">
+                                    value="{{ old($field, round($sampling->$field)) }}" step="1" min="0">
                             </div>
                             @endforeach
                         </div>

@@ -212,6 +212,14 @@ class PackingController extends Controller
             'keterangan'    => 'nullable|string',
         ]);
 
+        $qrcodeFinal = $request->hasFile('qrcode')
+            ? $this->compressAndStore($request->file('qrcode'), 'qrcode')
+            : $packing->qrcode;
+
+        $kodePrintingFinal = $request->hasFile('kode_printing')
+            ? $this->compressAndStore($request->file('kode_printing'), 'printing')
+            : $packing->kode_printing;
+
         $packing->update([
             'date'                => $request->date,
             'shift'               => $request->shift,
@@ -227,6 +235,8 @@ class PackingController extends Controller
             'berat_pack'          => $request->berat_pack,
             'data_kemasan'        => $request->has('data_kemasan') ? json_encode($request->data_kemasan) : null,
             'keterangan'          => $request->keterangan,
+            'qrcode'              => $qrcodeFinal,
+            'kode_printing'       => $kodePrintingFinal,
         ]);
 
         return redirect()->route('packing.index')->with('success', 'Pemeriksaan Proses Packing berhasil diperbarui');

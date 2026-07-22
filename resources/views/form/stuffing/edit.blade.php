@@ -91,9 +91,19 @@
                                 @php $isExisting = $index < $originalCount; @endphp
                                 <div class="accordion-item stuffing-item">
                                     <h5 class="accordion-header" id="heading{{ $index }}">
-                                        <button class="accordion-button {{ $index == 0 ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}">
+                                        <button class="accordion-button {{ $index == 0 ? '' : 'collapsed' }}"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapse{{ $index }}">
                                             <i class="bi bi-clipboard-check me-2 text-warning"></i>
-                                            Stuffing {{ $index + 1 }} {!! $isExisting ? '<span class="badge bg-primary ms-2">Data Existing</span>' : '<span class="badge bg-success ms-2">Baru</span>' !!}
+
+                                            {{ !empty($item['kode_mesin']) ? $item['kode_mesin'] : 'Stuffing ' . ($index + 1) }}
+
+                                            @if ($isExisting)
+                                                <span class="badge bg-primary ms-2">Data Existing</span>
+                                            @else
+                                                <span class="badge bg-success ms-2">Baru</span>
+                                            @endif
                                         </button>
                                     </h5>
                                     <div id="collapse{{ $index }}" class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}" data-bs-parent="#accordionStuffing">
@@ -351,6 +361,26 @@
     document.addEventListener('click', function(e) {
         if (e.target.closest('.btnHapus')) { e.target.closest('.stuffing-item').remove(); }
     });
+
+    //nama mesin stuffing dinamis
+    $(document).on('change', 'select[name$="[kode_mesin]"]', function () {
+        const accordionButton = $(this)
+            .closest('.stuffing-item')
+            .find('.accordion-button');
+
+        const badge = accordionButton.find('.badge').prop('outerHTML') || '';
+
+        const nomor = $(this).closest('.stuffing-item').index() + 1;
+        const namaMesin = $(this).val()
+            ? $(this).find('option:selected').text().trim()
+            : `Stuffing ${nomor}`;
+
+        accordionButton.html(
+            `<i class="bi bi-clipboard-check me-2 text-warning"></i> ${namaMesin} ${badge}`
+        );
+    });
+
+    $('select[name$="[kode_mesin]"]').trigger('change');
 </script>
 
 @endpush

@@ -87,9 +87,19 @@
                                 
                                 <div class="accordion-item stuffing-item">
                                     <h5 class="accordion-header" id="heading{{ $index }}">
-                                        <button class="accordion-button {{ $index == 0 ? '' : 'collapsed' }}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}">
+                                        <button class="accordion-button {{ $index == 0 ? '' : 'collapsed' }}"
+                                            type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#collapse{{ $index }}">
                                             <i class="bi bi-clipboard-check me-2 text-warning"></i>
-                                            Stuffing {{ $index + 1 }} {!! $isReadonly ? '<span class="badge bg-secondary ms-2">Data Existing (Readonly)</span>' : '<span class="badge bg-success ms-2">Baru</span>' !!}
+
+                                            {{ !empty($item['kode_mesin']) ? $item['kode_mesin'] : 'Stuffing ' . ($index + 1) }}
+
+                                            @if ($isReadonly)
+                                                <span class="badge bg-secondary ms-2">Data Existing (Readonly)</span>
+                                            @else
+                                                <span class="badge bg-success ms-2">Baru</span>
+                                            @endif
                                         </button>
                                     </h5>
                                     <div id="collapse{{ $index }}" class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}" data-bs-parent="#accordionStuffing">
@@ -299,6 +309,25 @@
             setTimeout(() => { invalidInput.focus(); invalidInput.classList.add('is-invalid'); }, 350); 
         }
     }, true);
+
+    $(document).on('change', 'select[name$="[kode_mesin]"]', function () {
+        const accordionButton = $(this)
+            .closest('.stuffing-item')
+            .find('.accordion-button');
+
+        const badge = accordionButton.find('.badge').prop('outerHTML') || '';
+
+        const nomor = $(this).closest('.stuffing-item').index() + 1;
+        const namaMesin = $(this).val()
+            ? $(this).find('option:selected').text().trim()
+            : `Stuffing ${nomor}`;
+
+        accordionButton.html(
+            `<i class="bi bi-clipboard-check me-2 text-warning"></i> ${namaMesin} ${badge}`
+        );
+    });
+
+    $('select[name$="[kode_mesin]"]').trigger('change');
 </script>
 
 <style>
