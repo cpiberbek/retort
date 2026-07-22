@@ -309,7 +309,6 @@
                 <div class="preview mt-2"></div>
             </td>
             <td>
-                <button type="button" class="btn btn-primary btn-sm saveRow">Simpan</button>
                 <button type="button" class="btn btn-danger btn-sm removeRow">Hapus</button>
             </td>
         </tr>
@@ -319,14 +318,13 @@
 
     // =================== HAPUS BARIS ===================
         $('#pvdcBody').on('click', '.removeRow', function () {
-            // Cek sisa baris, jangan hapus jika tinggal satu (opsional)
-            // if($('#pvdcBody tr').length > 1) { 
+            if ($('#pvdcBody tr').length > 1) {
                 $(this).closest('tr').remove();
-            // }
+            } 
         });
 
     // =================== SIMPAN DATA (AJAX) ===================
-        $('#saveBtn').click(function () {
+        $('#saveBtn').click(async function () {
             const btn = $(this);
             const form = $('#pvdcForm')[0]; // Ambil elemen DOM form
             
@@ -337,6 +335,17 @@
             }
 
             const formData = new FormData(form);
+
+            const files = form.querySelectorAll('input[type="file"]');
+
+            for (let input of files) {
+                if (input.files[0]) {
+                    formData.set(
+                        input.name,
+                        await compressImage(input.files[0])
+                    );
+                }
+            }
 
             // Validasi manual tambahan (opsional, karena checkValidity sudah menangani required)
             let hasData = false;
@@ -391,6 +400,60 @@
                 }
             });
         });
+
+        function compressImage(file) {
+            return new Promise(resolve => {
+                if (file.size <= 2 * 1024 * 1024) {
+                    resolve(file);
+                    return;
+                }
+
+                const img = new Image();
+                const canvas = document.createElement('canvas');
+                const reader = new FileReader();
+
+                reader.onload = e => img.src = e.target.result;
+
+                img.onload = () => {
+                    let width = img.width;
+                    let height = img.height;
+                    let quality = 0.8;
+
+                    function compress() {
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        canvas.getContext('2d').clearRect(0, 0, width, height);
+                        canvas.getContext('2d').drawImage(
+                            img,
+                            0,
+                            0,
+                            width,
+                            height
+                        );
+
+                        canvas.toBlob(blob => {
+                            if (blob.size <= 2 * 1024 * 1024) {
+                                resolve(new File([blob], file.name, {
+                                    type: 'image/jpeg'
+                                }));
+                                return;
+                            }
+
+                            quality -= 0.1;
+                            width *= 0.85;
+                            height *= 0.85;
+
+                            compress();
+                        }, 'image/jpeg', quality);
+                    }
+
+                    compress();
+                };
+
+                reader.readAsDataURL(file);
+            });
+        }
 
     });
 </script>

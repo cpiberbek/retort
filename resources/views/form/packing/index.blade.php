@@ -163,8 +163,13 @@
                                                     <div class="col-md-6">
                                                         <table class="table table-sm table-bordered">
                                                             <tr><th>Waktu</th><td>{{ \Carbon\Carbon::parse($dep->waktu)->format('H:i') }}</td></tr>
-                                                            <tr><th>Kode Toples (Batch)</th><td>{{ $dep->kode_toples ?? '-' }}</td></tr>
-                                                            <tr><th>Suhu</th><td>{{ $dep->suhu ?? '-' }} Â°C</td></tr>
+                                                            <tr>
+                                                                <th>Kode Toples (Batch)</th>
+                                                                <td>
+                                                                    {{ \App\Models\Mincing::where('uuid', $dep->kode_toples)->value('kode_produksi') ?? $dep->kode_toples ?? '-' }}
+                                                                </td>
+                                                            </tr>
+                                                            <tr><th>Suhu</th><td>{{ $dep->suhu ?? '-' }} °C</td></tr>
                                                             <tr><th>Jml Produk</th><td>{{ $dep->jumlah_produk ?? '-' }}</td></tr>
                                                             <tr>
                                                                 <th>QR Code</th>

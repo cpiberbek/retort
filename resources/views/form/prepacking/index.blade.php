@@ -133,10 +133,21 @@
 
                     // Kondisi Produk
                     $kondisi = json_decode($dep->kondisi_produk, true) ?? [];
-                    $airBasah = ($kondisi['basah_air_ujung'] ?? 0) + ($kondisi['basah_air_seal'] ?? 0);
-                    $airKering = ($kondisi['kering_air_ujung'] ?? 0) + ($kondisi['kering_air_seal'] ?? 0);
-                    $minyakBasah = ($kondisi['basah_minyak_ujung'] ?? 0) + ($kondisi['basah_minyak_seal'] ?? 0);
-                    $minyakKering = ($kondisi['kering_minyak_ujung'] ?? 0) + ($kondisi['kering_minyak_seal'] ?? 0);
+                    $airBasah = fmod($kondisi['basah_air_total'] ?? 0, 1) == 0
+                        ? (int) ($kondisi['basah_air_total'] ?? 0)
+                        : ($kondisi['basah_air_total'] ?? 0);
+
+                    $airKering = fmod($kondisi['kering_air_total'] ?? 0, 1) == 0
+                        ? (int) ($kondisi['kering_air_total'] ?? 0)
+                        : ($kondisi['kering_air_total'] ?? 0);
+
+                    $minyakBasah = fmod($kondisi['basah_minyak_total'] ?? 0, 1) == 0
+                        ? (int) ($kondisi['basah_minyak_total'] ?? 0)
+                        : ($kondisi['basah_minyak_total'] ?? 0);
+
+                    $minyakKering = fmod($kondisi['kering_minyak_total'] ?? 0, 1) == 0
+                        ? (int) ($kondisi['kering_minyak_total'] ?? 0)
+                        : ($kondisi['kering_minyak_total'] ?? 0);
 
                     // Berat Produk
                     $berat = json_decode($dep->berat_produk, true) ?? [];

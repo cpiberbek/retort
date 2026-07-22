@@ -140,8 +140,8 @@
                                 @endif
                             </td>
                             <td class="text-center align-middle">{{ Str::limit($item->keterangan ?? '-', 35) }}</td>
-                            <td class="text-center align-middle">{{ $item->produksi->name ?? $item->produksi_id }}</td>
-                            <td class="text-center align-middle">{{ $item->engineer->name ?? $item->engineer_id }}</td>
+                            <td class="text-center align-middle">{{ optional($item->produksi)->nama_karyawan }}</td>
+                            <td class="text-center align-middle">{{ optional($item->engineer)->nama_karyawan }}</td>
                             <td class="text-center">
                                 @if($item->status_spv == 1)
                                 <span class="badge-status status-verified"><i
