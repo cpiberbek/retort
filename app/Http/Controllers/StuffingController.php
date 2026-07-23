@@ -10,62 +10,80 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use TCPDF;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 
 class StuffingController extends Controller
 {
     public function index(Request $request)
     {
-        $search     = $request->input('search');
-        $date       = $request->input('date');
-        $shift      = $request->input('shift');
-        $userPlant  = Auth::user()->plant;
-        
-        $data = Stuffing::with('mincing')  
-        ->where('plant', $userPlant) 
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%")
-                ->orWhere('kode_mesin', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) { 
-            $query->where('shift', $shift);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kodeBatch = $request->input('kode_batch');
+        $userPlant = Auth::user()->plant;
 
-        return view('form.stuffing.index', compact('data', 'search', 'date', 'shift'));
+        $data = Stuffing::with('mincing')
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $search = strtolower(trim($search));
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(username) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(nama_produk) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(data_stuffing) LIKE ?', ["%{$search}%"])
+                        ->orWhereHas('mincing', function ($m) use ($search) {
+                            $m->whereRaw('LOWER(kode_produksi) LIKE ?', ["%{$search}%"]);
+                        });
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($kodeBatch, function ($query) use ($kodeBatch) {
+                $query->whereHas('mincing', function ($q) use ($kodeBatch) {
+                    $q->where('kode_produksi', 'like', "%{$kodeBatch}%");
+                });
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.stuffing.index', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kodeBatch'
+        ));
     }
 
     public function exportPdf(Request $request)
     {
         // 1. Ambil Data
-        $search    = $request->input('search');
         $date      = $request->input('date');
         $shift     = $request->input('shift');
+        $kodeBatch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
         $items = Stuffing::query()
         ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%")
-                ->orWhere('kode_mesin', 'like', "%{$search}%");
-            });
-        })
         ->when($date, function ($query) use ($date) {
             $query->whereDate('date', $date);
         })
         ->when($shift, function ($query) use ($shift) {
             $query->where('shift', $shift);
+        })
+        ->when($kodeBatch, function ($query) use ($kodeBatch) {
+            $query->whereHas('mincing', function ($q) use ($kodeBatch) {
+                $q->where('kode_produksi', 'like', "%{$kodeBatch}%");
+            });
         })
         ->orderBy('date', 'asc')
         ->orderBy('shift', 'asc')
@@ -103,6 +121,146 @@ class StuffingController extends Controller
         $filename = 'Laporan_Stuffing_' . date('d-m-Y_His') . '.pdf';
         $pdf->Output($filename, 'I');
         exit();
+    }
+
+    public function exportExcel(Request $request)
+    {
+        try {
+            $date = $request->input('date');
+            $shift = $request->input('shift');
+            $kodeBatch = $request->input('kode_batch');
+            $userPlant = Auth::user()->plant;
+
+            if (empty($kodeBatch)) {
+                return back()->with('error', 'LOL');
+            }
+
+            $templatePath = app_path('templates/excel_stuffing_sosis_retort.xlsx');
+
+            $spreadsheet = IOFactory::load($templatePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getFont()
+                ->setName('Times New Roman');
+
+            foreach (range('D', 'Q') as $col) {
+                $sheet->getColumnDimension($col)->setWidth(15);
+            }
+
+            $data = Stuffing::with('mincing')
+                ->where('plant', $userPlant)
+                ->whereDate('date', $date)
+                ->where('shift', $shift)
+                ->whereHas('mincing', function ($q) use ($kodeBatch) {
+                    $q->where('kode_produksi', 'like', "%{$kodeBatch}%");
+                })
+                ->get();
+
+            if ($data->isEmpty()) {
+                return back()->with('error', 'Data tidak ditemukan');
+            }
+
+            $batchCodes = $data->map(function ($item) {
+                return optional($item->mincing)->kode_produksi ?? $item->kode_produksi;
+            })
+            ->filter()
+            ->unique()
+            ->implode(', ');
+
+            $namaProduk = $data->pluck('nama_produk')
+                ->filter()
+                ->unique()
+                ->implode(', ');
+
+            $expDate = $data->pluck('exp_date')
+                ->filter()
+                ->map(fn($date) => \Carbon\Carbon::parse($date)->format('d-m-Y'))
+                ->unique()
+                ->implode(', ');
+
+            $namaSpv = $data->pluck('nama_spv')
+                ->filter()
+                ->unique()
+                ->first();
+
+            $sheet->setCellValue('B6', 'Hari/Tgl : ' . \Carbon\Carbon::parse($date)->format('d-m-Y'));
+            $sheet->setCellValue('D6', 'Shift : ' . $shift);
+            $sheet->setCellValue('G6', 'Nama Produk : ' . $namaProduk);
+            $sheet->setCellValue('P6', 'Exp Date : ' . $expDate);
+
+            $sheet->setCellValue('D8', $batchCodes);
+
+            $col = 'D';
+
+            foreach ($data as $stuffing) {
+                $items = $stuffing->data_stuffing;
+
+                if (is_string($items)) {
+                    $items = json_decode($items, true);
+                }
+
+                if (!is_array($items)) {
+                    continue;
+                }
+
+                foreach ($items as $item) {
+
+                    $values = [
+                        9  => $item['kode_mesin'] ?? '-',
+                        10 => $item['jam_mulai'] ?? '-',
+                        12 => $item['suhu'] ?? '-',
+                        13 => $item['sensori'] ?? '-',
+                        14 => '-',
+                        15 => $item['kecepatan_stuffing'] ?? '-',
+                        16 => $item['panjang_pcs'] ?? '-',
+                        17 => $item['berat_pcs'] ?? '-',
+                        19 => $item['kebersihan_seal'] ?? '-',
+                        20 => $item['kekuatan_seal'] ?? '-',
+                        21 => $item['diameter_klip'] ?? '-',
+                        22 => $item['print_kode'] ?? '-',
+                        23 => $item['lebar_cassing'] ?? '-',
+                        24 => $item['catatan'] ?? '-',
+                        25 => $stuffing->username_updated ?? $stuffing->username ?? '-',
+                        26 => $stuffing->nama_produksi ?? '-',
+                    ];
+
+                    foreach ($values as $row => $value) {
+                        $cell = $col . $row;
+
+                        $sheet->setCellValue($cell, $value);
+
+                        $sheet->getStyle($cell)
+                            ->getAlignment()
+                            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                    }
+
+                    $col++;
+                }
+            }
+
+            $sheet->setCellValue('O36', '(' . ($namaSpv ?? '-') . ')');
+
+            $filename = 'Stuffing_Sosis_Retort_' .
+                \Carbon\Carbon::parse($date)->format('Ymd') .
+                '_Shift' . $shift . '.xlsx';
+
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            return response()->streamDownload(function () use ($spreadsheet) {
+                $writer = new Xlsx($spreadsheet);
+                $writer->save('php://output');
+            }, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Cache-Control' => 'max-age=0',
+            ]);
+
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal export: ' . $e->getMessage());
+        }
     }
 
     public function create()

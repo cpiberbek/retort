@@ -31,6 +31,9 @@
             <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
+            <button type="button" class="btn btn-success" id="exportExcelBtn">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
             @endcan
             @can('can access recycle')
             <a href="{{ route('stuffing.recyclebin') }}" class="btn btn-secondary">
@@ -41,85 +44,108 @@
     </div>
 
     {{-- Filter dan Live Search --}}
-    <form id="filterForm" method="GET" action="{{ route('stuffing.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="mb-1">Pilih Tanggal</div>
-                <div class="input-group mb-2">
+    <form id="filterForm" method="GET" action="{{ route('stuffing.index') }}"
+        class="mb-3 p-3 border rounded bg-white shadow-sm">
+
+        <div class="row g-3 align-items-end">
+
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label mb-1">Pilih Tanggal</label>
+                <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="bi bi-calendar-date text-muted"></i>
                         </span>
                     </div>
-                    <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    <input type="date"
+                        name="date"
+                        id="filter_date"
+                        class="form-control border-start-0"
+                        value="{{ request('date') }}">
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="mb-1">Pilih Shift</div>
-                <div class="input-group mb-2">
+
+            <div class="col-lg-2 col-md-6">
+                <label class="form-label mb-1">Pilih Shift</label>
+                <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="bi bi-hourglass-split text-muted"></i>
                         </span>
                     </div>
-                    <select name="shift" id="filter_shift" class="form-select border-start-0 form-control">
+                    <select name="shift" id="filter_shift" class="form-select border-start-0">
                         <option value="">Semua Shift</option>
-                        <option value="1" {{ request("shift")=="1" ? "selected" : "" }}>Shift 1</option>
-                        <option value="2" {{ request("shift")=="2" ? "selected" : "" }}>Shift 2</option>
-                        <option value="3" {{ request("shift")=="3" ? "selected" : "" }}>Shift 3</option>
+                        <option value="1" {{ request('shift') == '1' ? 'selected' : '' }}>Shift 1</option>
+                        <option value="2" {{ request('shift') == '2' ? 'selected' : '' }}>Shift 2</option>
+                        <option value="3" {{ request('shift') == '3' ? 'selected' : '' }}>Shift 3</option>
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="mb-1">Cari Data</div>
-                <div class="input-group mb-2">
+
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label mb-1">Cari Kode Batch</label>
+                <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="bi bi-search text-muted"></i>
                         </span>
                     </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Area / Varian / Mesin...">
+                    <input type="text"
+                        name="kode_batch"
+                        id="kode_batch"
+                        class="form-control border-start-0"
+                        value="{{ request('kode_batch') }}"
+                        placeholder="Cari Kode Batch...">
                 </div>
             </div>
-            <div class="col-md-3 align-self-end">
-                <a href="{{ route('stuffing.index') }}" class="btn btn-primary mb-2">
+
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label mb-1">Cari Data</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                    </div>
+                    <input type="text"
+                        name="search"
+                        id="search"
+                        class="form-control border-start-0"
+                        value="{{ request('search') }}"
+                        placeholder="Cari Area / Varian / Mesin...">
+                </div>
+            </div>
+
+            <div class="col-lg-2 col-md-12">
+                <a href="{{ route('stuffing.index') }}" class="btn btn-primary w-100">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
             </div>
+
         </div>
+
     </form>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const search = document.getElementById('search');
-            const date = document.getElementById('filter_date');
-            const shift = document.getElementById('filter_shift');
-            const form = document.getElementById('filterForm');
-            const exportPdfBtn = document.getElementById('exportPdfBtn'); // Get Export Button
+    {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b>, <b>Shift</b> & <b>Kode Batch</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            let timer;
 
-            search.addEventListener('input', () => {
-                clearTimeout(timer);
-                timer = setTimeout(() => form.submit(), 500);
-            });
-
-            date.addEventListener('change', () => form.submit());
-            if(shift) shift.addEventListener('change', () => form.submit());
-
-            // Handle PDF export button click
-            if(exportPdfBtn){
-                exportPdfBtn.addEventListener('click', function() {
-                    const formData = new FormData(form);
-                    // Pastikan route exportPdf sudah dibuat di web.php
-                    const exportUrl = "{{ route('stuffing.exportPdf') }}?" + new URLSearchParams(formData).toString();
-                    window.open(exportUrl, '_blank');
-                });
-            }
-        });
-    </script>
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -452,35 +478,100 @@
 </div>
 </div>
 
-<script>
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if(alert){
-            alert.classList.remove('show');
-            alert.classList.add('fade');
+    <script>
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if(alert){
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+            }
+        }, 3000);
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const search = document.getElementById('search');
+            const kodeBatch = document.getElementById('kode_batch');
+            const date = document.getElementById('filter_date');
+            const shift = document.getElementById('filter_shift');
+            const form = document.getElementById('filterForm');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+
+            let timer;
+
+            function submitFilter() {
+                clearTimeout(timer);
+                timer = setTimeout(() => form.submit(), 500);
+            }
+
+            if (search) {
+                search.addEventListener('input', submitFilter);
+            }
+
+            if (kodeBatch) {
+                kodeBatch.addEventListener('input', submitFilter);
+            }
+
+            if (date) {
+                date.addEventListener('change', () => form.submit());
+            }
+
+            if (shift) {
+                shift.addEventListener('change', () => form.submit());
+            }
+
+            function validateExport() {
+                if (!date.value || !shift.value || !kodeBatch.value.trim()) {
+                    new bootstrap.Modal(document.getElementById('warningModal')).show();
+                    return false;
+                }
+
+                return true;
+            }
+
+            function handleExport(route) {
+                if (!validateExport()) return;
+
+                const formData = new FormData(form);
+                const exportUrl = route + '?' + new URLSearchParams(formData).toString();
+
+                window.open(exportUrl, '_blank');
+            }
+
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', () => {
+                    handleExport("{{ route('stuffing.exportPdf') }}");
+                });
+            }
+
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', () => {
+                    handleExport("{{ route('stuffing.exportExcel') }}");
+                });
+            }
+        });
+    </script>
+
+    <style>
+        .table td,
+        .table th {
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
-    }, 3000);
-</script>
 
-<style>
-    .table td,
-    .table th {
-        font-size: 0.85rem;
-        white-space: nowrap;
-    }
+        .text-danger {
+            font-weight: bold;
+        }
 
-    .text-danger {
-        font-weight: bold;
-    }
+        .text-muted.fst-italic {
+            color: #6c757d !important;
+            font-style: italic !important;
+        }
 
-    .text-muted.fst-italic {
-        color: #6c757d !important;
-        font-style: italic !important;
-    }
-
-    .container {
-        padding-left: 2px !important;
-        padding-right: 2px !important;
-    }
-</style>
+        .container {
+            padding-left: 2px !important;
+            padding-right: 2px !important;
+        }
+    </style>
 @endsection

@@ -541,6 +541,7 @@ Route::middleware('auth')->group(function () {
     /*FORM PUTRI*/
     // Stuffing
     Route::get('/stuffing/export-pdf', [App\Http\Controllers\StuffingController::class, 'exportPdf'])->name('stuffing.exportPdf');
+    Route::get('/stuffing/export-excel', [App\Http\Controllers\StuffingController::class, 'exportExcel'])->name('stuffing.exportExcel');
     Route::get('/stuffing', [StuffingController::class, 'index'])->name('stuffing.index');
     Route::get('/stuffing/create', [StuffingController::class, 'create'])->name('stuffing.create');
     Route::post('/stuffing', [StuffingController::class, 'store'])->name('stuffing.store');
