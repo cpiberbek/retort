@@ -14,6 +14,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use App\Models\List_form;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class StuffingController extends Controller
 {
@@ -148,6 +150,19 @@ class StuffingController extends Controller
                 $sheet->getColumnDimension($col)->setWidth(15);
             }
 
+            $sheet->getStyle('D9:Q26')
+                ->getAlignment()
+                ->setWrapText(true);
+
+            foreach (range(9, 26) as $row) {
+                $sheet->getRowDimension($row)->setRowHeight(-1);
+            }
+
+            $sheet->getStyle('B24')
+                ->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
             $data = Stuffing::with('mincing')
                 ->where('plant', $userPlant)
                 ->whereDate('date', $date)
@@ -239,6 +254,18 @@ class StuffingController extends Controller
                     $col++;
                 }
             }
+
+            //nomer dokumen
+            $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Pemeriksaan Stuffing Sosis Retort')
+                ->value('no_dokumen');
+
+            $sheet->setCellValue('Q30', $noDokumen ?? '-');
+
+            $sheet->getStyle('Q30')
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
 
             $sheet->setCellValue('O36', '(' . ($namaSpv ?? '-') . ')');
 
