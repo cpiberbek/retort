@@ -411,19 +411,14 @@ class Sampling_fgController extends Controller
 
         $releaseQuery = Release_packing::query();
 
-        // Jika kode_produksi sudah berupa UUID, gunakan langsung.
         if (Str::isUuid($kode_produksi)) {
-            $releaseQuery->where('kode_produksi', $kode_produksi);
-        } else {
-            if (!$nama_produk) {
-                return response()->json([
-                    'jumlah_box' => 0,
-                ]);
+            $mincing = Mincing::where('uuid', $kode_produksi);
+
+            if ($nama_produk) {
+                $mincing->where('nama_produk', $nama_produk);
             }
 
-            $mincing = Mincing::where('kode_produksi', $kode_produksi)
-                ->where('nama_produk', $nama_produk)
-                ->first();
+            $mincing = $mincing->first();
 
             if (!$mincing) {
                 return response()->json([
@@ -431,28 +426,27 @@ class Sampling_fgController extends Controller
                 ]);
             }
 
-            $releaseQuery->where('kode_produksi', $mincing->uuid);
+            $kode_produksi = $mincing->kode_produksi;
+        }
+
+        $releaseQuery->where('kode_produksi', $kode_produksi);
+
+        if ($nama_produk) {
+            $releaseQuery->where('nama_produk', $nama_produk);
         }
 
         if ($no_palet) {
             $releaseQuery->where('no_palet', $no_palet);
-            $jumlahBox = $releaseQuery->sum('release');
-            return response()->json([
-                'nama_produk' => $nama_produk,
-                'kode_produksi' => $kode_produksi,
-                'no_palet' => $no_palet,
-                'jumlah_box' => $jumlahBox,
-                'total_box' => $jumlahBox,
-            ]);
         }
 
-        $totalRelease = $releaseQuery->sum('release');
+        $jumlahBox = $releaseQuery->sum('release');
 
         return response()->json([
-            'nama_produk' => $nama_produk,
+            'nama_produk'   => $nama_produk,
             'kode_produksi' => $kode_produksi,
-            'jumlah_box' => $totalRelease,
-            'total_box' => $totalRelease,
+            'no_palet'      => $no_palet,
+            'jumlah_box'    => $jumlahBox,
+            'total_box'     => $jumlahBox,
         ]);
     }
 
@@ -475,21 +469,29 @@ class Sampling_fgController extends Controller
             return response()->json([]);
         }
 
-        if (!Str::isUuid($kode_produksi)) {
-            $query = Mincing::where('kode_produksi', $kode_produksi);
+        if (Str::isUuid($kode_produksi)) {
+            $query = Mincing::where('uuid', $kode_produksi);
+
             if ($nama_produk) {
                 $query->where('nama_produk', $nama_produk);
             }
+
             $mincing = $query->first();
-            if ($mincing) {
-                $kode_produksi = $mincing->uuid;
+
+            if (!$mincing) {
+                return response()->json([]);
             }
+
+            $kode_produksi = $mincing->kode_produksi;
         }
 
         $palets = Release_packing::where('kode_produksi', $kode_produksi)
+            ->when($nama_produk, function ($query) use ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            })
             ->select('no_palet')
             ->distinct()
-            ->orderBy('no_palet', 'asc')
+            ->orderBy('no_palet')
             ->get();
 
         return response()->json($palets);
