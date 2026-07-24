@@ -72,7 +72,7 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('inspections.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
+            <a href="#" id="exportPdfBtn" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
             @endcan
@@ -246,6 +246,25 @@
     </div>
 </div>
 
+
+    <div class="modal fade" id="warningModal" tabindex="-1" role="dialog" aria-labelledby="warningModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {{-- 
 =======================================================
 MODAL VERIFIKASI (LOOPING DI BAGIAN BAWAH HALAMAN)
@@ -296,28 +315,54 @@ MODAL VERIFIKASI (LOOPING DI BAGIAN BAWAH HALAMAN)
 
     {{-- Auto-hide alert & Search Script --}}
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-        // Auto hide alert
-            setTimeout(() => {
+        document.addEventListener('DOMContentLoaded', function () {
+
+            setTimeout(function () {
                 const alert = document.querySelector('.alert');
-                if(alert){
+                if (alert) {
                     alert.classList.remove('show');
                     alert.classList.add('fade');
                 }
             }, 3000);
 
-        // Search logic
             const search = document.getElementById('search');
             const date = document.getElementById('filter_date');
             const form = document.getElementById('filterForm');
+            const exportBtn = document.getElementById('exportPdfBtn');
+
             let timer;
 
-            search.addEventListener('input', () => {
-                clearTimeout(timer);
-                timer = setTimeout(() => form.submit(), 500);
-            });
+            if (search) {
+                search.addEventListener('input', function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(function () {
+                        form.submit();
+                    }, 500);
+                });
+            }
 
-            date.addEventListener('change', () => form.submit());
+            if (date) {
+                date.addEventListener('change', function () {
+                    form.submit();
+                });
+            }
+
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    if (date.value === '') {
+                        $('#warningModal').modal('show');
+                        return false;
+                    }
+
+                    window.open(
+                        "{{ route('inspections.exportPdf') }}?date=" + encodeURIComponent(date.value),
+                        "_blank"
+                    );
+                });
+            }
+
         });
-    </script>
+        </script>
     @endsection
