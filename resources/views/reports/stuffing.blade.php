@@ -60,121 +60,122 @@
         /* Status Label */
         .status-ok { color: #006400; font-weight: bold; }
         .status-rev { color: #8B0000; font-weight: bold; }
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 <body>
 
-    {{-- 1. HEADER HALAMAN (Menggunakan Tabel agar rapi) --}}
-    <table class="company-header" cellpadding="2">
+@php
+    $pages = array_chunk($columns, 9);
+@endphp
+
+@foreach($pages as $page)
+
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-            <td width="30%" class="company-name">
-                PT Charoen Pokphand Indonesia<br>
-                <span style="font-weight: normal; font-size: 8px;">Food Division</span>
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
             </td>
-            <td width="40%" class="report-title">
-                LAPORAN PEMERIKSAAN<br>STUFFING SOSIS RETORT
-            </td>
-            <td width="30%" style="text-align: right; font-size: 8px;">
-                <strong>Dicetak:</strong> {{ date('d-m-Y H:i') }}<br>
-                <strong>Oleh:</strong> {{ Auth::user()->username ?? 'System' }}
+            <td>
+                <span style="font-size:14pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
+</div>
 
-    {{-- 2. INFORMASI FILTER --}}
-    <table width="100%" cellpadding="2" style="margin-bottom: 5px; font-size: 8px;">
+<table width="100%" border="0" cellpadding="3" cellspacing="0">
+    <tr>
+        <td width="18%">
+        </td>
+        <td width="64%" align="center" style="font-size:12pt;"><b>PEMERIKSAAN STUFFING SOSIS RETORT</b></td>
+        <td width="18%"></td>
+    </tr>
+</table>
+
+<br>
+
+<table width="100%" cellpadding="2">
+    <tr>
+        <td width="20%">Hari/Tgl : {{ \Carbon\Carbon::parse($date)->format('d-m-Y') }}</td>
+        <td width="18%">Shift : {{ $shift }}</td>
+        <td width="45%">Nama Produk : {{ $namaProduk }}</td>
+        <td width="15%" align="right">Exp Date : {{ $expDate }}</td>
+    </tr>
+</table>
+
+<br>
+
+
+<table width="100%" border="1" cellpadding="3" cellspacing="0">
+    <tr>
+        <td width="10%"><b>Kode Batch</b></td>
+        <td width="90%" align="center">{{ $batchCodes }}</td>
+    </tr>
+</table>
+
+<br>
+
+<table width="100%" border="1" cellpadding="2" cellspacing="0">
+    @foreach($rows as $row)
         <tr>
-            <td width="15%"><strong>Filter Tanggal</strong></td>
-            <td width="35%">: {{ $request->date ? \Carbon\Carbon::parse($request->date)->format('d-m-Y') : 'SEMUA' }}</td>
-            <td width="15%"><strong>Filter Shift</strong></td>
-            <td width="35%">: {{ $request->shift ? $request->shift : 'SEMUA' }}</td>
-        </tr>
-    </table>
+            <td width="10%"><b>{{ $row }}</b></td>
 
-    {{-- 3. TABEL DATA UTAMA --}}
-    {{-- Penting: Definisi width ditaruh di TH. Total harus 100% --}}
-    <table class="tbl-data" nobr="true">
-        <thead>
-            <tr>
-                <th width="3%">No</th>
-                <th width="7%">Date</th>
-                <th width="3%">Shift</th>
-                <th width="16%">Nama Varian</th> {{-- Lebar diperbesar agar muat --}}
-                <th width="9%">Kode<br>Batch</th>
-                <th width="6%">Mesin</th>
-                <th width="5%">Jam</th>
-                
-                <th width="5%">Suhu<br>(°C)</th>
-                <th width="5%">Speed</th>
-                <th width="5%">Pjg<br>(cm)</th>
-                <th width="5%">Berat<br>(gr)</th>
-                <th width="4%">Seal</th>
-                <th width="4%">Klip</th>
-                
-                <th width="10%">Catatan</th>
-                <th width="4%">QC</th>
-                <th width="5%">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($items as $index => $item)
-            {{-- nobr="true" mencegah baris terpotong halaman --}}
-            <tr nobr="true">
-                <td width="3%">{{ $index + 1 }}</td>
-                <td width="7%">{{ \Carbon\Carbon::parse($item->date)->format('d-m-y') }}</td>
-                <td width="3%">{{ $item->shift }}</td>
-                
-                {{-- Text align Left untuk Varian --}}
-                <td width="16%" class="text-left">{{ $item->nama_produk }}</td>
-                
-                <td width="9%">{{ $item->kode_produksi }}</td>
-                <td width="6%">{{ $item->kode_mesin }}</td>
-                <td width="5%">{{ \Carbon\Carbon::parse($item->jam_mulai)->format('H:i') }}</td>
-                
-                {{-- Menghapus .00 jika angka bulat --}}
-                <td width="5%">{{ $item->suhu ? (float)$item->suhu : '-' }}</td>
-                <td width="5%">{{ $item->kecepatan_stuffing ? (float)$item->kecepatan_stuffing : '-' }}</td>
-                <td width="5%">{{ $item->panjang_pcs ? (float)$item->panjang_pcs : '-' }}</td>
-                <td width="5%">{{ $item->berat_pcs ? (float)$item->berat_pcs : '-' }}</td>
-                
-                {{-- Simbol Centang (ZapfDingbats) --}}
-                <td width="4%" >{{ !empty($item->kekuatan_seal) ? '4' : '-' }}</td>
-                <td width="4%">{{ $item->diameter_klip ?? '-' }}</td>
-                
-                <td width="10%" class="text-left">{{ $item->catatan ?? '-' }}</td>
-                <td width="4%">{{ $item->username }}</td>
-                <td width="5%">
-                    @if($item->status_spv == 1) <span class="status-ok">OK</span>
-                    @elseif($item->status_spv == 2) <span class="status-rev">REV</span>
-                    @else - @endif
+            @for($i = 0; $i < 9; $i++)
+                <td width="10%" align="center">
+                    {{ $page[$i][$row] ?? '' }}
                 </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="17" style="padding: 10px; text-align: center;">Data tidak ditemukan.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
+            @endfor
+        </tr>
+    @endforeach
+</table>
+<table width="100%">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right">{{ $noDokumen }}</td>
+    </tr>
+</table>
 
-    {{-- 4. FOOTER TANDA TANGAN (Menggunakan Tabel Stabil) --}}
-    {{-- page-break-inside: avoid mencegah tanda tangan terpotong --}}
-    <table width="100%" style="margin-top: 20px; page-break-inside: avoid;">
+<table width="100%">
+    <tr>
+        <td height="30"></td>
+    </tr>
+</table>
+
+
+<table width="100%">
+    <tr>
+        <td width="70%"></td>
+        <td width="30%" align="center">
+            Disetujui Oleh
+            <br><br><br><br>
+            ({{ $namaSpv ?: '-' }})<br>
+            QC SPV
+        </td>
+    </tr>
+</table>
+
+
+
+@if(!$loop->last)
+    <table width="100%">
         <tr>
-            <td width="70%">
-                <div style="font-size: 7px; font-style: italic;">
-                   
-                </div>
-            </td>
-            <td width="30%" style="text-align: center;">
-                <div style="font-size: 9px;">Disetujui Oleh,</div>
-                <div style="font-size: 9px; margin-bottom: 40px;">QC Supervisor</div>
-                <br><br><br>
-                <div style="border-bottom: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-                {{-- Garis Tanda Tangan --}}
-            </td>
+            <td height="80"></td>
         </tr>
     </table>
+    <tcpdf method="AddPage" />
+@endif
+
+@endforeach
 
 </body>
 </html>

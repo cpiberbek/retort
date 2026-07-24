@@ -68,56 +68,132 @@ class StuffingController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
         $kodeBatch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
-        $items = Stuffing::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
+        $data = Stuffing::with('mincing')
+            ->where('plant', $userPlant)
+            ->when($date, fn($q) => $q->whereDate('date', $date))
+            ->when($shift, fn($q) => $q->where('shift', $shift))
+            ->when($kodeBatch, function ($q) use ($kodeBatch) {
+                $q->whereHas('mincing', function ($q) use ($kodeBatch) {
+                    $q->where('kode_produksi', 'like', "%{$kodeBatch}%");
+                });
+            })
+            ->get();
+
+        if ($data->isEmpty()) {
+            return back()->with('error', 'Data tidak ditemukan');
+        }
+
+        $batchCodes = $data->map(function ($item) {
+            return optional($item->mincing)->kode_produksi ?? $item->kode_produksi;
         })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->when($kodeBatch, function ($query) use ($kodeBatch) {
-            $query->whereHas('mincing', function ($q) use ($kodeBatch) {
-                $q->where('kode_produksi', 'like', "%{$kodeBatch}%");
-            });
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('shift', 'asc')
-        ->get();
+        ->filter()
+        ->unique()
+        ->implode(', ');
+
+        $namaProduk = $data->pluck('nama_produk')
+            ->filter()
+            ->unique()
+            ->implode(', ');
+
+        $expDate = $data->pluck('exp_date')
+            ->filter()
+            ->map(fn($item) => \Carbon\Carbon::parse($item)->format('d-m-Y'))
+            ->unique()
+            ->implode(', ');
+
+        $namaSpv = $data->pluck('nama_spv')
+            ->filter()
+            ->unique()
+            ->first();
+
+        $columns = [];
+
+        foreach ($data as $stuffing) {
+            $items = $stuffing->data_stuffing;
+
+            if (is_string($items)) {
+                $items = json_decode($items, true);
+            }
+
+            if (!is_array($items)) {
+                continue;
+            }
+
+            foreach ($items as $item) {
+                $columns[] = [
+                    'Nama Mesin' => $item['kode_mesin'] ?? '-',
+                    'Jam Mulai' => $item['jam_mulai'] ?? '-',
+                    'Suhu (Celcius)' => $item['suhu'] ?? '-',
+                    'Sensori' => $item['sensori'] ?? '-',
+                    'Kecepatan Stuffing (/mnt)' => $item['kecepatan_stuffing'] ?? '-',
+                    'Panjang/pcs (cm)' => $item['panjang_pcs'] ?? '-',
+                    'Berat/pcs (gr)' => $item['berat_pcs'] ?? '-',
+                    'Kebersihan Seal' => $item['kebersihan_seal'] ?? '-',
+                    'Kekuatan Seal' => $item['kekuatan_seal'] ?? '-',
+                    'Diameter Klip (mm)' => $item['diameter_klip'] ?? '-',
+                    'Print Kode' => $item['print_kode'] ?? '-',
+                    'Lebar Cassing (mm)' => $item['lebar_cassing'] ?? '-',
+                    'Catatan' => $item['catatan'] ?? '-',
+                    'Operator' => $stuffing->username_updated ?? $stuffing->username ?? '-',
+                    'Produksi' => $stuffing->nama_produksi ?? '-',
+                ];
+            }
+        }
+
+        $rows = [
+            'Nama Mesin',
+            'Jam Mulai',
+            'Suhu (Celcius)',
+            'Sensori',
+            'Kecepatan Stuffing (/mnt)',
+            'Panjang/pcs (cm)',
+            'Berat/pcs (gr)',
+            'Kebersihan Seal',
+            'Kekuatan Seal',
+            'Diameter Klip (mm)',
+            'Print Kode',
+            'Lebar Cassing (mm)',
+            'Catatan',
+            'Operator',
+            'Produksi',
+        ];
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Stuffing Sosis Retort')
+            ->value('no_dokumen');
 
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Landscape, A4)
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
-        
-        // Metadata
+
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Stuffing');
-        
-        // Hilangkan Header/Footer Bawaan (Agar kita bisa custom full di Blade)
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
-
-        // 3. SET MARGIN TIPIS (5mm)
-        // Format: Left, Top, Right
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5); // Margin bawah juga tipis
-
-        // 4. Set Font Default
+        $pdf->SetAutoPageBreak(true, 5);
         $pdf->SetFont('helvetica', '', 8);
-
         $pdf->AddPage();
 
-        // 5. Render
-        $html = view('reports.stuffing', compact('items', 'request'))->render();
+        $html = view('reports.stuffing', [
+            'date' => $date,
+            'shift' => $shift,
+            'batchCodes' => $batchCodes,
+            'namaProduk' => $namaProduk,
+            'expDate' => $expDate,
+            'namaSpv' => $namaSpv,
+            'noDokumen' => $noDokumen ?? '-',
+            'rows' => $rows,
+            'columns' => $columns,
+        ])->render();
+
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Laporan_Stuffing_' . date('d-m-Y_His') . '.pdf';
