@@ -204,7 +204,9 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
     @endforeach
 
 </table>
-
+<div style="margin-top:5px; text-align:right;">
+    <i>{{ $noDokumen ?? '-' }}</i>
+</div>
 <br>
 <br>
 

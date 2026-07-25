@@ -196,7 +196,10 @@ class StuffingController extends Controller
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = 'Laporan_Stuffing_' . date('d-m-Y_His') . '.pdf';
+        $filename = 'Laporan_Stuffing_' .
+            \Carbon\Carbon::parse($date)->format('d-m-Y') .
+            '_Shift' . $shift .
+            '.pdf';
         $pdf->Output($filename, 'I');
         exit();
     }
@@ -346,7 +349,7 @@ class StuffingController extends Controller
             $sheet->setCellValue('O36', '(' . ($namaSpv ?? '-') . ')');
 
             $filename = 'Stuffing_Sosis_Retort_' .
-                \Carbon\Carbon::parse($date)->format('Ymd') .
+                \Carbon\Carbon::parse($date)->format('d-m-Y') .
                 '_Shift' . $shift . '.xlsx';
 
             while (ob_get_level()) {

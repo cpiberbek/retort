@@ -7,6 +7,11 @@
         .title { font-size: 12px; font-weight: bold; text-align: center; }
         table { border-collapse: collapse; }
 
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 8px;
+        }
+
         .tbl-header td {
             padding: 2px;
             font-size: 8px;
@@ -31,15 +36,21 @@
 <body>
 
 {{-- HEADER LOGO + TITLE --}}
-<table width="100%">
-    <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
-        </td>
-        
-    </tr>
-</table>
+<div style="margin:0; padding:0; line-height:1;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0; padding:0;">
+        <tr>
+            <td width="55" style="padding:0;">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td style="padding:0;">
+                <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
+                <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
+
 <h2 class="title">PEMERIKSAAN PROSES PACKING</h2>
 <br>
 <br>
@@ -63,51 +74,59 @@
 {{-- TABEL --}}
 <table width="100%" class="tbl-main small">
     <tr>
-        <th rowspan="2" class="center">Waktu</th>
-        <th rowspan="2" class="center">Kalibrasi</th>
-        <th rowspan="2" class="center">QR Code</th>
+        <th rowspan="2" class="center"><b>Waktu</b></th>
+        <th rowspan="2" class="center"><b>Kalibrasi</b></th>
+        <th rowspan="2" class="center"><b>QR Code</b></th>
 
-        <th colspan="3" class="center">Kode Batch</th>
+        <th colspan="3" class="center"><b>Kode Batch</b></th>
 
-        <th colspan="2" class="center">Shrink Tunnel</th>
+        <th colspan="2" class="center"><b>Shrink Tunnel</b></th>
 
-        <th rowspan="2" class="center">Kondisi Segel Toples / Seal Pouch</th>
+        <th rowspan="2" class="center"><b>Kondisi Segel Toples / Seal Pouch</b></th>
 
-        <th colspan="2" class="center">Berat Varian Per</th>
+        <th colspan="2" class="center"><b>Berat Varian Per</b></th>
 
-        <th colspan="3" class="center">Data Kemasan</th>
+        <th colspan="3" class="center"><b>Data Kemasan</b></th>
 
-        <th colspan="2" class="center">Paraf</th>
+        <th colspan="2" class="center"><b>Paraf</b></th>
 
-        <th rowspan="2" class="center">Keterangan</th>
+        <th rowspan="2" class="center"><b>Keterangan</b></th>
     </tr>
 
     <tr>
-        <th class="center">Printing</th>
-        <th class="center">Toples</th>
-        <th class="center">Karton</th>
+        <th class="center"><b>Printing</b></th>
+        <th class="center"><b>Toples</b></th>
+        <th class="center"><b>Karton</b></th>
 
-        <th class="center">Suhu</th>
-        <th class="center">Speed</th>
+        <th class="center"><b>Suhu</b></th>
+        <th class="center"><b>Speed</b></th>
 
-        <th class="center">Toples</th>
-        <th class="center">Pouch</th>
+        <th class="center"><b>Toples</b></th>
+        <th class="center"><b>Pouch</b></th>
 
-        <th class="center">No. Lot Kemasan</th>
-        <th class="center">Tgl Kedatangan</th>
-        <th class="center">Nama Supplier</th>
+        <th class="center"><b>No. Lot Kemasan</b></th>
+        <th class="center"><b>Tgl Kedatangan</b></th>
+        <th class="center"><b>Nama Supplier</b></th>
 
-        <th class="center">QC</th>
-        <th class="center">Produksi</th>
+        <th class="center"><b>QC</b></th>
+        <th class="center"><b>Produksi</b></th>
     </tr>
 
     @forelse($packings as $packing)
     <tr>
         <td class="center">{{ \Carbon\Carbon::parse($packing->waktu)->format('H:i') }}</td>
         <td class="center">{{ $packing->kalibrasi ?? '-' }}</td>
-        <td class="center">{{ $packing->qrcode ?? '-' }}</td>
+        <td class="center">
+            @if($packing->qrcode)
+                <img src="{{ public_path($packing->qrcode) }}" width="60">
+            @else
+                -
+            @endif
+        </td>
         <td class="center">{{ $packing->kode_printing ? 'Ada Gambar' : '-' }}</td>
-        <td class="center">{{ $packing->kode_toples ?? '-' }}</td>
+        <td class="center">
+            {{ \App\Models\Mincing::where('uuid', $packing->kode_toples)->value('kode_produksi') ?? $packing->kode_toples ?? '-' }}
+        </td>
         <td class="center">{{ $packing->kode_karton ?? '-' }}</td>
         <td class="center">{{ $packing->suhu ?? '-' }}</td>
         <td class="center">{{ $packing->speed ?? '-' }}</td>
@@ -129,7 +148,9 @@
 
 </table>
 
-<div style="text-align:right; font-size:8px;font-style:italic;">QT 06 / 00</div>
+<div style="margin-top:5px; text-align:right; font-style:italic;">
+    {{ $noDokumen ?? '-' }}
+</div>
 <br>
 
 <table width="100%" class="small">
@@ -139,14 +160,17 @@
             OK : √ <br>
             Tidak OK : X
         </td>
-        <td>
-            <table width="50%" class="sign small">
-                <tr><td>Disetujui oleh</td></tr>
-                <tr><td><br><br></td></tr>
-                <tr><td>(___________________)</td></tr>
-                <tr><td>QC SPV</td></tr>
-            </table>
-        </td>
+        <table width="100%">
+    <tr>
+            <td width="70%"></td>
+            <td width="30%" align="center">
+                Disetujui Oleh
+                <br><br><br><br>
+                ({{  $packing->nama_spv ?: '-' }})<br>
+                QC SPV
+            </td>
+        </tr>
+    </table>
     </tr>
 </table>
 
