@@ -57,13 +57,16 @@
 
                             {{-- Dropdown Satuan --}}
                             <div class="col-md-6 mt-3 mt-md-0">
-                                <label for="satuan" class="form-label">Satuan</label>
-                                <select name="satuan" id="satuan" class="form-select @error('satuan') is-invalid @enderror" required>
+                                <label for="satuan" class="form-label">Satuan</label><br>
+                                <select name="satuan" id="satuan" class="form-select @error('satuan') is-invalid @enderror" style="height: 38px;" required>
                                     <option value="" disabled>-- Pilih Satuan --</option>
                                     <option value="kg" {{ old('satuan', $raw_material->satuan) == 'kg' ? 'selected' : '' }}>Kilogram (kg)</option>
                                     <option value="gr" {{ old('satuan', $raw_material->satuan) == 'gr' ? 'selected' : '' }}>Gram (gr)</option>
                                     <option value="liter" {{ old('satuan', $raw_material->satuan) == 'liter' ? 'selected' : '' }}>Liter (L)</option>
                                     <option value="sak" {{ old('satuan', $raw_material->satuan) == 'sak' ? 'selected' : '' }}>Sak</option>
+                                    <option value="box" {{ old('satuan', $raw_material->satuan) == 'box' ? 'selected' : '' }}>Box</option>
+                                    <option value="pail" {{ old('satuan', $raw_material->satuan) == 'pail' ? 'selected' : '' }}>Pail</option>
+                                    <option value="pcs" {{ old('satuan', $raw_material->satuan) == 'pcs' ? 'selected' : '' }}>Pcs</option>
                                 </select>
                                 @error('satuan')
                                 <div class="invalid-feedback">{{ $message }}</div>

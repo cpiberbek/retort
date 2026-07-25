@@ -311,7 +311,29 @@
                                         @endif
                                     </td>
                                     <td class="text-center align-middle">
-                                        {{ !empty($dep->keterangan) ? $dep->keterangan : '-' }}</td>
+                                        @if(!empty($dep->keterangan))
+                                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#keteranganModal{{ $dep->uuid }}">
+                                                Lihat Keterangan
+                                            </button>
+
+                                            <div class="modal fade" id="keteranganModal{{ $dep->uuid }}" tabindex="-1">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">Keterangan</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body text-start" style="word-break: break-word; white-space: normal;">
+                                                            {{ $dep->keterangan }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="text-center align-middle fw-medium">{{ $dep->username }}</td>
                                     <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
                                     <td class="text-center align-middle">

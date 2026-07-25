@@ -53,4 +53,20 @@ class LookupController extends Controller
         );
     }
 
+    public function getBatchByUuid($uuid)
+    {
+        $batch = Mincing::select('uuid', 'kode_produksi')
+            ->where('uuid', $uuid)
+            ->first();
+
+        if (!$batch) {
+            return response()->json([], 404);
+        }
+
+        return response()->json([
+            'id' => $batch->uuid,
+            'text' => $batch->kode_produksi,
+        ]);
+    }
+
 }

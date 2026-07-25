@@ -80,6 +80,12 @@
                                         <label class="form-label">Foot Basin (Std 200 ppm)</label>
                                         <input type="file" id="footbasin" name="footbasin" class="form-control"
                                             accept="image/*" required>
+                                        <div class="mt-2">
+                                            <a id="footbasin-link" href="#" target="_blank">
+                                                <img id="footbasin-preview" src="#" class="img-fluid d-none" style="max-height:200px">
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah.</small>
                                         <small id="footbasin-error" class="text-danger"></small>
                                     </div>
 
@@ -88,6 +94,12 @@
                                         <label class="form-label">Hand Basin (Std 50-100 ppm)</label>
                                         <input type="file" id="handbasin" name="handbasin" class="form-control"
                                             accept="image/*" required>
+                                        <div class="mt-2">
+                                            <a id="handbasin-link" href="#" target="_blank">
+                                                <img id="handbasin-preview" src="#" class="img-fluid d-none" style="max-height:200px">
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah.</small>
                                         <small id="handbasin-error" class="text-danger"></small>
                                     </div>
                                 </div>
@@ -122,57 +134,163 @@
 
     {{-- ===================== SCRIPT ===================== --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const maxFileSize = 5 * 1024 * 1024;
+
+            function handleImageUpload(inputId, errorId, previewId, linkId) {
+                const input = document.getElementById(inputId);
+                const error = document.getElementById(errorId);
+                const preview = document.getElementById(previewId);
+                const link = document.getElementById(linkId);
+
+                input.addEventListener("change", function () {
+
+                    error.textContent = "";
+
+                    const file = this.files[0];
+
+                    if (!file) return;
+
+
+                    if (file.size > maxFileSize) {
+
+                        compressImage(file, maxFileSize, function(compressedFile) {
+
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(compressedFile);
+                            input.files = dataTransfer.files;
+
+                            setPreview(compressedFile);
+
+                        });
+
+                    } else {
+
+                        setPreview(file);
+
+                    }
+
+                });
+
+
+                function setPreview(file) {
+
+                    const url = URL.createObjectURL(file);
+
+                    preview.src = url;
+                    link.href = url;
+
+                    preview.classList.remove("d-none");
+
+                }
+            }
+
+
+            function compressImage(file, maxSize, callback) {
+
+                const img = new Image();
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                };
+
+
+                img.onload = function() {
+
+                    const canvas = document.createElement("canvas");
+
+                    let width = img.width;
+                    let height = img.height;
+
+                    const maxDimension = 1920;
+
+
+                    if (width > maxDimension || height > maxDimension) {
+
+                        if (width > height) {
+                            height = height * maxDimension / width;
+                            width = maxDimension;
+                        } else {
+                            width = width * maxDimension / height;
+                            height = maxDimension;
+                        }
+
+                    }
+
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    canvas.getContext("2d")
+                        .drawImage(img, 0, 0, width, height);
+
+
+                    let quality = 0.9;
+
+
+                    function compress() {
+
+                        canvas.toBlob(function(blob) {
+
+                            if (blob.size > maxSize && quality > 0.1) {
+
+                                quality -= 0.1;
+                                compress();
+                                return;
+
+                            }
+
+
+                            callback(new File(
+                                [blob],
+                                file.name,
+                                {
+                                    type: "image/jpeg"
+                                }
+                            ));
+
+
+                        }, "image/jpeg", quality);
+
+                    }
+
+
+                    compress();
+
+                };
+
+
+                reader.readAsDataURL(file);
+
+            }
+
+
+            handleImageUpload(
+                "footbasin",
+                "footbasin-error",
+                "footbasin-preview",
+                "footbasin-link"
+            );
+
+
+            handleImageUpload(
+                "handbasin",
+                "handbasin-error",
+                "handbasin-preview",
+                "handbasin-link"
+            );
+
+
             const dateInput = document.getElementById("dateInput");
             const timeInput = document.getElementById("timeInput");
 
-            // Set tanggal dan waktu default
             const now = new Date();
+
             dateInput.value = now.toISOString().split("T")[0];
-            timeInput.value = now.toTimeString().slice(0, 5);
+            timeInput.value = now.toTimeString().slice(0,5);
 
-            const maxFileSize = 5 * 1024 * 1024; // 5 MB
-            const submitBtn = document.getElementById("submitBtn");
-
-            function validateFile(inputId, errorId) {
-                const input = document.getElementById(inputId);
-                const error = document.getElementById(errorId);
-
-                input.addEventListener("change", function() {
-                    error.textContent = "";
-                    const file = input.files[0];
-
-                    if (!file) {
-                        error.textContent = "Upload File maksimal 5MB.";
-                        return;
-                    }
-
-                    if (file.size > maxFileSize) {
-                        error.textContent = "Ukuran file maksimal 5MB.";
-                        input.value = "";
-                    }
-                });
-            }
-
-            // Validasi saat user klik tombol Simpan
-            submitBtn.addEventListener("click", function(e) {
-                const footbasin = document.getElementById("footbasin");
-                const handbasin = document.getElementById("handbasin");
-                const footErr = document.getElementById("footbasin-error");
-                const handErr = document.getElementById("handbasin-error");
-
-                footErr.textContent = "";
-                handErr.textContent = "";
-
-                if (!footbasin.files.length || !handbasin.files.length) {
-                    e.preventDefault();
-                    if (!footbasin.files.length) footErr.textContent = "File wajib diupload.";
-                    if (!handbasin.files.length) handErr.textContent = "File wajib diupload.";
-                }
-            });
-
-            validateFile("footbasin", "footbasin-error");
-            validateFile("handbasin", "handbasin-error");
         });
     </script>
 @endsection

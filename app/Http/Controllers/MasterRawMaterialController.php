@@ -35,7 +35,7 @@ class MasterRawMaterialController extends Controller
         $request->validate([
             'nama_bahan_baku' => 'required|string|max:255',
             'kode_internal'   => 'nullable|string|max:255', // Bisa diubah 'required' jika wajib diisi
-            'satuan'          => 'required|in:kg,gr,liter,sak' // Validasi dropdown
+            'satuan' => 'required|in:kg,gr,liter,sak,box,pail,pcs'
         ]);
 
         Master_Raw_Material::create([
@@ -63,7 +63,7 @@ class MasterRawMaterialController extends Controller
         $request->validate([
             'nama_bahan_baku' => 'required|string|max:255',
             'kode_internal'   => 'nullable|string|max:255',
-            'satuan'          => 'required|in:kg,gr,liter,sak'
+            'satuan' => 'required|in:kg,gr,liter,sak,box,pail,pcs'
         ]);
 
         if ($raw_material->plant_uuid !== Auth::user()->plant) {

@@ -65,18 +65,23 @@
                         </td>
                         <td class="text-start fw-semibold text-dark">{{ $item->nama_bahan_baku }}</td>
                         <td>
-                            {{-- Pewarnaan Dinamis untuk Satuan (Netral) --}}
-                            @if(strtolower($item->satuan) == 'kg')
-                                <span class="badge bg-light text-dark border px-2 py-1 shadow-sm">KG</span>
-                            @elseif(strtolower($item->satuan) == 'gr')
-                                <span class="badge bg-light text-dark border px-2 py-1 shadow-sm">GR</span>
-                            @elseif(strtolower($item->satuan) == 'liter')
-                                <span class="badge bg-light text-dark border px-2 py-1 shadow-sm">LITER</span>
-                            @elseif(strtolower($item->satuan) == 'sak')
-                                <span class="badge bg-light text-dark border px-2 py-1 shadow-sm">SAK</span>
-                            @else
-                                <span class="badge bg-light text-dark border px-2 py-1">-</span>
-                            @endif
+                            @php
+                                $satuan = [
+                                    'kg' => 'KG',
+                                    'gr' => 'GR',
+                                    'liter' => 'LITER',
+                                    'sak' => 'SAK',
+                                    'box' => 'BOX',
+                                    'pail' => 'PAIL',
+                                    'pcs' => 'PCS',
+                                ];
+
+                                $label = $satuan[strtolower(trim($item->satuan ?? ''))] ?? '-';
+                            @endphp
+
+                            <span class="badge bg-light text-dark border px-2 py-1 shadow-sm">
+                                {{ $label }}
+                            </span>
                         </td>
                         <td class="text-muted small">{{ $item->dataPlant->plant ?? 'N/A' }}</td>
                         <td class="align-middle">

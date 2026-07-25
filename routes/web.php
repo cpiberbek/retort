@@ -177,6 +177,7 @@ Route::middleware('auth')->group(function () {
     // UMUM
     Route::get('/lookup/batch/{nama_produk}', [LookupController::class, 'getBatchByProduk'])->name('lookup.batch');
     Route::get('/lookup/batch-packing/{nama_produk}', [LookupController::class, 'getAllBatchByProduk'])->name('lookup.batch_packing');
+    Route::get('/lookup/batch-packing-by-uuid/{uuid}', [LookupController::class, 'getBatchByUuid']);
 
     // Form QC
     Route::resource('list_form', List_formController::class)->parameters([

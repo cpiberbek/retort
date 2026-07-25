@@ -135,8 +135,7 @@
                         </td>
                         <td>
                             @if($bIndex==0)
-                            <button type="button" class="btn btn-success btn-sm addBatchRow"
-                            {{ !empty($mesinData['mesin']) ? 'disabled' : '' }}>+ Batch</button>
+                            <button type="button" class="btn btn-success btn-sm addBatchRow">+ Batch</button>
                             <button type="button" class="btn btn-danger btn-sm removeRow"
                             {{ !empty($mesinData['mesin']) ? 'disabled' : '' }}>Hapus</button>
                             @else

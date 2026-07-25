@@ -101,7 +101,10 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="file" name="data_pvdc[{{ $i }}][kode_produksi]" class="form-control form-control-sm" accept="image/*">
+                                        <label class="form-control form-control-sm">
+                                            {{ !empty($row['file']) ? 'Ganti File' : 'Pilih File' }}
+                                            <input type="file" name="data_pvdc[{{ $i }}][kode_produksi]" accept="image/*" hidden>
+                                        </label>
                                         <div class="preview mt-2">
                                             @if(!empty($row['file']))
                                             @php
@@ -135,7 +138,7 @@
 
                 {{-- TOMBOL SIMPAN --}}
                 <div class="d-flex justify-content-between mt-3">
-                    <button type="button" id="saveBtn" class="btn btn-success"><i class="bi bi-save"></i> Simpan</button>
+                    <button type="submit" id="saveBtn" class="btn btn-success"><i class="bi bi-save"></i> Simpan</button>
                     <a href="{{ route('labelisasi_pvdc.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
                 </div>
             </form>
@@ -166,15 +169,15 @@ $(document).ready(function(){
         if (select.data('select2')) {
             select.select2('destroy');
         }
-        
+
         if (!produk) {
             select.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
             select.prop("disabled", true);
             return;
         }
-        
+
         select.prop("disabled", false);
-        
+
         select.select2({
             theme: "bootstrap-5",
             width: '100%',
@@ -184,10 +187,10 @@ $(document).ready(function(){
                 url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produk),
                 dataType: 'json',
                 delay: 250,
-                data: function (params) {
+                data: function(params) {
                     return { q: params.term };
                 },
-                processResults: function (data) {
+                processResults: function(data) {
                     return { results: data };
                 },
                 cache: true
@@ -201,16 +204,80 @@ $(document).ready(function(){
 
         $('.batchSelect').each(function() {
             let select = $(this);
-            
+
             if (!select.val()) {
                 select.html('<option value="">-- Pilih Batch --</option>');
             }
-            
+
             initBatchSelect(select, produkValue);
         });
     }
 
-    // Initialize select2 on load
+    function compressImage(file) {
+        return new Promise((resolve) => {
+            if (!file) {
+                resolve(file);
+                return;
+            }
+
+            const img = new Image();
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                img.src = e.target.result;
+            };
+
+            img.onload = function() {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+
+                let width = img.width;
+                let height = img.height;
+                let quality = 0.8;
+
+                if (width > 1280) {
+                    height = height * (1280 / width);
+                    width = 1280;
+                }
+
+                function compress() {
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(function(blob) {
+
+                        if (blob.size <= 2097152) {
+                            resolve(new File([blob], file.name, {
+                                type: 'image/jpeg'
+                            }));
+                            return;
+                        }
+
+                        if (width < 200 || height < 200) {
+                            resolve(new File([blob], file.name, {
+                                type: 'image/jpeg'
+                            }));
+                            return;
+                        }
+
+                        quality -= 0.1;
+                        width *= 0.8;
+                        height *= 0.8;
+
+                        compress();
+
+                    }, 'image/jpeg', quality);
+                }
+
+                compress();
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+
     loadBatchForAllRows();
 
     $('select[name="nama_produk"]').on('change', function() {
@@ -218,8 +285,8 @@ $(document).ready(function(){
         loadBatchForAllRows();
     });
 
-    // TAMBAH BARIS
     let index = {{ count($labelisasi_pvdcData) }};
+
     const mesinOptions = `{!! collect($mesins)->map(fn($m) => "<option value='{$m->nama_mesin}'>{$m->nama_mesin}</option>")->implode('') !!}`;
 
     $('#addRow').click(function(){
@@ -236,7 +303,7 @@ $(document).ready(function(){
                 </select>
             </td>
             <td>
-                <input type="file" name="data_pvdc[${index}][kode_produksi]" class="form-control form-control-sm" accept="image/*">
+                <input type="file" name="data_pvdc[${index}][kode_produksi]" class="form-control form-control-sm" accept="image/*" required>
                 <div class="preview mt-2"></div>
             </td>
             <td>
@@ -246,26 +313,56 @@ $(document).ready(function(){
                 <button type="button" class="btn btn-danger btn-sm removeRow">Hapus</button>
             </td>
         </tr>`);
+
         index++;
         loadBatchForAllRows();
     });
 
-    // HAPUS BARIS
-    $('#pvdcBody').on('click','.removeRow',function(){
-        $(this).closest('tr').remove();
+    $('#pvdcBody').on('click', '.removeRow', function () {
+                if ($('#pvdcBody tr').length > 1) {
+                    $(this).closest('tr').remove();
+                } 
+        });
+
+    $('#pvdcBody').on('change', 'input[type="file"]', function(){
+        const input = this;
+        const file = input.files[0];
+
+        const preview = $(input).closest('td').find('.preview');
+
+        preview.empty();
+
+        if(file){
+            const url = URL.createObjectURL(file);
+
+            preview.html(`
+                <a href="${url}" target="_blank">
+                    <img src="${url}" width="100" class="img-thumbnail">
+                </a>
+            `);
+        }
     });
 
-    // SIMPAN DATA
-    $('#saveBtn').click(function(){
-        const btn = $(this);
-        const form = $('#pvdcEditForm')[0];
-        const formData = new FormData(form);
+    $('#pvdcEditForm').on('submit', async function(e){
+        e.preventDefault();
+
+        const btn = $('#saveBtn');
+        const form = this;
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
 
         let hasData = false;
+
         $('#pvdcBody tr').each(function(){
             const mesin = $(this).find('select[name$="[mesin]"]').val();
-            const kodeBatch = $(this).find('input[name$="[kode_batch]"]').val();
-            if(mesin && kodeBatch) hasData = true;
+            const kodeBatch = $(this).find('select[name$="[kode_batch]"]').val();
+
+            if(mesin && kodeBatch) {
+                hasData = true;
+            }
         });
 
         if(!hasData){
@@ -273,20 +370,40 @@ $(document).ready(function(){
             return;
         }
 
-        btn.prop('disabled',true).html('Menyimpan...');
+        const formData = new FormData(form);
+
+        const files = $('#pvdcBody input[type="file"]');
+
+        for(let i = 0; i < files.length; i++){
+            if(files[i].files[0]){
+                const compressed = await compressImage(files[i].files[0]);
+
+                formData.delete(files[i].name);
+                formData.append(files[i].name, compressed);
+            }
+        }
+
+        btn.prop('disabled', true).html('Menyimpan...');
 
         $.ajax({
-            url: "{{ route('labelisasi_pvdc.update.form', $labelisasi_pvdc->uuid) }}",
+            url: "{{ route('labelisasi_pvdc.update_qc', $labelisasi_pvdc->uuid) }}",
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
             success: function(res){
-                if(res.success) window.location.href = res.redirect_url;
-                else alert(res.message);
+                if(res.success){
+                    window.location.href = res.redirect_url;
+                } else {
+                    alert(res.message);
+                }
+            },
+            error: function(xhr){
+                console.log(xhr.responseText);
+                alert('Terjadi kesalahan saat menyimpan');
             },
             complete: function(){
-                btn.prop('disabled',false).html('<i class="bi bi-save"></i> Simpan');
+                btn.prop('disabled', false).html('<i class="bi bi-save"></i> Simpan');
             }
         });
     });

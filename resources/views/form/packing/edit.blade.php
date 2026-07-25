@@ -93,20 +93,36 @@
                         <div class="row mb-3">
                             <div class="col-md-6 file-wrapper">
                                 <label class="form-label fw-bold">QR Code (Upload Gambar)</label>
-                                @if(!empty($packing->qrcode) && !in_array($packing->qrcode, ['Ok', 'Tidak Ok']))
-                                    <div class="mb-2"><a href="{{ asset($packing->qrcode) }}" target="_blank" class="text-primary text-decoration-underline">Lihat Gambar Saat Ini</a></div>
-                                @endif
+
+                                <div class="mb-2">
+                                    @if(!empty($packing->qrcode) && !in_array($packing->qrcode, ['Ok', 'Tidak Ok']))
+                                        <a id="preview-qrcode-link" href="{{ asset($packing->qrcode) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-image"></i> Lihat Gambar Saat Ini
+                                        </a>
+                                    @else
+                                        <span id="preview-qrcode-empty" class="text-muted">Belum ada foto</span>
+                                    @endif
+                                </div>
+
                                 <input type="file" name="qrcode" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 5 MB | Kosongkan jika tidak diubah</small>
+                                <small class="text-muted">Gambar > 5 MB akan dikompresi otomatis | Kosongkan jika tidak diubah</small>
                             </div>
 
                             <div class="col-md-6 file-wrapper">
                                 <label class="form-label fw-bold">Kode Printing (Upload Gambar)</label>
-                                @if(!empty($packing->kode_printing))
-                                    <div class="mb-2"><a href="{{ asset($packing->kode_printing) }}" target="_blank" class="text-primary text-decoration-underline">Lihat Gambar Saat Ini</a></div>
-                                @endif
+
+                                <div class="mb-2">
+                                    @if(!empty($packing->kode_printing))
+                                        <a id="preview-printing-link" href="{{ asset($packing->kode_printing) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-image"></i> Lihat Gambar Saat Ini
+                                        </a>
+                                    @else
+                                        <span id="preview-printing-empty" class="text-muted">Belum ada foto</span>
+                                    @endif
+                                </div>
+
                                 <input type="file" name="kode_printing" class="form-control" accept="image/*">
-                                <small class="text-muted">Max 5 MB | Kosongkan jika tidak diubah</small>
+                                <small class="text-muted">Gambar > 5 MB akan dikompresi otomatis | Kosongkan jika tidak diubah</small>
                             </div>
                         </div>
 
@@ -405,6 +421,64 @@
         }
     });
 
+    async function compressImage(file) {
+        if (!file.type.startsWith('image/')) return file;
+        if (file.size <= 5 * 1024 * 1024) return file;
+
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const img = new Image();
+
+                img.onload = function () {
+                    let width = img.width;
+                    let height = img.height;
+                    const maxWidth = 1920;
+
+                    if (width > maxWidth) {
+                        height = Math.round(height * (maxWidth / width));
+                        width = maxWidth;
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let quality = 0.9;
+
+                    const exportBlob = () => {
+                        canvas.toBlob(function (blob) {
+                        if (!blob) {
+                            resolve(file);
+                            return;
+                        }
+
+                        if (blob.size <= 5 * 1024 * 1024 || quality <= 0.4) {
+                            resolve(new File([blob], file.name, {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            }));
+                        } else {
+                            quality -= 0.1;
+                            exportBlob();
+                        }
+                    }, 'image/jpeg', quality);
+                    };
+
+                    exportBlob();
+                };
+
+                img.src = e.target.result;
+            };
+
+            reader.readAsDataURL(file);
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function () {
         const checkOk = document.getElementById('kalibrasi_ok');
         const checkTidakOk = document.getElementById('kalibrasi_tidak_ok');
@@ -413,28 +487,60 @@
             checkTidakOk.addEventListener('change', function() { if (this.checked) checkOk.checked = false; });
         }
     });
+   
+    $('input[name="qrcode"]').on('change', function () {
+        if (!this.files.length) return;
 
-    function validateFile(input) {
-        const file = input.files[0];
-        const max = 5 * 1024 * 1024;
-        const wrap = $(input).closest('.file-wrapper');
-        wrap.find('.file-error').remove();
+        const url = URL.createObjectURL(this.files[0]);
 
-        if (file && file.size > max) {
-            $(input).addClass('is-invalid');
-            wrap.append('<div class="text-danger file-error mt-1" style="font-size:0.8rem;">Ukuran file maksimal 5 MB</div>');
-            return false;
+        if ($('#preview-qrcode-link').length) {
+            $('#preview-qrcode-link').attr('href', url);
+        } else {
+            $('#preview-qrcode-empty').replaceWith(
+                `<a id="preview-qrcode-link" href="${url}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-image"></i> Lihat Gambar Saat Ini
+                </a>`
+            );
         }
-        $(input).removeClass('is-invalid');
-        return true;
-    }
-
-    $(document).on('change', 'input[type="file"]', function () { validateFile(this); });
-    $('#pvdcForm').on('submit', function (e) {
-        let ok = true;
-        $('input[type="file"]').each(function () { if (!validateFile(this)) ok = false; });
-        if (!ok) { e.preventDefault(); alert('Periksa ukuran file, maksimal 5 MB.'); }
     });
+
+    $('input[name="kode_printing"]').on('change', function () {
+        if (!this.files.length) return;
+
+        const url = URL.createObjectURL(this.files[0]);
+
+        if ($('#preview-printing-link').length) {
+            $('#preview-printing-link').attr('href', url);
+        } else {
+            $('#preview-printing-empty').replaceWith(
+                `<a id="preview-printing-link" href="${url}" target="_blank" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-image"></i> Lihat Gambar Saat Ini
+                </a>`
+            );
+        }
+    });
+
+    $('#pvdcForm').on('submit', async function (e) {
+        e.preventDefault();
+
+        const inputs = [
+            $('input[name="qrcode"]')[0],
+            $('input[name="kode_printing"]')[0]
+        ];
+
+        for (const input of inputs) {
+            if (!input.files.length) continue;
+
+            const compressed = await compressImage(input.files[0]);
+
+            const dt = new DataTransfer();
+            dt.items.add(compressed);
+            input.files = dt.files;
+        }
+
+        HTMLFormElement.prototype.submit.call(this);
+    });
+
 </script>
 @endpush
 

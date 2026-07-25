@@ -151,8 +151,14 @@
                                     </label>
 
                                     <input type="file" id="kode_karton" name="kode_karton" class="form-control"
-                                        accept="image/*"required>
+                                        accept="image/*" required>
 
+                                    <div class="mt-2">
+                                        <a id="kode-karton-link" href="#" target="_blank">
+                                            <img id="kode-karton-preview" src="#" class="img-fluid d-none" style="max-height:100px">
+                                        </a>
+                                    </div>
+                                    <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah.</small>
                                     <small id="kode-karton-error" class="text-danger"></small>
                                 </div>
 
@@ -233,11 +239,88 @@
 
             const produkSelect = document.querySelector('select[name="nama_produk"]');
             const batchSelect = document.getElementById('kode_produksi');
-            const kodeError = document.getElementById('kodeError');
             const form = document.getElementById('samplingForm');
             const fileInput = document.getElementById('kode_karton');
             const fileError = document.getElementById('kode-karton-error');
-            const maxFileSize = 5 * 1024 * 1024; // 5MB
+            const preview = document.getElementById('kode-karton-preview');
+            const maxFileSize = 5 * 1024 * 1024;
+            const previewLink = document.getElementById('kode-karton-link');
+
+            fileInput.addEventListener('change', function() {
+                fileError.textContent = "";
+
+                const file = this.files[0];
+                if (!file) return;
+
+                const previewUrl = URL.createObjectURL(file);
+
+                preview.src = previewUrl;
+                previewLink.href = previewUrl;
+                preview.classList.remove('d-none');
+
+                if (file.size > maxFileSize) {
+                    compressImage(file, maxFileSize, function(compressedFile) {
+                        const dataTransfer = new DataTransfer();
+                        dataTransfer.items.add(compressedFile);
+                        fileInput.files = dataTransfer.files;
+
+                        const previewUrl = URL.createObjectURL(compressedFile);
+
+                        preview.src = previewUrl;
+                        previewLink.href = previewUrl;
+                    });
+                }
+            });
+
+            function compressImage(file, maxSize, callback) {
+                const img = new Image();
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                };
+
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    const maxDimension = 1920;
+
+                    if (width > maxDimension || height > maxDimension) {
+                        if (width > height) {
+                            height *= maxDimension / width;
+                            width = maxDimension;
+                        } else {
+                            width *= maxDimension / height;
+                            height = maxDimension;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    let quality = 0.9;
+
+                    canvas.toBlob(function(blob) {
+                        if (blob.size > maxSize && quality > 0.1) {
+                            quality -= 0.1;
+                            canvas.toBlob(arguments.callee, 'image/jpeg', quality);
+                            return;
+                        }
+
+                        callback(new File([blob], file.name, {
+                            type: 'image/jpeg'
+                        }));
+
+                    }, 'image/jpeg', quality);
+                };
+
+                reader.readAsDataURL(file);
+            }
 
             // Disable batch saat awal load (jika tidak ada old value)
             $('#nama_produk').select2({
@@ -293,14 +376,14 @@
                     .trigger('change');
             });
             // ============ VALIDASI FILE (langsung muncul di bawah kolom) ============
-            fileInput.addEventListener('change', function() {
-                fileError.textContent = "";
-                const file = fileInput.files[0];
-                if (file && file.size > maxFileSize) {
-                    fileError.textContent = "Ukuran file maksimal 5MB.";
-                    fileInput.value = "";
-                }
-            });
+            // fileInput.addEventListener('change', function() {
+            //     fileError.textContent = "";
+            //     const file = fileInput.files[0];
+            //     if (file && file.size > maxFileSize) {
+            //         fileError.textContent = "Ukuran file maksimal 5MB.";
+            //         fileInput.value = "";
+            //     }
+            // });
 
             form.addEventListener('submit', function(e) {
 
@@ -314,12 +397,12 @@
                 //     return;
                 // }
 
-                if (file.size > maxFileSize) {
-                    e.preventDefault();
-                    fileError.textContent = "Ukuran file maksimal 5MB.";
-                    fileInput.value = "";
-                    return;
-                }
+                // if (file.size > maxFileSize) {
+                //     e.preventDefault();
+                //     fileError.textContent = "Ukuran file maksimal 5MB.";
+                //     fileInput.value = "";
+                //     return;
+                // }
             });
 
             // ============ OTOMATIS TANGGAL & SHIFT ============

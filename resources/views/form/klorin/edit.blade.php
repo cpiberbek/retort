@@ -126,43 +126,58 @@
 
                             <div class="card-body">
                                 <div class="row mb-3">
+
                                     {{-- FOOTBASIN --}}
                                     <div class="col-md-6">
                                         <label class="form-label">Foot Basin (Std 200 ppm)</label>
+
                                         <input type="file" id="footbasin" name="footbasin" class="form-control"
                                             accept="image/*">
+                                        
                                         <small id="footbasin-error" class="text-danger"></small>
 
-                                        @if ($klorin->footbasin)
-                                            <div class="mt-2">
-                                                <a href="{{ asset('storage/' . str_replace('public/', '', $klorin->footbasin)) }}"
-                                                    target="_blank">
-                                                    <img src="{{ asset('storage/' . str_replace('public/', '', $klorin->footbasin)) }}"
-                                                        alt="Footbasin"
-                                                        style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
-                                                </a>
-                                            </div>
-                                        @endif
+                                        <div class="mt-2">
+                                            <a id="footbasin-link"
+                                                href="{{ $klorin->footbasin ? asset('storage/' . str_replace('public/', '', $klorin->footbasin)) : '#' }}"
+                                                target="_blank">
+
+                                                <img id="footbasin-preview"
+                                                    src="{{ $klorin->footbasin ? asset('storage/' . str_replace('public/', '', $klorin->footbasin)) : '#' }}"
+                                                    alt="Footbasin"
+                                                    class="img-fluid {{ $klorin->footbasin ? '' : 'd-none' }}"
+                                                    style="width:100px;height:100px;object-fit:cover;border-radius:8px;">
+
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah. | Kosongkan jika tidak diubah</small>
                                     </div>
+
 
                                     {{-- HANDBASIN --}}
                                     <div class="col-md-6">
                                         <label class="form-label">Hand Basin (Std 50-100 ppm)</label>
+
                                         <input type="file" id="handbasin" name="handbasin" class="form-control"
                                             accept="image/*">
+
                                         <small id="handbasin-error" class="text-danger"></small>
 
-                                        @if ($klorin->handbasin)
-                                            <div class="mt-2">
-                                                <a href="{{ asset('storage/' . str_replace('public/', '', $klorin->handbasin)) }}"
-                                                    target="_blank">
-                                                    <img src="{{ asset('storage/' . str_replace('public/', '', $klorin->handbasin)) }}"
-                                                        alt="Handbasin"
-                                                        style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
-                                                </a>
-                                            </div>
-                                        @endif
+                                        <div class="mt-2">
+                                            <a id="handbasin-link"
+                                                href="{{ $klorin->handbasin ? asset('storage/' . str_replace('public/', '', $klorin->handbasin)) : '#' }}"
+                                                target="_blank">
+
+                                                <img id="handbasin-preview"
+                                                    src="{{ $klorin->handbasin ? asset('storage/' . str_replace('public/', '', $klorin->handbasin)) : '#' }}"
+                                                    alt="Handbasin"
+                                                    class="img-fluid {{ $klorin->handbasin ? '' : 'd-none' }}"
+                                                    style="width:100px;height:100px;object-fit:cover;border-radius:8px;">
+
+                                            </a>
+                                        </div>
+                                        <small class="text-muted">*Gambar > 5 MB akan dikompresi otomatis sebelum diunggah. | Kosongkan jika tidak diubah</small>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -192,48 +207,156 @@
 
     {{-- ===================== SCRIPT ===================== --}}
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const form = document.getElementById("klorinEditForm");
-            const submitBtn = document.getElementById("submitBtn");
-            const maxFileSize = 5 * 1024 * 1024; // 5 MB
+        document.addEventListener("DOMContentLoaded", function () {
 
-            const footInput = document.getElementById("footbasin");
-            const handInput = document.getElementById("handbasin");
-            const footErr = document.getElementById("footbasin-error");
-            const handErr = document.getElementById("handbasin-error");
+            const maxFileSize = 5 * 1024 * 1024;
 
-            // Fungsi cek ukuran file
-            function checkFile(input, errorEl) {
-                errorEl.textContent = "";
-                if (input.files.length > 0) {
-                    const file = input.files[0];
+            function handleImageUpload(inputId, errorId, previewId, linkId) {
+
+                const input = document.getElementById(inputId);
+                const error = document.getElementById(errorId);
+                const preview = document.getElementById(previewId);
+                const link = document.getElementById(linkId);
+
+                input.addEventListener("change", function () {
+
+                    error.textContent = "";
+
+                    const file = this.files[0];
+
+                    if (!file) return;
+
+
                     if (file.size > maxFileSize) {
-                        errorEl.textContent = "âŒ Ukuran file maksimal 5MB. Pilih file lain.";
-                        return false;
+
+                        compressImage(file, maxFileSize, function(compressedFile){
+
+                            const dataTransfer = new DataTransfer();
+                            dataTransfer.items.add(compressedFile);
+
+                            input.files = dataTransfer.files;
+
+                            setPreview(compressedFile);
+
+                        });
+
+                    } else {
+
+                        setPreview(file);
+
                     }
+
+                });
+
+
+                function setPreview(file) {
+
+                    const url = URL.createObjectURL(file);
+
+                    preview.src = url;
+                    link.href = url;
+
                 }
-                return true;
+
             }
 
-            // Validasi realtime saat user ganti file
-            footInput.addEventListener("change", () => checkFile(footInput, footErr));
-            handInput.addEventListener("change", () => checkFile(handInput, handErr));
 
-            // Cegah form dikirim kalau invalid
-            form.addEventListener("submit", function(event) {
-                event.preventDefault(); // â›” cegah submit DULU
+            function compressImage(file, maxSize, callback) {
 
-                const validFoot = checkFile(footInput, footErr);
-                const validHand = checkFile(handInput, handErr);
+                const img = new Image();
+                const reader = new FileReader();
 
-                // kalau ada yang invalid, tampilkan error dan jangan submit
-                if (!validFoot || !validHand) {
-                    return;
-                }
+                reader.onload = function(e){
+                    img.src = e.target.result;
+                };
 
-                // âœ… kalau semua valid baru kirim manual
-                form.submit();
-            });
+
+                img.onload = function(){
+
+                    const canvas = document.createElement("canvas");
+
+                    let width = img.width;
+                    let height = img.height;
+
+                    const maxDimension = 1920;
+
+
+                    if(width > maxDimension || height > maxDimension){
+
+                        if(width > height){
+                            height = height * maxDimension / width;
+                            width = maxDimension;
+                        }else{
+                            width = width * maxDimension / height;
+                            height = maxDimension;
+                        }
+
+                    }
+
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+
+                    canvas.getContext("2d")
+                        .drawImage(img,0,0,width,height);
+
+
+                    let quality = 0.9;
+
+
+                    function compress(){
+
+                        canvas.toBlob(function(blob){
+
+                            if(blob.size > maxSize && quality > 0.1){
+
+                                quality -= 0.1;
+                                compress();
+                                return;
+
+                            }
+
+
+                            callback(new File(
+                                [blob],
+                                file.name,
+                                {
+                                    type:"image/jpeg"
+                                }
+                            ));
+
+
+                        },"image/jpeg",quality);
+
+                    }
+
+
+                    compress();
+
+                };
+
+
+                reader.readAsDataURL(file);
+
+            }
+
+
+            handleImageUpload(
+                "footbasin",
+                "footbasin-error",
+                "footbasin-preview",
+                "footbasin-link"
+            );
+
+
+            handleImageUpload(
+                "handbasin",
+                "handbasin-error",
+                "handbasin-preview",
+                "handbasin-link"
+            );
+
         });
     </script>
 

@@ -129,7 +129,18 @@ $noSegel = $firstLoading ? $firstLoading->no_segel : '';
         <tr>
             <td class="center">{{ $index + 1 }}</td>
             <td>{{ $detail->nama_produk ?? '' }}</td>
-            <td>{{ $detail->kode_produksi ?? '' }}</td>
+            <td>
+                @php
+                    $kodeProduksi = $detail->kode_produksi ?? '';
+
+                    if (preg_match('/^[0-9a-f-]{36}$/i', $kodeProduksi)) {
+                        $kodeProduksi = \App\Models\Mincing::where('uuid', $kodeProduksi)
+                            ->value('kode_produksi') ?? $kodeProduksi;
+                    }
+                @endphp
+
+                {{ $kodeProduksi }}
+            </td>
             <td>{{ $detail->kode_expired ? \Carbon\Carbon::parse($detail->kode_expired)->format('d-m-Y') : '' }}</td>
             <td class="center">{{ $detail->jumlah ?? '' }}</td>
             <td>{{ $detail->keterangan ?? '' }}</td>

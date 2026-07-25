@@ -527,9 +527,44 @@ class GmpController extends Controller
                 return back()->with('error', "Tidak ada data pada area {$atribut} untuk tanggal {$date}.");
             }
 
-            $templatePath = storage_path('app/templates/personal_hygiene.xlsx');
-            $spreadsheet  = IOFactory::load($templatePath);
-            $sheet        = $spreadsheet->getActiveSheet();
+            $templatePath = app_path('templates/personal_hygiene.xlsx');
+            $spreadsheet = IOFactory::load($templatePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            //nambahin entry karena template mentok 23 entry saja
+            $startRow = 12;
+            $templateEndRow = 34;
+            $signatureRow = 36;
+
+            $dataCount = count($rekap);
+            $templateCapacity = $templateEndRow - $startRow + 1;
+
+            if ($dataCount > $templateCapacity) {
+                $extraRows = $dataCount - $templateCapacity;
+
+                $sheet->insertNewRowBefore($signatureRow, $extraRows);
+
+                for ($i = 0; $i < $extraRows; $i++) {
+                    $newRow = $templateEndRow + 1 + $i;
+
+                    $sheet->duplicateStyle(
+                        $sheet->getStyle("B{$templateEndRow}:AH{$templateEndRow}"),
+                        "B{$newRow}:AH{$newRow}"
+                    );
+
+                    $sheet->getRowDimension($newRow)
+                        ->setRowHeight(
+                            $sheet->getRowDimension($templateEndRow)->getRowHeight()
+                        );
+
+                    $sheet->mergeCells("C{$newRow}:E{$newRow}");
+                    $sheet->mergeCells("AE{$newRow}:AF{$newRow}");
+                }
+            }
+
+            //manjangin dikit kolom AG sama AH
+            $sheet->getColumnDimension('AG')->setWidth(20);
+            $sheet->getColumnDimension('AH')->setWidth(20);
 
             $sheet->getStyle($sheet->calculateWorksheetDimension())
                 ->getFont()
@@ -571,7 +606,9 @@ class GmpController extends Controller
                 $col++;
 
                 foreach ($attributes as $attr) {
-                    $sheet->setCellValueByColumnAndRow($col, $rowNum, $data[$attr]);
+                    $value = $data[$attr] == 1 ? '✓' : '-';
+
+                    $sheet->setCellValueByColumnAndRow($col, $rowNum, $value);
                     $sheet->getStyleByColumnAndRow($col, $rowNum)->applyFromArray($center);
                     $col++;
                 }

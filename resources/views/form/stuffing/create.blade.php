@@ -391,6 +391,23 @@
                 $('#nama_produk').trigger('change');
             }
         });
+
+        //nama mesin stuffing dinamis
+        $(document).on('change', 'select[name$="[kode_mesin]"]', function () {
+            const namaMesin = $(this).find('option:selected').text().trim();
+            const accordionButton = $(this)
+                .closest('.stuffing-item')
+                .find('.accordion-button');
+
+            const nomor = accordionButton.text().match(/\d+$/);
+            const label = namaMesin && namaMesin !== '-- Pilih Mesin --'
+                ? namaMesin
+                : `Stuffing ${nomor ? nomor[0] : ''}`;
+
+            accordionButton.html(
+                `<i class="bi bi-clipboard-check me-2 text-warning"></i> ${label}`
+            );
+        });
     </script>
 
     <script>

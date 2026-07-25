@@ -54,7 +54,17 @@ class MagnetTrapModel extends Model
     {
         return $this->belongsTo(User::class, 'created_by', 'uuid');
     }
-    
+
+    public function produksi()
+    {
+        return $this->belongsTo(Operator::class, 'produksi_id');
+    }
+
+    public function engineer()
+    {
+        return $this->belongsTo(Operator::class, 'engineer_id');
+    }
+        
     // Opsional: Definisikan relasi ke model User (jika operator dan engineer ada di tabel users)
     // public function operator()
     // {

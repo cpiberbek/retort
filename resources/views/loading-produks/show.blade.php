@@ -268,34 +268,101 @@
 
     {{-- Data Detail (Item) --}}
     <div class="detail-card">
-        <h2><i class="bi bi-list-nested"></i> Detail Produk yang Di-load</h2>
-        <div class="items-table-container">
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th>Nama Produk (Varian)</th>
-                        <th>Kode Produksi</th>
-                        <th>Kode Expired</th>
-                        <th>Jumlah</th>
-                        <th>Keterangan</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($loadingProduk->details as $detail)
-                        <tr>
-                            <td>{{ $detail->nama_produk }}</td>
-                            <td>{{ $detail->kode_produksi }}</td>
-                            <td>{{ $detail->kode_expired ? \Carbon\Carbon::parse($detail->kode_expired)->format('d/m/Y') : '-' }}</td>
-                            <td>{{ $detail->jumlah }}</td>
-                            <td>{{ $detail->keterangan ?? '-' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" style="text-align: center; padding: 2rem;">Tidak ada item detail untuk data ini.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+    <h2><i class="bi bi-list-nested"></i> Detail Produk yang Di-load</h2>
+
+    <div class="card">
+            <div class="card-body">
+
+                <div class="table-responsive">
+                    <table class="table table-bordered align-middle">
+                        <thead>
+                            <tr>
+                                <th>Nama Produk (Varian)</th>
+                                <th>Kode Produksi</th>
+                                <th>Kode Expired</th>
+                                <th>Jumlah</th>
+                                <th>Keterangan</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($loadingProduk->details as $detail)
+                                <tr>
+                                    <td>{{ $detail->nama_produk }}</td>
+
+                                    <td>
+                                        @if(\Illuminate\Support\Str::isUuid($detail->kode_produksi))
+                                            {{ \App\Models\Mincing::where('uuid', $detail->kode_produksi)->value('kode_produksi') ?? $detail->kode_produksi }}
+                                        @else
+                                            {{ $detail->kode_produksi }}
+                                        @endif
+                                    </td>
+
+                                    <td>
+                                        {{ $detail->kode_expired 
+                                            ? \Carbon\Carbon::parse($detail->kode_expired)->format('d/m/Y') 
+                                            : '-' 
+                                        }}
+                                    </td>
+
+                                    <td>
+                                        {{ $detail->jumlah }}
+                                        {{ $detail->satuan ? ' (' . $detail->satuan . ')' : '' }}
+                                    </td>
+
+                                    <td>{{ $detail->keterangan ?? '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        Tidak ada item detail untuk data ini.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+
+                @php
+                    $totals = [];
+
+                    foreach ($loadingProduk->details as $detail) {
+                        $key = $detail->nama_produk . '|' . $detail->satuan;
+
+                        if (!isset($totals[$key])) {
+                            $totals[$key] = [
+                                'nama_produk' => $detail->nama_produk,
+                                'satuan' => $detail->satuan,
+                                'jumlah' => 0,
+                            ];
+                        }
+
+                        $totals[$key]['jumlah'] += $detail->jumlah;
+                    }
+                @endphp
+
+
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <strong>Total Item Per Produk (Varian)</strong>
+                    </div>
+
+                    <div class="card-body">
+                        @forelse($totals as $total)
+                            <div class="mb-2">
+                                <span class="badge bg-light text-dark p-2">
+                                    • {{ $total['nama_produk'] }} [ {{ $total['jumlah'] }} {{ $total['satuan'] }} ]
+                                </span>
+                            </div>
+                        @empty
+                            <span class="text-muted">
+                                Belum ada data.
+                            </span>
+                        @endforelse
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 </div>
