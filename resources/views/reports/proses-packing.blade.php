@@ -157,7 +157,7 @@
     <tr>
         <td width="50%">
             Ket :<br>
-            OK : √ <br>
+            OK : V <br>
             Tidak OK : X
         </td>
         <table width="100%">
