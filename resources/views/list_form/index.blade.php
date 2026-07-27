@@ -14,9 +14,11 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h3><i class="bi bi-list-check"></i> Daftar Form QC</h3>
-                <a href="{{ route('list_form.create') }}" class="btn btn-success">
-                    <i class="bi bi-plus-circle"></i> Tambah
-                </a>
+                @role('superadmin')
+                    <a href="{{ route('list_form.create') }}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Tambah
+                    </a>
+                @endrole
             </div>
 
             {{-- Search Form di kanan --}}
