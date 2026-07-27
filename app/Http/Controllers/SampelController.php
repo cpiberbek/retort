@@ -299,7 +299,7 @@ class SampelController extends Controller
         $pdf->AddPage();
 
         $noDokumen = List_form::where('plant', $userPlant)
-        ->where('laporan', 'Pemeriksaan Stuffing Sosis Retort')
+        ->where('laporan', 'Pengambilan Sampel')
         ->value('no_dokumen');
 
         // 3. Render
