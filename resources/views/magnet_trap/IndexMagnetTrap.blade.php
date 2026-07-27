@@ -30,9 +30,10 @@
                 <button type="button" class="btn btn-success me-2" id="exportExcelBtn">
                     <i class="bi bi-file-earmark-excel"></i> Export Excel
                 </button>
-                <a href="{{ route('checklistmagnettrap.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-primary me-2">
+                {{-- disable sesuai kesepakatan --}}
+                {{-- <a href="{{ route('checklistmagnettrap.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-primary me-2">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF
-                </a>
+                </a> --}}
             @endcan
             @can('can access recycle')
             <a href="{{ route('checklistmagnettrap.recyclebin') }}" class="btn btn-secondary">
@@ -68,6 +69,24 @@
         </div>
     </form>
 
+    <div class="modal fade" id="exportWarningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Script Auto Submit --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -86,6 +105,11 @@
 
             if (exportExcelBtn) {
                 exportExcelBtn.addEventListener('click', () => {
+                    if (!date.value) {
+                        new bootstrap.Modal(document.getElementById('exportWarningModal')).show();
+                        return;
+                    }
+
                     const formData = new FormData(form);
                     const exportUrl = "{{ route('checklistmagnettrap.exportExcel') }}?" + new URLSearchParams(formData).toString();
                     window.location.href = exportUrl;
