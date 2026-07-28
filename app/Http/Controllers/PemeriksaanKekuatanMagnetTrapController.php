@@ -16,41 +16,35 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
      */
     public function index(Request $request)
     {
-        // 1. Base Query dengan Eager Loading
-        // Memuat relasi creator & updater untuk menghindari N+1 Query
         $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater']);
 
-        // 2. Filter Tanggal (Single Date)
-        // Sesuai dengan input name="date" di View baru
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
+        } elseif ($request->filled('month')) {
+            [$year, $month] = explode('-', $request->month);
+
+            $query->whereYear('tanggal', $year)
+                ->whereMonth('tanggal', $month);
         }
 
-        // 3. Filter Search (Pencarian Global)
         if ($request->filled('search')) {
             $search = $request->search;
 
-            // Grouping query agar logika OR tidak merusak filter tanggal (AND)
             $query->where(function ($q) use ($search) {
                 $q->where('kondisi_magnet_trap', 'like', "%{$search}%")
                 ->orWhere('petugas_qc', 'like', "%{$search}%")
-                
-                // Tambahan: Cari juga berdasarkan nama User pembuat (jika ada)
-                ->orWhereHas('creator', function($subQuery) use ($search) {
+                ->orWhereHas('creator', function ($subQuery) use ($search) {
                     $subQuery->where('name', 'like', "%{$search}%");
                 });
             });
         }
 
-        // 4. Sorting & Pagination
-        // Menggunakan withQueryString() agar parameter filter tetap ada di link paginasi
         $pemeriksaanKekuatanMagnetTraps = $query->latest()
-                                                ->paginate(15)
-                                                ->withQueryString();
+            ->paginate(15)
+            ->withQueryString();
 
         return view('pemeriksaan-kekuatan-magnet-trap.index', compact('pemeriksaanKekuatanMagnetTraps'));
     }
-
     /**
      * Menampilkan form create.
      */

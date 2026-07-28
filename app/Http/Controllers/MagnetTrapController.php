@@ -373,6 +373,10 @@ class MagnetTrapController extends Controller
     {
         $date = $request->input('date');
         $userPlant = Auth::user()->plant;
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Checklist Cleaning Magnet Trap')
+            ->value('no_dokumen');
+
 
         $magnetTraps = MagnetTrapModel::query()
         ->where('plant_uuid', $userPlant)
@@ -403,7 +407,7 @@ class MagnetTrapController extends Controller
         $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
         // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 10, PDF_MARGIN_RIGHT);
         $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
 
@@ -423,10 +427,10 @@ class MagnetTrapController extends Controller
         $pdf->SetFont('helvetica', '', 8);
 
         // Add a page
-        $pdf->AddPage('L', 'A3'); // Landscape A3 for many columns
+        $pdf->AddPage('L', 'A4'); // Landscape A3 for many columns
 
         // Convert the Blade view to HTML
-        $html = view('reports.cleaning-magnet-trap', compact('magnetTraps', 'request'))->render();
+        $html = view('reports.cleaning-magnet-trap', compact('magnetTraps', 'request', 'noDokumen'))->render();
 
         // Print text using writeHTMLCell()
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);

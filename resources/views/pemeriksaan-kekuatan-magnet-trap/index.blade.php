@@ -75,9 +75,9 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('checklistmagnettrap.exportPdf') }}" class="btn btn-danger">
+            <button type="button" id="exportPdfBtn" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
-            </a>
+            </button>
             @endcan
             {{-- Tombol Export PDF dihapus sementara karena tidak ada di snippet asli, silakan tambahkan jika routenya ada --}}
             @can('can access recycle')
@@ -88,10 +88,29 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
         </div>
     </div>
 
+    <div class="border border-info bg-light rounded p-2 mb-3 d-flex align-items-start">
+        <small class="text-dark">
+           ℹ️ <strong>Informasi:</strong> Pilih <strong>Bulan</strong> untuk menentukan periode data dan sebagai acuan proses <strong>convert PDF</strong>. Jika <strong>Tanggal</strong> juga dipilih, tampilan data akan difilter berdasarkan <strong>Tanggal</strong>, namun proses <strong>convert PDF</strong> tetap menggunakan periode <strong>Bulan</strong> yang diterapkan.
+        </small>
+    </div>
+
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('pemeriksaan-kekuatan-magnet-trap.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
         <div class="row w-100">
-            <div class="col-md-4">
+            <div class="col-md-3">
+                <div class="mb-1">Pilih Bulan</div>
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-calendar-month"></i>
+                    </span>
+                    <input type="month"
+                        name="month"
+                        id="filter_month"
+                        class="form-control border-start-0 ps-0 shadow-none filter-input text-muted"
+                        value="{{ request('month') }}">
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar4-week"></i></span>
@@ -99,7 +118,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                     value="{{ request('date') }}">
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-1">Cari Data</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
@@ -107,13 +126,31 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                     placeholder="Cari Magnet Ke, Petugas..." value="{{ request('search') }}">
                 </div>
             </div>
-            <div class="col-md-4 align-self-end">
+            <div class="col-md-3 align-self-end">
                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.index') }}" class="btn btn-primary mb-2">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
             </div>
         </div>
     </form>
+
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Bulan</b> terlebih dahulu sebelum sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="card card-custom mb-4">
         <div class="card-body">
@@ -291,30 +328,40 @@ MODAL VERIFIKASI (LOOPING)
 
     {{-- Script Auto Submit --}}
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', function () {
             const form = document.getElementById('filterForm');
-            const inputs = document.querySelectorAll('.filter-input');
+            const month = document.getElementById('filter_month');
+            const date = document.getElementById('filter_date');
+            const search = document.getElementById('filter_search');
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+
             let debounceTimer;
 
-            inputs.forEach(input => {
-                if(input.type === 'date') {
-                    input.addEventListener('change', () => form.submit());
-                } else {
-                    input.addEventListener('input', () => {
-                        clearTimeout(debounceTimer);
-                        debounceTimer = setTimeout(() => { form.submit(); }, 600);
-                    });
-                }
+            function showWarning() {
+                new bootstrap.Modal(document.getElementById('warningModal')).show();
+            }
+
+            function submitFilter() {
+                form.submit();
+            }
+
+            date.addEventListener('change', submitFilter);
+
+            month.addEventListener('change', submitFilter);
+
+            search.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(submitFilter, 600);
             });
 
-            const alertBox = document.querySelector('.alert');
-            if(alertBox){
-                setTimeout(() => {
-                    alertBox.classList.remove('show');
-                    alertBox.classList.add('fade');
-                    setTimeout(() => alertBox.remove(), 500); 
-                }, 3000);
-            }
+            exportPdfBtn.addEventListener('click', function () {
+                if (!month.value) {
+                    showWarning();
+                    return;
+                }
+
+                window.location.href = "{{ route('checklistmagnettrap.exportPdf') }}?month=" + month.value;
+            });
         });
     </script>
     @endsection

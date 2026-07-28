@@ -153,8 +153,7 @@
                     <td>Keterangan : V terdeteksi</td>
                 </tr>
                 <tr>
-                    <td>
-                        Catatan :
+                    <td>Catatan :
                         @if($catatan)
                             <u>{{ $catatan }}</u>
                         @else
