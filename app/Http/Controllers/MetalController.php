@@ -263,72 +263,76 @@ class MetalController extends Controller
     public function exportPdf(Request $request)
     {
         $date = $request->input('date');
+        $search = $request->input('search');
         $userPlant = Auth::user()->plant;
 
-        $metals = Metal::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('pukul', 'asc')
-        ->get();
+        $metals = Metal::where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where('username', 'like', "%{$search}%");
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('pukul')
+            ->get();
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+        if ($metals->isEmpty()) {
+            return back()->with('error', 'Data tidak ditemukan');
+        }
+
+        $plantName = Plant::where('uuid', $userPlant)
+            ->value('plant');
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Metal Detector')
+            ->value('no_dokumen');
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // Create new TCPDF object
         $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
-        // Set document information
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Your Name/Company');
         $pdf->SetTitle('Pengecekan Metal Detector');
-        $pdf->SetSubject('Pengecekan Metal');
+        $pdf->SetSubject('Pengecekan Metal Detector');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set default monospaced font
         $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
         $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
 
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-        // Set image scale factor
+        $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
+        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
+            require_once(dirname(__FILE__) . '/lang/eng.php');
             $pdf->setLanguageArray($l);
         }
 
-        // Set font
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont('times', '', 10);
+        $pdf->AddPage('L', 'A4');
 
-        // Add a page
-        $pdf->AddPage('P', 'A4');
+        $html = view('reports.metal-detector', compact(
+            'metals',
+            'date',
+            'search',
+            'plantName',
+            'noDokumen'
+        ))->render();
 
-        $noDokumen = List_form::where('plant', $userPlant)
-        ->where('laporan', 'Pemeriksaan Metal Detector')
-        ->value('no_dokumen');
-
-        // Convert the Blade view to HTML
-        $html = view('reports.metal-detector', compact('metals', 'request', 'noDokumen'))->render();
-
-        // Print text using writeHTMLCell()
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
-        // Close and output PDF document (Inline/Preview)
-        $pdf->Output('Pengecekan_Metal_Detector_' . date('Ymd_His') . '.pdf', 'I');
+        $filename = 'Pengecekan_Metal_Detector_' .
+            ($date ? Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
+            '.pdf';
+
+        $pdf->Output($filename, 'I');
 
         exit();
     }

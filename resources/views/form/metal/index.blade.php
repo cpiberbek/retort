@@ -28,13 +28,13 @@
             </a>
             @endcan
             @can('can access export')
-            <button type="button" class="btn btn-success" id="exportExcelBtn">
-                <i class="bi bi-file-earmark-excel"></i> Export Excel
-            </button>
             {{-- ditiadakan di kesepakatan kalau butuh bisa diuncomment --}}
-            {{-- <button type="button" class="btn btn-danger" id="exportPdfBtn">
-                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            {{-- <button type="button" class="btn btn-success" id="exportExcelBtn">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
             </button> --}}
+            <button type="button" class="btn btn-danger" id="exportPdfBtn">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </button>
             @endcan
             @can('can access recycle')
             <a href="{{ route('metal.recyclebin') }}" class="btn btn-secondary">
