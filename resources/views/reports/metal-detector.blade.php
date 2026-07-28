@@ -95,22 +95,28 @@
 
 <br><br>
 
-<table width="100%" class="tbl-header">
-    <tr>
-        <td>Hari / Tanggal : {{ $dateFilter }}</td>
-    </tr>
-</table>
+
 
 <br>
 
 <table width="100%" class="tbl-main small">
+
     <tr>
-        <th rowspan="2" class="center"><b>Pukul</b></th>
+        <th rowspan="3" class="center" valign="middle" style="vertical-align: middle;">
+            <b>Pukul</b>
+        </th>
+        <th colspan="5" style="text-align: center; vertical-align: middle;">
+            <b>Hari / Tanggal : {{ $dateFilter }}</b>
+        </th>
+    </tr>
+
+    <tr>
         <th rowspan="2" class="center"><b>FE 1.0 mm</b></th>
         <th rowspan="2" class="center"><b>NFE 1.5 mm</b></th>
         <th rowspan="2" class="center"><b>SUS {{ $susText }} mm</b></th>
         <th colspan="2" class="center"><b>Paraf</b></th>
     </tr>
+
     <tr>
         <th class="center"><b>QC</b></th>
         <th class="center"><b>Produksi</b></th>
