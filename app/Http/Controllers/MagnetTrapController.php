@@ -427,7 +427,7 @@ class MagnetTrapController extends Controller
         $pdf->SetFont('helvetica', '', 8);
 
         // Add a page
-        $pdf->AddPage('L', 'A4'); // Landscape A3 for many columns
+        $pdf->AddPage('L', 'F4'); // Landscape A3 for many columns
 
         // Convert the Blade view to HTML
         $html = view('reports.cleaning-magnet-trap', compact('magnetTraps', 'request', 'noDokumen'))->render();
