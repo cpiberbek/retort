@@ -422,6 +422,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('pemeriksaan-kekuatan-magnet-trap', PemeriksaanKekuatanMagnetTrapController::class)
         ->names('pemeriksaan-kekuatan-magnet-trap');
 
+    Route::get('checkingpowermagnettrap/export-pdf', [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf'])->name('checkingpowermagnettrap.exportPdf');
+
     Route::get(
         '/penyimpangan-kualitas/{penyimpanganKualitas}/update-form',
         [PenyimpanganKualitasController::class, 'showUpdateForm']

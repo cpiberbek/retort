@@ -88,11 +88,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
         </div>
     </div>
 
-    <div class="border border-info bg-light rounded p-2 mb-3 d-flex align-items-start">
-        <small class="text-dark">
-           ℹ️ <strong>Informasi:</strong> Pilih <strong>Bulan</strong> untuk menentukan periode data dan sebagai acuan proses <strong>convert PDF</strong>. Jika <strong>Tanggal</strong> juga dipilih, tampilan data akan difilter berdasarkan <strong>Tanggal</strong>, namun proses <strong>convert PDF</strong> tetap menggunakan periode <strong>Bulan</strong> yang diterapkan.
-        </small>
-    </div>
+
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('pemeriksaan-kekuatan-magnet-trap.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
@@ -345,9 +341,21 @@ MODAL VERIFIKASI (LOOPING)
                 form.submit();
             }
 
-            date.addEventListener('change', submitFilter);
+            date.addEventListener('change', function () {
+                if (date.value) {
+                    month.value = '';
+                }
 
-            month.addEventListener('change', submitFilter);
+                submitFilter();
+            });
+
+            month.addEventListener('change', function () {
+                if (month.value) {
+                    date.value = '';
+                }
+
+                submitFilter();
+            });
 
             search.addEventListener('input', function () {
                 clearTimeout(debounceTimer);
@@ -360,7 +368,7 @@ MODAL VERIFIKASI (LOOPING)
                     return;
                 }
 
-                window.location.href = "{{ route('checklistmagnettrap.exportPdf') }}?month=" + month.value;
+                window.location.href = "{{ route('checkingpowermagnettrap.exportPdf') }}?month=" + month.value;
             });
         });
     </script>
