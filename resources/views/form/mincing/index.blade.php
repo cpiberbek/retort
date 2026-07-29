@@ -48,7 +48,7 @@
     {{-- ===================== FILTER & LIVE SEARCH ===================== --}}
     <form id="filterForm" method="GET" action="{{ route('mincing.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
         <div class="row w-100">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="mb-1 fw-semibold">Pilih Tanggal</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -59,8 +59,8 @@
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0" value="{{ request('date') }}" placeholder="Tanggal Produksi">
                 </div>
             </div>
-            
-            <div class="col-md-3">
+
+            <div class="col-md-2">
                 <div class="mb-1 fw-semibold">Pilih Shift</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -76,8 +76,20 @@
                     </select>
                 </div>
             </div>
-            
-            <div class="col-md-3">
+
+            <div class="col-md-2">
+                <div class="mb-1 fw-semibold">Kode Batch</div>
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-upc-scan text-muted"></i>
+                        </span>
+                    </div>
+                    <input type="text" name="kode_batch" id="filter_kode_batch" class="form-control border-start-0" value="{{ request('kode_batch') }}" placeholder="Kode Batch">
+                </div>
+            </div>
+
+            <div class="col-md-2">
                 <div class="mb-1 fw-semibold">Cari Data</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -88,14 +100,32 @@
                     <input type="text" name="search" id="search" class="form-control border-start-0" value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Batch...">
                 </div>
             </div>
-            
-            <div class="col-md-3 align-self-end">
+
+            <div class="col-md-2 align-self-end">
                 <a href="{{ route('mincing.index') }}" class="btn btn-primary mb-2 w-100">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
             </div>
         </div>
     </form>
+    
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b>, <b>Shift</b> & <b>Kode Batch</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- Filter Scripts --}}
     <script>
@@ -106,34 +136,64 @@
             const form = document.getElementById('filterForm');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
             const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const kodeBatch = document.getElementById('filter_kode_batch');
 
             let timer;
 
-            // Apply filter on search input with debounce
-            search.addEventListener('input', () => {
+            function submitFilter() {
                 clearTimeout(timer);
                 timer = setTimeout(() => form.submit(), 500);
-            });
+            }
 
-            // Apply filter on date or shift change
-            date.addEventListener('change', () => form.submit());
-            shift.addEventListener('change', () => form.submit());
+            if (search) {
+                search.addEventListener('input', submitFilter);
+            }
 
-            // Handle PDF export button click
+            if (date) {
+                date.addEventListener('change', () => form.submit());
+            }
+
+            if (shift) {
+                shift.addEventListener('change', () => form.submit());
+            }
+
+            if (kodeBatch) {
+                kodeBatch.addEventListener('input', submitFilter);
+            }
+
+
+            function validateExport() {
+                const selectedDate = date.value.trim();
+                const selectedShift = shift.value.trim();
+                const selectedBatch = document.getElementById('filter_kode_batch').value.trim();
+
+                if (selectedDate === '' || selectedShift === '' || selectedBatch === '') {
+                    const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                    modal.show();
+                    return false;
+                }
+
+                return true;
+            }
+
+            function handleExport(route, target = '_blank') {
+                if (!validateExport()) return;
+
+                const formData = new FormData(form);
+                const exportUrl = route + '?' + new URLSearchParams(formData).toString();
+
+                window.open(exportUrl, target);
+            }
+
             if (exportPdfBtn) {
-                exportPdfBtn.addEventListener('click', function() {
-                    const formData = new FormData(form);
-                    const exportUrl = "{{ route('mincing.exportPdf') }}?" + new URLSearchParams(formData).toString();
-                    window.open(exportUrl, '_blank');
+                exportPdfBtn.addEventListener('click', () => {
+                    handleExport("{{ route('mincing.exportPdf') }}", '_blank');
                 });
             }
 
-            // Handle EXCEL export button click
             if (exportExcelBtn) {
-                exportExcelBtn.addEventListener('click', function() {
-                    const formData = new FormData(form);
-                    const exportUrl = "{{ route('mincing.exportExcel') }}?" + new URLSearchParams(formData).toString();
-                    window.open(exportUrl, '_self'); // Gunakan _self agar langsung download
+                exportExcelBtn.addEventListener('click', () => {
+                    handleExport("{{ route('mincing.exportExcel') }}", '_self');
                 });
             }
         });

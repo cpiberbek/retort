@@ -9,21 +9,28 @@ use App\Models\Mesin;
 use App\Models\Master_Raw_Material;
 use App\Models\RawMaterialInspection;
 use App\Models\Master_Premix;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use TCPDF; // Import TCPDF
 use Maatwebsite\Excel\Facades\Excel;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Exports\MincingExport;
 
 class MincingController extends Controller
 {
     public function index(Request $request)
     {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
-        $userPlant  = Auth::user()->plant;
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kode_batch = $request->input('kode_batch');
+        $userPlant = Auth::user()->plant;
 
         $data = Mincing::query()
             ->where('plant', $userPlant)
@@ -40,26 +47,37 @@ class MincingController extends Controller
             ->when($shift, function ($query) use ($shift) {
                 $query->where('shift', $shift);
             })
+            ->when($kode_batch, function ($query) use ($kode_batch) {
+                $query->where('kode_produksi', 'like', "%{$kode_batch}%");
+            })
             ->orderBy('date', 'desc')
             ->orderBy('created_at', 'desc')
             ->paginate(10)
             ->appends($request->all());
 
-        return view('form.mincing.index', compact('data', 'search', 'date', 'shift'));
+        return view('form.mincing.index', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kode_batch'
+        ));
     }
 
     public function exportPdf(Request $request)
     {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kode_batch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
         $produks = Mincing::query()
             ->where('plant', $userPlant)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
                         ->orWhere('kode_produksi', 'like', "%{$search}%");
                 });
             })
@@ -69,68 +87,44 @@ class MincingController extends Controller
             ->when($shift, function ($query) use ($shift) {
                 $query->where('shift', $shift);
             })
-            ->orderBy('date', 'asc')
+            ->when($kode_batch, function ($query) use ($kode_batch) {
+                $query->where('kode_produksi', 'like', "%{$kode_batch}%");
+            })
+            ->orderBy('date', 'desc')
             ->get();
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
-        if (ob_get_length()) {
-            ob_end_clean();
+        if ($produks->isEmpty()) {
+            abort(404, 'Data tidak ditemukan.');
         }
 
-        // Create new TCPDF object
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Mincing - Emulsifying - Aging')
+            ->value('no_dokumen');
 
-        // Set document information
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
+        $html = view('reports.mincing-emulsifying-aging', compact('produks', 'request', 'noDokumen'))->render();
+
+        $pdf = new \TCPDF();
+
+        $pdf->setPrintHeader(false);
+        $pdf->setPrintFooter(false);
+
+        $pdf->SetCreator('CPI');
+        $pdf->SetAuthor('CPI');
         $pdf->SetTitle('Pemeriksaan Mincing - Emulsifying - Aging');
-        $pdf->SetSubject('Pemeriksaan Mincing');
 
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->AddPage();
 
-        // // Set default header data
-        // $pdf->SetHeaderData(PDF_HEADER_LOGO, PDF_HEADER_LOGO_WIDTH, 'Pemeriksaan Mincing - Emulsifying - Aging', 'Tanggal: ' . date('d M Y'));
+        $pdf->SetFont('times', '', 10);
 
-        // // Set header and footer fonts
-        // $pdf->setHeaderFont(Array(PDF_FONT_NAME_MAIN, '', PDF_FONT_SIZE_MAIN));
-        // $pdf->setFooterFont(Array(PDF_FONT_NAME_DATA, '', PDF_FONT_SIZE_DATA));
+        $pdf->writeHTML($html, true, false, true, false, '');
 
-        // Set default monospaced font
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+        $filename = 'Pemeriksaan_Mincing_' . $kode_batch . '_' . date('d-m-Y') . '.pdf';
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-        // Set image scale factor
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
-            require_once(dirname(__FILE__) . '/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-        // Set font
-        $pdf->SetFont('helvetica', '', 10);
-
-        // Add a page
-        $pdf->AddPage('L', 'A4'); // Landscape A4
-
-        // Convert the Blade view to HTML
-        $html = view('reports.mincing-emulsifying-aging', compact('produks', 'request'))->render();
-
-        // Print text using writeHTMLCell()
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
-        // Close and output PDF document (Inline/Preview)
-        $pdf->Output('Pemeriksaan_Mincing_Emulsifying_Aging_' . date('Ymd_His') . '.pdf', 'I');
-
-        exit();
+        return response()->streamDownload(function () use ($pdf) {
+            ob_clean();
+            $pdf->Output('php://output', 'I');
+        }, $filename);
     }
 
     public function create()
@@ -604,9 +598,10 @@ class MincingController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kode_batch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
         $data = Mincing::query()
@@ -624,13 +619,157 @@ class MincingController extends Controller
             ->when($shift, function ($query) use ($shift) {
                 $query->where('shift', $shift);
             })
+            ->when($kode_batch, function ($query) use ($kode_batch) {
+                $query->where('kode_produksi', 'like', "%{$kode_batch}%");
+            })
             ->orderBy('date', 'desc')
             ->get();
 
-        $periode = $date
-            ? 'Periode: ' . \Carbon\Carbon::parse($date)->format('d-m-Y')
-            : 'Periode: Semua Periode';
+        $row = $data->first();
 
-        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\MincingExport($data, $periode), 'Pemeriksaan_Mincing_' . date('Ymd_His') . '.xlsx');
+        if (!$row) {
+            abort(404, 'Data tidak ditemukan.');
+        }
+
+        $template = app_path('templates/pemeriksaan_mincing.xlsx');
+
+        $spreadsheet = IOFactory::load($template);
+        $sheet = $spreadsheet->getActiveSheet();
+
+        foreach ($spreadsheet->getAllSheets() as $sheet) {
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getFont()
+                ->setName('Times New Roman');
+        }
+
+        $sheet->getStyle('B8:F43')
+        ->getAlignment()
+        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+        ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+        $richText = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
+        $richText->createText('Hari/Tanggal: ');
+        $dateText = $richText->createTextRun(\Carbon\Carbon::parse($row->date)->format('d-m-Y'));
+        $dateText->getFont()->setUnderline(true);
+        $sheet->setCellValue('A6', $richText);
+
+        $richText = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
+        $richText->createText('Shift: ');
+        $shiftText = $richText->createTextRun($row->shift ?? '-');
+        $shiftText->getFont()->setUnderline(true);
+        $sheet->setCellValue('C6', $richText);
+
+        $richText = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
+        $richText->createText('Nama Produk: ');
+        $produkText = $richText->createTextRun($row->nama_produk ?? '-');
+        $produkText->getFont()->setUnderline(true);
+        $sheet->setCellValue('E6', $richText);
+
+        $sheet->setCellValue('B8', $kode_batch);
+        $sheet->setCellValue('B10', $row->waktu_mulai ?? '-');
+        $sheet->setCellValue('F10', $row->waktu_selesai ?? '-');
+
+        $nonPremix = json_decode($row->non_premix, true) ?? [];
+
+        $startRow = 12;
+
+        foreach ($nonPremix as $i => $item) {
+            $excelRow = $startRow + $i;
+
+            $kodeBatch = '-';
+
+            if (!empty($item['inspection_uuid'])) {
+                $kodeBatch = \App\Models\InspectionProductDetail::where('uuid', $item['inspection_uuid'])
+                    ->value('kode_batch') ?? '-';
+            }
+
+            $sheet->setCellValue("A{$excelRow}", ($i + 1) . '. ' . ($item['nama_bahan'] ?? '-'));
+            $sheet->setCellValue("B{$excelRow}", $kodeBatch);
+            $sheet->setCellValue("C{$excelRow}", $item['suhu_bahan'] ?? '-');
+            $sheet->setCellValue("D{$excelRow}", $item['ph_bahan'] ?? '-');
+            $sheet->setCellValue("E{$excelRow}", $item['berat_bahan'] ?? '-');
+            $sheet->setCellValue("F{$excelRow}", $item['sensori'] ?? '-');
+
+        }
+
+        $premix = json_decode($row->premix, true) ?? [];
+
+        $startRow = 30;
+
+        foreach ($premix as $i => $item) {
+            $excelRow = $startRow + $i;
+
+            $sheet->setCellValue("A{$excelRow}", ($i + 1) . '. ' . ($item['nama_premix'] ?? '-'));
+            $sheet->setCellValue("B{$excelRow}", $item['kode_premix'] ?? '-');
+            $sheet->setCellValue("E{$excelRow}", $item['berat_premix'] ?? '-');
+            $sheet->setCellValue("F{$excelRow}", $item['sensori_premix'] ?? '-');
+       
+        }
+        $daging = json_decode($row->suhu_sebelum_grinding, true) ?? [];
+
+        $text = [];
+
+        foreach ($daging as $item) {
+            $text[] = ($item['daging'] ?? '-') . ': ' . ($item['suhu'] ?? '-') . ' °C';
+        }
+
+        $sheet->setCellValue('B33', implode(', ', $text));
+
+        $awalAging = $row->waktu_aging_emulsi_awal;
+        $akhirAging = $row->waktu_aging_emulsi_akhir;
+
+        $agingMenit = '-';
+
+        if ($awalAging && $akhirAging) {
+            $agingMenit = \Carbon\Carbon::parse($awalAging)->diffInMinutes(\Carbon\Carbon::parse($akhirAging));
+        }
+
+        $sheet->setCellValue('B35', ($row->waktu_mixing_premix ?? '-') . ' Menit');
+        $sheet->setCellValue('B36', ($row->waktu_bowl_cutter ?? '-') . ' Menit');
+        $sheet->setCellValue('B37', $agingMenit . ' Menit');
+        $sheet->setCellValue('B38', ($row->suhu_akhir_emulsi_gel ?? '-') . ' °C');
+        $sheet->setCellValue('B39', ($row->waktu_mixing ?? '-') . ' Menit');
+        $sheet->setCellValue('B40', ($row->suhu_akhir_mixing ?? '-') . ' °C');
+        $sheet->setCellValue('B41', ($row->suhu_akhir_emulsi ?? '-') . ' °C');
+        $sheet->setCellValue('B42', $row->username_updated ?? $row->username ?? '-');
+        $sheet->setCellValue('B43', $row->nama_produksi ?? '-');
+
+        $sheet->setCellValue('F44', $noDokumen ?? '-');
+
+        $sheet->getStyle('F44')
+            ->getFont()
+            ->setItalic(true);
+
+        $sheet->setCellValue('A48', $row->catatan);
+
+        $sheet->getStyle('A48')
+            ->getFont()
+            ->setUnderline(true);
+
+        $sheet->getStyle('A48')
+            ->getAlignment()
+            ->setWrapText(true);
+
+        $sheet->setCellValue('F50', '(' . ($row->nama_spv ?? '-') . ')');
+
+        $sheet->getStyle('F50')
+            ->getFont()
+            ->setUnderline(true);
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Mincing - Emulsifying - Aging')
+            ->value('no_dokumen');
+
+        $sheet->setCellValue('F44', $noDokumen ?? '-');
+
+        $sheet->getStyle('F44')
+            ->getFont()
+            ->setItalic(true);
+
+        $filename = 'Pemeriksaan_Mincing_' . $kode_batch . '_' . date('d-m-Y') . '.xlsx';
+
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer) { ob_clean(); $writer->save('php://output'); }, $filename);
     }
 }
