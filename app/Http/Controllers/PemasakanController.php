@@ -7,6 +7,7 @@ use App\Models\Mincing;
 use App\Models\Stuffing;
 use App\Models\Produk;
 use App\Models\Mesin;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use TCPDF;
@@ -16,26 +17,39 @@ class PemasakanController extends Controller
 
     public function index(Request $request)
     {
-        // 1. INPUT (Gabungan: Ambil input Shift dari Anda)
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $shift     = $request->input('shift'); // Punya Anda
-        $userPlant = Auth::user()->plant;
+        $search     = $request->input('search');
+        $kodeBatch  = $request->input('kode_batch');
+        $date       = $request->input('date');
+        $shift      = $request->input('shift');
+        $userPlant  = Auth::user()->plant;
 
-        // 2. QUERY (Gabungan: Pakai logic query Anda yang ada filter shift-nya)
+        $kodeProduksi = [];
+
+        if ($kodeBatch) {
+            $kodeProduksi = Mincing::where('kode_produksi', $kodeBatch)
+                ->pluck('uuid')
+                ->toArray();
+        }
+
         $data = Pemasakan::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                      ->orWhere('kode_produksi', 'like', "%{$search}%"); // Punya Anda lebih lengkap
-                  });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-            ->when($shift, function ($query) use ($shift) { // Punya Anda
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($kodeBatch, function ($query) use ($kodeProduksi) {
+                $query->where(function ($q) use ($kodeProduksi) {
+                    foreach ($kodeProduksi as $uuid) {
+                        $q->orWhere('kode_produksi', 'like', "%{$uuid}%");
+                    }
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
                 $query->where('shift', $shift);
             })
             ->orderBy('date', 'desc')
@@ -43,74 +57,81 @@ class PemasakanController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
-        // 3. LOGIC BARU DARI SERVER (Wajib diambil agar tidak error)
-            $allUUID = [];
-            foreach ($data as $row) {
-                if (is_array($row->kode_produksi)) {
-                    $allUUID = array_merge($allUUID, $row->kode_produksi);
-                }
-            }
-            $allUUID = array_unique($allUUID);
-        // Mengambil data Mincing/Stuffing
-            $stuffingData = Mincing::whereIn('uuid', $allUUID)
-                ->orWhereIn('kode_produksi', $allUUID)
-                ->get()
-                ->keyBy('uuid');
+        $allUUID = [];
 
-        // 4. RETURN VIEW (Gabungan: Kirim 'shift' dan 'stuffingData')
-            return view('form.pemasakan.index', compact('data', 'search', 'date', 'shift', 'stuffingData'));
+        foreach ($data as $row) {
+            if (is_array($row->kode_produksi)) {
+                $allUUID = array_merge($allUUID, $row->kode_produksi);
+            }
         }
 
+        $allUUID = array_unique($allUUID);
 
+        $stuffingData = Mincing::whereIn('uuid', $allUUID)
+            ->orWhereIn('kode_produksi', $allUUID)
+            ->get()
+            ->keyBy('uuid');
+
+        return view('form.pemasakan.index', compact(
+            'data',
+            'search',
+            'kodeBatch',
+            'date',
+            'shift',
+            'stuffingData'
+        ));
+    }
     /**
      * Export PDF dengan Filter Shift
      */
     public function exportPdf(Request $request)
     {
-        $search    = $request->input('search');
+        $kodeBatch = $request->input('kode_batch');
         $date      = $request->input('date');
-        $shift     = $request->input('shift'); // Tambah shift
+        $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
 
+        $uuidMincing = Mincing::where('kode_produksi', $kodeBatch)
+            ->pluck('uuid')
+            ->toArray();
+
         $items = Pemasakan::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-            ->when($shift, function ($query) use ($shift) { // Logic Filter Shift
-                $query->where('shift', $shift);
+            ->where('plant', $userPlant)
+            ->whereDate('date', $date)
+            ->where('shift', $shift)
+            ->where(function ($q) use ($uuidMincing) {
+                foreach ($uuidMincing as $uuid) {
+                    $q->orWhere('kode_produksi', 'like', "%{$uuid}%");
+                }
             })
             ->orderBy('date', 'asc')
             ->get();
 
-            if (ob_get_length()) {
-                ob_end_clean();
-            }
-
-        // Setup PDF (Portrait karena formulir vertikal)
-            $pdf = new \TCPDF('P', PDF_UNIT, 'A4', true, 'UTF-8', false);
-            $pdf->SetCreator(PDF_CREATOR);
-            $pdf->SetTitle('Pengecekan Pemasakan');
-            $pdf->SetPrintHeader(false);
-            $pdf->SetPrintFooter(false);
-            $pdf->SetMargins(10, 10, 10);
-            $pdf->SetAutoPageBreak(TRUE, 10);
-            $pdf->SetFont('helvetica', '', 8);
-
-            $pdf->AddPage();
-
-            $html = view('reports.pemasakan', compact('items', 'request'))->render();
-
-            $pdf->writeHTML($html, true, false, true, false, '');
-            $pdf->Output('Pengecekan_Pemasakan_' . date('YmdHis') . '.pdf', 'I');
-            exit();
+        if (ob_get_length()) {
+            ob_end_clean();
         }
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Pemasakan')
+            ->value('no_dokumen');
+
+        $pdf = new \TCPDF('P', PDF_UNIT, 'F4', true, 'UTF-8', false);
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetTitle('Pengecekan Pemasakan');
+        $pdf->SetPrintHeader(false);
+        $pdf->SetPrintFooter(false);
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->SetFont('helvetica', '', 8);
+
+        $pdf->AddPage();
+
+        $html = view('reports.pemasakan', compact('items', 'request', 'noDokumen'))->render();
+
+        $pdf->writeHTML($html, true, false, true, false, '');
+        $pdf->Output('Pengecekan_Pemasakan_' . date('YmdHis') . '.pdf', 'I');
+        exit();
+    }
 
         public function create()
         {
