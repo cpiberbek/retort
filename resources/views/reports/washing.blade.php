@@ -197,6 +197,15 @@ $item = $items->first();
     </tr>
 
 </table>
+<table width="100%">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right" style="font-style: italic;">
+            {{ $noDokumen }}
+        </td>
+    </tr>
+</table>
+
 <table border="0" cellpadding="3" cellspacing="0" width="100%" style="margin-top:4px;">
 
     <tr>

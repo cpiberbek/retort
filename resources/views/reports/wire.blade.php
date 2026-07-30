@@ -157,7 +157,7 @@
 
             <td width="50%" style="border:1px solid #000;text-align:center;font-size:18px;padding:5px;">
                 <b>FORM</b><br>
-                <b>VERIFIKASI MAGNET TRAP</b>
+                <b>DATA LOT NO. WIRE</b>
             </td>
 
             <td width="25%" style="border:1px solid #000;font-size:10px;padding:0;">

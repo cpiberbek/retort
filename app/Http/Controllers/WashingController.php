@@ -89,7 +89,7 @@ class WashingController extends Controller
         }
 
         $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Data No. Lot Wire')
+            ->where('laporan', 'Pemeriksaan Washing - Drying')
             ->value('no_dokumen');
 
         $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
