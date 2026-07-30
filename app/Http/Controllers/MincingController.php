@@ -103,7 +103,7 @@ class MincingController extends Controller
 
         $html = view('reports.mincing-emulsifying-aging', compact('produks', 'request', 'noDokumen'))->render();
 
-        $pdf = new \TCPDF();
+        $pdf = new \TCPDF('P', 'mm', [210, 330], true, 'UTF-8', false);
 
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
