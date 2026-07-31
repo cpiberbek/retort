@@ -95,9 +95,9 @@
                     <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
                 </td>
                 <td>
-                    <span style="font-size:14pt;"><b>PT Charoen </b></span><br>
-                    <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
-                    <span style="font-size:14pt;"><b>Food Division</b></span>
+                    <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                    <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+                    <span style="font-size:12pt;"><b>Food Division</b></span>
                 </td>
             </tr>
         </table>
