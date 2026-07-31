@@ -44,6 +44,10 @@
             <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
+            <button type="button" class="btn btn-success" id="exportExcelBtn">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
+            {{-- start from here --}}
             @endcan
             @can('can access recycle')
             <a href="{{ route('pemasakan.recyclebin') }}" class="btn btn-secondary">
@@ -122,7 +126,7 @@
             const form = document.getElementById('filterForm');
             const kodeBatch = document.getElementById('kode_batch');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
-            
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
 
             let timer;
             search.addEventListener('input', () => {
@@ -153,6 +157,21 @@
                     window.open(exportUrl, '_blank');
                 });
             }
+
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', function () {
+                    if (!date.value || !shift.value || !kodeBatch.value.trim()) {
+                        const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                        modal.show();
+                        return;
+                    }
+
+                    const formData = new FormData(form);
+                    const exportUrl = "{{ route('pemasakan.exportExcel') }}?" + new URLSearchParams(formData).toString();
+                    window.open(exportUrl, '_blank');
+                });
+            }
+
         });
     </script>
 

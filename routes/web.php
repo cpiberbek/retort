@@ -775,6 +775,7 @@ Route::middleware('auth')->group(function () {
 
     // Pemasakan
     Route::get('/pemasakan/export-pdf', [PemasakanController::class, 'exportPdf'])->name('pemasakan.exportPdf');
+    Route::get('/pemasakan/export-excel', [PemasakanController::class, 'exportExcel'])->name('pemasakan.exportExcel');
     Route::get('/pemasakan', [PemasakanController::class, 'index'])->name('pemasakan.index');
     Route::get('/pemasakan/create', [PemasakanController::class, 'create'])->name('pemasakan.create');
     Route::post('/pemasakan', [PemasakanController::class, 'store'])->name('pemasakan.store');
