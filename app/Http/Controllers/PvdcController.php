@@ -470,7 +470,7 @@ class PvdcController extends Controller
             ->where('laporan', 'Data No. Lot PVDC')
             ->value('no_dokumen');
 
-        $pdf = new TCPDF('L', PDF_UNIT, array(210,330), true, 'UTF-8', false);
+        $pdf = new TCPDF('L', 'mm', [330, 210], true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Charoen Pokphand Indonesia');
         $pdf->SetTitle('Laporan Data No. Lot PVDC');

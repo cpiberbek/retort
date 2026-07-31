@@ -38,7 +38,7 @@
 
     {{-- Filter Bar --}}
     <form id="filterForm" method="GET" action="{{ route('labelisasi_pvdc.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
+        <div class="row w-100">
             <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
@@ -87,21 +87,71 @@
         </div>
     </form>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const form = document.getElementById('filterForm');
-            const inputs = [document.getElementById('filter_date'), document.getElementById('filter_shift')];
-            const search = document.getElementById('search');
-            let timer;
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('filterForm');
+    const date = document.getElementById('filter_date');
+    const shift = document.getElementById('filter_shift');
+    const search = document.getElementById('search');
+    const exportBtn = document.getElementById('exportPdfBtn');
 
-            inputs.forEach(el => el.addEventListener('change', () => form.submit()));
-            search.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => form.submit(), 500); });
+    let timer;
 
-            document.getElementById('exportPdfBtn').addEventListener('click', () => {
-                window.open("{{ route('labelisasi_pvdc.exportPdf') }}?" + new URLSearchParams(new FormData(form)).toString(), '_blank');
-            });
+    [date, shift].forEach(function (el) {
+        el.addEventListener('change', function () {
+            form.submit();
         });
-    </script>
+    });
+
+    search.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            form.submit();
+        }, 500);
+    });
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (date.value.trim() === '' || shift.value.trim() === '') {
+                const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                modal.show();
+                return false;
+            }
+
+            const params = new URLSearchParams(new FormData(form));
+
+            window.open(
+                "{{ route('labelisasi_pvdc.exportPdf') }}?" + params.toString(),
+                "_blank"
+            );
+
+            return false;
+        });
+    }
+});
+</script>
+
+     <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> & <b>Shift</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
