@@ -73,100 +73,170 @@
             margin-top: 20px;
             page-break-inside: avoid;
         }
+
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 6pt;
+        }
     </style>
 </head>
 <body>
 
     {{-- 1. HEADER --}}
-    <table class="header-table" cellpadding="0" cellspacing="0">
+    <div style="margin-left:-30px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+            <tr>
+                <td width="32">
+                    <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="30">
+                </td>
+                <td>
+                    <span style="font-size:9pt;"><b>PT Charoen </b></span><br>
+                    <span style="font-size:9pt;"><b>Pokphand Indonesia</b></span><br>
+                    <span style="font-size:9pt;"><b>Food Division</b></span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- 2. INFO SEBELUM TABEL --}}
+    @php
+        $tanggal = $items->pluck('date')
+            ->unique()
+            ->map(fn($item) => \Carbon\Carbon::parse($item)->translatedFormat('l, d-m-Y'))
+            ->implode(', ');
+
+        $shift = $items->pluck('shift')
+            ->unique()
+            ->implode(', ');
+
+        $produkExpired = $items
+            ->unique(function ($item) {
+                return $item->nama_produk . $item->tgl_expired;
+            })
+            ->map(function ($item) {
+                return '[' . $item->nama_produk . ', ' . \Carbon\Carbon::parse($item->tgl_expired)->format('d-m-Y') . ']';
+            })
+            ->implode(', ');
+
+        $tglKedatangan = $items
+            ->pluck('tgl_kedatangan')
+            ->unique()
+            ->map(fn($item) => \Carbon\Carbon::parse($item)->format('d-m-Y'))
+            ->implode(', ');
+    @endphp
+
+    <table width="100%" cellspacing="0" cellpadding="0">
         <tr>
-            <td width="30%" style="vertical-align: top;">
-                <strong>PT Charoen Pokphand Indonesia</strong><br>
-                <span style="font-size: 8px;">Food Division - Plant Ngoro</span>
+            <td width="33%">
+                <strong>Hari/Tanggal</strong> : {{ $tanggal ?: '-' }}
             </td>
-            <td width="40%" class="judul-laporan">
-                LAPORAN HARIAN<br>PEMERIKSAAN NO. LOT PVDC
+
+           <td width="20%">
+                <strong>Shift</strong> : {{ $items->pluck('shift')->unique()->implode(', ') ?: '-' }}
             </td>
-            <td width="30%" style="text-align: right; font-size: 8px; vertical-align: top;">
-                <strong>Dicetak:</strong> {{ date('d-m-Y H:i') }}<br>
-                <strong>Oleh:</strong> {{ Auth::user()->username ?? 'superadmin' }}
+
+            <td width="34%">
+                <strong>Nama Produk</strong> : {{ $items->pluck('nama_produk')->unique()->implode(', ') ?: '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <td colspan="2">
+                <strong>Tanggal kedatangan PVDC</strong> : {{ $tglKedatangan ?: '-' }}
+            </td>
+
+            <td>
+                <strong>Tanggal expired</strong> : {{ $items->first()->tgl_expired ? \Carbon\Carbon::parse($items->first()->tgl_expired)->format('d-m-Y') : '-' }}
             </td>
         </tr>
     </table>
-
-    {{-- 2. INFO FILTER --}}
-    <table class="info-table">
-        <tr>
-            <td width="15%"><strong>Tanggal Laporan</strong></td>
-            <td width="35%">: {{ $request->date ? \Carbon\Carbon::parse($request->date)->format('d-m-Y') : 'SEMUA TANGGAL' }}</td>
-            <td width="15%"><strong>Filter Varian</strong></td>
-            <td width="35%">: {{ $request->nama_produk ?? 'SEMUA VARIAN' }}</td>
-        </tr>
-        <tr>
-            <td><strong>Shift</strong></td>
-            <td>: {{ $request->shift ? $request->shift : 'SEMUA SHIFT' }}</td>
-            <td><strong>Pencarian</strong></td>
-            <td>: {{ $request->search ?? '-' }}</td>
-        </tr>
-    </table>
-
     {{-- 3. TABEL DATA --}}
     {{-- Menggunakan border=1 di HTML juga membantu kompatibilitas PDF reader lama --}}
-    <table class="tbl-data" border="1" cellspacing="0" cellpadding="0">
-        {{-- COLGROUP: INI KUNCI AGAR GARIS LURUS PRESISI --}}
-        {{-- Total Width = 100% --}}
-        <colgroup>
-            <col style="width: 4%">  <col style="width: 8%">  <col style="width: 5%">  <col style="width: 23%"> <col style="width: 6%">  <col style="width: 10%"> <col style="width: 12%"> <col style="width: 6%">  <col style="width: 20%"> <col style="width: 6%">  </colgroup>
+    @php
+        $mesinGrid = $items->groupBy('kode_mesin')->values()->chunk(3);
+    @endphp
 
-        <thead>
+    <table width="100%" cellspacing="0" cellpadding="3">
+    @foreach($mesinGrid as $row)
+
+    <tr>
+    @foreach($row as $mesin => $data)
+
+    <td width="33.33%" valign="top">
+
+        <table width="100%" border="1" cellspacing="0" cellpadding="3">
             <tr>
-                <th>No</th>
-                <th>Tgl</th>
-                <th>Shift</th>
-                <th>Varian</th>
-                <th>Mesin</th>
+                <td colspan="3" align="center">
+                    <b>Mesin : {{ $data->first()->kode_mesin }}</b>
+                </td>
+            </tr>
+
+            <tr>
                 <th>Batch</th>
                 <th>No. Lot</th>
-                <th>Jam</th>
-                <th>Catatan</th>
-                <th>QC</th>
+                <th>Waktu</th>
             </tr>
-        </thead>
-        <tbody>
-            @forelse($items as $index => $item)
+
+            @foreach($data as $item)
             <tr>
-                <td>{{ $index + 1 }}</td>
-                <td>{{ \Carbon\Carbon::parse($item->date)->format('d-m-y') }}</td>
-                <td>{{ $item->shift }}</td>
-                <td class="text-left">{{ substr($item->nama_produk, 0, 35) }}</td>
-                <td>{{ $item->kode_mesin }}</td>
                 <td>{{ $item->kode_produksi }}</td>
                 <td>{{ $item->no_lot }}</td>
                 <td>{{ $item->jam_mulai }}</td>
-                <td class="text-left">{{ $item->catatan }}</td>
-                <td>
-                    @if($item->status_spv == 1) OK
-                    @elseif($item->status_spv == 2) REV
-                    @else - @endif
-                </td>
             </tr>
-            @empty
-            <tr>
-                <td colspan="10" style="padding: 15px; text-align: center;">Data tidak ditemukan pada periode ini.</td>
-            </tr>
-            @endforelse
-        </tbody>
+            @endforeach
+
+        </table>
+
+    </td>
+
+    @endforeach
+
+    @for($i = $row->count(); $i < 3; $i++)
+    <td width="33.33%"></td>
+    @endfor
+
+    </tr>
+
+    @endforeach
     </table>
 
+<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-top:1px solid #000;">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right" style="font-style: italic;">
+            {{ $noDokumen }}
+        </td>
+    </tr>
+</table>
+
     {{-- 4. TANDA TANGAN --}}
+    @php
+        $approved = $items->every(function ($item) {
+            return $item->status_spv == 1;
+        });
+
+        $namaSpv = $approved
+            ? $items->pluck('nama_spv')->unique()->implode(', ')
+            : 'Masih ada dokumen yang belum di-Approve SPV';
+    @endphp
+
     <table class="footer-wrapper">
         <tr>
-            <td width="75%"></td> <td width="25%" style="text-align: center;">
+            <td width="75%"></td>
+
+            <td width="25%" style="text-align: center;">
                 <div style="margin-bottom: 50px;">Disetujui Oleh,</div>
-                <div style="font-weight: bold; border-bottom: 1px solid #000; padding-bottom: 2px;">SPV / QC Head</div>
+
+                <div style="font-weight: bold; display:inline-block; border-bottom:1px solid #000; padding-bottom:2px;">
+                    {{ $namaSpv ?: 'SPV / QC Head' }}
+                </div>
             </td>
         </tr>
     </table>
-
 </body>
 </html>
