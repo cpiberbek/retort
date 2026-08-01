@@ -182,23 +182,21 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
             <td class="center">{{ $detail->jumlah }}</td>
             <td class="center">{{ $detail->jumlah_sampel }}</td>
             <td class="center">{{ $detail->jumlah_reject }}</td>
-            <td class="center">{{ $item->mobil_check_kotoran ? 'V' : '' }}</td>
-            <td class="center">{{ $item->mobil_check_aroma ? 'V' : '' }}</td>
-            <td class="center">{{ $item->mobil_check_warna ? 'V' : '' }}</td>
-            <td class="center">{{ $item->mobil_check_kemasan ? 'V' : '' }}</td>
-            <td></td>
-            <td class="center">{{ $item->analisa_logo_halal ? 'V' : '' }}</td>
+            <td class="center">{{ $item->mobil_check_kotoran ? 'V' : 'X' }}</td>
+            <td class="center">{{ $item->mobil_check_aroma ? 'V' : 'X' }}</td>
+            <td class="center">{{ $item->mobil_check_warna ? 'V' : 'X' }}</td>
+            <td class="center">{{ $item->mobil_check_kemasan ? 'V' : 'X' }}</td>
+            <td class="center">{{ $item->analisa_ka_ffa }}</td>
+            <td class="center">{{ $item->analisa_logo_halal ? 'V' : 'X' }}</td>
             <td>{{ $item->analisa_negara_asal }} / {{ $item->analisa_produsen }}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>{{ $item->dokumen_halal_berlaku ? 'V' : '' }}</td>
+            <td class="center">{{ $item->dokumen_halal_berlaku ? 'V' : '' }}</td>
+            <td class="center">{{ !$item->dokumen_halal_berlaku ? 'X' : '' }}</td>
+            <td>{{ $item->dokumen_coa_file ? 'V' : 'X' }}</td>
             <td>{{ $item->nopol_mobil }}</td>
             <td>{{ $item->suhu_mobil }}</td>
             <td>{{ $item->kondisi_mobil }}</td>
-            <td>{{ $item->no_segel }}</td>
             <td>{{ $item->do_po }}</td>
-            <td>{{ $item->keterangan }}</td>
+            <td>{{ $item->keterangan }}</td>\
         </tr>
         @endforeach
     @endforeach
