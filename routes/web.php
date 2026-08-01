@@ -422,6 +422,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('pemeriksaan-kekuatan-magnet-trap', PemeriksaanKekuatanMagnetTrapController::class)
         ->names('pemeriksaan-kekuatan-magnet-trap');
 
+    Route::get('checkingpowermagnettrap/export-pdf', [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf'])->name('checkingpowermagnettrap.exportPdf');
+
     Route::get(
         '/penyimpangan-kualitas/{penyimpanganKualitas}/update-form',
         [PenyimpanganKualitasController::class, 'showUpdateForm']
@@ -541,6 +543,7 @@ Route::middleware('auth')->group(function () {
     /*FORM PUTRI*/
     // Stuffing
     Route::get('/stuffing/export-pdf', [App\Http\Controllers\StuffingController::class, 'exportPdf'])->name('stuffing.exportPdf');
+    Route::get('/stuffing/export-excel', [App\Http\Controllers\StuffingController::class, 'exportExcel'])->name('stuffing.exportExcel');
     Route::get('/stuffing', [StuffingController::class, 'index'])->name('stuffing.index');
     Route::get('/stuffing/create', [StuffingController::class, 'create'])->name('stuffing.create');
     Route::post('/stuffing', [StuffingController::class, 'store'])->name('stuffing.store');
@@ -772,6 +775,7 @@ Route::middleware('auth')->group(function () {
 
     // Pemasakan
     Route::get('/pemasakan/export-pdf', [PemasakanController::class, 'exportPdf'])->name('pemasakan.exportPdf');
+    Route::get('/pemasakan/export-excel', [PemasakanController::class, 'exportExcel'])->name('pemasakan.exportExcel');
     Route::get('/pemasakan', [PemasakanController::class, 'index'])->name('pemasakan.index');
     Route::get('/pemasakan/create', [PemasakanController::class, 'create'])->name('pemasakan.create');
     Route::post('/pemasakan', [PemasakanController::class, 'store'])->name('pemasakan.store');

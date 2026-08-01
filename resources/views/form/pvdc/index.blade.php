@@ -42,7 +42,7 @@
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('pvdc.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
+        <div class="row w-100">
             <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
@@ -53,6 +53,19 @@
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
                     value="{{ request('date') }}" placeholder="Tanggal Batch...">
+                </div>
+            </div>
+            
+            <div class="col-md-3">
+                <div class="mb-1">Cari Varian</div>
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                    </div>
+                    <input type="text" name="search" id="search" class="form-control border-start-0"
+                    value="{{ request('search') }}" placeholder="Cari Varian">
                 </div>
             </div>
             <div class="col-md-3">
@@ -72,23 +85,31 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="mb-1">Cari Data</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Varian / Supplier / Catatan...">
-                </div>
-            </div>
             <div class="col-md-3 align-self-end">
                 <a href="{{ route('pvdc.index') }}" class="btn btn-primary mb-2"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
             </div>
         </div>
     </form>
+
+        {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> dan <b>Nama Varian</b>  yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.<br><br>
+                    *Copy Nama Varian (bisa klik tombol <i class="bi bi-copy text-muted"></i> disebelah tiap produk/varian) setelah Tanggal diterapkan agar tidak perlu mengetik manual
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -111,22 +132,23 @@
 
             // --- LOGIC EXPORT PDF ---
             exportPdfBtn.addEventListener('click', function(e) {
-                e.preventDefault(); // Mencegah form submit biasa
+            e.preventDefault();
 
-                // Ambil nilai real-time dari input
-                let dateVal = dateInput.value;
-                let shiftVal = shiftInput.value;
-                let searchVal = searchInput.value;
+            let dateVal = dateInput.value.trim();
+            let shiftVal = shiftInput.value.trim();
+            let searchVal = searchInput.value.trim();
 
-                // Bangun URL dengan query string
-                // encodeURIComponent digunakan agar karakter spesial aman di URL
-                let exportUrl = "{{ route('pvdc.exportPdf') }}" +
+            if (!dateVal || !searchVal) {
+                $('#warningModal').modal('show');
+                return;
+            }
+
+            let exportUrl = "{{ route('pvdc.exportPdf') }}" +
                 "?date=" + encodeURIComponent(dateVal) +
                 "&shift=" + encodeURIComponent(shiftVal) +
                 "&search=" + encodeURIComponent(searchVal);
 
-                // Buka di tab baru
-                window.open(exportUrl, '_blank');
+            window.open(exportUrl, '_blank');
             });
         });
     </script>
@@ -158,7 +180,16 @@
                         <tr>
                             <td class="text-center align-middle">{{ $no++ }}</td>
                             <td class="align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift: {{ $dep->shift }}</td>
-                            <td class="align-middle">{{ $dep->nama_produk }}</td>
+                            <td class="align-middle">
+                                {{ $dep->nama_produk }}
+                                <span
+                                    class="badge bg-light text-dark border ms-1 copy-badge"
+                                    style="cursor:pointer"
+                                    data-text="{{ $dep->nama_produk }}"
+                                    title="Copy">
+                                    <i class="bi bi-copy"></i>
+                                </span>
+                            </td>
                             <td class="align-middle">{{ $dep->nama_supplier }}</td>
                             <td class="text-center align-middle">{{
                                 \Carbon\Carbon::parse($dep->tgl_kedatangan)->format('d-m-Y') }}</td>
@@ -388,6 +419,27 @@
     {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
 </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.copy-badge').forEach(function (badge) {
+        badge.addEventListener('click', async function () {
+            await navigator.clipboard.writeText(this.dataset.text);
+
+            const oldHtml = this.innerHTML;
+            const oldTitle = this.title;
+
+            this.innerHTML = 'Ter-Copy';
+            this.title = 'Ter-Copy';
+
+            setTimeout(() => {
+                this.innerHTML = oldHtml;
+                this.title = oldTitle;
+            }, 1500);
+        });
+    });
+});
+</script>
 
 {{-- Auto-hide alert --}}
 <script>

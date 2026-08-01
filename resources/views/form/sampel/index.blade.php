@@ -27,9 +27,9 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('sampel.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
+            <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
-            </a>
+            </button>
             @endcan
             @can('can access recycle')
             <a href="{{ route('sampel.recyclebin') }}" class="btn btn-secondary">
@@ -271,6 +271,24 @@
             {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
         </div>
     </div>
+
+    <div class="modal fade" id="exportWarningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 </div>
 
@@ -283,6 +301,21 @@
             alert.classList.add('fade');
         }
     }, 3000);
+</script>
+
+
+<script>
+document.getElementById('exportPdfBtn').addEventListener('click', function () {
+    const date = document.getElementById('filter_date').value;
+
+    if (!date) {
+        const modal = new bootstrap.Modal(document.getElementById('exportWarningModal'));
+        modal.show();
+        return;
+    }
+
+    window.open(`{{ route('sampel.exportPdf') }}?date=${date}`, '_blank');
+});
 </script>
 
 {{-- CSS tambahan agar tabel lebih rapi --}}

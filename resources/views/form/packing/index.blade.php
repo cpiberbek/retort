@@ -26,7 +26,10 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('packing.exportPdf', ['date' => request('date'), 'shift' => request('shift'), 'nama_produk' => request('nama_produk')]) }}" target="_blank" class="btn btn-danger">
+            <a href="{{ route('packing.exportPdf', ['date' => request('date'), 'shift' => request('shift'), 'nama_produk' => request('nama_produk')]) }}"
+            id="btnExportPdf"
+            target="_blank"
+            class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
             @endcan
@@ -98,6 +101,24 @@
         </div>
     </form>
 
+    <div class="modal fade" id="tanggalModal" tabindex="-1" aria-labelledby="tanggalModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const search = document.getElementById('search');
@@ -115,6 +136,21 @@
             date.addEventListener('change', () => form.submit());
             shift.addEventListener('change', () => form.submit());
             nama_produk.addEventListener('change', () => form.submit());
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btnExportPdf = document.getElementById('btnExportPdf');
+            const filterDate = document.getElementById('filter_date');
+
+            btnExportPdf.addEventListener('click', function (e) {
+                if (!filterDate.value.trim()) {
+                    e.preventDefault();
+                    const modal = new bootstrap.Modal(document.getElementById('tanggalModal'));
+                    modal.show();
+                }
+            });
         });
     </script>
 

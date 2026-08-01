@@ -27,200 +27,244 @@
         .small { font-size: 7px; }
         .sign { text-align: center; }
         .page-break { page-break-after: always; }
+
+         /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 
 <body>
 
-@foreach ($produks as $produk)
-    @php
-        // Helper untuk menghindari TypeError: Argument #1 ($json) must be of type string, array given
-        $safeDecode = function($data) {
-            if (is_array($data)) return $data;
-            return json_decode($data ?? '[]', true) ?? [];
-        };
-
-        $nonPremixItems = $safeDecode($produk->non_premix);
-        $premixItems    = $safeDecode($produk->premix);
-        $suhuGrinding = $safeDecode($produk->suhu_sebelum_grinding);
-
-        $numNonPremixCols = count($nonPremixItems) > 0 ? count($nonPremixItems) : 1;
-        $numPremixCols    = count($premixItems) > 0 ? count($premixItems) : 1;
-    @endphp
-
-    {{-- HEADER --}}
-    <table>
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-            <td style="font-weight: bold;">
-                PT Charoen Pokphand Indonesia<br>
-                Food Division
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td>
+                <span style="font-size:14pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
+</div>
 
-    <h3 class="center">PEMERIKSAAN MINCING – EMULSIFYING – AGING</h3>
+<br>
 
-    {{-- INFO --}}
-    <table class="tbl-header">
-        <tr>
-            <td width="15%">Hari / Tgl</td>
-            <td width="25%">: {{ \Carbon\Carbon::parse($produk->date)->format('d-m-Y') }}</td>
-            <td width="10%">Shift</td>
-            <td width="15%">: {{ $produk->shift }}</td>
-            <td width="35%">Nama Varian: {{ $produk->nama_produk }}</td>
-        </tr>
-    </table>
+<div class="title">
+    PEMERIKSAAN MINCING - EMULSIFYING - AGING
+</div>
 
-    <br>
+<br>
 
-    {{-- TABLE UTAMA BATCH (Non-Premix) --}}
-    <table class="tbl-main small">
-        <tr>
-            <th width="15%" rowspan="2">Bahan Baku dan Bahan Tambahan (Non-Premix)</th>
-            @for($i=1; $i<=$numNonPremixCols; $i++)
-                <th colspan="4">Batch {{ $i }}</th>
-            @endfor
-        </tr>
-        <tr>
-            @for($i=1; $i<=$numNonPremixCols; $i++)
-                <th>Kode</th>
-                <th>(°C)</th>
-                <th>pH</th>
-                <th>Kg</th>
-            @endfor
-        </tr>
+<table class="tbl-header">
+    <tr>
+        <td width="20%">Hari/Tanggal: {{ \Carbon\Carbon::parse($produks->first()->date)->format('d-m-Y') }}</td>
+        <td width="20%">Shift: {{ $produks->first()->shift ?? '-' }}</td>
+        <td width="60%">Nama Produk: {{ $produks->first()->nama_produk ?? '-' }}</td>
+    </tr>
+</table>
 
-        @php $maxRowNonPremix = 12; @endphp
-        @for($i=0; $i<$maxRowNonPremix; $i++)
-            <tr>
-                <td style="padding-left: 5px;">
-                    {{-- Menampilkan nama bahan di kolom pertama --}}
-                    {{ $nonPremixItems[$i]['nama_bahan'] ?? ($i + 1) }}
-                </td>
-                @for($j=0; $j<$numNonPremixCols; $j++)
-                    <td class="center">{{ $nonPremixItems[$j]['kode_bahan'] ?? '' }}</td>
-                    <td class="center">{{ $nonPremixItems[$j]['suhu_bahan'] ?? '' }}</td>
-                    <td class="center">{{ $nonPremixItems[$j]['ph_bahan'] ?? '' }}</td>
-                    <td class="center">{{ $nonPremixItems[$j]['berat_bahan'] ?? '' }}</td>
-                @endfor
-            </tr>
-        @endfor
-    </table>
 
-    <br>
+<br>
 
-    {{-- PREMIX --}}
-    <table class="tbl-main small">
-        <tr>
-            <th width="15%" rowspan="2">Premix</th>
-            @for($i=1; $i<=$numPremixCols; $i++)
-                <th colspan="2">Batch {{ $i }}</th>
-            @endfor
-        </tr>
-        <tr>
-            @for($i=1; $i<=$numPremixCols; $i++)
-                <th>Kode</th>
-                <th>Kg</th>
-            @endfor
-        </tr>
+@foreach($produks as $row)
 
-        @php $maxRowPremix = 3; @endphp
-        @for($i=0; $i<$maxRowPremix; $i++)
-            <tr>
-                <td class="center">{{ $i+1 }}</td>
-                @for($j=0; $j<$numPremixCols; $j++)
-                    <td class="center">{{ $premixItems[$j]['kode_premix'] ?? '' }}</td>
-                    <td class="center">{{ $premixItems[$j]['berat_premix'] ?? '' }}</td>
-                @endfor
-            </tr>
-        @endfor
-    </table>
+@php
+    $nonPremix = json_decode($row->non_premix, true) ?? [];
+    $premix = json_decode($row->premix, true) ?? [];
 
-    <br>
+    $suhu = json_decode($row->suhu_sebelum_grinding, true) ?? [];
+    $suhuText = [];
 
-    {{-- WAKTU & SUHU GRINDING (Dinamis) --}}
-    <table class="tbl-main small">
-        <tr>
-            <td width="40%" style="padding-left: 5px;">Waktu Preparation</td>
-            <td width="60%">: {{ $produk->waktu_mulai ?? '-' }} s/d {{ $produk->waktu_selesai ?? '-' }}</td>
-        </tr>
-        
-        {{-- Menampilkan data Daging dari input dinamis --}}
-        @if(count($suhuGrinding) > 0)
-            @foreach($suhuGrinding as $sg)
-            <tr>
-                <td style="padding-left: 5px;">Suhu Sebelum Grinding ({{ $sg['daging'] ?? 'Daging' }})</td>
-                <td>: {{ $sg['suhu'] ?? '-' }} °C</td>
-            </tr>
-            @endforeach
-        @else
-            <tr>
-                <td style="padding-left: 5px;">Suhu Sebelum Grinding</td>
-                <td>: -</td>
-            </tr>
-        @endif
+    foreach($suhu as $s){
+        $suhuText[] = ($s['daging'] ?? '-') . ': ' . ($s['suhu'] ?? '-') . ' °C';
+    }
+@endphp
 
-        <tr>
-            <td style="padding-left: 5px;">Waktu Mixing Premix</td>
-            <td>: {{ $produk->waktu_mixing_premix_awal ?? '-' }} s/d {{ $produk->waktu_mixing_premix_akhir ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td style="padding-left: 5px;">Waktu Bowl Cutter / Aging Emulsi</td>
-            <td>: {{ $produk->waktu_bowl_cutter_awal ?? '-' }} s/d {{ $produk->waktu_aging_emulsi_akhir ?? '-' }}</td>
-        </tr>
-        <tr>
-            <td style="padding-left: 5px;">Suhu Akhir Emulsi Gel (Std < 5°C)</td>
-            <td>: {{ $produk->suhu_akhir_emulsi_gel ?? '-' }} °C</td>
-        </tr>
-        <tr>
-            <td style="padding-left: 5px;">Suhu Akhir Mixing (Std 2–5°C)</td>
-            <td>: {{ $produk->suhu_akhir_mixing ?? '-' }} °C</td>
-        </tr>
-        <tr>
-            <td style="padding-left: 5px;">Suhu Akhir Emulsifying (Std 14±2°C)</td>
-            <td>: {{ $produk->suhu_akhir_emulsi ?? '-' }} °C</td>
-        </tr>
-    </table>
+<table class="tbl-main">
 
-    <br>
+    <tr>
+        <th class="center">Kode Batch</th>
+        <td colspan="5" class="center">{{ $row->kode_produksi ?? '-' }}</td>
+    </tr>
 
-    {{-- PARAF --}}
-    <table class="tbl-main small">
-        <tr>
-            <td width="25%" class="center">PARAF QC</td>
-            <td width="25%" class="center" style="height: 30px;">{{ $produk->username }}</td>
-            <td width="25%" class="center">PARAF Produksi</td>
-            <td width="25%" class="center">{{ $produk->nama_produksi ?? '..........' }}</td>
-        </tr>
-    </table>
+    <tr>
+        <th class="center">Preparation</th>
+        <td colspan="5" class="center">
+            {{ $row->waktu_mulai ?? '-' }} s/d {{ $row->waktu_selesai ?? '-' }}
+        </td>
+    </tr>
 
-    <br>
+    <tr>
+        <th colspan="6" class="left">Bahan Baku & Tambahan (Non-Premix)</th>
+    </tr>
 
-    {{-- CATATAN --}}
-    <table class="small">
-        <tr><td>Catatan: {{ $produk->catatan ?? '-' }}</td></tr>
-        <tr><td>__________________________________________________________________________________________</td></tr>
-    </table>
+    <tr>
+        <th class="center">Nama Bahan</th>
+        <th class="center">Kode</th>
+        <th class="center">Suhu</th>
+        <th class="center">pH</th>
+        <th class="center">Kg</th>
+        <th class="center">Sens</th>
+    </tr>
 
-    <br>
+    @foreach($nonPremix as $i => $item)
+    <tr>
+        <td class="center">
+            {{ ($i+1) }}. {{ $item['nama_bahan'] ?? '-' }}
+        </td>
+        <td class="center">
+            @if(!empty($item['inspection_uuid']))
+                {{ \App\Models\InspectionProductDetail::where('uuid',$item['inspection_uuid'])->value('kode_batch') ?? '-' }}
+            @else
+                -
+            @endif
+        </td>
+        <td class="center">{{ $item['suhu_bahan'] ?? '-' }}</td>
+        <td class="center">{{ $item['ph_bahan'] ?? '-' }}</td>
+        <td class="center">{{ $item['berat_bahan'] ?? '-' }}</td>
+        <td class="center">{{ $item['sensori'] ?? '-' }}</td>
+    </tr>
+    @endforeach
 
-    <table class="sign small">
-        <tr>
-            <td width="70%"></td>
-            <td width="30%">
-                Disetujui oleh,<br><br><br><br>
-                (___________________)<br>
-                QC SPV
-            </td>
-        </tr>
-    </table>
 
-    <div style="text-align:right; font-size:7px; margin-top: 10px;">Form QT 10 / 01</div>
+    <tr>
+        <th colspan="6" class="left">Premix</th>
+    </tr>
 
-    @if (!$loop->last)
-        <div class="page-break"></div>
-    @endif
+    <tr>
+        <th class="center">Nama Premix</th>
+        <th colspan="2" class="center">Kode</th>
+        <th colspan="2" class="center">Kg</th>
+        <th class="center">Sens</th>
+    </tr>
+
+    @foreach($premix as $i => $item)
+    <tr>
+        <td class="center">
+            {{ ($i+1) }}. {{ $item['nama_premix'] ?? '-' }}
+        </td>
+        <td colspan="2" class="center">
+            {{ $item['kode_premix'] ?? '-' }}
+        </td>
+        <td colspan="2" class="center">
+            {{ $item['berat_premix'] ?? '-' }}
+        </td>
+        <td class="center">
+            {{ $item['sensori_premix'] ?? '-' }}
+        </td>
+    </tr>
+    @endforeach
+
+
+    <tr>
+        <td colspan="2" class="left"><b>Suhu Sebelum Grinding</b></td>
+        <td colspan="4" class="center">
+            {{ implode(', ', $suhuText) ?: '-' }}
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>Waktu Mixing Premix</b></td>
+        <td colspan="4" class="center">
+            {{ $row->waktu_mixing_premix ?? '-' }} Menit
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>Waktu Bowl Cutter</b></td>
+        <td colspan="4" class="center">
+            {{ $row->waktu_bowl_cutter ?? '-' }} Menit
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>Waktu Aging Emulsi</b></td>
+        <td colspan="4" class="center">
+            {{ $row->waktu_aging_emulsi_awal ?? '-' }}
+            s/d
+            {{ $row->waktu_aging_emulsi_akhir ?? '-' }}
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>Suhu Akhir Emulsi Gel</b></td>
+        <td colspan="4" class="center">
+            {{ $row->suhu_akhir_emulsi_gel ?? '-' }} °C
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>Waktu Mixing</b></td>
+        <td colspan="4" class="center">
+            {{ $row->waktu_mixing ?? '-' }} Menit
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>Suhu Akhir Mixing</b></td>
+        <td colspan="4" class="center">
+            {{ $row->suhu_akhir_mixing ?? '-' }} °C
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>Suhu Akhir Emulsifying</b></td>
+        <td colspan="4" class="center">
+            {{ $row->suhu_akhir_emulsi ?? '-' }} °C
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>PARAF QC</b></td>
+        <td colspan="4" class="center">
+            {{ $row->username_updated ?? $row->username ?? '-' }}
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="left"><b>PARAF Produksi</b></td>
+        <td colspan="4" class="center">
+            {{ $row->nama_spv ?? '-' }}
+        </td>
+    </tr>
+
+</table>
+<table class="tbl-header">
+    <tr>
+        <td style="text-align:right;">
+            <i>{{ $noDokumen ?? '-' }}</i>
+        </td>
+    </tr>
+</table>
+
+
+<table class="tbl-header">
+    <tr>
+        <td style="text-align:left;">
+            Catatan<br>
+            *pengukuran pH khusus untuk air produksi<br><br>
+            {{ $row->catatan ?? ' ' }}
+        </td>
+    </tr>
+</table>
+
+
+<br>
+
 @endforeach
+
+<br>
+
 
 </body>
 </html>

@@ -4,6 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Models\Metal;
 use App\Models\Operator;
+use App\Models\List_form;
+use App\Models\Plant;
+use Carbon\Carbon;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use TCPDF;
@@ -257,96 +263,222 @@ class MetalController extends Controller
     public function exportPdf(Request $request)
     {
         $date = $request->input('date');
+        $search = $request->input('search');
         $userPlant = Auth::user()->plant;
 
-        $metals = Metal::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('pukul', 'asc')
-        ->get();
+        $metals = Metal::where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where('username', 'like', "%{$search}%");
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('pukul')
+            ->get();
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+        if ($metals->isEmpty()) {
+            return back()->with('error', 'Data tidak ditemukan');
+        }
+
+        $plantName = Plant::where('uuid', $userPlant)
+            ->value('plant');
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Metal Detector')
+            ->value('no_dokumen');
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // Create new TCPDF object
         $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
-        // Set document information
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Your Name/Company');
         $pdf->SetTitle('Pengecekan Metal Detector');
-        $pdf->SetSubject('Pengecekan Metal');
+        $pdf->SetSubject('Pengecekan Metal Detector');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set default monospaced font
         $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
         $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
 
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-        // Set image scale factor
+        $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
+        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
+            require_once(dirname(__FILE__) . '/lang/eng.php');
             $pdf->setLanguageArray($l);
         }
 
-        // Set font
-        $pdf->SetFont('helvetica', '', 10);
+        $pdf->SetFont('times', '', 10);
+        $pdf->AddPage('L', 'A4');
 
-        // Add a page
-        $pdf->AddPage('P', 'A4');
+        $html = view('reports.metal-detector', compact(
+            'metals',
+            'date',
+            'search',
+            'plantName',
+            'noDokumen'
+        ))->render();
 
-        // Convert the Blade view to HTML
-        $html = view('reports.metal-detector', compact('metals', 'request'))->render();
-
-        // Print text using writeHTMLCell()
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
-        // Close and output PDF document (Inline/Preview)
-        $pdf->Output('Pengecekan_Metal_Detector_' . date('Ymd_His') . '.pdf', 'I');
+        $filename = 'Pengecekan_Metal_Detector_' .
+            ($date ? Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
+            '.pdf';
+
+        $pdf->Output($filename, 'I');
 
         exit();
     }
 
     public function exportExcel(Request $request)
     {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $userPlant = Auth::user()->plant;
+        try {
+            $search = $request->input('search');
+            $date = $request->input('date');
+            $userPlant = Auth::user()->plant;
 
-        $data = Metal::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                // Sesuai dengan filter pencarian pada method index()
-                $query->where('username', 'like', "%{$search}%"); 
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
-            ->get();
+            $data = Metal::where('plant', $userPlant)
+                ->when($search, function ($query) use ($search) {
+                    $query->where('username', 'like', "%{$search}%");
+                })
+                ->when($date, function ($query) use ($date) {
+                    $query->whereDate('date', $date);
+                })
+                ->orderBy('pukul')
+                ->get();
 
-        // Parameter kedua di MetalExport menerima string tanggal/periode
-        $periode = $date 
-            ? \Carbon\Carbon::parse($date)->format('d-m-Y') 
-            : 'Semua Periode';
+            if ($data->isEmpty()) {
+                return back()->with('error', 'Data tidak ditemukan');
+            }
 
-        return Excel::download(new MetalExport($data, $periode), 'Pengecekan_Metal_Detector_' . date('Ymd_His') . '.xlsx');
+            $template = base_path('form retort/FM QT 26 Pemeriksaan Metal Detector.xlsx');
+
+            $spreadsheet = IOFactory::load($template);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $plantName = Plant::where('uuid', $userPlant)
+                ->value('plant');
+
+            if ($plantName == 'Cikande 2') {
+                $sheet->setCellValue('P9', 'SUS 2.0 mm');
+            } elseif ($plantName == 'Berbek') {
+                $sheet->setCellValue('P9', 'SUS 2.5 mm');
+            } else {
+                $sheet->setCellValue('P9', 'SUS 2.0 mm');
+            }
+
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getFont()
+                ->setName('Times New Roman');
+
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getAlignment()
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            if ($date) {
+                $sheet->setCellValue(
+                    'B7',
+                    'Hari / Tanggal : ' . Carbon::parse($date)->format('d-m-Y')
+                );
+            }
+
+            foreach ($data as $item) {
+                $row = 11 + (int) Carbon::parse($item->pukul)->format('H');
+
+                $values = [
+                    "B{$row}" => $item->fe === 'Terdeteksi' ? 'V' : '',
+                    "I{$row}" => $item->nfe === 'Terdeteksi' ? 'V' : '',
+                    "P{$row}" => $item->sus === 'Terdeteksi' ? 'V' : '',
+                    "W{$row}" => $item->username ?? '-',
+                    "X{$row}" => $item->nama_produksi ?? '-',
+                ];
+
+                foreach ($values as $cell => $value) {
+                    $sheet->setCellValue($cell, $value);
+
+                    $sheet->getStyle($cell)
+                        ->getAlignment()
+                        ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                        ->setVertical(Alignment::VERTICAL_CENTER);
+                }
+            }
+
+            $namaSpv = $data->pluck('nama_spv')
+                ->filter()
+                ->unique()
+                ->first();
+
+            $sheet->setCellValue('U41', '(' . ($namaSpv ?? '-') . ')');
+
+            $sheet->getStyle('U41')
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            $sheet->getStyle('U41')
+                ->getFont()
+                ->setUnderline(true);
+
+            $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Pemeriksaan Metal Detector')
+                ->value('no_dokumen');
+
+            $sheet->setCellValue('X35', $noDokumen ?? '-');
+
+            $sheet->getStyle('X35')
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_RIGHT)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            $sheet->getStyle('X35')
+                ->getFont()
+                ->setItalic(true);
+
+            $catatan = $data->pluck('catatan')
+                ->filter()
+                ->unique()
+                ->implode(', ');
+
+            $sheet->setCellValue('B40', $catatan ?: ': -');
+
+            $sheet->getStyle('B40')
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                ->setVertical(Alignment::VERTICAL_TOP)
+                ->setWrapText(true);
+
+            if (!empty($catatan)) {
+                $sheet->getStyle('B40')
+                    ->getFont()
+                    ->setUnderline(true);
+            }
+
+
+            $filename = 'Pengecekan_Metal_Detector_' .
+                ($date ? Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
+                '.xlsx';
+
+            while (ob_get_level()) {
+                ob_end_clean();
+            }
+
+            return response()->streamDownload(function () use ($spreadsheet) {
+                $writer = new Xlsx($spreadsheet);
+                $writer->save('php://output');
+            }, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Cache-Control' => 'max-age=0',
+            ]);
+
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal export: ' . $e->getMessage());
+        }
     }
 }

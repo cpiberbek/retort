@@ -30,21 +30,35 @@
             padding: 2px;
             font-size: 8px;
         }
+         /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 
 <body>
 
 {{-- HEADER --}}
-<table width="100%">
-    <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
-        </td>
-        
-    </tr>
-</table>
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td>
+                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
 <h2 class="title">PEMERIKSAAN LOADING – UNLOADING PRODUK</h2>
 <br>
 <br>
@@ -61,42 +75,55 @@ $jenisKendaraan = $firstLoading ? $firstLoading->jenis_kendaraan : '';
 $ekspedisi = $firstLoading ? $firstLoading->ekspedisi : '';
 $tujuanAsal = $firstLoading ? $firstLoading->tujuan_asal : '';
 $noSegel = $firstLoading ? $firstLoading->no_segel : '';
+$kondisi_mobil = $firstLoading ? $firstLoading->kondisi_mobil : '';
 @endphp
 {{-- INFO --}}
 <table width="100%" class="tbl-header">
     <tr>
         <td width="15%">Hari / Tanggal</td>
-        <td width="35%">: {{ $date }}</td>
+        <td width="18%">: {{ $date }}</td>
+
         <td width="15%">Jam Mulai</td>
-        <td width="35%">: {{ $jamMulai }}</td>
+        <td width="18%">: {{ $jamMulai }}</td>
+
+        <td width="15%">Ekspedisi</td>
+        <td width="19%">: {{ $ekspedisi }}</td>
     </tr>
+
     <tr>
         <td>Shift</td>
         <td>: {{ $shift }}</td>
+
         <td>Jam Selesai</td>
         <td>: {{ $jamSelesai }}</td>
+
+        <td>Tujuan / Asal</td>
+        <td>: {{ $tujuanAsal }}</td>
     </tr>
+
     <tr>
         <td>No. Pol Mobil</td>
         <td>: {{ $noPol }}</td>
+
         <td>Nama Sopir</td>
         <td>: {{ $namaSupir }}</td>
-    </tr>
-    <tr>
-        <td>Jenis Kendaraan</td>
-        <td>: {{ $jenisKendaraan }}</td>
-        <td>Ekspedisi</td>
-        <td>: {{ $ekspedisi }}</td>
-    </tr>
-    <tr>
-        <td>Kondisi Mobil</td>
-        <td colspan="3">: isi sesuai kolom keterangan di bawah</td>
-    </tr>
-    <tr>
-        <td>Tujuan / Asal</td>
-        <td>: {{ $tujuanAsal }}</td>
+
         <td>No. Segel</td>
         <td>: {{ $noSegel }}</td>
+    </tr>
+
+    <tr>
+        <td>Jenis Kendaraan</td>
+        <td colspan="5">: {{ $jenisKendaraan }}</td>
+    </tr>
+
+   <tr>
+        <td>Kondisi Mobil</td>
+        <td colspan="5">:
+            {{ collect($kondisi_mobil ?? [])
+                ->map(fn($item) => ucwords(str_replace('_', ' ', $item)))
+                ->implode(', ') }}
+        </td>
     </tr>
 </table>
 
@@ -161,7 +188,14 @@ $noSegel = $firstLoading ? $firstLoading->no_segel : '';
     @endfor
     @endif
 </table>
-<div style="text-align:right; font-size:8px; font-style:italic">QT 18 / 01</div>
+<table width="100%">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right" style="font-style: italic;">
+            {{ $noDokumen }}
+        </td>
+    </tr>
+</table>
 <br>
 
 {{-- KETERANGAN --}}
@@ -170,7 +204,7 @@ $noSegel = $firstLoading ? $firstLoading->no_segel : '';
         <td colspan="4">Keterangan :<br></td>
     </tr>
     <tr>
-        <td>√ OK<br>X Tidak</td>
+        <td>V OK<br>X Tidak</td>
         <td>1 Bersih<br>2 Bocor<br>3 Debu</td>
         <td>4 Kering<br>5 Basah<br>6 Hama</td>
         <td>7 Noda (Karat, cat, tinta)<br>8 Bekas oli di lantai, di dinding<br>9 Tidak ada varian non halal</td>
@@ -185,17 +219,17 @@ $noSegel = $firstLoading ? $firstLoading->no_segel : '';
     <tr>
         <td width="33%" class="sign">
             Diperiksa oleh,<br><br><br>
-            ( ___________________ )<br>
+            ( <u>{{ $header->pic_qc ?? '' }}</u> )<br>
             QC
         </td>
         <td width="33%" class="sign">
             Diketahui oleh,<br><br><br>
-            ( ___________________ )<br>
+            ( <u>{{ $header->pic_warehouse ?? '' }}</u> )<br>
             Warehouse
         </td>
         <td width="33%" class="sign">
             Disetujui oleh,<br><br><br>
-            ( ___________________ )<br>
+            ( <u>{{ $header->pic_qc_spv ?? '' }}</u> )<br>
             QC SPV
         </td>
     </tr>

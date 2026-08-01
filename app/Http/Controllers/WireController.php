@@ -6,6 +6,7 @@ use App\Models\Wire;
 use App\Models\Produk;
 use App\Models\Mesin;
 use App\Models\Supplier;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -74,8 +75,12 @@ class WireController extends Controller
             ob_end_clean();
         }
 
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Data No. Lot Wire')
+            ->value('no_dokumen');
+
         // Setup PDF (Landscape)
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Data No. Lot Wire');
         
@@ -91,7 +96,7 @@ class WireController extends Controller
         $pdf->AddPage();
 
         // Render View
-        $html = view('reports.wire', compact('items', 'request'))->render();
+        $html = view('reports.wire', compact('items', 'request', 'noDokumen'))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
         $pdf->Output('Laporan_Wire_' . date('d-m-Y_His') . '.pdf', 'I');

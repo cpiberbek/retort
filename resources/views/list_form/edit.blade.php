@@ -32,7 +32,7 @@
                                 type="text"
                                 name="laporan"
                                 class="form-control @error('laporan') is-invalid @enderror"
-                                value="{{ old('laporan', $list_form->laporan) }}"
+                                value="{{ old('laporan', $list_form->laporan) }}" readonly
                             >
                             @error('laporan')
                             <div class="invalid-feedback">
