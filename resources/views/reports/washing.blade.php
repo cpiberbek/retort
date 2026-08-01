@@ -25,185 +25,249 @@
         .text-left { text-align: left !important; padding-left: 2px !important; }
         .bg-ok { color: #006400; font-weight: bold; }
         .bg-rev { color: #8B0000; font-weight: bold; }
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 6pt;
+        }
     </style>
 </head>
 <body>
 
-    <table class="company-header" cellpadding="2">
+@php
+$item = $items->first();
+@endphp
+
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
         <tr>
-            <td width="30%" class="company-name">
-                PT Charoen Pokphand Indonesia<br>
-                <span style="font-weight: normal; font-size: 7px;">Food Division</span>
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
             </td>
-            <td width="40%" class="report-title">PEMERIKSAAN WASHING - DRYING</td>
-            <td width="30%" style="text-align: right; font-size: 7px;">
-                <strong>Dicetak:</strong> {{ date('d-m-Y H:i') }}<br>
-                <strong>Oleh:</strong> {{ Auth::user()->username ?? 'System' }}
-            </td>
-        </tr>
-    </table>
-
-    <table width="100%" cellpadding="1" style="margin-bottom: 5px; font-size: 7px;">
-        <tr>
-            <td width="15%"><strong>Filter Tanggal</strong></td>
-            <td width="35%">: {{ $request->date ? \Carbon\Carbon::parse($request->date)->format('d-m-Y') : 'SEMUA' }}</td>
-            <td width="15%"><strong>Filter Shift</strong></td>
-            <td width="35%">: {{ $request->shift ? $request->shift : 'SEMUA' }}</td>
-        </tr>
-    </table>
-
-    <table class="tbl-data" nobr="true">
-        <thead>
-            <tr>
-                <th width="2%" rowspan="2">No</th>
-                <th width="5%" rowspan="2">Tgl</th>
-                <th width="2%" rowspan="2">Shf</th>
-                <th width="8%" rowspan="2">Varian</th>
-                <th width="5%" rowspan="2">Kode</th>
-                <th width="3%" rowspan="2">Jam</th>
-                
-                {{-- Group: Fisik --}}
-                <th width="6%" colspan="2">Dimensi (mm)</th>
-                <th width="14%" colspan="6">Visual Check</th>
-                
-                {{-- Group: PC Kleer --}}
-                <th width="13%" colspan="5">Kondisi PC Kleer</th>
-                
-                {{-- Group: Pottasium --}}
-                <th width="11%" colspan="4">Pottasium Sorbate</th>
-                
-                {{-- Group: Mesin --}}
-                <th width="3%" rowspan="2">Suhu<br>Htr</th>
-                <th width="8%" colspan="4">Speed Conveyor</th>
-                
-                <th width="8%" rowspan="2">Catatan</th>
-                <th width="6%" rowspan="2">Check</th>
-                <th width="3%" rowspan="2">QC</th>
-                <th width="3%" rowspan="2">Sts</th>
-            </tr>
-            <tr>
-                {{-- Sub Header Dimensi --}}
-                <th width="3%">Pjg</th>
-                <th width="3%">Dia</th>
-                
-                {{-- Sub Header Visual --}}
-                <th width="2%">Air</th>
-                <th width="2%">Lkt</th>
-                <th width="2%">Sisa</th>
-                <th width="3%">Bcr</th>
-                <th width="3%">Seal</th>
-                <th width="2%">Prt</th>
-                
-                {{-- Sub Header PC Kleer --}}
-                <th width="3%">Kons</th>
-                <th width="2%">T1</th>
-                <th width="2%">T2</th>
-                <th width="2%">pH</th>
-                <th width="4%">Air</th>
-                
-                {{-- Sub Header Pottasium --}}
-                <th width="3%">Kons</th>
-                <th width="2%">T</th>
-                <th width="2%">pH</th>
-                <th width="4%">Air</th>
-                
-                {{-- Sub Header Speed --}}
-                <th width="2%">1</th>
-                <th width="2%">2</th>
-                <th width="2%">3</th>
-                <th width="2%">4</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($items as $index => $item)
-            <tr nobr="true">
-                <td>{{ $index + 1 }}</td>
-                <td>{{ \Carbon\Carbon::parse($item->date)->format('d-m') }}</td>
-                <td>{{ $item->shift }}</td>
-                <td class="text-left">{{ $item->nama_produk }}</td>
-                <td>{{ $item->kode_produksi }}</td>
-                <td>{{ \Carbon\Carbon::parse($item->pukul)->format('H:i') }}</td>
-                
-                {{-- Dimensi --}}
-                <td>{{ $item->panjang_produk ?? '-' }}</td>
-                <td>{{ $item->diameter_produk ?? '-' }}</td>
-                
-                {{-- Visual Check (Simbol) --}}
-                <td style="font-family: zapfdingbats;">{{ !empty($item->airtrap) ? '4' : '-' }}</td>
-                <td style="font-family: zapfdingbats;">{{ !empty($item->lengket) ? '4' : '-' }}</td>
-                <td style="font-family: zapfdingbats;">{{ !empty($item->sisa_adonan) ? '4' : '-' }}</td>
-                <td style="font-family: zapfdingbats;">{{ !empty($item->kebocoran) ? '4' : '-' }}</td>
-                <td style="font-family: zapfdingbats;">{{ !empty($item->kekuatan_seal) ? '4' : '-' }}</td>
-                <td style="font-family: zapfdingbats;">{{ !empty($item->print_kode) ? '4' : '-' }}</td>
-                
-                {{-- PC Kleer --}}
-                <td>{{ $item->konsentrasi_pckleer ?? '-' }}</td>
-                <td>{{ $item->suhu_pckleer_1 ?? '-' }}</td>
-                <td>{{ $item->suhu_pckleer_2 ?? '-' }}</td>
-                <td>{{ $item->ph_pckleer ?? '-' }}</td>
-                <td>{{ $item->kondisi_air_pckleer ?? '-' }}</td>
-                
-                {{-- Pottasium --}}
-                <td>{{ $item->konsentrasi_pottasium ?? '-' }}</td>
-                <td>{{ $item->suhu_pottasium ?? '-' }}</td>
-                <td>{{ $item->ph_pottasium ?? '-' }}</td>
-                <td>{{ $item->kondisi_pottasium ?? '-' }}</td>
-                
-                {{-- Mesin --}}
-                <td>{{ $item->suhu_heater ?? '-' }}</td>
-                <td>{{ $item->speed_1 ?? '-' }}</td>
-                <td>{{ $item->speed_2 ?? '-' }}</td>
-                <td>{{ $item->speed_3 ?? '-' }}</td>
-                <td>{{ $item->speed_4 ?? '-' }}</td>
-                
-                <td class="text-left" style="font-size: 5px;">{{ $item->catatan ?? '-' }}</td>
-                
-                {{-- Check Logic (Simplifikasi tampilan) --}}
-                <td style="font-size: 5px;">
-                    @if($item->konsentrasi_pckleer >= 0.7 && $item->konsentrasi_pckleer <= 1.0) OK @else - @endif
-                </td>
-
-                <td>{{ $item->username }}</td>
-                <td>
-                    @if($item->status_spv == 1) <span class="bg-ok">OK</span>
-                    @elseif($item->status_spv == 2) <span class="bg-rev">REV</span>
-                    @else - @endif
-                </td>
-            </tr>
-            @empty
-            <tr>
-                <td colspan="30" style="padding: 10px;">Data tidak ditemukan.</td>
-            </tr>
-            @endforelse
-        </tbody>
-    </table>
-    
-    {{-- Info Standar (Footer Tabel) --}}
-    <table width="100%" style="font-size: 5px; margin-top: 2px;">
-        <tr>
-            <td width="10%"><strong>Standar:</strong></td>
-            <td width="30%">Suhu PC Kleer: 46±3 °C</td>
-            <td width="30%">Suhu Heater: 125 - 135 °C</td>
-            <td width="30%" align="right">QT 17 / 00</td>
-        </tr>
-        <tr>
-            <td></td>
-            <td>Kons. PC Kleer: 0.7% (ayam); 1% (sapi); 0.8% (cuci)</td>
-            <td colspan="2">Kons. Pottasium Sorbate: 0.15%</td>
-        </tr>
-    </table>
-
-    {{-- Tanda Tangan --}}
-    <table width="100%" style="margin-top: 15px; page-break-inside: avoid;">
-        <tr>
-            <td width="70%"></td>
-            <td width="30%" align="center">
-                <div style="font-size: 8px;">Disetujui Oleh,<br>QC Supervisor</div>
-                <br><br><br>
-                <div style="border-bottom: 1px solid #000; width: 80%;"></div>
+            <td>
+                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
+</div>
+
+<table width="100%" border="0" cellpadding="3" cellspacing="0">
+    <tr>
+        <td width="18%">
+        </td>
+        <td width="64%" align="center" style="font-size:12pt;"><b>PEMERIKSAAN WASHING - DRYING</b></td>
+        <td width="18%"></td>
+    </tr>
+</table>
+
+
+
+<table border="1" cellpadding="3" cellspacing="0" width="100%">
+
+    <tr>
+        <td width="28%">Nama Produk</td>
+        <td width="72%" align="center">{{ $item->nama_produk ?? '-' }}</td>
+    </tr>
+
+    <tr>
+    <td>Kode Produksi</td>
+        <td align="center">
+            {{ \App\Models\Mincing::where('id', $item->id)->value('kode_produksi') ?? '-' }}
+        </td>
+    </tr>
+    <tr>
+        <td>Waktu</td>
+        <td align="center">{{ $item->pukul ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Panjang Produk Akhir</td>
+        <td align="center">{{ $item->panjang_produk ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Diameter Produk Akhir</td>
+        <td align="center">{{ $item->diameter_produk ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Airtrap</td>
+        <td align="center">{{ $item->airtrap ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Lengket</td>
+        <td align="center">{{ $item->lengket ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Sisa Adonan</td>
+        <td align="center">{{ $item->sisa_adonan ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Cek Kebocoran/Vacuum</td>
+        <td align="center">{{ $item->kebocoran ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Kekuatan Seal</td>
+        <td align="center">{{ $item->kekuatan_seal ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Print Kode Produksi</td>
+        <td align="center">{{ $item->print_kode ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Konsentrasi PC Kleer 1</td>
+        <td align="center">{{ $item->konsentrasi_pckleer ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Suhu PC Kleer 1</td>
+        <td align="center">{{ $item->suhu_pckleer_1 ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Suhu PC Kleer 2</td>
+        <td align="center">{{ $item->suhu_pckleer_2 ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>pH PC Kleer</td>
+        <td align="center">{{ $item->ph_pckleer ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Kondisi Air PC Kleer</td>
+        <td align="center">{{ $item->kondisi_air_pckleer ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Konsentrasi Pottasium Sorbate</td>
+        <td align="center">{{ $item->konsentrasi_pottasium ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Suhu Pottasium Sorbate</td>
+        <td align="center">{{ $item->suhu_pottasium ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>pH Pottasium Sorbate</td>
+        <td align="center">{{ $item->ph_pottasium ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Kondisi Air Pottasium Sorbate</td>
+        <td align="center">{{ $item->kondisi_pottasium ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Suhu Heater</td>
+        <td align="center">{{ $item->suhu_heater ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Speed Conv. Drying 1</td>
+        <td align="center">{{ $item->speed_1 ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Speed Conv. Drying 2</td>
+        <td align="center">{{ $item->speed_2 ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Speed Conv. Drying 3</td>
+        <td align="center">{{ $item->speed_3 ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Speed Conv. Drying 4</td>
+        <td align="center">{{ $item->speed_4 ?? '-' }}</td>
+    </tr>
+
+</table>
+<table width="100%">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right" style="font-style: italic;">
+            {{ $noDokumen }}
+        </td>
+    </tr>
+</table>
+
+<table border="0" cellpadding="3" cellspacing="0" width="100%" style="margin-top:4px;">
+
+    <tr>
+        <td width="10%"><b>Standar</b></td>
+        <td width="100%"> &nbsp;:&nbsp;
+            Suhu PC Kleer : 46 ± 3°C &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            Suhu Heater : 125 - 135°C 
+            <br>
+            &nbsp;&nbsp;Konsentrasi PC Kleer : 0.7% (Ayam), 1% (Sapi), 0.8% (Cuci)&nbsp;&nbsp;&nbsp;
+            Konsentrasi Potassium Sorbate : 0.15%
+        </td>
+    </tr>
+
+    <tr>
+        <td><b>Catatan</b></td>
+        <td style="height:30px;">
+            :&nbsp;{{ $item->catatan ?? '-' }}
+        </td>
+    </tr>
+
+</table>
+
+<br>
+
+<table border="0" cellpadding="3" cellspacing="0" width="100%">
+
+    <tr>
+        <td width="50%" align="center">
+            Diperiksa Oleh
+        </td>
+
+        <td width="50%" align="center">
+            Disetujui Oleh
+        </td>
+    </tr>
+
+    <tr>
+        <td align="center" style="height:10px;"></td>
+        <td align="center"></td>
+    </tr>
+
+    <tr>
+        <td align="center">
+           <u>({{ $item->username_updated ?? $item->username }})</u>
+        </td>
+
+        <td align="center">
+           <u>({{ $item->nama_spv ?? '-' }})</u>
+        </td>
+    </tr>
+
+    <tr>
+        <td align="center">
+            QC
+        </td>
+
+        <td align="center">
+            QC SPV
+        </td>
+    </tr>
+
+</table>
 
 </body>
 </html>

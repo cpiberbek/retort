@@ -7,6 +7,7 @@ use App\Models\Mincing;
 use App\Models\Produk;
 use App\Models\Mesin;
 use App\Models\Operator;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -483,6 +484,10 @@ class Labelisasi_pvdcController extends Controller
         $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
 
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Kontrol Labelisasi PVDC')
+            ->value('no_dokumen');
+
         // Ambil data (Get Collection)
         $produks = Labelisasi_pvdc::query() 
         ->where('plant', $userPlant)
@@ -503,7 +508,7 @@ class Labelisasi_pvdcController extends Controller
 
         if (ob_get_length()) ob_end_clean();
 
-        $pdf = new TCPDF('L', PDF_UNIT, 'LEGAL', true, 'UTF-8', false);
+        $pdf = new TCPDF('L', 'mm', [330, 210], true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('PT. Charoen Pokphand Indonesia');
         $pdf->SetTitle('Laporan Labelisasi PVDC');
@@ -518,7 +523,7 @@ class Labelisasi_pvdcController extends Controller
 
         // Render View ke HTML
         // Pastikan Anda membuat file view ini (kode ada di bawah)
-        $html = view('reports.labelisasi-pvdc', compact('produks', 'request'))->render();
+        $html = view('reports.labelisasi-pvdc', compact('produks', 'request', 'noDokumen'))->render();
 
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
         $pdf->Output('Labelisasi_PVDC_' . date('Ymd_His') . '.pdf', 'I');

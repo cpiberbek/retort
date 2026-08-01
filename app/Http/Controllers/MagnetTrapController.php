@@ -3,6 +3,12 @@ namespace App\Http\Controllers;
 
 use App\Models\MagnetTrapModel;
 use App\Models\Mincing;
+use App\Models\List_form;
+use App\Models\User;
+use App\Models\Produksi;
+use App\Models\Engineer;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Produk;
@@ -367,6 +373,10 @@ class MagnetTrapController extends Controller
     {
         $date = $request->input('date');
         $userPlant = Auth::user()->plant;
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Checklist Cleaning Magnet Trap')
+            ->value('no_dokumen');
+
 
         $magnetTraps = MagnetTrapModel::query()
         ->where('plant_uuid', $userPlant)
@@ -397,7 +407,7 @@ class MagnetTrapController extends Controller
         $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
         // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 10, PDF_MARGIN_RIGHT);
         $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
 
@@ -417,10 +427,10 @@ class MagnetTrapController extends Controller
         $pdf->SetFont('helvetica', '', 8);
 
         // Add a page
-        $pdf->AddPage('L', 'A3'); // Landscape A3 for many columns
+        $pdf->AddPage('L', 'F4'); // Landscape A3 for many columns
 
         // Convert the Blade view to HTML
-        $html = view('reports.cleaning-magnet-trap', compact('magnetTraps', 'request'))->render();
+        $html = view('reports.cleaning-magnet-trap', compact('magnetTraps', 'request', 'noDokumen'))->render();
 
         // Print text using writeHTMLCell()
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
@@ -433,30 +443,139 @@ class MagnetTrapController extends Controller
 
     public function exportExcel(Request $request)
     {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $userPlant = Auth::user()->plant;
+        try {
+            $search = $request->input('search');
+            $date = $request->input('date');
+            $userPlant = Auth::user()->plant;
 
-        $data = MagnetTrapModel::query()
-            ->where('plant_uuid', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_produk', 'like', "%{$search}%")
-                        ->orWhere('kode_batch', 'like', "%{$search}%")
-                        ->orWhere('keterangan', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('created_at', $date);
-            })
-            ->orderBy('created_at', 'asc')
-            ->get();
+            $data = MagnetTrapModel::where('plant_uuid', $userPlant)
+                ->when($search, function ($query) use ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('nama_produk', 'like', "%{$search}%")
+                            ->orWhere('kode_batch', 'like', "%{$search}%")
+                            ->orWhere('keterangan', 'like', "%{$search}%");
+                    });
+                })
+                ->when($date, function ($query) use ($date) {
+                    $query->whereDate('created_at', $date);
+                })
+                ->orderBy('created_at')
+                ->get();
 
-        $periode = $date
-            ? 'Periode: ' . \Carbon\Carbon::parse($date)->format('d-m-Y')
-            : 'Periode: Semua Periode';
+            if ($data->isEmpty()) {
+                return back()->with('error', 'Data tidak ditemukan');
+            }
 
-        return Excel::download(new MagnetTrapExport($data, $periode), 'Checklist_Cleaning_Magnet_Trap_' . date('Ymd_His') . '.xlsx');
+            $template = base_path('form retort/FR-QC-61 cleaning magnet trap.xlsx');
+
+            if (!file_exists($template)) {
+                return back()->with('error', 'Template tidak ditemukan: ' . $template);
+            }
+
+            try {
+                $spreadsheet = IOFactory::load($template);
+            } catch (\Throwable $e) {
+                return back()->with('error', 'Gagal membuka template: ' . $e->getMessage());
+            }
+
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getFont()
+                ->setName('Times New Roman');
+
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getAlignment()
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+            $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Checklist Cleaning Magnet Trap')
+                ->value('no_dokumen');
+
+            $revisi = $noDokumen ? (string) intval(substr($noDokumen, -2)) : '-';
+
+            $sheet->setCellValue('Z2', ': ' . ($noDokumen ?? '-'));
+            $sheet->setCellValue('Z3', ': ' . $revisi);
+
+            foreach ($data as $index => $item) {
+                if ($index >= 24) {
+                    break;
+                }
+
+                $row = $index + 10;
+
+                $sheet->setCellValue(
+                "C{$row}",
+                Mincing::where('uuid', $item->kode_batch)->value('kode_produksi') ?? '-'
+            );
+                $sheet->setCellValue(
+                    "F{$row}",
+                    \Carbon\Carbon::parse($item->pukul)->format('H:i')
+                );
+                $sheet->setCellValue("K{$row}", $item->jumlah_temuan);
+                $sheet->getStyle("K{$row}")
+                    ->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->setCellValue("N{$row}", $item->keterangan ?: '-');
+                $sheet->getStyle("N{$row}")
+                    ->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet->setCellValue(
+                    "S{$row}",
+                    User::where('uuid', $item->created_by)->value('username') ?? '-'
+                );
+                $sheet->setCellValue("W{$row}", optional($item->produksi)->nama_karyawan ?? '-');
+                $sheet->setCellValue(
+                    "Z{$row}",
+                    Operator::find($item->engineer_id)->nama_karyawan ?? '-'
+                );
+            }
+
+            $verifiedBySpv = User::whereIn(
+                'uuid',
+                $data->pluck('verified_by_spv_uuid')->filter()->unique()
+            )->value('username');
+
+            $sheet->setCellValue('X38', '(' . ($verifiedBySpv ?? '-') . ')');
+
+            $sheet->getStyle('X38')
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            $sheet->getStyle('X38')
+                ->getFont()
+                ->setUnderline(true);
+
+            $sheet->getStyle('Z2:Z3')
+                ->getAlignment()
+                ->setHorizontal(Alignment::HORIZONTAL_LEFT)
+                ->setVertical(Alignment::VERTICAL_CENTER);
+
+            $filename = 'Checklist_Cleaning_Magnet_Trap_' .
+                ($date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
+                '.xlsx';
+
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            return response()->streamDownload(function () use ($spreadsheet) {
+                $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+                $writer->save('php://output');
+            }, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+                'Cache-Control' => 'max-age=0',
+                'Pragma' => 'public',
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error($e);
+
+            return back()->with('error', 'Gagal export: ' . $e->getMessage());
+        }
     }
 
 }

@@ -91,34 +91,67 @@
         </div>
     </form>
 
+    {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const search = document.getElementById('search');
             const date = document.getElementById('filter_date');
             const shift = document.getElementById('filter_shift');
+            const kodeBatch = document.getElementById('filter_kode_batch');
             const form = document.getElementById('filterForm');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
 
+            function validateExport() {
+                if (!date.value) {
+                    new bootstrap.Modal(document.getElementById('warningModal')).show();
+                    return false;
+                }
+
+                return true;
+            }
+
             let timer;
 
-            // Auto submit saat mengetik search (debounce)
             search.addEventListener('input', () => {
                 clearTimeout(timer);
                 timer = setTimeout(() => form.submit(), 500);
             });
 
-            // Auto submit saat tanggal / shift berubah
             date.addEventListener('change', () => form.submit());
-            if(shift) shift.addEventListener('change', () => form.submit());
 
-            // Handle Export PDF
-            if(exportPdfBtn){
-                exportPdfBtn.addEventListener('click', function() {
-                    // Ambil semua data dari form filter (Date, Shift, Search)
+            if (shift) {
+                shift.addEventListener('change', () => form.submit());
+            }
+
+            if (kodeBatch) {
+                kodeBatch.addEventListener('change', () => form.submit());
+            }
+
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', function () {
+                    if (!validateExport()) return;
+
                     const formData = new FormData(form);
-                    // Buat URL export dengan query string
                     const exportUrl = "{{ route('wire.exportPdf') }}?" + new URLSearchParams(formData).toString();
-                    // Buka di tab baru
                     window.open(exportUrl, '_blank');
                 });
             }

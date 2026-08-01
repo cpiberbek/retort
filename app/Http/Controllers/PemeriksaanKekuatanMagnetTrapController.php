@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\PemeriksaanKekuatanMagnetTrap; // Model diubah
+use App\Models\List_form; 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
+use TCPDF;
 
 // Nama class diubah
 class PemeriksaanKekuatanMagnetTrapController extends Controller
@@ -16,41 +18,48 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
      */
     public function index(Request $request)
     {
-        // 1. Base Query dengan Eager Loading
-        // Memuat relasi creator & updater untuk menghindari N+1 Query
-        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater']);
-
-        // 2. Filter Tanggal (Single Date)
-        // Sesuai dengan input name="date" di View baru
-        if ($request->filled('date')) {
-            $query->whereDate('tanggal', $request->date);
+        if ($request->filled('date') && $request->filled('month')) {
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index', [
+                'date' => $request->date
+            ]);
         }
 
-        // 3. Filter Search (Pencarian Global)
+        if ($request->filled('month') && $request->filled('date')) {
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index', [
+                'month' => $request->month
+            ]);
+        }
+
+        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater']);
+
+        if ($request->filled('date')) {
+            $query->whereDate('tanggal', $request->date);
+
+        } elseif ($request->filled('month')) {
+            [$year, $month] = explode('-', $request->month);
+
+            $query->whereYear('tanggal', $year)
+                ->whereMonth('tanggal', $month);
+        }
+
         if ($request->filled('search')) {
             $search = $request->search;
 
-            // Grouping query agar logika OR tidak merusak filter tanggal (AND)
             $query->where(function ($q) use ($search) {
                 $q->where('kondisi_magnet_trap', 'like', "%{$search}%")
-                ->orWhere('petugas_qc', 'like', "%{$search}%")
-                
-                // Tambahan: Cari juga berdasarkan nama User pembuat (jika ada)
-                ->orWhereHas('creator', function($subQuery) use ($search) {
-                    $subQuery->where('name', 'like', "%{$search}%");
-                });
+                    ->orWhere('petugas_qc', 'like', "%{$search}%")
+                    ->orWhereHas('creator', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
-        // 4. Sorting & Pagination
-        // Menggunakan withQueryString() agar parameter filter tetap ada di link paginasi
         $pemeriksaanKekuatanMagnetTraps = $query->latest()
-                                                ->paginate(15)
-                                                ->withQueryString();
+            ->paginate(15)
+            ->withQueryString();
 
         return view('pemeriksaan-kekuatan-magnet-trap.index', compact('pemeriksaanKekuatanMagnetTraps'));
     }
-
     /**
      * Menampilkan form create.
      */
@@ -220,4 +229,70 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
         // Menggunakan view baru khusus update
         return view('pemeriksaan-kekuatan-magnet-trap.update_view', compact('pemeriksaanKekuatanMagnetTrap'));
     }
+
+    public function exportPdf(Request $request)
+    {
+        $month = $request->input('month');
+        $userPlant = Auth::user()->plant;
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Kekuatan Magnet Trap')
+            ->value('no_dokumen');
+
+        $magnetTraps = PemeriksaanKekuatanMagnetTrap::query()
+            ->where('plant_uuid', $userPlant)
+            ->when($month, function ($query) use ($month) {
+                $query->whereYear('created_at', substr($month, 0, 4))
+                    ->whereMonth('created_at', substr($month, 5, 2));
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('CPI');
+        $pdf->SetTitle('Verifikasi Magnet Trap');
+        $pdf->SetSubject('Verifikasi Magnet Trap');
+
+        $pdf->SetPrintHeader(false);
+        $pdf->SetPrintFooter(false);
+
+        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 10, PDF_MARGIN_RIGHT);
+        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
+        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+
+        $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
+
+        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+
+        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
+            require_once(dirname(__FILE__) . '/lang/eng.php');
+            $pdf->setLanguageArray($l);
+        }
+
+        $pdf->SetFont('helvetica', '', 8);
+
+        $pdf->AddPage('L', 'F4');
+
+        $html = view('reports.checkingpowermagnettrap', compact(
+            'magnetTraps',
+            'request',
+            'month',
+            'noDokumen'
+        ))->render();
+
+        $pdf->writeHTML($html, true, false, true, false, '');
+
+        $pdf->Output('Verifikasi_Magnet_Trap_' . date('Ymd_His') . '.pdf', 'I');
+
+        exit();
+    }
+
 }

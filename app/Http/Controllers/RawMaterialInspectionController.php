@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\RawMaterialInspection;
 use App\Models\Master_Raw_Material;
+use App\Models\List_form;
 use App\Models\Supplier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -470,6 +471,10 @@ class RawMaterialInspectionController extends Controller
             $query->where('plant_uuid', $userPlant);
         }
 
+        $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia')
+                ->value('no_dokumen');
+
         // Filter tanggal (menggunakan setup_kedatangan)
         $query->when($date, function ($q) use ($date) {
             $q->whereDate('setup_kedatangan', $date);
@@ -502,7 +507,7 @@ class RawMaterialInspectionController extends Controller
         $pdf->AddPage();
 
         // 3. Render
-        $html = view('reports.pemeriksaan-input-bahan-baku', compact('items', 'request'))->render();
+        $html = view('reports.pemeriksaan-input-bahan-baku', compact('items', 'request', 'noDokumen'))->render();
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Pemeriksaan_Input_Bahan_Baku_' . date('d-m-Y_His') . '.pdf';
