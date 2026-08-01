@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\LoadingProduk;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -357,6 +358,10 @@ class LoadingProdukController extends Controller
         $date = $request->input('date');
         $shift = $request->input('shift');
         $userPlant = Auth::user()->plant;
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Loading-Unloading Produk')
+            ->value('no_dokumen');
+        
 
         $query = LoadingProduk::with(['details', 'creator']);
         if (Auth::check() && !empty($userPlant)) {
@@ -398,11 +403,16 @@ class LoadingProdukController extends Controller
 
         $pdf->AddPage();
 
+        $header = $loadings->first();
+
         // 3. Render
-        $html = view('reports.pemeriksaan-loading-unloading', compact('loadings', 'request'))->render();
+        $html = view('reports.pemeriksaan-loading-unloading', compact('loadings', 'header', 'request', 'noDokumen'))->render();
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = 'Pemeriksaan_Loading_Unloading_' . date('d-m-Y_His') . '.pdf';
+        $filename = 'Laporan_Stuffing_' .
+            \Carbon\Carbon::parse($date)->format('d-m-Y') .
+            '_Shift' . $shift .
+            '.pdf';
         $pdf->Output($filename, 'I');
         exit();
     }

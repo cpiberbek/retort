@@ -8,7 +8,7 @@
         table { border-collapse: collapse; }
 
         .tbl-header td {
-            font-size: 9px;
+            font-size: 11px;
             padding: 2px 0;
         }
 
@@ -27,21 +27,77 @@
         .center { text-align: center; }
         .sign { text-align: center; }
         .small { font-size: 8px; }
+
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 
 <body>
 
 {{-- HEADER LOGO + TITLE --}}
-<table width="100%">
+<table width="100%" style="border-collapse:collapse;border:1px solid #000;table-layout:fixed;">
     <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
+        <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
+            <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
         </td>
-        
+
+        <td width="50%" style="border:1px solid #000;text-align:center;font-size:18px;padding:5px;">
+            <b>FORM</b><br>
+            <b>VERIFIKASI MAGNET TRAP</b>
+        </td>
+
+        <td width="25%" style="border:1px solid #000;font-size:10px;padding:0;vertical-align:top;">
+
+            <table width="100%" style="border-collapse:collapse;height:100%;">
+                <tr>
+                    <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        No. Dokumen
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : {{ $noDokumen }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        Revisi
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        Tanggal Efektif
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : 27/12/2021
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;padding:3px;">
+                        Halaman
+                    </td>
+                    <td style="padding:3px;">
+                        : 1 dari 1
+                    </td>
+                </tr>
+            </table>
+
+        </td>
     </tr>
 </table>
+
 <h2 class="title">CHECKLIST CLEANING MAGNET TRAP</h2>
 <br>
 <br>
@@ -51,47 +107,102 @@
 @endphp
 
 <table width="100%" class="tbl-header">
-    <tr>
-        <td>Tgl : {{ $dateFilter }}</td>
-    </tr>
 </table>
-<br>
 
-{{-- TABLE --}}
-<table width="100%" class="tbl-main small">
+<table width="100%" class="tbl-main small" style="border-collapse:collapse;">
+
     <tr>
-        <th class="center" rowspan="2" style="width: 50px;">No.</th>
-        <th class="center" rowspan="2">Batch Ke-</th>
-        <th class="center" rowspan="2">Pukul</th>
-        <th class="center" rowspan="2">Jumlah Temuan</th>
-        <th class="center" rowspan="2">Keterangan</th>
-        <th class="center" colspan="3">Paraf</th>
+        <th class="center" rowspan="3" style="padding:0;">No.</th>
+        <th class="center" rowspan="3" style="padding:0;">Pukul</th>
+
+        <th class="center" colspan="6" style="padding:0;">
+           Tanggal: {{ $dateFilter }}
+        </th>
     </tr>
+
     <tr>
-        <td>QC</td>
-        <td>Prod</td>
-        <td>Eng</td>
+        <th class="center" rowspan="2" style="padding:0;">Batch Ke-</th>
+        <th class="center" rowspan="2" style="padding:0;">Jumlah Temuan</th>
+        <th class="center" rowspan="2" style="padding:0;">Keterangan</th>
+
+        <th class="center" colspan="3" style="padding:0;">
+            PARAF
+        </th>
+    </tr>
+
+    <tr>
+        <th class="center" style="padding:0;">QC</th>
+        <th class="center" style="padding:0;">Prod</th>
+        <th class="center" style="padding:0;">Eng</th>
     </tr>
 
     @forelse($magnetTraps as $index => $item)
+
+    @php
+        $kode_batch_text = \App\Models\Mincing::where('uuid', $item->kode_batch)->value('kode_produksi') ?? $item->kode_batch;
+    @endphp
+
     <tr>
-        <td class="center">{{ $index + 1 }}</td>
-        <td class="center">{{ $item->kode_batch ?? '-' }}</td>
-        <td class="center">{{ $item->pukul ? \Carbon\Carbon::parse($item->pukul)->format('H:i') : '-' }}</td>
-        <td class="center">{{ $item->jumlah_temuan ?? '-' }}</td>
-        <td class="center">{{ Str::limit($item->keterangan ?? '-', 30) }}</td>
-        <td class="center">{{ $item->username ?? '-' }}</td>
-        <td class="center">{{ $item->produksi->name ?? $item->produksi_id ?? '-' }}</td>
-        <td class="center">{{ $item->engineer->name ?? $item->engineer_id ?? '-' }}</td>
+        <td class="center" style="padding:0;">{{ $index + 1 }}</td>
+
+        <td class="center" style="padding:0;">
+            {{ $item->pukul ? \Carbon\Carbon::parse($item->pukul)->format('H:i') : '-' }}
+        </td>
+
+        <td class="center" style="padding:0;">
+            {{ $kode_batch_text }}
+        </td>
+
+        <td class="center" style="padding:0;">
+            {{ $item->jumlah_temuan ?? '-' }}
+        </td>
+
+        <td class="center" style="padding:0;">
+            {{ Str::limit($item->keterangan ?? '-', 30) }}
+        </td>
+
+        <td class="center" style="padding:0;">
+            {{ $item->username ?? '-' }}
+        </td>
+
+        <td class="center" style="padding:0;">
+            {{ $item->produksi->name ?? $item->produksi_id ?? '-' }}
+        </td>
+
+        <td class="center" style="padding:0;">
+            {{ $item->engineer->name ?? $item->engineer_id ?? '-' }}
+        </td>
     </tr>
+
     @empty
+
+    @for($i = 1; $i <= 6; $i++)
     <tr>
-        <td colspan="8" class="center">Tidak ada data cleaning magnet trap</td>
+        <td>{{ $i }}</td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
     </tr>
+    @endfor
+
     @endforelse
 
 </table>
 <br>
+{{-- <table width="100%">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right" style="font-style: italic;">
+            {{ $noDokumen }}
+        </td>
+    </tr>
+</table> --}}
+<br>
+
 <table width="100%" class="small">
     <tr>
         <td align="right">
@@ -101,7 +212,7 @@
                     <td width="70%"></td>
                     <td width="30%" class="sign">
                         Disetujui oleh,<br><br><br><br>
-                        (___________________)<br>
+                       <u>({{ \App\Models\User::where('uuid', $item->verified_by_spv_uuid)->value('name') ?? '___________________' }})</u><br>
                         QC SPV
                     </td>
                 </tr>

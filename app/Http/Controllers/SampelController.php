@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sampel;
 use App\Models\Produk;
 use App\Models\Mincing;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -297,8 +298,12 @@ class SampelController extends Controller
 
         $pdf->AddPage();
 
+        $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pengambilan Sampel')
+        ->value('no_dokumen');
+
         // 3. Render
-        $html = view('reports.pengambilan-sampel', compact('items', 'request'))->render();
+        $html = view('reports.pengambilan-sampel', compact('items', 'request', 'noDokumen'))->render();
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Pengambilan_Sampel_' . date('d-m-Y_His') . '.pdf';

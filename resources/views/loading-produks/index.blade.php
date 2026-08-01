@@ -75,9 +75,15 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('loading-produks.exportPdf', ['date' => request('date'), 'shift' => request('shift')]) }}" target="_blank" class="btn btn-danger">
-                <i class="bi bi-file-earmark-pdf"></i> Export PDF
-            </a>
+            @if(request('date') && request('shift'))
+                <a href="{{ route('loading-produks.exportPdf', ['date' => request('date'), 'shift' => request('shift')]) }}" target="_blank" class="btn btn-danger">
+                    <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                </a>
+            @else
+                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#warningModal">
+                    <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                </button>
+            @endif
             @endcan
             @can('can access recycle')
             <a href="{{ route('loading-produks.recyclebin') }}" class="btn btn-secondary">
@@ -110,6 +116,9 @@
                         <option value="">Semua Shift</option>
                         <option value="Pagi" {{ request('shift') == 'Pagi' ? 'selected' : '' }}>Pagi</option>
                         <option value="Malam" {{ request('shift') == 'Malam' ? 'selected' : '' }}>Malam</option>
+                        <option value="Shift 1" {{ request('shift') == 'Shift 1' ? 'selected' : '' }}>Shift 1</option>
+                        <option value="Shift 2" {{ request('shift') == 'Shift 2' ? 'selected' : '' }}>Shift 2</option>
+                        <option value="Shift 3" {{ request('shift') == 'Shift 3' ? 'selected' : '' }}>Shift 3</option>
                     </select>
                 </div>
             </div>
@@ -245,6 +254,27 @@
         {{ $produks->withQueryString()->links('pagination::bootstrap-5') }}
     </div>
     @endif
+</div>
+
+<div class="modal fade" id="warningModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                Silakan pilih <b>Tanggal</b> dan <b>Shift</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 {{-- 

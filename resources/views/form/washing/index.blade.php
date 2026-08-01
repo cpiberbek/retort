@@ -43,55 +43,87 @@
         </div>
     </div>
 
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b>, <b>Shift</b>, dan isi <b>Kode Batch</b> sebelum export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- FILTER: Menggunakan Versi Anda (Ada Shift) --}}
     <form id="filterForm" method="GET" action="{{ route('washing.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
-            <div class="col-md-3">
-                <div class="mb-1">Pilih Tanggal</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-calendar-date text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="date" name="date" id="filter_date" class="form-control border-start-0"
+    <div class="row">
+        <div class="col-md-2">
+            <div class="mb-1">Pilih Tanggal</div>
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-calendar-date text-muted"></i>
+                    </span>
+                </div>
+                <input type="date" name="date" id="filter_date" class="form-control border-start-0"
                     value="{{ request('date') }}" placeholder="Tanggal">
-                </div>
             </div>
-            <div class="col-md-3">
-                {{-- Filter Shift --}}
-                <div class="mb-1">Pilih Shift</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-hourglass-split text-muted"></i>
-                        </span>
-                    </div>
-                    <select name="shift" id="filter_shift" class="form-select border-start-0 form-control">
-                        <option value="">Semua Shift</option>
-                        <option value="1" {{ request("shift") == "1" ? "selected" : "" }}>Shift 1</option>
-                        <option value="2" {{ request("shift") == "2" ? "selected" : "" }}>Shift 2</option>
-                        <option value="3" {{ request("shift") == "3" ? "selected" : "" }}>Shift 3</option>
-                    </select>
+        </div>
+
+        <div class="col-md-2">
+            <div class="mb-1">Pilih Shift</div>
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-hourglass-split text-muted"></i>
+                    </span>
                 </div>
+                <select name="shift" id="filter_shift" class="form-select border-start-0 form-control">
+                    <option value="">Semua Shift</option>
+                    <option value="1" {{ request('shift') == '1' ? 'selected' : '' }}>Shift 1</option>
+                    <option value="2" {{ request('shift') == '2' ? 'selected' : '' }}>Shift 2</option>
+                    <option value="3" {{ request('shift') == '3' ? 'selected' : '' }}>Shift 3</option>
+                </select>
             </div>
-            <div class="col-md-3">
-                <div class="mb-1">Cari Data</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
+        </div>
+
+        <div class="col-md-2">
+            <div class="mb-1">Kode Batch</div>
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-upc-scan text-muted"></i>
+                    </span>
+                </div>
+                <input type="text" name="kode_batch" id="filter_kode_batch" class="form-control border-start-0"
+                    value="{{ request('kode_batch') }}" placeholder="Kode Batch">
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="mb-1">Cari Data</div>
+            <div class="input-group mb-2">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search text-muted"></i>
+                    </span>
+                </div>
+                <input type="text" name="search" id="search" class="form-control border-start-0"
                     value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
-            <div class="col-md-3 align-self-end">
-                <!-- <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button> -->
-                <a href="{{ route('washing.index') }}" class="btn btn-primary mb-2"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
+
+            <div class="col-md-2 align-self-end">
+                <a href="{{ route('washing.index') }}" class="btn btn-primary mb-2">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
             </div>
-        </div>  
+        </div>
     </form>
 
     {{-- SCRIPT: Versi Anda (PDF & Shift Handler) --}}
@@ -100,8 +132,10 @@
             const search = document.getElementById('search');
             const date = document.getElementById('filter_date');
             const shift = document.getElementById('filter_shift');
+            const kodeBatch = document.getElementById('filter_kode_batch');
             const form = document.getElementById('filterForm');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const warningModal = new bootstrap.Modal(document.getElementById('warningModal'));
 
             let timer;
 
@@ -110,12 +144,23 @@
                 timer = setTimeout(() => form.submit(), 500);
             });
 
-            date.addEventListener('change', () => form.submit());
-            if(shift) shift.addEventListener('change', () => form.submit());
+            if (kodeBatch) {
+                kodeBatch.addEventListener('input', () => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => form.submit(), 500);
+                });
+            }
 
-            // Handle Export PDF
-            if(exportPdfBtn){
-                exportPdfBtn.addEventListener('click', function() {
+            date.addEventListener('change', () => form.submit());
+            if (shift) shift.addEventListener('change', () => form.submit());
+
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', function () {
+                    if (!date.value || !shift.value || !kodeBatch.value) {
+                        warningModal.show();
+                        return;
+                    }
+
                     const formData = new FormData(form);
                     const exportUrl = "{{ route('washing.exportPdf') }}?" + new URLSearchParams(formData).toString();
                     window.open(exportUrl, '_blank');

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Packing;
 use App\Models\Produk;
 use App\Models\Supplier;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -330,6 +331,10 @@ class PackingController extends Controller
         $shift = $request->input('shift');
         $nama_produk = $request->input('nama_produk');
         $userPlant = Auth::user()->plant;
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Proses Packing')
+            ->value('no_dokumen');
+
 
         $packings = Packing::query()
         ->where('plant', $userPlant)
@@ -390,7 +395,7 @@ class PackingController extends Controller
         $pdf->AddPage('L', 'A4'); // Landscape A4
 
         // Convert the Blade view to HTML
-        $html = view('reports.proses-packing', compact('packings', 'request'))->render();
+        $html = view('reports.proses-packing', compact('packings', 'request', 'noDokumen'))->render();
 
         // Print text using writeHTMLCell()
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);

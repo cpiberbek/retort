@@ -28,12 +28,13 @@
             </a>
             @endcan
             @can('can access export')
-            <button type="button" class="btn btn-success" id="exportExcelBtn">
+            {{-- ditiadakan di kesepakatan kalau butuh bisa diuncomment --}}
+            {{-- <button type="button" class="btn btn-success" id="exportExcelBtn">
                 <i class="bi bi-file-earmark-excel"></i> Export Excel
-            </button>
-            <a href="{{ route('metal.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
+            </button> --}}
+            <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
-            </a>
+            </button>
             @endcan
             @can('can access recycle')
             <a href="{{ route('metal.recyclebin') }}" class="btn btn-secondary">
@@ -77,31 +78,7 @@
 
     </form>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const search = document.getElementById('search');
-            const date = document.getElementById('filter_date');
-            const form = document.getElementById('filterForm');
-            const exportExcelBtn = document.getElementById('exportExcelBtn');
-            let timer;
-
-            search.addEventListener('input', () => {
-                clearTimeout(timer);
-                timer = setTimeout(() => form.submit(), 500);
-            });
-
-            date.addEventListener('change', () => form.submit());
-
-            // Script tambahan untuk Export Excel membawa parameter
-            if (exportExcelBtn) {
-                exportExcelBtn.addEventListener('click', () => {
-                    const formData = new FormData(form);
-                    const exportUrl = "{{ route('metal.exportExcel') }}?" + new URLSearchParams(formData).toString();
-                    window.location.href = exportUrl;
-                });
-            }
-        });
-    </script>
+ 
 
     <div class="card shadow-sm mb-4">
         <div class="card-body">
@@ -384,6 +361,24 @@
 </div>
 </div>
 
+    <div class="modal fade" id="exportWarningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {{-- Auto-hide alert setelah 3 detik --}}
 <script>
     setTimeout(() => {
@@ -393,6 +388,50 @@
             alert.classList.add('fade');
         }
     }, 3000);
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const search = document.getElementById('search');
+        const date = document.getElementById('filter_date');
+        const form = document.getElementById('filterForm');
+        const exportExcelBtn = document.getElementById('exportExcelBtn');
+        const exportPdfBtn = document.getElementById('exportPdfBtn');
+        let timer;
+
+        search.addEventListener('input', () => {
+            clearTimeout(timer);
+            timer = setTimeout(() => form.submit(), 500);
+        });
+
+        date.addEventListener('change', () => form.submit());
+
+        if (exportExcelBtn) {
+            exportExcelBtn.addEventListener('click', () => {
+                if (!date.value) {
+                    new bootstrap.Modal(document.getElementById('exportWarningModal')).show();
+                    return;
+                }
+
+                const formData = new FormData(form);
+                const exportUrl = "{{ route('metal.exportExcel') }}?" + new URLSearchParams(formData).toString();
+                window.location.href = exportUrl;
+            });
+        }
+
+        if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', () => {
+                if (!date.value) {
+                    new bootstrap.Modal(document.getElementById('exportWarningModal')).show();
+                    return;
+                }
+
+                const formData = new FormData(form);
+                const exportUrl = "{{ route('metal.exportPdf') }}?" + new URLSearchParams(formData).toString();
+                window.open(exportUrl, '_blank');
+            });
+        }
+    });
 </script>
 
 {{-- CSS tambahan agar tabel lebih rapi --}}

@@ -77,124 +77,349 @@
         .text-left { text-align: left !important; }
         .bg-ok { color: #006400; font-weight: bold; }
         .bg-rev { color: #8B0000; font-weight: bold; }
+
+          /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
+
 <body>
 
-    {{-- HEADER --}}
-    <table class="company-header" cellpadding="2">
+    @php
+    $grids = [];
+
+    foreach ($items as $item) {
+        $dataWire = json_decode($item->data_wire, true);
+
+        if (!is_array($dataWire)) {
+            continue;
+        }
+
+        foreach ($dataWire as $mesin) {
+
+            foreach ($mesin['detail'] ?? [] as $dtl) {
+
+                $grids[] = [
+                    'tanggal'  => $item->date,
+                    'shift'    => $item->shift,
+                    'supplier' => $item->nama_supplier ?? '-',
+                    'produk'   => $item->nama_produk ?? '-',
+                    'catatan'  => $item->catatan ?? '-',
+                    'status'   => $item->status_spv ?? '-',
+                    'mesin'    => $mesin['mesin'] ?? '-',
+                    'detail'   => [$dtl],
+                ];
+
+            }
+
+        }
+    }
+
+    //in case usernya meminta 1 mesin many lot
+    // foreach ($items as $item) {
+    //     $dataWire = json_decode($item->data_wire, true);
+
+    //     if (!is_array($dataWire)) {
+    //         continue;
+    //     }
+
+    //     foreach ($dataWire as $mesin) {
+    //         $grids[] = [
+    //             'tanggal'  => $item->date,
+    //             'shift'    => $item->shift,
+    //             'supplier' => $item->nama_supplier ?? '-',
+    //             'produk'   => $item->nama_produk ?? '-',
+    //             'catatan'  => $item->catatan ?? '-',
+    //             'status'   => $item->status_spv ?? '-',
+    //             'mesin'    => $mesin['mesin'] ?? '-',
+    //             'detail'   => $mesin['detail'] ?? [],
+    //         ];
+    //     }
+    // }
+
+    $totalPage = ceil(count($grids) / 9);
+    @endphp
+
+    @foreach(array_chunk($grids, 9) as $pageIndex => $rows)
+
+    <table width="100%" style="border-collapse:collapse;border:1px solid #000;">
         <tr>
-            <td width="30%" class="company-name">
-                PT Charoen Pokphand Indonesia<br>
-                <span style="font-weight: normal; font-size: 8px;">Food Division</span>
+            <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
+                <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
             </td>
-            <td width="40%" class="report-title">LAPORAN DATA NO. LOT WIRE</td>
-            <td width="30%" style="text-align: right; font-size: 8px;">
-                <strong>Dicetak:</strong> {{ date('d-m-Y H:i') }}<br>
-                <strong>Oleh:</strong> {{ Auth::user()->username ?? 'System' }}
+
+            <td width="50%" style="border:1px solid #000;text-align:center;font-size:18px;padding:5px;">
+                <b>FORM</b><br>
+                <b>DATA LOT NO. WIRE</b>
+            </td>
+
+            <td width="25%" style="border:1px solid #000;font-size:10px;padding:0;">
+                <table width="100%" style="border-collapse:collapse;">
+                    <tr>
+                        <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                            No. Dokumen
+                        </td>
+                        <td style="border-bottom:1px solid #000;padding:3px;">
+                            : {{ $noDokumen }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                            Revisi
+                        </td>
+                        <td style="border-bottom:1px solid #000;padding:3px;">
+                            : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                            Tanggal Efektif
+                        </td>
+                        <td style="border-bottom:1px solid #000;padding:3px;">
+                            : 18-12-2023
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="border-right:1px solid #000;padding:3px;">
+                            Halaman
+                        </td>
+                        <td style="padding:3px;">
+                            : {{ $pageIndex + 1 }} dari {{ $totalPage }}
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
 
-    {{-- FILTER INFO --}}
-    <table width="100%" cellpadding="2" style="margin-bottom: 8px; font-size: 8px;">
+    <table width="100%" cellspacing="0" cellpadding="3" border="1">
         <tr>
-            <td width="15%"><strong>Filter Tanggal</strong></td>
-            <td width="35%">: {{ $request->date ? \Carbon\Carbon::parse($request->date)->format('d-m-Y') : 'SEMUA' }}</td>
-            <td width="15%"><strong>Filter Shift</strong></td>
-            <td width="35%">: {{ $request->shift ? $request->shift : 'SEMUA' }}</td>
+            <td width="50%">
+                <b>Hari / Tgl</b> :
+                {{ $request->date ? \Carbon\Carbon::parse($request->date)->format('d-m-Y') : 'SEMUA' }}
+            </td>
+
+            <td width="50%">
+                <b>Supplier Wire</b> :
+                {{ count($grids) ? $grids[0]['supplier'] : '-' }}
+            </td>
         </tr>
     </table>
 
-    {{-- TABEL DATA --}}
-    <table class="tbl-data" nobr="true">
-        <thead>
-            <tr>
-                <th width="4%">No</th>
-                <th width="8%">Date</th>
-                <th width="4%">Shf</th>
-                <th width="15%">Nama Varian</th>
-                <th width="15%">Supplier</th>
-                <th width="35%">Detail Wire (Mesin : Start-End / No. Lot)</th>
-                <th width="12%">Catatan</th>
-                <th width="7%">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($items as $index => $item)
-            <tr nobr="true">
-                <td width="4%" class="text-center">{{ $index + 1 }}</td>
-                <td width="8%" class="text-center">{{ \Carbon\Carbon::parse($item->date)->format('d-m-y') }}</td>
-                <td width="4%" class="text-center">{{ $item->shift }}</td>
-                <td width="15%" class="text-left">{{ $item->nama_produk }}</td>
-                <td width="15%" class="text-left">{{ $item->nama_supplier }}</td>
-                
-                {{-- KOLOM NESTED --}}
-                {{-- Class 'td-nested' menghilangkan padding wrapper agar tabel dalam full --}}
-                <td width="35%" class="td-nested">
-                    @php $dataWire = json_decode($item->data_wire, true); @endphp
-                    
-                    @if(!empty($dataWire) && is_array($dataWire))
-                        <table class="nested-table" cellpadding="0" cellspacing="0">
-                        @foreach($dataWire as $mesin)
-                            {{-- Header Mesin --}}
-                            <tr>
-                                <td colspan="2" class="mesin-label">
-                                    <u>Mesin: {{ $mesin['mesin'] ?? '-' }}</u>
-                                </td>
-                            </tr>
-                            
-                            {{-- Isi Detail --}}
-                            @if(!empty($mesin['detail']) && is_array($mesin['detail']))
-                                @foreach($mesin['detail'] as $dtl)
-                                <tr>
-                                    {{-- Atur lebar kolom dalam nested table agar rapi --}}
-                                    <td width="35%" style="padding-left: 10px;">
-                                        {{ $dtl['start'] ?? '' }} - {{ $dtl['end'] ?? '' }}
-                                    </td>
-                                    <td width="65%">
-                                        <strong>Lot:</strong> {{ $dtl['no_lot'] ?? '' }}
-                                    </td>
-                                </tr>
-                                @endforeach
-                            @else
-                                <tr><td colspan="2" style="font-style:italic; padding-left:10px;">- Kosong -</td></tr>
-                            @endif
-                        @endforeach
-                        </table>
-                    @else
-                        <div style="padding: 5px; text-align: center;">-</div>
-                    @endif
-                </td>
+    <br>
 
-                <td width="12%" class="text-left">{{ $item->catatan ?? '-' }}</td>
-                <td width="7%" class="text-center">
-                    @if($item->status_spv == 1) <span class="bg-ok">VERIFIED</span>
-                    @elseif($item->status_spv == 2) <span class="bg-rev">REVISI</span>
-                    @else - @endif
+    <table width="100%" border="0" cellspacing="2" cellpadding="0">
+
+        @foreach(array_chunk($rows, 3) as $row)
+
+    {{-- //in case usernya minta data aneh2 ini lebih lengkap--}}
+    {{-- <tr>
+
+        @foreach($row as $grid)
+
+        <td width="33.33%" valign="top">
+
+            <table width="100%" border="1" cellspacing="0" cellpadding="3">
+
+                <tr>
+                    <td colspan="2" align="center">
+                        <b>MESIN : {{ $grid['mesin'] }}</b>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td width="35%">
+                        Tanggal
+                    </td>
+                    <td width="65%">
+                        {{ \Carbon\Carbon::parse($grid['tanggal'])->format('d-m-Y') }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>
+                        Shift
+                    </td>
+                    <td>
+                        {{ $grid['shift'] }}
+                    </td>
+                </tr>
+
+              
+                <tr>
+                    <td>
+                        Produk
+                    </td>
+                    <td>
+                        {{ $grid['produk'] }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="2">
+                        <b>Detail Wire</b>
+                    </td>
+                </tr>
+
+                @if(!empty($grid['detail']) && is_array($grid['detail']))
+
+                    @foreach($grid['detail'] as $dtl)
+
+                    <tr>
+                        <td width="35%">
+                            <strong>Lot:</strong> 
+                        </td>
+
+                        <td width="65%">
+                        <strong>{{ $dtl['no_lot'] ?? '' }}</strong>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td width="35%">
+                            Start - End:
+                        </td>
+
+                        <td width="65%">
+                            {{ $dtl['start'] ?? '?' }} - {{ $dtl['end'] ?? '?' }}
+                        </td>
+                    </tr>
+
+                    @endforeach
+
+                @endif
+
+                <tr>
+                    <td>
+                        Catatan
+                    </td>
+
+                    <td>
+                        {{ $grid['catatan'] }}
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+
+        @endforeach
+
+        @for($i = count($row); $i < 3; $i++)
+            <td width="33.33%"></td>
+        @endfor
+
+    </tr> --}}
+
+    <tr>
+
+    @foreach($row as $grid)
+
+    <td width="33.33%" valign="top">
+
+        <table width="100%" border="1" cellspacing="0" cellpadding="3">
+
+            <tr>
+                <td colspan="2" align="center">
+                    <b>MESIN : {{ $grid['mesin'] }}</b>
                 </td>
             </tr>
-            @empty
+
             <tr>
-                <td colspan="8" class="text-center" style="padding: 10px;">Data tidak ditemukan.</td>
+                <td width="50%">
+                    <b>End</b>
+                </td>
+                <td width="50%">
+                    <b>No.Lot</b>
+                </td>
             </tr>
-            @endforelse
-        </tbody>
+
+            @if(!empty($grid['detail']) && is_array($grid['detail']))
+
+                @foreach($grid['detail'] as $dtl)
+
+                <tr>
+                    <td>
+                        {{ $dtl['end'] ?? '-' }}
+                    </td>
+
+                    <td>
+                        <strong>{{ $dtl['no_lot'] ?? '-' }}</strong>
+                    </td>
+                </tr>
+
+                @endforeach
+
+            @endif
+
+        </table>
+
+    </td>
+
+    @endforeach
+
+    @for($i = count($row); $i < 3; $i++)
+        <td width="33.33%"></td>
+    @endfor
+
+</tr>
+
+    @endforeach
+
     </table>
 
-    {{-- FOOTER TANDA TANGAN --}}
-    <table width="100%" style="margin-top: 20px; page-break-inside: avoid;">
+    <br>
+
+    @if(!$loop->last)
+        <div style="page-break-after: always;"></div>
+    @endif
+
+    @endforeach
+
+    <br><br><br>
+
+    @php
+    $ttd = $items->first();
+    @endphp
+
+    <table width="100%" border="0" cellspacing="0" cellpadding="0">
         <tr>
-            <td width="70%">
-                <div style="font-size: 7px; font-style: italic;"></div>
-            </td>
-            <td width="30%" align="center">
-                <div style="font-size: 9px;">Disetujui Oleh,</div>
-                <div style="font-size: 9px; margin-bottom: 40px;">QC Supervisor</div>
-                <div style="border-bottom: 1px solid #000; width: 80%;"></div>
+            <td width="60%"></td>
+
+            <td width="40%">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                    <tr>
+                        <td width="50%" align="center">
+                            Diperiksa oleh
+                            <br><br><br>
+                            ( <u>{{ $ttd->username_updated ?? $ttd->username }}</u> )
+                            <br>
+                            QC
+                        </td>
+
+                        <td width="50%" align="center">
+                            Disetujui oleh
+                            <br><br><br>
+                            ( <u>{{ $ttd->nama_spv ?? '' }}</u> )
+                            <br>
+                            QC SPV
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>
 
 </body>
+    
 </html>

@@ -44,6 +44,10 @@
             <button type="button" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
+            <button type="button" class="btn btn-success" id="exportExcelBtn">
+                <i class="bi bi-file-earmark-excel"></i> Export Excel
+            </button>
+            {{-- start from here --}}
             @endcan
             @can('can access recycle')
             <a href="{{ route('pemasakan.recyclebin') }}" class="btn btn-secondary">
@@ -55,8 +59,8 @@
 
     {{-- FILTER --}}
     <form id="filterForm" method="GET" action="{{ route('pemasakan.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
-            <div class="col-md-3">
+         <div class="row w-100 g-3">
+            <div class="col-md-2">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -68,7 +72,7 @@
                     value="{{ request('date') }}" placeholder="Tanggal Batch">
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="mb-1">Pilih Shift</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -84,7 +88,19 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
+                <div class="mb-1">Kode Batch</div>
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-upc-scan text-muted"></i>
+                        </span>
+                    </div>
+                    <input type="text" name="kode_batch" id="kode_batch" class="form-control border-start-0"
+                    value="{{ request('kode_batch') }}" placeholder="Cari Kode Batch...">
+                </div>
+            </div>
+            <div class="col-md-2">
                 <div class="mb-1">Cari Data</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -96,7 +112,7 @@
                     value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
                 </div>
             </div>
-            <div class="col-md-3 align-self-end">
+            <div class="col-md-2 align-self-end">
                 <a href="{{ route('pemasakan.index') }}" class="btn btn-primary mb-2"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
             </div>
         </div>
@@ -108,7 +124,9 @@
             const date = document.getElementById('filter_date');
             const shift = document.getElementById('filter_shift'); 
             const form = document.getElementById('filterForm');
+            const kodeBatch = document.getElementById('kode_batch');
             const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
 
             let timer;
             search.addEventListener('input', () => {
@@ -116,16 +134,44 @@
                 timer = setTimeout(() => form.submit(), 500);
             });
 
+            
+
+            kodeBatch.addEventListener('input', () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => form.submit(), 500);
+            });
+
             date.addEventListener('change', () => form.submit());
             if(shift) shift.addEventListener('change', () => form.submit());
 
-            if(exportPdfBtn){
-                exportPdfBtn.addEventListener('click', function() {
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', function () {
+                    if (!date.value || !shift.value || !kodeBatch.value.trim()) {
+                        const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                        modal.show();
+                        return;
+                    }
+
                     const formData = new FormData(form);
                     const exportUrl = "{{ route('pemasakan.exportPdf') }}?" + new URLSearchParams(formData).toString();
                     window.open(exportUrl, '_blank');
                 });
             }
+
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', function () {
+                    if (!date.value || !shift.value || !kodeBatch.value.trim()) {
+                        const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                        modal.show();
+                        return;
+                    }
+
+                    const formData = new FormData(form);
+                    const exportUrl = "{{ route('pemasakan.exportExcel') }}?" + new URLSearchParams(formData).toString();
+                    window.open(exportUrl, '_blank');
+                });
+            }
+
         });
     </script>
 
@@ -326,6 +372,26 @@
             </div>
         </div>
     </div>
+
+    {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b>, <b>Shift</b> & <b>Kode Batch</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
