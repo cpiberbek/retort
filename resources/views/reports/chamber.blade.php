@@ -124,7 +124,7 @@
                     <th align="center" style="font-weight:bold;">DETIK</th>
                     <th align="center" style="font-weight:bold;">MENIT</th>
                     <th align="center" style="font-weight:bold;">DETIK</th>
-                    <th align="center" style="font-weight:bold;">Koreksi</th>
+                    <th align="center" style="font-weight:bold;">KOREKSI</th>
                 @endforeach
             </tr>
 
