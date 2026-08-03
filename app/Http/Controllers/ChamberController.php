@@ -97,7 +97,7 @@ class ChamberController extends Controller
         }
 
          $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pemeriksaan Stuffing Sosis Retort')
+            ->where('laporan', 'Verifikasi Timer Chamber')
             ->value('no_dokumen');
 
         // Setup PDF Landscape A4
@@ -114,7 +114,7 @@ class ChamberController extends Controller
 
         $pdf->AddPage();
 
-        $html = view('reports.chamber', compact('items', 'request'))->render();
+        $html = view('reports.chamber', compact('items', 'request', 'noDokumen'))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
         $pdf->Output('Laporan_Chamber_' . date('d-m-Y_His') . '.pdf', 'I');

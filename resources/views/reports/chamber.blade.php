@@ -197,7 +197,18 @@
     $spvName = $allApproved ? implode(', ', $spvNames) : 'Masih ada entry yang belum di approve';
 @endphp
 
-<br><br>
+<table width="100%">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right" style="font-style: italic;">
+            {{ $noDokumen }}
+        </td>
+    </tr>
+</table>
+
+<br>
+<br>
+<br>
 <table class="header-table" cellpadding="2" cellspacing="0" style="page-break-inside: avoid;">
     <tr>
         <td width="80%"></td>
