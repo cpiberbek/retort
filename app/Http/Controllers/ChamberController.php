@@ -9,6 +9,7 @@ use App\Models\Mesin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use App\Models\List_form;
 use TCPDF;
 
 class ChamberController extends Controller
@@ -17,30 +18,45 @@ class ChamberController extends Controller
     public function index(Request $request)
     {
         $search    = $request->input('search');
+        $month     = $request->input('month');
         $date      = $request->input('date');
-        $shift     = $request->input('shift'); // Tambahan filter Shift
+        $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
-        
-        $data = Chamber::query()
-        ->where('plant', $userPlant) 
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_operator', 'like', "%{$search}%"); // Search operator juga
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
 
-        return view('form.chamber.index', compact('data', 'search', 'date', 'shift'));
+        if ($month) {
+            $date = null;
+        }
+
+        if ($date) {
+            $month = null;
+        }
+
+        $data = Chamber::query()
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('nama_operator', 'like', "%{$search}%");
+                });
+            })
+            ->when($month, function ($query) use ($month) {
+                [$year, $monthNumber] = explode('-', $month);
+
+                $query->whereYear('date', $year)
+                    ->whereMonth('date', $monthNumber);
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.chamber.index', compact('data', 'search', 'month', 'date', 'shift'));
     }
 
     public function exportPdf(Request $request)
@@ -49,6 +65,7 @@ class ChamberController extends Controller
         $date      = $request->input('date');
         $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
+        $month = $request->input('month');
 
         // Ambil data tanpa pagination untuk PDF
         $items = Chamber::query()
@@ -59,19 +76,29 @@ class ChamberController extends Controller
                 ->orWhere('nama_operator', 'like', "%{$search}%");
             });
         })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
+        // ->when($date, function ($query) use ($date) {
+        //     $query->whereDate('date', $date);
+        // })
         ->when($shift, function ($query) use ($shift) {
             $query->where('shift', $shift);
         })
-        ->orderBy('date', 'asc')
+        ->when($month, function ($query) use ($month) {
+            [$year, $month] = explode('-', $month);
+
+            $query->whereYear('date', $year)
+                ->whereMonth('date', $month);
+        })
+                ->orderBy('date', 'asc')
         ->orderBy('shift', 'asc')
         ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
         }
+
+         $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Stuffing Sosis Retort')
+            ->value('no_dokumen');
 
         // Setup PDF Landscape A4
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);

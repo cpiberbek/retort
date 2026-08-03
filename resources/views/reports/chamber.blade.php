@@ -41,130 +41,180 @@
         /* Status Colors */
         .status-ok { color: #006400; font-weight: bold; }
         .status-rev { color: #8B0000; font-weight: bold; }
+
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 <body>
 
-    <table class="header-table" cellpadding="2" cellspacing="0">
-        <tr>
-            <td width="20%">
-                <div class="text-bold" style="font-size: 10pt;">PT Charoen Pokphand Indonesia</div>
-                <div class="sub-title">Food Division</div>
-            </td>
-            <td width="60%" class="title">
-                LAPORAN VERIFIKASI TIMER CHAMBER
-            </td>
-            <td width="20%" style="text-align: right; font-size: 7pt;">
-                Dicetak: {{ date('d-m-Y H:i') }}<br>
-                Oleh: {{ Auth::user()->username ?? 'System' }}
-            </td>
-        </tr>
-    </table>
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:none;margin:0;padding:0;">
+    <tr>
+        <td width="55" style="border:none;padding:0;">
+            <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+        </td>
+        <td style="border:none;padding:0;line-height:1.1;">
+            <span style="font-size:12pt;"><b>PT Charoen</b></span><br>
+            <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+            <span style="font-size:12pt;"><b>Food Division</b></span>
+        </td>
+    </tr>
+</table>
 
-    <div style="border-bottom: 2px solid #000; height: 1px; line-height: 1px;"></div>
-    <br>
+<h2 class="title" style="margin:5px 0 0 0;">LAPORAN VERIFIKASI TIMER CHAMBER</h2>
 
-    <table class="header-table" cellpadding="2" cellspacing="0">
-        <tr>
-            <td width="100%" style="font-size: 9pt;">
-                <strong>Tanggal:</strong> {{ $request->date ? \Carbon\Carbon::parse($request->date)->format('d-m-Y') : 'SEMUA' }} &nbsp;&nbsp;|&nbsp;&nbsp; 
-                <strong>Shift:</strong> {{ $request->shift ? $request->shift : 'SEMUA' }}
-            </td>
-        </tr>
-    </table>
-    <br>
+@php
+    $groups = $items->groupBy(fn($item) => $item->date . '_' . $item->shift);
+    $rentang = [5, 10, 20, 30, 60];
+@endphp
 
-    <table cellpadding="3" cellspacing="0">
-        <thead>
-            <tr class="bg-header">
-                <th width="3%" class="text-center">No</th>
-                <th width="7%" class="text-center">Tanggal</th>
-                <th width="4%" class="text-center">Shift</th>
-                <th width="75%" class="text-center">Detail Verifikasi (Rentang Ukur)</th>
-                <th width="6%" class="text-center">Opr</th>
-                <th width="5%" class="text-center">Sts</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($items as $index => $item)
-            <tr nobr="true">
-                <td width="3%" class="text-center f-norm">{{ $index + 1 }}</td>
-                <td width="7%" class="text-center f-norm">{{ \Carbon\Carbon::parse($item->date)->format('d-m-Y') }}</td>
-                <td width="4%" class="text-center f-norm">{{ $item->shift }}</td>
-                
-                <td width="75%" style="padding: 0;">
-                    @php
-                        $chambers = json_decode($item->verifikasi, true);
-                        $rentang_menit = [5, 10, 20, 30, 60];
-                    @endphp
+@foreach($groups as $group)
 
-                    @if(!empty($chambers))
-                        <table width="100%" cellpadding="2" cellspacing="0" border="0">
-                            <thead>
-                                <tr class="bg-sub-header">
-                                    <th width="10%" rowspan="2" class="text-center f-small">Menit</th>
-                                    @foreach($chambers as $i => $row)
-                                        <th colspan="3" class="text-center f-small">Chamber {{ $i + 1 }}</th>
-                                    @endforeach
-                                </tr>
-                                <tr class="bg-sub-header">
-                                    @foreach($chambers as $i => $row)
-                                        <th width="10%" class="text-center f-small">PLC</th>
-                                        <th width="10%" class="text-center f-small">StopW</th>
-                                        <th width="10%" class="text-center f-small">Selisih</th>
-                                    @endforeach
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($rentang_menit as $rentang)
-                                <tr>
-                                    <td class="text-center f-small"><b>{{ $rentang }}</b></td>
-                                    @foreach($chambers as $i => $row)
-                                        <td class="text-center f-small">
-                                            <nobr>{{ isset($row['plc_menit_'.$rentang]) ? sprintf('%02d:%02d', $row['plc_menit_'.$rentang], $row['plc_detik_'.$rentang]) : '-' }}</nobr>
-                                        </td>
-                                        <td class="text-center f-small">
-                                            <nobr>{{ isset($row['stopwatch_menit_'.$rentang]) ? sprintf('%02d:%02d', $row['stopwatch_menit_'.$rentang], $row['stopwatch_detik_'.$rentang]) : '-' }}</nobr>
-                                        </td>
-                                        <td class="text-center f-small">
-                                            {{ $row['faktor_koreksi_'.$rentang] ?? '' }}
-                                        </td>
-                                    @endforeach
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    @else
-                        <div class="text-center" style="padding: 10px;">- Data Verifikasi Tidak Tersedia -</div>
-                    @endif
-                </td>
+    @foreach($group as $item)
 
-                <td width="6%" class="text-center f-small">{{ substr($item->nama_operator, 0, 8) }}</td>
-                <td width="5%" class="text-center f-small">
-                    @if($item->status_spv == 1) <span class="status-ok">OK</span>
-                    @elseif($item->status_spv == 2) <span class="status-rev">REV</span>
-                    @else - @endif
-                </td>
-            </tr>
-            @empty
+        @php
+            $verifikasi = json_decode($item->verifikasi, true) ?? [];
+        @endphp
+
+        <table cellpadding="3" cellspacing="0" border="1" width="100%">
             <tr>
-                <td colspan="6" class="text-center" style="padding: 10px;">Data tidak ditemukan untuk filter ini.</td>
+                <td width="50%" style="font-weight:bold;">
+                    Hari/Tanggal :
+                    {{ \Carbon\Carbon::parse($item->date)->format('d-m-Y') }}
+                </td>
+                <td width="50%" style="font-weight:bold;">
+                    Shift : {{ $item->shift }}
+                </td>
             </tr>
-            @endforelse
-        </tbody>
-    </table>
+        </table>
 
-    <br><br>
-    <table class="header-table" cellpadding="2" cellspacing="0" style="page-break-inside: avoid;">
-        <tr>
-            <td width="80%"></td> <td width="20%" class="text-center f-norm">
-                Disetujui Oleh,<br>
-                QC Supervisor
-                <br><br><br><br><br>
-                <div style="border-bottom: 1px solid #000; width: 80%; margin: 0 auto;"></div>
-            </td>
-        </tr>
-    </table>
+        <table cellpadding="2" cellspacing="0" border="1" width="100%">
+
+            <tr>
+                <th colspan="2" align="center" style="font-weight:bold;">Nomer Chamber</th>
+
+                @foreach($verifikasi as $i => $chamber)
+                    <th colspan="5" align="center" style="font-weight:bold;">Chamber {{ $i + 1 }}</th>
+                @endforeach
+            </tr>
+
+            <tr>
+                 <th colspan="2" align="center" style="font-weight:bold;">RENTANG UKUR</th>
+
+                @foreach($verifikasi as $chamber)
+                    <th colspan="2" align="center" style="font-weight:bold;">PLC</th>
+                    <th colspan="2" align="center" style="font-weight:bold;">STOPWATCH</th>
+                    <th align="center"  style="font-weight:bold;">FAKTOR</th>
+                @endforeach
+            </tr>
+
+            <tr>
+                <th align="center" style="font-weight:bold;">MENIT</th>
+                <th align="center" style="font-weight:bold;">DETIK</th>
+
+                @foreach($verifikasi as $chamber)
+                    <th align="center" style="font-weight:bold;">MENIT</th>
+                    <th align="center" style="font-weight:bold;">DETIK</th>
+                    <th align="center" style="font-weight:bold;">MENIT</th>
+                    <th align="center" style="font-weight:bold;">DETIK</th>
+                    <th align="center" style="font-weight:bold;">Koreksi</th>
+                @endforeach
+            </tr>
+
+            @foreach($rentang as $m)
+                <tr>
+                    <td align="center">{{ $m }}</td>
+                    <td align="center">00</td>
+
+                    @foreach($verifikasi as $chamber)
+
+                        <td align="center">
+                            {{ sprintf('%02d', $chamber["plc_menit_$m"] ?? 0) }}
+                        </td>
+                        <td align="center">
+                            {{ sprintf('%02d', $chamber["plc_detik_$m"] ?? 0) }}
+                        </td>
+
+                        <td align="center">
+                            {{ sprintf('%02d', $chamber["stopwatch_menit_$m"] ?? 0) }}
+                        </td>
+                        <td align="center">
+                            {{ sprintf('%02d', $chamber["stopwatch_detik_$m"] ?? 0) }}
+                        </td>
+
+                        <td align="center">
+                            {{ $chamber["faktor_koreksi_$m"] ?? '-' }}
+                        </td>
+
+                    @endforeach
+                </tr>
+            @endforeach
+
+            <tr>
+                <td colspan="2" style="font-weight:bold;">PARAF SPV</td>
+                <td colspan="{{ count($verifikasi) * 5 }}" style="font-weight:bold;">
+                    {{ $item->nama_spv ?? '-' }}
+                </td>
+            </tr>
+
+            <tr>
+                <td colspan="2" style="font-weight:bold;">PARAF PRODUKSI</td>
+                <td colspan="{{ count($verifikasi) * 5 }}">
+                    {{ $item->username_updated ?? $item->username ?? '-' }}
+                </td>
+            </tr>
+
+        </table>
+
+        <br><br>
+
+    @endforeach
+
+@endforeach
+
+@php
+    $spvNames = [];
+    $allApproved = true;
+
+    foreach ($groups as $group) {
+        foreach ($group as $item) {
+            if (empty($item->nama_spv)) {
+                $allApproved = false;
+                break 2;
+            }
+
+            $spvNames[$item->nama_spv] = $item->nama_spv;
+        }
+    }
+
+    $spvName = $allApproved ? implode(', ', $spvNames) : 'Masih ada entry yang belum di approve';
+@endphp
+
+<br><br>
+<table class="header-table" cellpadding="2" cellspacing="0" style="page-break-inside: avoid;">
+    <tr>
+        <td width="80%"></td>
+        <td width="20%" class="text-center f-norm">
+            Disetujui Oleh,<br>
+            QC Supervisor
+            <br><br><br><br><br>
+
+            <div style="width:80%; margin:0 auto; text-align:center;">
+                <span style="display:inline-block; min-width:120px; border-bottom:1px solid #000; padding-bottom:2px;">
+                    (<u>{{ $spvName }}</u>)
+                </span>
+            </div>
+
+        </td>
+    </tr>
+</table>
 
 </body>
 </html>
