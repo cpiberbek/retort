@@ -37,9 +37,16 @@
                     </a>
                 @endcan
                 @can('can access export')
-                    <a href="{{ route('sampling.exportPdf', ['date' => request('date'), 'shift' => request('shift'), 'nama_produk' => request('nama_produk')]) }}"
+                    <a id="exportPdfBtn"
+                        href="{{ route('sampling.exportPdf', ['date' => request('date'), 'shift' => request('shift'), 'nama_produk' => request('nama_produk')]) }}"
                         target="_blank" class="btn btn-danger">
                         <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                    </a>
+
+                    <a id="exportExcelBtn"
+                        href="{{ route('sampling.exportExcel', ['date' => request('date'), 'shift' => request('shift'), 'nama_produk' => request('nama_produk')]) }}"
+                        target="_blank" class="btn btn-success">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel
                     </a>
                 @endcan
                 @can('can access recycle')
@@ -114,6 +121,25 @@
             </div>
         </form>
 
+            {{-- warning modal--}}
+        <div class="modal fade" id="warningModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                    </div>
+                    <div class="modal-body">
+                        Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const search = document.getElementById('search');
@@ -131,6 +157,18 @@
                 date.addEventListener('change', () => form.submit());
                 shift.addEventListener('change', () => form.submit());
                 nama_produk.addEventListener('change', () => form.submit());
+            });
+
+            document.addEventListener('DOMContentLoaded', function () {
+                $('#exportPdfBtn, #exportExcelBtn').on('click', function (e) {
+                    const date = $('#filter_date').val();
+
+                    if (!date) {
+                        e.preventDefault();
+                        $('#warningModal').modal('show');
+                        return false;
+                    }
+                });
             });
         </script>
 

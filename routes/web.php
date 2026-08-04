@@ -655,6 +655,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/sampling/verification/{uuid}', [SamplingController::class, 'updateVerification'])
         ->name('sampling.verification.update');
     Route::get('/sampling/export-pdf', [SamplingController::class, 'exportPdf'])->name('sampling.exportPdf');
+    Route::get('/sampling/export-excel', [SamplingController::class, 'exportExcel'])->name('sampling.exportExcel');
     Route::delete('/sampling/{uuid}', [SamplingController::class, 'destroy'])->name('sampling.destroy');
 
     // Packing
