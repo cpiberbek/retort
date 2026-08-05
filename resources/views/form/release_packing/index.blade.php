@@ -68,7 +68,7 @@
             </div>
 
             <div class="col-lg-3 col-md-6 mb-3">
-                <label class="form-label mb-1">Cari Data</label>
+                <label class="form-label mb-1">Cari Kode Batch</label>
                 <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text bg-white border-end-0">
