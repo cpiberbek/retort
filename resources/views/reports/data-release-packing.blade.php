@@ -166,18 +166,18 @@
     <tr>
         <td style="border:0.3px solid #000; padding:5px;">
             @php
-                $catatan = $release_packings
-                    ->pluck('catatan')
-                    ->filter(fn($item) => trim($item) !== '')
+                $keterangan = $release_packings
+                    ->filter(fn($item) => trim($item->keterangan ?? '') !== '')
+                    ->values()
+                    ->map(fn($item, $index) => '  -Data ke-' . ($index + 1) . ': ' . $item->keterangan)
                     ->unique()
-                    ->implode(', ');
+                    ->implode('<br>');
             @endphp
 
-            <b>Catatan :</b> {{ $catatan ?: '-' }}
+            <b>Catatan :</b><br>{!! $keterangan ?: '-' !!}
         </td>
     </tr>
 </table>
-
 <br>
 
 @php
@@ -185,7 +185,7 @@
         ? $release_packings->first()->nama_spv
         : null;
 @endphp
-
+<br><br>
 <table width="100%" class="small">
     <tr>
         <td width="70%"></td>
