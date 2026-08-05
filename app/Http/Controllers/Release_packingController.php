@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Release_packing;
 use App\Models\Produk;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use TCPDF;
@@ -248,74 +249,79 @@ class Release_packingController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $date         = $request->input('date');
+        $date = $request->input('date');
         $jenis_kemasan = $request->input('jenis_kemasan');
-        $userPlant    = Auth::user()->plant;
+        $userPlant = Auth::user()->plant;
+        $search = $request->input('search');
 
         $release_packings = Release_packing::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($jenis_kemasan, function ($query) use ($jenis_kemasan) {
-            $query->where('jenis_kemasan', $jenis_kemasan);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('created_at', 'asc')
-        ->get();
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('kode_produksi', 'like', "%{$search}%")
+                    ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($jenis_kemasan, function ($query) use ($jenis_kemasan) {
+                $query->where('jenis_kemasan', $jenis_kemasan);
+            })
+            ->orderBy('date', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->get();
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Data Release Packing')
+            ->value('no_dokumen');
+
+        $perPage = 15;
+
+        $pages = $release_packings->chunk($perPage);
+        $totalPage = max($pages->count(), 1);
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // Create new TCPDF object
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, 'F4', true, 'UTF-8', false);
 
-        // Set document information
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
+        $pdf->SetAuthor('System');
         $pdf->SetTitle('Data Release Packing');
-        $pdf->SetSubject('Data Release Packing');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set default monospaced font
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+        $pdf->SetMargins(8, 8, 8);
+        $pdf->SetAutoPageBreak(true, 8);
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-        // Set image scale factor
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-
-        // Set font
         $pdf->SetFont('helvetica', '', 8);
 
-        // Add a page
-        $pdf->AddPage('L', 'A3'); // Landscape A3 for many columns
+        if ($pages->isEmpty()) {
+            $pages = collect([collect()]);
+            $totalPage = 1;
+        }
 
-        // Convert the Blade view to HTML
-        $html = view('reports.data-release-packing', compact('release_packings', 'request'))->render();
+        foreach ($pages as $pageIndex => $pageData) {
 
-        // Print text using writeHTMLCell()
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
+            $pdf->AddPage('L', 'F4');
 
-        // Close and output PDF document (Inline/Preview)
+            $html = view('reports.data-release-packing', [
+                'release_packings' => $pageData,
+                'request' => $request,
+                'noDokumen' => $noDokumen,
+                'pageIndex' => $pageIndex,
+                'totalPage' => $totalPage,
+                'perPage' => $perPage,
+                'lastPage' => ($pageIndex == $totalPage - 1),
+            ])->render();
+
+            $pdf->writeHTML($html, true, false, true, false, '');
+        }
+
         $pdf->Output('Data_Release_Packing_' . date('Ymd_His') . '.pdf', 'I');
-
-        exit();
+        exit;
     }
 }
