@@ -7,6 +7,7 @@ use App\Models\Produk;
 use App\Models\Operator;
 use App\Models\Release_packing;
 use App\Models\Mincing;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -86,6 +87,11 @@ class Sampling_fgController extends Controller
             ->orderBy('shift', 'asc')
             ->get();
 
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Proses Sampling Finish Good')
+            ->value('no_dokumen');
+
+
         if (ob_get_length()) {
             ob_end_clean();
         }
@@ -103,7 +109,7 @@ class Sampling_fgController extends Controller
 
         $pdf->AddPage();
 
-        $html = view('reports.sampling_fg', compact('items', 'request'))->render();
+        $html = view('reports.sampling_fg', compact('items', 'request', 'noDokumen'))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
         $pdf->Output('Laporan_Sampling_FG_' . date('d-m-Y_His') . '.pdf', 'I');

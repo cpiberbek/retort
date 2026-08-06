@@ -176,6 +176,14 @@
 
     {{-- Footer Sign --}}
     <table width="100%" style="margin-top: 15px; page-break-inside: avoid;">
+        <table width="100%">
+            <tr>
+                <td width="75%"></td>
+                <td width="25%" align="right" style="font-style: italic;">
+                    {{ $noDokumen }}
+                </td>
+            </tr>
+        </table>
         <tr>
             <td width="10%"></td>
 
