@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Prepacking;
 use App\Models\Produk;
 use App\Models\Mincing;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -285,25 +286,43 @@ class PrepackingController extends Controller
     {
         $date = $request->input('date');
         $userPlant = Auth::user()->plant;
+        $search = $request->input('search');
 
         $prepackings = Prepacking::query()
             ->where('plant', $userPlant)
             ->when($date, function ($query) use ($date) {
                 $query->whereDate('date', $date);
             })
+            ->when($search, function ($query) use ($search) {
+                $uuidMincing = Mincing::where('kode_produksi', 'like', "%{$search}%")
+                    ->pluck('uuid')
+                    ->toArray();
+
+                $query->where(function ($q) use ($search, $uuidMincing) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+
+                    if (!empty($uuidMincing)) {
+                        $q->orWhereIn('kode_produksi', $uuidMincing);
+                    } else {
+                        $q->orWhere('kode_produksi', 'like', "%{$search}%");
+                    }
+                });
+            })
             ->orderBy('date', 'asc')
             ->orderBy('created_at', 'asc')
             ->get();
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Pre Packing')
+            ->value('no_dokumen');
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // Create new TCPDF object
         $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
-        // Set document information
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Your Name/Company');
         $pdf->SetTitle('Pengecekan Pre Packing');
@@ -312,43 +331,47 @@ class PrepackingController extends Controller
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set default monospaced font
         $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
         $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
 
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-        // Set image scale factor
+        $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
-        // Set some language-dependent strings (optional)
         if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
             require_once(dirname(__FILE__) . '/lang/eng.php');
             $pdf->setLanguageArray($l);
         }
 
-        // Set font
-        $pdf->SetFont('helvetica', '', 8);
+        $pdf->SetFont('helvetica', '', 6);
 
-        // Add a page
-        $pdf->AddPage('L', 'A3'); // Landscape A3 for many columns
+        $chunks = $prepackings->chunk(6);
 
-        // Convert the Blade view to HTML
-        $html = view('reports.pengecekan-pre-packing', compact('prepackings', 'request'))->render();
+        if ($chunks->isEmpty()) {
+            $chunks = collect([collect()]);
+        }
 
-        // Print text using writeHTMLCell()
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
+        foreach ($chunks as $index => $chunk) {
+            $pdf->AddPage('L', 'F4');
 
-        // Close and output PDF document (Inline/Preview)
+            $html = view('reports.pengecekan-pre-packing', [
+                'prepackings' => $chunk,
+                'request' => $request,
+                'noDokumen' => $noDokumen,
+                'isFirstPage' => $index === 0,
+                'isLastPage' => $index === $chunks->count() - 1,
+            ])->render();
+
+            $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
+        }
+
         $pdf->Output('Pengecekan_Pre_Packing_' . date('Ymd_His') . '.pdf', 'I');
 
         exit();
     }
+    
     public function getBatch($nama_produk)
     {
         $data = DB::table('mincings')
