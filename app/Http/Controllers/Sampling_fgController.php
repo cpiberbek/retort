@@ -25,10 +25,18 @@ class Sampling_fgController extends Controller
         $data = Sampling_fg::query()
             ->where('plant', $userPlant)
             ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
+                $kodeProduksi = \App\Models\Mincing::where('kode_produksi', 'like', "%{$search}%")
+                    ->pluck('uuid')
+                    ->toArray();
+
+                $query->where(function ($q) use ($search, $kodeProduksi) {
                     $q->where('username', 'like', "%{$search}%")
                         ->orWhere('nama_produk', 'like', "%{$search}%")
                         ->orWhere('kode_produksi', 'like', "%{$search}%");
+
+                    if (!empty($kodeProduksi)) {
+                        $q->orWhereIn('kode_produksi', $kodeProduksi);
+                    }
                 });
             })
             ->when($date, function ($query) use ($date) {
@@ -52,13 +60,20 @@ class Sampling_fgController extends Controller
         $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
 
-        // Ambil Data Tanpa Pagination
         $items = Sampling_fg::query()
             ->where('plant', $userPlant)
             ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
+                $kodeProduksi = Mincing::where('kode_produksi', 'like', "%{$search}%")
+                    ->pluck('uuid')
+                    ->toArray();
+
+                $query->where(function ($q) use ($search, $kodeProduksi) {
                     $q->where('nama_produk', 'like', "%{$search}%")
                         ->orWhere('kode_produksi', 'like', "%{$search}%");
+
+                    if (!empty($kodeProduksi)) {
+                        $q->orWhereIn('kode_produksi', $kodeProduksi);
+                    }
                 });
             })
             ->when($date, function ($query) use ($date) {
@@ -75,24 +90,19 @@ class Sampling_fgController extends Controller
             ob_end_clean();
         }
 
-        // Setup PDF (Landscape A4)
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Sampling Finish Good');
 
-        // Remove Default Header/Footer
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margins (Tipis 5mm)
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
-        $pdf->SetFont('helvetica', '', 7); // Font Kecil (7pt) karena kolom BANYAK
+        $pdf->SetAutoPageBreak(true, 5);
+        $pdf->SetFont('helvetica', '', 7);
 
         $pdf->AddPage();
 
-        // Render View
-        // Pastikan Anda membuat file: resources/views/reports/sampling_fg.blade.php
         $html = view('reports.sampling_fg', compact('items', 'request'))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
