@@ -29,6 +29,9 @@
             <a href="#" id="exportPdfBtn" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
+            <a href="#" id="exportExcelBtn" class="btn btn-success">
+                <i class="bi bi-file-earmark-pdf"></i> Export Excel
+            </a>
             @endcan
             @can('can access recycle')
             <a href="{{ route('prepacking.recyclebin') }}" class="btn btn-secondary">
@@ -387,12 +390,31 @@ document.getElementById('exportPdfBtn').addEventListener('click', function(e) {
     const date = document.getElementById('filter_date').value.trim();
     const search = document.getElementById('search').value.trim();
 
-    if (!date ) {
+    if (!date) {
         new bootstrap.Modal(document.getElementById('warningModal')).show();
         return;
     }
 
     const url = "{{ route('prepacking.exportPdf') }}" +
+        "?date=" + encodeURIComponent(date) +
+        "&search=" + encodeURIComponent(search);
+
+    window.open(url, '_blank');
+});
+
+
+document.getElementById('exportExcelBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const date = document.getElementById('filter_date').value.trim();
+    const search = document.getElementById('search').value.trim();
+
+    if (!date) {
+        new bootstrap.Modal(document.getElementById('warningModal')).show();
+        return;
+    }
+
+    const url = "{{ route('prepacking.exportExcel') }}" +
         "?date=" + encodeURIComponent(date) +
         "&search=" + encodeURIComponent(search);
 

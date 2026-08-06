@@ -801,6 +801,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/prepacking/verification/{uuid}', [PrepackingController::class, 'updateVerification'])
         ->name('prepacking.verification.update');
     Route::get('/prepacking/export-pdf', [PrepackingController::class, 'exportPdf'])->name('prepacking.exportPdf');
+    Route::get('/prepacking/export-excel', [PrepackingController::class, 'exportExcel'])->name('prepacking.exportExcel');
     Route::delete('/prepacking/{uuid}', [PrepackingController::class, 'destroy'])->name('prepacking.destroy');
 
     // Washing

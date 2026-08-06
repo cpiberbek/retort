@@ -6,6 +6,10 @@ use App\Models\Prepacking;
 use App\Models\Produk;
 use App\Models\Mincing;
 use App\Models\List_form;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\Border;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -370,6 +374,239 @@ class PrepackingController extends Controller
         $pdf->Output('Pengecekan_Pre_Packing_' . date('Ymd_His') . '.pdf', 'I');
 
         exit();
+    }
+
+    public function exportExcel(Request $request)
+    {
+        try {
+            $date = $request->input('date');
+            $userPlant = Auth::user()->plant;
+            $search = $request->input('search');
+
+            $templatePath = app_path('templates/pre_packing.xlsx');
+
+            $spreadsheet = IOFactory::load($templatePath);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $sheet->getStyle($sheet->calculateWorksheetDimension())
+                ->getFont()
+                ->setName('Times New Roman');
+
+            $prepackings = Prepacking::query()
+                ->where('plant', $userPlant)
+                ->when($date, function ($query) use ($date) {
+                    $query->whereDate('date', $date);
+                })
+                ->when($search, function ($query) use ($search) {
+
+                    $uuidMincing = Mincing::where('kode_produksi', 'like', "%{$search}%")
+                        ->pluck('uuid')
+                        ->toArray();
+
+                    $query->where(function ($q) use ($search, $uuidMincing) {
+
+                        $q->where('username', 'like', "%{$search}%")
+                            ->orWhere('nama_produk', 'like', "%{$search}%");
+
+                        if (!empty($uuidMincing)) {
+                            $q->orWhereIn('kode_produksi', $uuidMincing);
+                        }
+
+                    });
+
+                })
+                ->orderBy('date', 'asc')
+                ->orderBy('created_at', 'asc')
+                ->get();
+
+            if ($prepackings->isEmpty()) {
+                return back()->with('error', 'Data tidak ditemukan');
+            }
+
+            $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Pemeriksaan Pre Packing')
+                ->value('no_dokumen');
+
+            $row = 10;
+            $no = 1;
+
+            foreach ($prepackings as $prepacking) {
+
+                $startRow = $row;
+                $endRow = $row + 2;
+
+                $kodeProduksi = Mincing::where('uuid', $prepacking->kode_produksi)
+                    ->value('kode_produksi') ?? '-';
+
+                $suhu = is_array($prepacking->suhu_produk)
+                    ? $prepacking->suhu_produk
+                    : json_decode($prepacking->suhu_produk, true);
+
+                $suhu = is_array($suhu) ? $suhu : [];
+
+                $suhuText = implode(' | ', $suhu);
+
+                $kondisi = is_array($prepacking->kondisi_produk)
+                    ? $prepacking->kondisi_produk
+                    : json_decode($prepacking->kondisi_produk, true);
+
+                $kondisi = is_array($kondisi) ? $kondisi : [];
+
+                $berat = is_array($prepacking->berat_produk)
+                    ? $prepacking->berat_produk
+                    : json_decode($prepacking->berat_produk, true);
+
+                $berat = is_array($berat) ? $berat : [];
+
+                $pcs = implode(' | ', [
+                    $berat['pcs_1'] ?? 0,
+                    $berat['pcs_2'] ?? 0,
+                    $berat['pcs_3'] ?? 0
+                ]);
+
+                $toples = implode(' | ', [
+                    $berat['toples_1'] ?? 0,
+                    $berat['toples_2'] ?? 0,
+                    $berat['toples_3'] ?? 0
+                ]);
+
+                $data = [
+                    'airBasahUjung' => $kondisi['basah_air_ujung'] ?? 0,
+                    'airKeringUjung' => $kondisi['kering_air_ujung'] ?? 0,
+                    'minyakBasahUjung' => $kondisi['basah_minyak_ujung'] ?? 0,
+                    'minyakKeringUjung' => $kondisi['kering_minyak_ujung'] ?? 0,
+
+                    'airBasahSeal' => $kondisi['basah_air_seal'] ?? 0,
+                    'airKeringSeal' => $kondisi['kering_air_seal'] ?? 0,
+                    'minyakBasahSeal' => $kondisi['basah_minyak_seal'] ?? 0,
+                    'minyakKeringSeal' => $kondisi['kering_minyak_seal'] ?? 0,
+                ];
+
+                $sheet->mergeCells("A{$startRow}:A{$endRow}");
+                $sheet->mergeCells("B{$startRow}:B{$endRow}");
+                $sheet->mergeCells("C{$startRow}:C{$endRow}");
+                $sheet->mergeCells("D{$startRow}:D{$endRow}");
+                $sheet->mergeCells("E{$startRow}:E{$endRow}");
+                $sheet->mergeCells("M{$startRow}:M{$endRow}");
+
+                $sheet->setCellValue("A{$startRow}", $no++);
+                $sheet->setCellValue("B{$startRow}", $prepacking->nama_produk ?? '-');
+                $sheet->setCellValue("C{$startRow}", $kodeProduksi);
+                $sheet->setCellValue("D{$startRow}", $prepacking->conveyor ?? '-');
+                $sheet->setCellValue("E{$startRow}", $suhuText);
+                $sheet->setCellValue("M{$startRow}", $prepacking->username ?? '-');
+
+                $sheet->setCellValue("F{$startRow}", 'Ujung');
+                $sheet->setCellValue("G{$startRow}", $data['airBasahUjung']);
+                $sheet->setCellValue("H{$startRow}", $data['airKeringUjung']);
+                $sheet->setCellValue("I{$startRow}", $data['minyakBasahUjung']);
+                $sheet->setCellValue("J{$startRow}", $data['minyakKeringUjung']);
+                $sheet->setCellValue("K{$startRow}", $pcs);
+                $sheet->setCellValue("L{$startRow}", $toples);
+
+                $sheet->setCellValue("F" . ($startRow + 1), 'Seal');
+                $sheet->setCellValue("G" . ($startRow + 1), $data['airBasahSeal']);
+                $sheet->setCellValue("H" . ($startRow + 1), $data['airKeringSeal']);
+                $sheet->setCellValue("I" . ($startRow + 1), $data['minyakBasahSeal']);
+                $sheet->setCellValue("J" . ($startRow + 1), $data['minyakKeringSeal']);
+
+                $sheet->setCellValue("F" . ($startRow + 2), 'Total');
+                $sheet->setCellValue("G" . ($startRow + 2), $data['airBasahUjung'] + $data['airBasahSeal']);
+                $sheet->setCellValue("H" . ($startRow + 2), $data['airKeringUjung'] + $data['airKeringSeal']);
+                $sheet->setCellValue("I" . ($startRow + 2), $data['minyakBasahUjung'] + $data['minyakBasahSeal']);
+                $sheet->setCellValue("J" . ($startRow + 2), $data['minyakKeringUjung'] + $data['minyakKeringSeal']);
+
+                $sheet->getStyle("A{$startRow}:M{$endRow}")
+                    ->getAlignment()
+                    ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                    ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                    ->setWrapText(true);
+
+                $sheet->getStyle("A{$startRow}:M{$endRow}")
+                    ->getBorders()
+                    ->getAllBorders()
+                    ->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN);
+
+                $row += 3;
+            }
+
+            $lastRow = $row - 1;
+
+            $footerStart = max(37, $lastRow + 1);
+
+            $sheet->setCellValue("M{$footerStart}", $noDokumen);
+
+            $sheet->getStyle("M{$footerStart}")
+                ->getFont()
+                ->setItalic(true);
+
+            $sheet->getStyle("M{$footerStart}")
+                ->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+
+
+            $catatanRow = $footerStart + 5;
+
+            $catatan = $prepackings->pluck('catatan')->filter()->first();
+
+            $sheet->mergeCells("A{$catatanRow}:E" . ($catatanRow + 2));
+            $sheet->setCellValue("A{$catatanRow}", "CATATAN :\n" . ($catatan ?? '-'));
+
+            $sheet->getStyle("A{$catatanRow}:E" . ($catatanRow + 2))
+                ->getAlignment()
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP)
+                ->setWrapText(true);
+
+
+            $allApproved = $prepackings->every(fn($item) => !empty($item->nama_spv));
+
+            $namaSpv = $allApproved && $prepackings->isNotEmpty()
+                ? $prepackings->first()->nama_spv
+                : 'Belum Semua Entry Disetujui Oleh SPV';
+
+
+            $ttdRow = $footerStart + 8;
+
+            $sheet->mergeCells("M{$ttdRow}:M" . ($ttdRow + 3));
+
+            $sheet->setCellValue(
+                "M{$ttdRow}",
+                "Disetujui Oleh,\n\n\n(" . $namaSpv . ")\nQC SPV"
+            );
+
+            $sheet->getStyle("M{$ttdRow}:M" . ($ttdRow + 3))
+                ->getAlignment()
+                ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER)
+                ->setWrapText(true);
+
+
+            $sheet->getPageSetup()
+                ->setFitToWidth(1)
+                ->setFitToHeight(0);
+
+            $sheet->getPageMargins()
+                ->setTop(0.3)
+                ->setBottom(0.3)
+                ->setLeft(0.3)
+                ->setRight(0.3);
+
+            $filename = 'Pemeriksaan_Pre_Packing_' . ($date ? date('d-m-Y', strtotime($date)) : date('d-m-Y')) . '.xlsx';
+
+            return response()->streamDownload(function () use ($spreadsheet) {
+
+                if (ob_get_length()) {
+                    ob_end_clean();
+                }
+
+                $writer = new Xlsx($spreadsheet);
+                $writer->save('php://output');
+
+            }, $filename);
+
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
     
     public function getBatch($nama_produk)
