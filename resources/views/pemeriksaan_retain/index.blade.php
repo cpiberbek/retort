@@ -102,7 +102,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="mb-1">Cari Data</div>
+                <div class="mb-1">Cari Kode Batch</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0">
                         <i class="bi bi-search text-muted"></i>

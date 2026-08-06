@@ -429,7 +429,7 @@ class OrganoleptikController extends Controller
         $pdf->SetFont('helvetica', '', 10);
 
         // Add a page
-        $pdf->AddPage('L', 'A4'); // Landscape A4
+        $pdf->AddPage('L', 'F4'); // Landscape A4
 
         // Convert the Blade view to HTML
         $html = view('reports.organoleptik', compact('organoleptiks', 'request', 'noDokumen'))->render();

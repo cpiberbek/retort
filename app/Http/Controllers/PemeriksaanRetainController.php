@@ -321,7 +321,7 @@ class PemeriksaanRetainController extends Controller
             ob_end_clean();
         }
 
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
 
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Pengecekan Retain Sampel');
