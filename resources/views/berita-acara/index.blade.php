@@ -75,7 +75,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('berita-acara.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
+            <a href="#" id="exportPdfBtn" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
             @endcan
@@ -90,7 +90,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('berita-acara.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
         <div class="row w-100">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-calendar4-week"></i></span>
@@ -99,6 +99,22 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                 </div>
             </div>
             <div class="col-md-4">
+                <div class="mb-1">Nomor BA</div>
+                <div class="input-group mb-2">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input
+                        type="text"
+                        name="nomor_ba"
+                        id="nomor_ba"
+                        class="form-control border-start-0 ps-0 shadow-none filter-input"
+                        placeholder="Cari Nomor BA..."
+                        value="{{ request('nomor_ba') }}"
+                    >
+                </div>
+            </div>
+            <div class="col-md-3">
                 <div class="mb-1">Cari Data</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
@@ -106,7 +122,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                     placeholder="Cari Nomor BA / Supplier / Barang..." value="{{ request('search') }}">
                 </div>
             </div>
-            <div class="col-md-4 align-self-end">
+            <div class="col-md-2 align-self-end">
                 <a href="{{ route('berita-acara.index') }}" class="btn btn-primary mb-2">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
@@ -241,6 +257,25 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
 @endif
 </div>
 
+    {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal & No BA</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {{-- 
 =======================================================
 MODAL VERIFIKASI (LOOPING)
@@ -324,5 +359,27 @@ MODAL VERIFIKASI (LOOPING)
                 }, 3000);
             }
         });
+        const exportBtn = document.getElementById('exportPdfBtn');
+
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const date = document.getElementById('filter_date').value.trim();
+                const nomorBa = document.getElementById('nomor_ba').value.trim();
+
+                if (!date || !nomorBa) {
+                    const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                    modal.show();
+                    return;
+                }
+
+                const url = "{{ route('berita-acara.exportPdf') }}" +
+                    "?date=" + encodeURIComponent(date) +
+                    "&nomor_ba=" + encodeURIComponent(nomorBa);
+
+                window.open(url, '_blank');
+            });
+        }
     </script>
     @endsection
