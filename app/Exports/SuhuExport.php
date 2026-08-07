@@ -7,6 +7,7 @@ use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 class SuhuExport implements WithEvents
 {
@@ -25,9 +26,14 @@ class SuhuExport implements WithEvents
 
     public function registerEvents(): array
     {
-        return [
+        return [            
             AfterSheet::class => function (AfterSheet $event) {
                 $sheet = $event->sheet->getDelegate();
+
+                $sheet->getStyle($sheet->calculateWorksheetDimension())
+                    ->getFont()
+                    ->setName('Times New Roman');
+
 
                 // ----------------------------------------------------------------
                 // Warna & gaya
@@ -75,19 +81,27 @@ class SuhuExport implements WithEvents
 
                 $lastColLetter = $col($lastColIdx);
 
+                $logo = new Drawing();
+                $logo->setName('Logo CPI');
+                $logo->setDescription('Logo CPI');
+                $logo->setPath(public_path('assets/img/Logo CPI.png'));
+                $logo->setHeight(50);
+                $logo->setCoordinates('A1');
+                $logo->setWorksheet($sheet);
+
                 // ----------------------------------------------------------------
                 // ROW 1 – Nama Perusahaan (kiri)
                 // ----------------------------------------------------------------
-                $sheet->mergeCells('A1:C1');
-                $sheet->setCellValue('A1', 'PT. Charoen Pokphand Indonesia');
-                $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(9);
+                $sheet->mergeCells('B1:H1');
+                $sheet->setCellValue('B1', 'PT. Charoen Pokphand Indonesia');
+                $sheet->getStyle('B1')->getFont()->setBold(true)->setSize(9);
 
                 // ----------------------------------------------------------------
                 // ROW 2 – Sub-perusahaan
                 // ----------------------------------------------------------------
-                $sheet->mergeCells('A2:C2');
-                $sheet->setCellValue('A2', 'Food Division');
-                $sheet->getStyle('A2')->getFont()->setSize(8);
+                $sheet->mergeCells('B2:F2');
+                $sheet->setCellValue('B2', 'Food Division');
+                $sheet->getStyle('B2')->getFont()->setBold(true)->setSize(9);
 
                 // ----------------------------------------------------------------
                 // ROW 3 – Judul tengah
@@ -105,9 +119,13 @@ class SuhuExport implements WithEvents
                 // ROW 4 – Hari/Tanggal & Shift
                 // ----------------------------------------------------------------
                 $tanggalLabel = $this->date
-                    ? \Carbon\Carbon::parse($this->date)->translatedFormat('l, d F Y')
-                    : '_______________';
-                $shiftLabel = $this->shift ? 'Shift ' . $this->shift : '________';
+                ? \Carbon\Carbon::parse($this->date)->translatedFormat('l, d F Y')
+                : '_______________';
+
+                $shiftLabel = $this->shift ? 'Shift ' . $this->shift : 'Semua Shift';
+
+                $sheet->mergeCells('E4:H4');
+                $sheet->setCellValue('E4', 'Shift : ' . $shiftLabel);
 
                 $sheet->mergeCells('A4:D4');
                 $sheet->setCellValue('A4', 'Hari/Tanggal : ' . $tanggalLabel);
@@ -130,12 +148,8 @@ class SuhuExport implements WithEvents
                 $sheet->setCellValue($col($qcColIdx) . '5', 'PARAF');
 
                 $sheet->getStyle("B5:{$lastColLetter}5")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['argb' => $white], 'size' => 9],
-                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                    'font'      => ['bold' => true, 'size' => 9],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
-                ]);
-                $sheet->getStyle('A5')->applyFromArray([
-                    'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
                 ]);
                 $sheet->getRowDimension(5)->setRowHeight(16);
 
@@ -177,8 +191,7 @@ class SuhuExport implements WithEvents
 
                 // Style header rows 6-7
                 $sheet->getStyle("A6:{$lastColLetter}7")->applyFromArray([
-                    'font'      => ['bold' => true, 'color' => ['argb' => $white], 'size' => 8],
-                    'fill'      => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['argb' => $headerBlue]],
+                    'font'      => ['bold' => true, 'size' => 8],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER, 'wrapText' => true],
                 ]);
                 $sheet->getRowDimension(6)->setRowHeight(24);
@@ -364,7 +377,11 @@ class SuhuExport implements WithEvents
                 // ----------------------------------------------------------------
                 $qtRow = $catatanRow + 1;
                 $sheet->mergeCells("A{$qtRow}:{$lastColLetter}{$qtRow}");
-                $sheet->setCellValue("A{$qtRow}", 'QT 25/01');
+                $noDokumen = \App\Models\List_form::where('plant', $this->items->first()->plant ?? null)
+                    ->where('laporan', 'Pemeriksaan Suhu dan RH Ruangan')
+                    ->value('no_dokumen');
+
+                $sheet->setCellValue("A{$qtRow}", $noDokumen ?? '');
                 $sheet->getStyle("A{$qtRow}")->applyFromArray([
                     'font'      => ['bold' => true, 'size' => 8],
                     'alignment' => ['horizontal' => Alignment::HORIZONTAL_RIGHT],
@@ -375,30 +392,39 @@ class SuhuExport implements WithEvents
                 // ROW blank & Tanda Tangan
                 // ----------------------------------------------------------------
                 $ttdRow = $qtRow + 4;
+
                 $sheet->mergeCells("A{$ttdRow}:F{$ttdRow}");
                 $sheet->setCellValue("A{$ttdRow}", 'Diperiksa Oleh :');
                 $sheet->getStyle("A{$ttdRow}")->getFont()->setSize(9)->setBold(true);
 
+                $sheet->setCellValue("A" . ($ttdRow + 1), '(' . ($this->items->first()->username ?? '') . ')');
+                $sheet->getStyle("A" . ($ttdRow + 1))->getFont()->setUnderline(true);
+
+
                 $ttdMidIdx = (int)round(($lastColIdx + 1) / 2);
-                $ttdMid    = $col($ttdMidIdx);
+                $ttdMid = $col($ttdMidIdx);
+
                 $sheet->mergeCells("{$ttdMid}{$ttdRow}:{$lastColLetter}{$ttdRow}");
                 $sheet->setCellValue("{$ttdMid}{$ttdRow}", 'Disetujui Oleh :');
                 $sheet->getStyle("{$ttdMid}{$ttdRow}")->getFont()->setSize(9)->setBold(true);
 
-                $ttdLineRow = $ttdRow + 4;
-                $sheet->mergeCells("A{$ttdLineRow}:F{$ttdLineRow}");
-                $sheet->setCellValue("A{$ttdLineRow}", '( _________________________ )');
-                $sheet->getStyle("A{$ttdLineRow}")->applyFromArray([
-                    'font'      => ['size' => 9],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                ]);
+                $sheet->setCellValue($col($ttdMidIdx) . ($ttdRow + 1), '(' . ($this->items->first()->nama_spv ?? '') . ')');
+                $sheet->getStyle($col($ttdMidIdx) . ($ttdRow + 1))->getFont()->setUnderline(true);
 
-                $sheet->mergeCells("{$ttdMid}{$ttdLineRow}:{$lastColLetter}{$ttdLineRow}");
-                $sheet->setCellValue("{$ttdMid}{$ttdLineRow}", '( _________________________ )');
-                $sheet->getStyle("{$ttdMid}{$ttdLineRow}")->applyFromArray([
-                    'font'      => ['size' => 9],
-                    'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                ]);
+                $ttdLineRow = $ttdRow + 4;
+                // $sheet->mergeCells("A{$ttdLineRow}:F{$ttdLineRow}");
+                // $sheet->setCellValue("A{$ttdLineRow}", '( _________________________ )');
+                // $sheet->getStyle("A{$ttdLineRow}")->applyFromArray([
+                //     'font'      => ['size' => 9],
+                //     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                // ]);
+
+                // $sheet->mergeCells("{$ttdMid}{$ttdLineRow}:{$lastColLetter}{$ttdLineRow}");
+                // $sheet->setCellValue("{$ttdMid}{$ttdLineRow}", '( _________________________ )');
+                // $sheet->getStyle("{$ttdMid}{$ttdLineRow}")->applyFromArray([
+                //     'font'      => ['size' => 9],
+                //     'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
+                // ]);
 
                 // ----------------------------------------------------------------
                 // BORDER – seluruh tabel utama
@@ -438,6 +464,16 @@ class SuhuExport implements WithEvents
                 $sheet->getColumnDimension($col($qcColIdx))->setWidth(10);
                 $sheet->getColumnDimension($col($prodColIdx))->setWidth(10);
 
+                foreach (range(2, 30, 2) as $i) {
+                    $sheet->getColumnDimension(
+                        \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($i)
+                    )->setWidth(15);
+                }
+
+                foreach (['M', 'O', 'U'] as $col) {
+                    $sheet->getColumnDimension($col)->setWidth(15);
+                }
+
                 // ----------------------------------------------------------------
                 // Print setup
                 // ----------------------------------------------------------------
@@ -445,8 +481,10 @@ class SuhuExport implements WithEvents
                 $sheet->getPageSetup()->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
                 $sheet->getPageSetup()->setFitToWidth(1);
                 $sheet->getPageSetup()->setFitToHeight(0);
-                $sheet->getPageSetup()->setFitToPage(true);
-            },
+                $sheet->getStyle($sheet->calculateWorksheetDimension())
+                        ->getFont()
+                        ->setName('Times New Roman');
+                                },
         ];
     }
 }
