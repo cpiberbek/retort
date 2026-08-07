@@ -104,7 +104,7 @@
     $supplier = $firstBeritaAcara ? $firstBeritaAcara->supplier : '';
     $uraianMasalah = $firstBeritaAcara ? $firstBeritaAcara->uraian_masalah : '';
     $noSuratJalan = $firstBeritaAcara ? $firstBeritaAcara->no_surat_jalan : '';
-    $doPo = $firstBeritaAcara ? $firstBeritaAcara->do_po : '';
+    $doPo = $firstBeritaAcara ? $firstBeritaAcara->dd_po : '';
     $tanggalKedatangan = $firstBeritaAcara ? \Carbon\Carbon::parse($firstBeritaAcara->tanggal_kedatangan)->format('d-m-Y') : '';
 @endphp
 
