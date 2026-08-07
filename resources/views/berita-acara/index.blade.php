@@ -154,7 +154,17 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                 {{ $loop->iteration + ($beritaAcaras->currentPage() - 1) * $beritaAcaras->perPage() }}
                             </td>
 
-                            <td class="fw-bold text-center text-primary">{{ $item->nomor }}</td>
+
+                            <td class="align-middle text-primary">
+                                {{ $item->nomor }}
+                                <span
+                                    class="badge bg-light text-primary border ms-1 copy-badge"
+                                    style="cursor:pointer"
+                                    data-text="{{ $item->nomor }}"
+                                    title="Copy">
+                                    <i class="bi bi-copy"></i>
+                                </span>
+                            </td>
 
                             <td class="text-center">
                                 {{ \Carbon\Carbon::parse($item->tanggal_kedatangan)->format('d-m-Y') }}
@@ -382,4 +392,26 @@ MODAL VERIFIKASI (LOOPING)
             });
         }
     </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('.copy-badge').forEach(function (badge) {
+            badge.addEventListener('click', async function () {
+                await navigator.clipboard.writeText(this.dataset.text);
+
+                const oldHtml = this.innerHTML;
+                const oldTitle = this.title;
+
+                this.innerHTML = 'Ter-Copy';
+                this.title = 'Ter-Copy';
+
+                setTimeout(() => {
+                    this.innerHTML = oldHtml;
+                    this.title = oldTitle;
+                }, 1500);
+            });
+        });
+    });
+    </script>
+
     @endsection
