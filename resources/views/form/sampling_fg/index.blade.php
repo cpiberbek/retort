@@ -43,7 +43,7 @@
 
     {{-- FILTER: Menggunakan Versi Anda (Ada Shift) --}}
     <form id="filterForm" method="GET" action="{{ route('sampling_fg.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
+        <div class="row w-100">
             <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
@@ -54,6 +54,18 @@
                     </div>
                     <input type="date" name="date" id="filter_date" class="form-control border-start-0"
                     value="{{ request('date') }}" placeholder="Tanggal Batch">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-1">Cari Kode Batch</div>
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                    </div>
+                    <input type="text" name="search" id="search" class="form-control border-start-0"
+                    value="{{ request('search') }}" placeholder="Cari Kode Batch...">
                 </div>
             </div>
             <div class="col-md-3">
@@ -73,24 +85,31 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="mb-1">Cari Data</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
-                </div>
-            </div>
             <div class="col-md-3 align-self-end">
                 <!-- <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button> -->
                 <a href="{{ route('sampling_fg.index') }}" class="btn btn-primary mb-2"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
             </div>
         </div>
     </form>
+
+    {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal & Kode Batch</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {{-- SCRIPT: Menggunakan Versi Anda (Handler PDF & Shift) --}}
     <script>
@@ -114,8 +133,17 @@
             if(shift) shift.addEventListener('change', () => form.submit());
 
             // Handle Export PDF
-            if(exportPdfBtn){
-                exportPdfBtn.addEventListener('click', function() {
+            if (exportPdfBtn) {
+                exportPdfBtn.addEventListener('click', function () {
+                    const tanggal = date.value.trim();
+                    const kodeBatch = search.value.trim();
+
+                    if (!tanggal || !kodeBatch) {
+                        const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                        modal.show();
+                        return;
+                    }
+
                     const formData = new FormData(form);
                     const exportUrl = "{{ route('sampling_fg.exportPdf') }}?" + new URLSearchParams(formData).toString();
                     window.open(exportUrl, '_blank');

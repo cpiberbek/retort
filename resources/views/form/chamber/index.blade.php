@@ -46,8 +46,20 @@
 
             {{-- FILTER: Style Washing (Compact & Ada Shift) --}}
             <form id="filterForm" method="GET" action="{{ route('chamber.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-                <div class="row">
-                    <div class="col-md-3">
+                <div class="row w-100">
+                    <div class="col-md-2">
+                        <div class="mb-1">Pilih Bulan</div>
+                        <div class="input-group mb-2">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text bg-white border-end-0">
+                                    <i class="bi bi-calendar3 text-muted"></i>
+                                </span>
+                            </div>
+                            <input type="month" name="month" id="filter_month" class="form-control border-start-0"
+                                value="{{ request('month') }}">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
                         <div class="mb-1">Pilih Tanggal</div>
                         <div class="input-group mb-2">
                             <div class="input-group-prepend">
@@ -59,7 +71,7 @@
                             value="{{ request('date') }}" placeholder="Tanggal">
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         {{-- Filter Shift --}}
                         <div class="mb-1">Pilih Shift</div>
                         <div class="input-group mb-2">
@@ -76,7 +88,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-2">
                         <div class="mb-1">Cari Data</div>
                         <div class="input-group mb-2">
                             <div class="input-group-prepend">
@@ -88,7 +100,7 @@
                             value="{{ request('search') }}" placeholder="Cari Operator / No Chamber...">
                         </div>
                     </div>
-                    <div class="col-md-3 align-self-end">
+                    <div class="col-md-2 align-self-end">
                         <!-- <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Filter</button> -->
                         <a href="{{ route('chamber.index') }}" class="btn btn-primary mb-2"><i class="bi bi-arrow-counterclockwise"></i> Reset</a>
                     </div>
@@ -96,35 +108,77 @@
                 
             </form>
 
+            {{-- warning modal--}}
+            <div class="modal fade" id="warningModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                        </div>
+                        <div class="modal-body">
+                            Silakan pilih <b>Bulan</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                                OK
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- SCRIPT: Handle Auto Submit & Export PDF (Sama dengan Washing) --}}
-            <script>
-                document.addEventListener('DOMContentLoaded', () => {
-                    const search = document.getElementById('search');
-                    const date = document.getElementById('filter_date');
-                    const shift = document.getElementById('filter_shift');
-                    const form = document.getElementById('filterForm');
-                    const exportPdfBtn = document.getElementById('exportPdfBtn');
+         <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const search = document.getElementById('search');
+                const month = document.getElementById('filter_month');
+                const date = document.getElementById('filter_date');
+                const shift = document.getElementById('filter_shift');
+                const form = document.getElementById('filterForm');
+                const exportPdfBtn = document.getElementById('exportPdfBtn');
 
-                    let timer;
+                let timer;
 
-                    search.addEventListener('input', () => {
-                        clearTimeout(timer);
-                        timer = setTimeout(() => form.submit(), 500);
-                    });
-
-                    date.addEventListener('change', () => form.submit());
-                    if(shift) shift.addEventListener('change', () => form.submit());
-
-                    // Handle Export PDF
-                    if(exportPdfBtn){
-                        exportPdfBtn.addEventListener('click', function() {
-                            // Menggunakan URLSearchParams agar semua filter (date, shift, search) terbawa ke URL export
-                            const formData = new FormData(form);
-                            const exportUrl = "{{ route('chamber.exportPdf') }}?" + new URLSearchParams(formData).toString();
-                            window.open(exportUrl, '_blank');
-                        });
-                    }
+                search.addEventListener('input', () => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => form.submit(), 500);
                 });
+
+                if (month) {
+                    month.addEventListener('change', () => {
+                        if (month.value) {
+                            date.value = '';
+                        }
+                        form.submit();
+                    });
+                }
+
+                if (date) {
+                    date.addEventListener('change', () => {
+                        if (date.value) {
+                            month.value = '';
+                        }
+                        form.submit();
+                    });
+                }
+
+                if (shift) {
+                    shift.addEventListener('change', () => form.submit());
+                }
+
+                if (exportPdfBtn) {
+                    exportPdfBtn.addEventListener('click', () => {
+                        if (!month.value) {
+                            $('#warningModal').modal('show');
+                            return;
+                        }
+
+                        const formData = new FormData(form);
+                        const exportUrl = "{{ route('chamber.exportPdf') }}?" + new URLSearchParams(formData).toString();
+                        window.open(exportUrl, '_blank');
+                    });
+                }
+            });
             </script>
 
             {{-- TABEL DATA --}}

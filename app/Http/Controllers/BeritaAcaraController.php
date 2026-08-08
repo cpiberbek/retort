@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BeritaAcara;
+use App\Models\List_form;
 use Illuminate\Http\Request; // <-- Pastikan ini di-import
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -46,6 +47,11 @@ class BeritaAcaraController extends Controller
             });
         }
 
+        // Filter Nomor BA
+        if ($request->filled('nomor_ba')) {
+            $query->where('nomor', 'like', '%' . $request->nomor_ba . '%');
+        }
+
         // 4. Sorting & Pagination
         // Menggunakan withQueryString() agar filter tidak hilang saat pindah halaman
         $beritaAcaras = $query->latest()
@@ -76,45 +82,46 @@ class BeritaAcaraController extends Controller
                 Rule::unique('berita_acaras', 'nomor')
             ],
 
-            'nama_barang' => 'required|string',
-            'jumlah_barang' => 'required|integer',
-            'supplier' => 'required|string',
+                'nama_barang' => 'required|string',
+                'jumlah_barang' => 'required|integer',
+                'supplier' => 'required|string',
 
-            'tanggal_kedatangan' => 'required|date',
+                'tanggal_kedatangan' => 'required|date',
 
-            'no_surat_jalan' => 'nullable|string',
-            'dd_po' => 'nullable|string',
-            'tanggal_keputusan' => 'nullable|date',
+                'no_surat_jalan' => 'nullable|string',
+                'dd_po' => 'nullable|string',
+                'tanggal_keputusan' => 'nullable|date',
 
-            'uraian_masalah' => 'required|string',
+                'uraian_masalah' => 'required|string',
 
-            'analisa_penyebab' => 'nullable|string',
-            'tindak_lanjut_perbaikan' => 'nullable|string',
-            'lampiran' => 'nullable|string',
-        ],
-        [
-            'nomor.required' => 'Nomor berita acara wajib diisi.',
-            'nomor.unique'   => 'Nomor berita acara sudah pernah digunakan.',
-        ]
-    );
+                'analisa_penyebab' => 'nullable|string',
+                'tindak_lanjut_perbaikan' => 'nullable|string',
+                'lampiran' => 'nullable|string',
+                'keputusan_lain_lain' => 'nullable|string',
+            ],
+            [
+                'nomor.required' => 'Nomor berita acara wajib diisi.',
+                'nomor.unique'   => 'Nomor berita acara sudah pernah digunakan.',
+            ]
+        );
 
-        // Menambahkan created_by (sesuai foreign key 'uuid' di tabel users)
-      $validatedData['created_by'] = Auth::user()->uuid;
+            // Menambahkan created_by (sesuai foreign key 'uuid' di tabel users)
+        $validatedData['created_by'] = Auth::user()->uuid;
 
-        // Handle checkbox (jika tidak dicentang, value-nya null)
-      $checkboxes = [
-        'keputusan_pengembalian', 'keputusan_potongan_harga', 'keputusan_sortir',
-        'keputusan_penukaran_barang', 'keputusan_penggantian_biaya'
-    ];
-    foreach ($checkboxes as $cb) {
-        $validatedData[$cb] = $request->has($cb);
+            // Handle checkbox (jika tidak dicentang, value-nya null)
+        $checkboxes = [
+            'keputusan_pengembalian', 'keputusan_potongan_harga', 'keputusan_sortir',
+            'keputusan_penukaran_barang', 'keputusan_penggantian_biaya'
+        ];
+        foreach ($checkboxes as $cb) {
+            $validatedData[$cb] = $request->has($cb);
+        }
+
+        BeritaAcara::create($validatedData);
+
+        return redirect()->route('berita-acara.index')
+        ->with('success', 'Berita Acara berhasil dibuat.');
     }
-
-    BeritaAcara::create($validatedData);
-
-    return redirect()->route('berita-acara.index')
-    ->with('success', 'Berita Acara berhasil dibuat.');
-}
 
     /**
      * Menampilkan detail data.
@@ -161,6 +168,7 @@ class BeritaAcaraController extends Controller
                 'analisa_penyebab' => 'nullable|string',
                 'tindak_lanjut_perbaikan' => 'nullable|string',
                 'lampiran' => 'nullable|string',
+                'keputusan_lain_lain' => 'nullable|string',
             ],
             [
                 'nomor.required' => 'Nomor berita acara wajib diisi.',
@@ -297,48 +305,47 @@ class BeritaAcaraController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
         $date = $request->input('date');
+        $nomorBa = $request->input('nomor_ba');
         $userPlant = Auth::user()->plant;
 
         $query = BeritaAcara::query();
+
         if (Auth::check() && !empty($userPlant)) {
             $query->where('plant_uuid', $userPlant);
         }
 
-        // Filter tanggal kedatangan
         $query->when($date, function ($q) use ($date) {
             $q->whereDate('tanggal_kedatangan', $date);
         });
 
+        $query->when($nomorBa, function ($q) use ($nomorBa) {
+            $q->where('nomor', 'like', '%' . $nomorBa . '%');
+        });
+
         $beritaAcaras = $query->orderBy('tanggal_kedatangan', 'asc')->get();
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Berita Acara')
+            ->value('no_dokumen');
 
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Landscape, A4)
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
 
-        // Metadata
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Form Berita Acara');
-
-        // Hilangkan Header/Footer Bawaan
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
-
-        // Set Margin
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
-
-        // Set Font Default
+        $pdf->SetAutoPageBreak(true, 5);
         $pdf->SetFont('helvetica', '', 8);
 
         $pdf->AddPage();
 
-        // 3. Render
-        $html = view('reports.form-berita-acara', compact('beritaAcaras', 'request'))->render();
+        $html = view('reports.form-berita-acara', compact('beritaAcaras', 'request', 'noDokumen'))->render();
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Form_Berita_Acara_' . date('d-m-Y_His') . '.pdf';

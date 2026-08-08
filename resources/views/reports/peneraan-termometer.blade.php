@@ -30,6 +30,15 @@
             padding: 2px;
             font-size: 9px;
         }
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 
@@ -37,18 +46,21 @@
 
 {{-- HEADER --}}
 
-<table width="100%">
-    <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
-        </td>
-        
-    </tr>
-</table>
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td>
+                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
 <h2 class="title">PENERAAN TERMOMETER</h2>
-<br>
-<br>
 
 
 {{-- INFO --}}
@@ -60,7 +72,7 @@ $shift = $firstItem ? $firstItem->shift : '';
 <table width="100%" class="tbl-header">
     <tr>
         <td>Hari / Tanggal : {{ $date }}</td>
-        <td>Shift : {{ $shift }}</td>
+        {{-- <td>Shift : {{ $shift }}</td> --}}
     </tr>
 </table>
 
@@ -69,37 +81,48 @@ $shift = $firstItem ? $firstItem->shift : '';
 {{-- TABEL UTAMA --}}
 <table width="100%" class="tbl-main small">
     <tr>
-        <th class="center" rowspan="2">KODE TERMOMETER / AREA</th>
-        <th class="center" rowspan="2">STANDAR</th>
-        <th colspan="2" class="center">PENERAAN</th>
-        <th class="center" rowspan="2">TINDAKAN PERBAIKAN</th>
-        <th class="center" rowspan="2">DIBUAT<br>QC</th>
-        <th class="center" rowspan="2">DIKETAHUI<br>SPV QC</th>
+        <th class="center" rowspan="2"><strong>KODE TERMOMETER / AREA</strong></th>
+        <th class="center" rowspan="2"><strong>STANDAR</strong></th>
+        <th colspan="2" class="center"><strong>PENERAAN</strong></th>
+        <th class="center" rowspan="2"><strong>TINDAKAN PERBAIKAN</strong></th>
+        <th class="center" rowspan="2"><strong>DIBUAT<br>QC</strong></th>
+        <th class="center" rowspan="2"><strong>DIKETAHUI<br>SPV QC</strong></th>
     </tr>
     <tr>
-        <th class="center">PUKUL</th>
-        <th class="center">HASIL TERA</th>
+        <th class="center"><strong>PUKUL</strong></th>
+        <th class="center"><strong>HASIL TERA</strong></th>
     </tr>
 
     @php
     $allPeneraan = [];
+
     foreach($items as $item) {
         $peneraan = $item->peneraan;
+
         if(is_array($peneraan)) {
-            $allPeneraan = array_merge($allPeneraan, $peneraan);
+            foreach($peneraan as $data) {
+                $allPeneraan[] = [
+                    'peneraan' => $data,
+                    'username' => $item->username,
+                    'nama_spv' => $item->nama_spv,
+                ];
+            }
         }
     }
     @endphp
 
-    @foreach($allPeneraan as $peneraan)
+    @foreach($allPeneraan as $itemPeneraan)
     <tr>
-        <td style="height:35px;">{{ $peneraan['kode_thermometer'] ?? '' }} / {{ $peneraan['area'] ?? '' }}</td>
-        <td class="center">{{ $peneraan['standar'] ?? '' }}</td>
-        <td>{{ $peneraan['pukul'] ?? '' }}</td>
-        <td>{{ $peneraan['hasil_tera'] ?? '' }}</td>
-        <td>{{ $peneraan['tindakan_perbaikan'] ?? '' }}</td>
-        <td></td>
-        <td></td>
+        <td style="height:35px;">
+            {{ $itemPeneraan['peneraan']['kode_thermometer'] ?? '' }} /<br>
+            {{ $itemPeneraan['peneraan']['area'] ?? '' }}
+        </td>
+        <td class="center">{{ $itemPeneraan['peneraan']['standar'] ?? '' }}</td>
+        <td>{{ $itemPeneraan['peneraan']['pukul'] ?? '' }}</td>
+        <td>{{ $itemPeneraan['peneraan']['hasil_tera'] ?? '' }}</td>
+        <td>{{ $itemPeneraan['peneraan']['tindakan_perbaikan'] ?? '' }}</td>
+        <td>{{ $itemPeneraan['username'] ?? '' }}</td>
+        <td>{{ $itemPeneraan['nama_spv'] ?? '-' }}</td>
     </tr>
     @endforeach
 
@@ -118,7 +141,21 @@ $shift = $firstItem ? $firstItem->shift : '';
     @endif
 </table>
 
-<div style="text-align:right; font-size:8px;font-style:italic">QT 40 / 00</div>
+@php
+    $noDokumen = \App\Models\List_form::where('plant', $items->first()->plant ?? null)
+        ->where('laporan', 'Verifikasi Termometer')
+        ->value('no_dokumen');
+@endphp
+
+<table width="100%" style="font-size:7px;">
+    <tr>
+        <td width="80%"></td>
+        <td width="20%" style="text-align:right;">
+            <i>{{ $noDokumen ?? '' }}</i>
+        </td>
+    </tr>
+</table>
+
 
 {{-- KETERANGAN --}}
 <table width="100%" class="small">

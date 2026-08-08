@@ -73,7 +73,10 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('pemeriksaan_retain.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger">
+            <a href="{{ route('pemeriksaan_retain.exportPdf', [
+                'date' => request('date'),
+                'kode_produksi' => request('kode_produksi')
+            ]) }}" target="_blank" class="btn btn-danger" id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
             @endcan
@@ -99,13 +102,13 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="mb-1">Cari Data</div>
+                <div class="mb-1">Cari Kode Batch</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0">
                         <i class="bi bi-search text-muted"></i>
                     </span>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Keterangan / Dibuat Oleh...">
+                    <input type="text" name="kode_produksi" id="kode_produksi" class="form-control border-start-0"
+                    value="{{ request('kode_produksi') }}" placeholder="Cari Kode Batch...">
                 </div>
             </div>
             <div class="col-md-4 align-self-end">
@@ -126,6 +129,7 @@
                             <th>NO.</th>
                             <th>Tanggal</th>
                             <th>Hari</th>
+                            <th>Kode Batch</th>
                             <th>Keterangan</th>
                             <th>Jumlah Item</th>
                             <th>Dibuat Oleh</th>
@@ -146,6 +150,16 @@
 
                             {{-- Hari --}}
                             <td class="text-center align-middle">{{ $p->hari }}</td>
+
+
+                            {{-- Kode Batch --}}
+                            <td class="text-center align-middle">
+                                @forelse($p->items as $item)
+                                    {{ $item->kode_produksi }}<br>
+                                @empty
+                                    -
+                                @endforelse
+                            </td>
 
                             {{-- Keterangan --}}
                             <td class="align-middle">{{ Str::limit($p->keterangan, 50) }}</td>
@@ -235,6 +249,25 @@
     </div>
 </div>
 
+    {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal & Kode Batch</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 {{-- 
 =======================================================
 MODAL VERIFIKASI (LOOPING)
@@ -298,17 +331,29 @@ MODAL VERIFIKASI (LOOPING)
             }, 3000);
 
         // Search & Filter Logic
-            const search = document.getElementById('search');
+            const kodeProduksi = document.getElementById('kode_produksi');
             const date = document.getElementById('filter_date');
             const form = document.getElementById('filterForm');
             let timer;
 
-            search.addEventListener('input', () => {
+            kodeProduksi.addEventListener('input', () => {
                 clearTimeout(timer);
                 timer = setTimeout(() => form.submit(), 500);
             });
 
             date.addEventListener('change', () => form.submit());
+        });
+
+        document.getElementById('exportPdfBtn').addEventListener('click', function(e) {
+            const date = document.getElementById('filter_date').value;
+            const kodeProduksi = document.getElementById('kode_produksi').value;
+
+            if (!date || !kodeProduksi) {
+                e.preventDefault();
+
+                const modal = new bootstrap.Modal(document.getElementById('warningModal'));
+                modal.show();
+            }
         });
     </script>
     @endsection
