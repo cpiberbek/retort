@@ -27,67 +27,82 @@
         .center { text-align: center; }
         .sign { text-align: center; }
         .small { font-size: 8px; }
+
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 
 <body>
 
 {{-- HEADER LOGO + TITLE --}}
-<table width="100%">
-    <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
-        </td>
-        
-    </tr>
-</table>
-<h2 class="title">DATA SAMPLING VARIAN</h2>
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td>
+                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h1 class="title" style="font-size:12pt;">DATA SAMPLING PRODUK</h1>
 <br>
 <br>
 
 @php
     $dateFilter = request('date') ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y') : 'All Dates';
-    $shiftFilter = request('shift') ?? 'All Shifts';
+    $shiftFilter = request('shift') ?? 'Semua Shift';
 @endphp
-
 
 <table width="100%" class="tbl-header">
     <tr>
-        <td>Hari / Tanggal : {{ $dateFilter }}</td>
-        <td>Shift : {{ $shiftFilter }}</td>
+        <td style="text-align: center;">Hari / Tanggal : <u>{{ $dateFilter }}</u></td>
+        <td style="text-align: center;">Shift : <u>{{ $shiftFilter }}</u></td>
     </tr>
 </table>
-<br>
+<br><br>
 
 {{-- TABLE --}}
 <table width="100%" class="tbl-main small">
     <tr>
-        <th rowspan="2" class="center">No.</th>
-        <th rowspan="2" class="center">Jenis Sampling</th>
-        <th rowspan="2" class="center">Nama Varian</th>
-        <th rowspan="2" class="center">Kode Batch</th>
-        <th rowspan="2" class="center">Jumlah</th>
-        <th colspan="16" class="center">Item Sortir</th>
-        <th rowspan="2" class="center">Paraf QC</th>
+    <th rowspan="2" class="center"><b>No.</b></th>
+    <th rowspan="2" class="center"><b>Jenis Sampling</b></th>
+    <th rowspan="2" class="center"><b>Nama Produk</b></th>
+    <th rowspan="2" class="center"><b>Kode Batch</b></th>
+    <th rowspan="2" class="center"><b>Jumlah</b></th>
+    <th colspan="16" class="center"><b>Item Sortir</b></th>
+    <th rowspan="2" class="center"><b>Paraf QC</b></th>
     </tr>
     <tr>
-        <th class="center">Jamur</th>
-        <th class="center">Lendir</th>
-        <th class="center">Klip Tajam</th>
-        <th class="center">Pin hole</th>
-        <th class="center">Air Trap PVDC</th>
-        <th class="center">Air Trap Varian</th>
-        <th class="center">Keriput</th>
-        <th class="center">Bengkok</th>
-        <th class="center">Non Kode</th>
-        <th class="center">Over lap</th>
-        <th class="center">Kecil</th>
-        <th class="center">Terjepit</th>
-        <th class="center">Double klip</th>
-        <th class="center">Seal Halus / Lepas</th>
-        <th class="center">Basah</th>
-        <th class="center">Dll</th>
+        <th class="center"><b>Jamur</b></th>
+        <th class="center"><b>Lendir</b></th>
+        <th class="center"><b>Klip Tajam</b></th>
+        <th class="center"><b>Pin hole</b></th>
+        <th class="center"><b>Air Trap PVDC</b></th>
+        <th class="center"><b>Air Trap Produk</b></th>
+        <th class="center"><b>Keriput</b></th>
+        <th class="center"><b>Bengkok</b></th>
+        <th class="center"><b>Non Kode</b></th>
+        <th class="center"><b>Over lap</b></th>
+        <th class="center"><b>Kecil</b></th>
+        <th class="center"><b>Terjepit</b></th>
+        <th class="center"><b>Double klip</b></th>
+        <th class="center"><b>Seal Halus / Lepas</b></th>
+        <th class="center"><b>Basah</b></th>
+        <th class="center"><b>Dll</b></th>
     </tr>
 
     @forelse($samplings as $index => $sampling)
@@ -123,29 +138,45 @@
 
 
 </table>
-<div style="text-align:right; font-size:8px;font-style:italic">QT 05 / 00</div>
+<div style="text-align:right; font-size:8px; font-style:italic;">
+    {{ $noDokumen }}
+</div>
 <br>
-<table width="100%" class="small">
+
+@php
+    $catatanList = $samplings->filter(function ($item) {
+        return !empty($item->catatan);
+    });
+
+    $allApproved = $samplings->every(function ($item) {
+        return !empty($item->nama_spv);
+    });
+
+    $namaSpv = $allApproved
+        ? $samplings->pluck('nama_spv')->filter()->unique()->implode(', ')
+        : 'Belum Semua Entry Disetujui Oleh SPV';
+@endphp
+
+<table width="100%">
     <tr>
-        <td width="50%">
-           Catatan :
+        <td width="70%" valign="top">
+            @if($catatanList->count())
+                <b>Catatan:</b><br>
+
+                @foreach($catatanList as $item)
+                    {{ $item->kode_produksi ?? '-' }} : {{ $item->catatan }}<br>
+                @endforeach
+            @endif
         </td>
-        <td  width="50%">
-            {{-- SIGN --}}
-            <table width="100%">
-                <tr>
-                    <td width="70%"></td>
-                    <td width="30%" class="sign">
-                        Disetujui oleh,<br><br><br><br>
-                        (___________________)<br>
-                        QC SPV
-                    </td>
-                </tr>
-            </table>
+
+        <td width="30%" align="center" valign="top">
+            Disetujui Oleh,
+            <br><br><br><br>
+            (<u>{{ $namaSpv }}</u>)<br>
+            QC SPV
         </td>
     </tr>
 </table>
-
 
 
 </body>

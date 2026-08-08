@@ -27,10 +27,9 @@
                     </a>
                 @endcan
                 @can('can access export')
-                    <a href="{{ route('organoleptik.exportPdf', ['date' => request('date'), 'shift' => request('shift'), 'nama_produk' => request('nama_produk')]) }}"
-                        target="_blank" class="btn btn-danger">
+                    <button type="button" id="exportPdfBtn" class="btn btn-danger">
                         <i class="bi bi-file-earmark-pdf"></i> Export PDF
-                    </a>
+                    </button>
                 @endcan
                 @can('can access recycle')
                     <a href="{{ route('organoleptik.recyclebin') }}" class="btn btn-secondary">
@@ -44,7 +43,7 @@
         <form id="filterForm" method="GET" action="{{ route('organoleptik.index') }}"
             class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
             <div class="row">
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="mb-1">Pilih Tanggal</div>
                     <div class="input-group mb-2">
                         <div class="input-group-prepend">
@@ -56,7 +55,7 @@
                             value="{{ request('date') }}">
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="mb-1">Pilih Shift</div>
                     <div class="input-group mb-2">
                         <div class="input-group-prepend">
@@ -72,7 +71,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="mb-1">Pilih Varian</div>
                     <div class="input-group mb-2">
                         <div class="input-group-prepend">
@@ -89,7 +88,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-2">
                     <div class="mb-1">Cari Data</div>
                     <div class="input-group mb-2">
                         <div class="input-group-prepend">
@@ -101,6 +100,13 @@
                             value="{{ request('search') }}" placeholder="Cari...">
                     </div>
                 </div>
+
+                <div class="col-md-2 d-flex align-items-end">
+                    <a href="{{ route('organoleptik.index') }}" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                </div>
+
             </div>
         </form>
 
@@ -439,6 +445,25 @@
     </div>
     </div>
 
+     {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     {{-- Auto-hide alert setelah 3 detik --}}
     <script>
         setTimeout(() => {
@@ -472,4 +497,31 @@
             padding-right: 2px !important;
         }
     </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const exportBtn = document.getElementById('exportPdfBtn');
+
+        if (exportBtn) {
+            exportBtn.addEventListener('click', function() {
+                const date = document.getElementById('filter_date').value;
+                const shift = document.getElementById('filter_shift').value;
+                const namaProduk = document.getElementById('filter_nama_produk').value;
+
+                if (!date) {
+                    new bootstrap.Modal(document.getElementById('warningModal')).show();
+                    return;
+                }
+
+                const params = new URLSearchParams({
+                    date: date,
+                    shift: shift,
+                    nama_produk: namaProduk
+                });
+
+                window.open("{{ route('organoleptik.exportPdf') }}?" + params.toString(), "_blank");
+            });
+        }
+    });
+</script>
 @endsection

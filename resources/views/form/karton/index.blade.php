@@ -27,7 +27,7 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('karton.exportPdf', ['date' => request('date'), 'nama_produk' => request('nama_produk')]) }}" target="_blank" class="btn btn-danger">
+            <a href="#" id="btnExportPdf" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
             @endcan
@@ -40,9 +40,12 @@
     </div>
 
     {{-- Filter dan Live Search --}}
-    <form id="filterForm" method="GET" action="{{ route('karton.index') }}" class="d-flex flex-wrap align-items-center gap-5 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
-            <div class="col-md-4">
+    <form id="filterForm" method="GET" action="{{ route('karton.index') }}"
+        class="border rounded bg-white shadow-sm p-3">
+
+        <div class="row align-items-end">
+
+            <div class="col-md-2">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -50,11 +53,32 @@
                             <i class="bi bi-calendar-date text-muted"></i>
                         </span>
                     </div>
-                    <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Batch">
+                    <input type="date" name="date" id="filter_date"
+                        class="form-control border-start-0"
+                        value="{{ request('date') }}"
+                        placeholder="Tanggal Batch">
                 </div>
             </div>
-            <div class="col-md-4">
+
+            <div class="col-md-2">
+                <label class="form-label mb-1">Cari Kode Batch</label>
+                <div class="input-group mb-2">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                    </div>
+                    <input
+                        type="text"
+                        name="search"
+                        id="search"
+                        class="form-control border-start-0"
+                        value="{{ request('search') }}"
+                        placeholder="Cari Kode Batch...">
+                </div>
+            </div>
+
+            <div class="col-md-2">
                 <div class="mb-1">Pilih Varian</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -62,28 +86,47 @@
                             <i class="bi bi-box-seam text-muted"></i>
                         </span>
                     </div>
-                    <select name="nama_produk" id="filter_nama_produk" class="form-select form-control border-start-0">
+                    <select name="nama_produk" id="filter_nama_produk"
+                        class="form-select form-control border-start-0">
                         <option value="">Semua Nama Varian</option>
                         @foreach(\App\Models\Produk::where('plant', Auth::user()->plant)->pluck('nama_produk')->unique() as $produk)
-                        <option value="{{ $produk }}" {{ request('nama_produk') == $produk ? 'selected' : '' }}>{{ $produk }}</option>
+                            <option value="{{ $produk }}" {{ request('nama_produk') == $produk ? 'selected' : '' }}>
+                                {{ $produk }}
+                            </option>
                         @endforeach
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="mb-1">Cari Data</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
+
+            
+
+            <div class="col-md-2">
+                <a href="{{ route('karton.index') }}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
+
+        </div>
+    </form>
+
+        {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> & <b>Kode Batch</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -100,6 +143,29 @@
 
             date.addEventListener('change', () => form.submit());
             nama_produk.addEventListener('change', () => form.submit());
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.getElementById('btnExportPdf').addEventListener('click', function (e) {
+                e.preventDefault();
+
+                const date = document.getElementById('filter_date').value;
+                const search = document.getElementById('search').value.trim();
+
+                if (!date || !search) {
+                    new bootstrap.Modal(document.getElementById('warningModal')).show();
+                    return;
+                }
+
+                const namaProduk = document.getElementById('filter_nama_produk').value;
+
+                window.open(
+                    `{{ route('karton.exportPdf') }}?date=${encodeURIComponent(date)}&nama_produk=${encodeURIComponent(namaProduk)}&search=${encodeURIComponent(search)}`,
+                    '_blank'
+                );
+            });
         });
     </script>
 
@@ -274,11 +340,11 @@
                                             " required>
                                             <option value="1" {{ $dep->status_spv == 1 ? 'selected'
                                                 : '' }}
-                                                style="color: #198754; font-weight: 600;">âœ… Verified
+                                                style="color: #198754; font-weight: 600;">Verified
                                             (Disetujui)</option>
                                             <option value="2" {{ $dep->status_spv == 2 ? 'selected'
                                                 : '' }}
-                                                style="color: #dc3545; font-weight: 600;">âŒ Revision
+                                                style="color: #dc3545; font-weight: 600;">Revision
                                             (Perlu Perbaikan)</option>
                                         </select>
                                     </div>
@@ -367,4 +433,5 @@
         padding-right: 2px !important;
     }
 </style>
+
 @endsection

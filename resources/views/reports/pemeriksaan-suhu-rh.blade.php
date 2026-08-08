@@ -30,6 +30,24 @@
             padding: 2px;
             font-size: 8px;
         }
+         /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 6pt;
+        }
+         /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 8pt;
+        }
     </style>
 </head>
 
@@ -37,14 +55,21 @@
 
 {{-- HEADER --}}
 
-<table width="100%">
-    <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
-        </td>
-    </tr>
-</table>
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td>
+                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
+
 <h2 class="title">PEMERIKSAAN SUHU DAN RH</h2>
 <br>
 <br>
@@ -53,14 +78,17 @@
 @php
 $firstItem = $items->first();
 $date = $firstItem ? \Carbon\Carbon::parse($firstItem->date)->format('d-m-Y') : '';
-$shift = $firstItem ? $firstItem->shift : '';
+$shifts = $items->pluck('shift')->filter()->unique()->sort()->values()->all();
+$shift = count($shifts) === 3 && $shifts === ['1', '2', '3']
+    ? 'Semua Shift'
+    : implode(',', $shifts);
 @endphp
 <table width="100%" class="tbl-header">
     <tr>
-        <td width="15%">Hari / Tanggal</td>
-        <td width="35%">: {{ $date }}</td>
-        <td width="10%">Shift</td>
-        <td width="40%">: {{ $shift }}</td>
+        <td width="15%">Hari / Tanggal: {{ $date }}</td>
+        <td width="35%"></td>
+        <td width="10%">Shift: {{ $shift }}</td>
+        <td width="40%"></td>
     </tr>
 </table>
 
@@ -69,62 +97,62 @@ $shift = $firstItem ? $firstItem->shift : '';
 {{-- TABEL UTAMA --}}
 <table width="100%" class="tbl-main small">
     <tr>
-        <td rowspan="3" class="center">Pukul</td>
-        <td colspan="18" class="center">Ruangan (oC)</td>
-        <td rowspan="3" class="center">Keterangan</td>
-        <td colspan="2" class="center">PARAF</td>
+        <td rowspan="3" class="center"><strong>Pukul</strong></td>
+        <td colspan="18" class="center"><strong>Ruangan (oC)</strong></td>
+        <td rowspan="3" class="center"><strong>Keterangan</strong></td>
+        <td colspan="2" class="center"><strong>PARAF</strong></td>
     </tr>
     <tr>
-        <td colspan="2" class="center">Chill Room</td>
-        <td colspan="2" class="center">Cold Storage Meat    </td>
-        <td rowspan="2" class="center">Seasoning </td>
-        <td rowspan="2" class="center">Meat Preparation</td>
-        <td rowspan="2" class="center">Hopper</td>
-        <td rowspan="2" class="center">Stuffer</td>
-        <td rowspan="2" class="center">Susun</td>
-        <td rowspan="2" class="center">Retort Chamber</td>
-        <td rowspan="2" class="center">PVDC</td>
-        <td colspan="2" class="center">Drying   </td>
-        <td colspan="2" class="center">Packing  </td>
-        <td rowspan="2" class="center">Dry Store</td>
-        <td colspan="2" class="center">FG   </td>
-        <td rowspan="2" class="center">QC</td>
-        <td rowspan="2" class="center">PROD.</td>
+        <td colspan="2" class="center"><strong>Chill Room</strong></td>
+        <td colspan="2" class="center"><strong>Cold Storage Meat</strong></td>
+        <td rowspan="2" class="center"><strong>Seasoning</strong></td>
+        <td rowspan="2" class="center"><strong>Meat Preparation</strong></td>
+        <td rowspan="2" class="center"><strong>Hopper</strong></td>
+        <td rowspan="2" class="center"><strong>Stuffer</strong></td>
+        <td rowspan="2" class="center"><strong>Susun</strong></td>
+        <td rowspan="2" class="center"><strong>Retort Chamber</strong></td>
+        <td rowspan="2" class="center"><strong>PVDC</strong></td>
+        <td colspan="2" class="center"><strong>Drying</strong></td>
+        <td colspan="2" class="center"><strong>Packing</strong></td>
+        <td rowspan="2" class="center"><strong>Dry Store</strong></td>
+        <td colspan="2" class="center"><strong>FG</strong></td>
+        <td rowspan="2" class="center"><strong>QC</strong></td>
+        <td rowspan="2" class="center"><strong>PROD.</strong></td>
     </tr>
     <tr>
-        <td class="center">Ruang</td>
-        <td class="center">Meat</td>
-        <td class="center">Ruang</td>
-        <td class="center">Meat</td>
-        <td class="center">Suhu</td>
-        <td class="center">RH</td>
-        <td class="center">Suhu</td>
-        <td class="center">RH</td>
-        <td class="center">Suhu</td>
-        <td class="center">RH</td>
+        <td class="center"><strong>Ruang</strong></td>
+        <td class="center"><strong>Meat</strong></td>
+        <td class="center"><strong>Ruang</strong></td>
+        <td class="center"><strong>Meat</strong></td>
+        <td class="center"><strong>Suhu</strong></td>
+        <td class="center"><strong>RH</strong></td>
+        <td class="center"><strong>Suhu</strong></td>
+        <td class="center"><strong>RH</strong></td>
+        <td class="center"><strong>Suhu</strong></td>
+        <td class="center"><strong>RH</strong></td>
     </tr>
     <tr>
-        <th class="center">STD (°C)</th>
-        <th class="center">0 - 4</th>
-        <th class="center"> < 10 </th>
-        <th class="center">-18 sd. -22</th>
-        <th class="center">-18 sd. -22</th>
-        <th class="center">25 - 30</th>
-        <th class="center">9 - 15</th>
-        <th class="center">8 - 12</th>
-        <th class="center">16 - 20</th>
-        <th class="center">12 - 18</th>
-        <th class="center">30 - 40</th>
-        <th class="center">27 - 33</th>
-        <th class="center">22 - 50</th>
-        <th class="center">20 - 60</th>
-        <th class="center">20 - 30</th>
-        <th class="center">40 - 70</th>
-        <th class="center">25 - 36</th>
-        <th class="center">28 - 36</th>
-        <th class="center">35 - 70</th>
-        <th class="center"></th>
-        <th class="center"></th>
+        <th class="center"><strong>STD (°C)</strong></th>
+        <th class="center"><strong>0 - 4</strong></th>
+        <th class="center"><strong>&lt; 10</strong></th>
+        <th class="center"><strong>-18 sd. -22</strong></th>
+        <th class="center"><strong>-18 sd. -22</strong></th>
+        <th class="center"><strong>25 - 30</strong></th>
+        <th class="center"><strong>9 - 15</strong></th>
+        <th class="center"><strong>8 - 12</strong></th>
+        <th class="center"><strong>16 - 20</strong></th>
+        <th class="center"><strong>12 - 18</strong></th>
+        <th class="center"><strong>30 - 40</strong></th>
+        <th class="center"><strong>27 - 33</strong></th>
+        <th class="center"><strong>22 - 50</strong></th>
+        <th class="center"><strong>20 - 60</strong></th>
+        <th class="center"><strong>20 - 30</strong></th>
+        <th class="center"><strong>40 - 70</strong></th>
+        <th class="center"><strong>25 - 36</strong></th>
+        <th class="center"><strong>28 - 36</strong></th>
+        <th class="center"><strong>35 - 70</strong></th>
+        <th class="center"><strong></strong></th>
+        <th class="center"><strong></strong></th>
     </tr>
 
     @php
@@ -155,29 +183,43 @@ $shift = $firstItem ? $firstItem->shift : '';
         <td class="center">{{ $hourStr }}:00</td>
         
         {{-- PASTIKAN STRING DI DALAM KURUNG SIKU SAMA PERSIS DENGAN DATABASE --}}
-        <td class="center">{{ $suhuByArea['Chillroom (Ruang)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Chillroom (Meat)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Cold Storage Meat (Ruang)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Cold Storage Meat (Meat)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Seasoning']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Meat Preparation']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Hopper']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Stuffer']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Susun']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Retort Chamber']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['PVDC']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Drying (Suhu)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Drying (RH)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Packing (Suhu)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Packing (RH)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['Dry Store']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['FG (Suhu)']['nilai'] ?? '' }}</td>
-        <td class="center">{{ $suhuByArea['FG (RH)']['nilai'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Chill Room (Ruang)']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Chill Room (Meat)']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Cold Storage (Ruang)']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Cold Storage (Meat)']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Seasoning']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Meat Preparation']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Hopper']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Stuffer']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Susun']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Retort Chamber']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['PVDC']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Drying']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Drying']['rh'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Packing']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Packing']['rh'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Dry Store']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Finish Good']['suhu'] ?? '' }}</td>
+        <td class="center">{{ $suhuByArea['Finish Good']['rh'] ?? '' }}</td>
         <td class="center">{{ $item ? $item->keterangan : '' }}</td>
-        <td></td>
-        <td></td>
+        <td class="center">{{ $item ? $item->nama_spv : '' }}</td>
+        <td class="center">{{ $item ? $item->username : '' }}</td>
     </tr>
     @endfor
+</table>
+@php
+    $noDokumen = \App\Models\List_form::where('plant', $items->first()->plant ?? null)
+        ->where('laporan', 'Pemeriksaan Suhu dan RH Ruangan')
+        ->value('no_dokumen');
+@endphp
+
+<table width="100%" style="font-size:7px;">
+    <tr>
+        <td width="80%"></td>
+        <td width="20%" style="text-align:right;">
+            {{ $noDokumen ?? '' }}
+        </td>
+    </tr>
 </table>
 
 <br>
@@ -196,15 +238,23 @@ $shift = $firstItem ? $firstItem->shift : '';
 <table width="100%" class="small">
     <tr>
         <td width="50%">
-            Diperiksa Oleh : ________________________
+            <strong>Diperiksa Oleh :</strong><br>
+            <u>({{ $items->first()->username ?? '' }})</u>
         </td>
         <td width="50%" style="text-align:right;">
-            Disetujui Oleh : ________________________
+            <strong>Disetujui Oleh :</strong><br>
+            <u>
+                @if($items->every(fn($item) => !is_null($item->nama_spv)))
+                    ({{ $items->first()->nama_spv }})
+                @else
+                    Belum Semua Entry Disetujui Oleh SPV
+                @endif
+            </u>
         </td>
     </tr>
 </table>
 
-<div style="text-align:right; font-size:7px;">QT 25 / 01</div>
+
 
 </body>
 </html>

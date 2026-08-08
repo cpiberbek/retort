@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\PemeriksaanRetain;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -15,18 +16,16 @@ class PemeriksaanRetainController extends Controller
     public function index(Request $request)
     {
         $query = PemeriksaanRetain::withCount('items')
-        ->with('creator')
-        ->latest();
+            ->with(['creator', 'items'])
+            ->latest();
 
-        // Optional: Filter otomatis agar user hanya melihat data Plant-nya sendiri
-        /*
-        if (Auth::check() && Auth::user()->plant) {
-             $query->where('plant_uuid', Auth::user()->plant);
-        }
-        */
+        $query->when($request->date, fn($q) => $q->whereDate('tanggal', $request->date));
 
-        $query->when($request->start_date, fn($q) => $q->where('tanggal', '>=', $request->start_date));
-        $query->when($request->end_date, fn($q) => $q->where('tanggal', '<=', $request->end_date));
+        $query->when($request->kode_produksi, function ($q) use ($request) {
+            $q->whereHas('items', function ($item) use ($request) {
+                $item->where('kode_produksi', 'like', '%' . $request->kode_produksi . '%');
+            });
+        });
 
         $pemeriksaanRetains = $query->paginate(15);
 
@@ -267,49 +266,95 @@ class PemeriksaanRetainController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
         $date = $request->input('date');
+        $kodeProduksi = $request->input('kode_produksi');
         $userPlant = Auth::user()->plant;
 
         $query = PemeriksaanRetain::with(['items', 'creator']);
+
         if (Auth::check() && !empty($userPlant)) {
             $query->where('plant_uuid', $userPlant);
         }
 
-        // Filter tanggal
         $query->when($date, function ($q) use ($date) {
             $q->whereDate('tanggal', $date);
         });
 
+        $query->when($kodeProduksi, function ($q) use ($kodeProduksi) {
+            $q->whereHas('items', function ($item) use ($kodeProduksi) {
+                $item->where('kode_produksi', 'like', '%' . $kodeProduksi . '%');
+            });
+        });
+
         $retains = $query->orderBy('tanggal', 'asc')->get();
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Sampel Retain')
+            ->value('no_dokumen');
+
+        $perPage = 3;
+
+        $pages = collect();
+        $temp = collect();
+        $countItem = 0;
+
+        foreach ($retains as $retain) {
+            $itemCount = $retain->items ? $retain->items->count() : 0;
+
+            if ($countItem + $itemCount > $perPage && $temp->count() > 0) {
+                $pages->push($temp);
+                $temp = collect();
+                $countItem = 0;
+            }
+
+            $temp->push($retain);
+            $countItem += $itemCount;
+        }
+
+        if ($temp->count() > 0) {
+            $pages->push($temp);
+        }
+
+        $totalPage = max($pages->count(), 1);
 
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Landscape, A4)
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
 
-        // Metadata
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Pengecekan Retain Sampel');
 
-        // Hilangkan Header/Footer Bawaan
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margin
         $pdf->SetMargins(5, 5, 5);
         $pdf->SetAutoPageBreak(TRUE, 5);
 
-        // Set Font Default
         $pdf->SetFont('helvetica', '', 6);
 
-        $pdf->AddPage();
+        if ($pages->isEmpty()) {
+            $pages = collect([collect()]);
+            $totalPage = 1;
+        }
 
-        // 3. Render
-        $html = view('reports.pengecekan-retain-sampel', compact('retains', 'request'))->render();
-        $pdf->writeHTML($html, true, false, true, false, '');
+        foreach ($pages as $pageIndex => $pageData) {
+
+            $pdf->AddPage();
+
+            $html = view('reports.pengecekan-retain-sampel', [
+                'retains' => $pageData,
+                'request' => $request,
+                'noDokumen' => $noDokumen,
+                'pageIndex' => $pageIndex,
+                'totalPage' => $totalPage,
+                'perPage' => $perPage,
+                'lastPage' => ($pageIndex == $totalPage - 1),
+            ])->render();
+
+            $pdf->writeHTML($html, true, false, true, false, '');
+        }
 
         $filename = 'Pengecekan_Retain_Sampel_' . date('d-m-Y_His') . '.pdf';
         $pdf->Output($filename, 'I');

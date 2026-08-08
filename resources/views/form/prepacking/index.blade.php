@@ -26,9 +26,11 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('prepacking.exportPdf', ['date' => request('date')]) }}" target="_blank"
-                class="btn btn-danger">
+            <a href="#" id="exportPdfBtn" class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </a>
+            <a href="#" id="exportExcelBtn" class="btn btn-success">
+                <i class="bi bi-file-earmark-pdf"></i> Export Excel
             </a>
             @endcan
             @can('can access recycle')
@@ -42,7 +44,7 @@
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('prepacking.index') }}"
     class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-    <div class="row">
+    <div class="row w-100">
         <div class="col-md-4">
             <div class="mb-1">Pilih Tanggal</div>
             <div class="input-group mb-2">
@@ -350,6 +352,26 @@
 </div>
 </div>
 
+    {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 {{-- Auto-hide alert setelah 3 detik --}}
 <script>
     setTimeout(() => {
@@ -359,6 +381,45 @@
             alert.classList.add('fade');
         }
     }, 3000);
+</script>
+
+<script>
+document.getElementById('exportPdfBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const date = document.getElementById('filter_date').value.trim();
+    const search = document.getElementById('search').value.trim();
+
+    if (!date) {
+        new bootstrap.Modal(document.getElementById('warningModal')).show();
+        return;
+    }
+
+    const url = "{{ route('prepacking.exportPdf') }}" +
+        "?date=" + encodeURIComponent(date) +
+        "&search=" + encodeURIComponent(search);
+
+    window.open(url, '_blank');
+});
+
+
+document.getElementById('exportExcelBtn').addEventListener('click', function(e) {
+    e.preventDefault();
+
+    const date = document.getElementById('filter_date').value.trim();
+    const search = document.getElementById('search').value.trim();
+
+    if (!date) {
+        new bootstrap.Modal(document.getElementById('warningModal')).show();
+        return;
+    }
+
+    const url = "{{ route('prepacking.exportExcel') }}" +
+        "?date=" + encodeURIComponent(date) +
+        "&search=" + encodeURIComponent(search);
+
+    window.open(url, '_blank');
+});
 </script>
 
 {{-- CSS tambahan agar tabel lebih rapi --}}

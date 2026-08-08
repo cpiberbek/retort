@@ -26,7 +26,14 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('release_packing.exportPdf', ['date' => request('date'), 'jenis_kemasan' => request('jenis_kemasan')]) }}" target="_blank" class="btn btn-danger">
+            <a href="{{ route('release_packing.exportPdf', [
+                'date' => request('date'),
+                'jenis_kemasan' => request('jenis_kemasan'),
+                'search' => request('search')
+            ]) }}"
+            target="_blank"
+            class="btn btn-danger"
+            id="exportPdfBtn">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
             @endcan
@@ -39,29 +46,57 @@
     </div>
 
     {{-- Filter dan Live Search --}}
-    <form id="filterForm" method="GET" action="{{ route('release_packing.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="mb-1">Pilih Tanggal</div>
-                <div class="input-group mb-2">
+    <form id="filterForm" method="GET" action="{{ route('release_packing.index') }}"
+        class="border rounded bg-white shadow-sm p-3">
+
+        <div class="row align-items-end">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label class="form-label mb-1">Pilih Tanggal</label>
+                <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="bi bi-calendar-date text-muted"></i>
                         </span>
                     </div>
-                    <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi...">
+                    <input
+                        type="date"
+                        name="date"
+                        id="filter_date"
+                        class="form-control border-start-0"
+                        value="{{ request('date') }}">
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="mb-1">Pilih Jenis Kemasan</div>
-                <div class="input-group mb-2">
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label class="form-label mb-1">Cari Kode Batch</label>
+                <div class="input-group">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                    </div>
+                    <input
+                        type="text"
+                        name="search"
+                        id="search"
+                        class="form-control border-start-0"
+                        value="{{ request('search') }}"
+                        placeholder="Cari Kode Batch...">
+                </div>
+            </div>
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <label class="form-label mb-1">Pilih Jenis Kemasan</label>
+                <div class="input-group">
                     <div class="input-group-prepend">
                         <span class="input-group-text bg-white border-end-0">
                             <i class="bi bi-box-seam text-muted"></i>
                         </span>
                     </div>
-                    <select name="jenis_kemasan" id="filter_jenis_kemasan" class="form-select border-start-0 form-control">
+                    <select
+                        name="jenis_kemasan"
+                        id="filter_jenis_kemasan"
+                        class="form-select form-control border-start-0">
                         <option value="">Semua Jenis Kemasan</option>
                         <option value="Pouch" {{ request('jenis_kemasan') == 'Pouch' ? 'selected' : '' }}>Pouch</option>
                         <option value="Toples" {{ request('jenis_kemasan') == 'Toples' ? 'selected' : '' }}>Toples</option>
@@ -69,20 +104,34 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="mb-1">Cari Data</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
+
+            <div class="col-lg-3 col-md-6 mb-3">
+                <a href="{{ route('release_packing.index') }}" class="btn btn-primary w-100">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
+
+        </div>
+    </form>
+
+        {{-- warning modal--}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> & <b>Kode Batch</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                        OK
+                    </button>
                 </div>
             </div>
         </div>
-    </form>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -99,6 +148,32 @@
 
             date.addEventListener('change', () => form.submit());
             jenis_kemasan.addEventListener('change', () => form.submit());
+        });
+    </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const search = document.getElementById('search');
+            const date = document.getElementById('filter_date');
+            const jenisKemasan = document.getElementById('filter_jenis_kemasan');
+            const form = document.getElementById('filterForm');
+            const exportBtn = document.getElementById('exportPdfBtn');
+            let timer;
+
+            search.addEventListener('input', () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => form.submit(), 500);
+            });
+
+            date.addEventListener('change', () => form.submit());
+            jenisKemasan.addEventListener('change', () => form.submit());
+
+            exportBtn.addEventListener('click', function(e) {
+                if (search.value.trim() === '' || date.value === '') {
+                    e.preventDefault();
+                    $('#warningModal').modal('show');
+                }
+            });
         });
     </script>
 

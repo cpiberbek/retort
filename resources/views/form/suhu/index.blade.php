@@ -26,12 +26,13 @@
                     </a>
                 @endcan
                 @can('can access export')
-                    <a href="{{ route('suhu.exportPdf', ['date' => request('date'), 'shift' => request('shift')]) }}"
-                        target="_blank" class="btn btn-danger">
+                    <a href="{{ route('suhu.exportPdf', ['date' => request('date')]) }}"
+                        target="_blank" class="btn btn-danger" id="exportPdfBtn">
                         <i class="bi bi-file-earmark-pdf"></i> Export PDF
                     </a>
-                    <a href="{{ route('suhu.exportExcel', ['date' => request('date'), 'shift' => request('shift')]) }}"
-                        class="btn btn-success">
+
+                    <a href="{{ route('suhu.exportExcel', ['date' => request('date')]) }}"
+                        class="btn btn-success" id="exportExcelBtn">
                         <i class="bi bi-file-earmark-excel"></i> Export Excel
                     </a>
                 @endcan
@@ -493,6 +494,46 @@
         </div>
     </div>
     </div>
+
+    {{-- warning modal --}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const dateInput = document.getElementById('filter_date');
+            const warningModal = document.getElementById('warningModal');
+
+            function checkExport(e) {
+                if (!dateInput.value) {
+                    e.preventDefault();
+
+                    const modal = new bootstrap.Modal(warningModal);
+                    modal.show();
+                }
+            }
+
+            exportPdfBtn?.addEventListener('click', checkExport);
+            exportExcelBtn?.addEventListener('click', checkExport);
+        });
+    </script>
 
     <script>
         // Auto-hide alert setelah 3 detik

@@ -655,6 +655,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/sampling/verification/{uuid}', [SamplingController::class, 'updateVerification'])
         ->name('sampling.verification.update');
     Route::get('/sampling/export-pdf', [SamplingController::class, 'exportPdf'])->name('sampling.exportPdf');
+    Route::get('/sampling/export-excel', [SamplingController::class, 'exportExcel'])->name('sampling.exportExcel');
     Route::delete('/sampling/{uuid}', [SamplingController::class, 'destroy'])->name('sampling.destroy');
 
     // Packing
@@ -800,6 +801,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/prepacking/verification/{uuid}', [PrepackingController::class, 'updateVerification'])
         ->name('prepacking.verification.update');
     Route::get('/prepacking/export-pdf', [PrepackingController::class, 'exportPdf'])->name('prepacking.exportPdf');
+    Route::get('/prepacking/export-excel', [PrepackingController::class, 'exportExcel'])->name('prepacking.exportExcel');
     Route::delete('/prepacking/{uuid}', [PrepackingController::class, 'destroy'])->name('prepacking.destroy');
 
     // Washing
