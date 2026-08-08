@@ -351,25 +351,15 @@ class PrepackingController extends Controller
 
         $pdf->SetFont('helvetica', '', 6);
 
-        $chunks = $prepackings->chunk(6);
+        $pdf->AddPage('L', 'F4');
 
-        if ($chunks->isEmpty()) {
-            $chunks = collect([collect()]);
-        }
+        $html = view('reports.pengecekan-pre-packing', [
+            'prepackings' => $prepackings,
+            'request' => $request,
+            'noDokumen' => $noDokumen,
+        ])->render();
 
-        foreach ($chunks as $index => $chunk) {
-            $pdf->AddPage('L', 'F4');
-
-            $html = view('reports.pengecekan-pre-packing', [
-                'prepackings' => $chunk,
-                'request' => $request,
-                'noDokumen' => $noDokumen,
-                'isFirstPage' => $index === 0,
-                'isLastPage' => $index === $chunks->count() - 1,
-            ])->render();
-
-            $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-        }
+        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
         $pdf->Output('Pengecekan_Pre_Packing_' . date('Ymd_His') . '.pdf', 'I');
 
