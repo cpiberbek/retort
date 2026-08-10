@@ -30,7 +30,8 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
             ]);
         }
 
-        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater']);
+        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater'])
+            ->where('plant_uuid', auth()->user()->plant);
 
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);

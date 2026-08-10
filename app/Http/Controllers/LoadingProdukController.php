@@ -20,7 +20,8 @@ class LoadingProdukController extends Controller
     public function index(Request $request) // 1. Tambahkan (Request $request)
     {
         // 2. Mulai query builder
-        $query = LoadingProduk::with('creator');
+        $query = LoadingProduk::with('creator')
+        ->where('plant_uuid', auth()->user()->plant);
 
         // 3. Terapkan filter jika ada input
         if ($request->filled('date')) {

@@ -20,7 +20,8 @@ class PackagingInspectionController extends Controller
     public function index(Request $request): View
     {
         // 1. Memulai query builder
-        $query = PackagingInspection::query();
+        $query = PackagingInspection::query()
+            ->where('plant_uuid', auth()->user()->plant);
 
         // 2. Terapkan filter pencarian
         if ($request->filled('search')) {
