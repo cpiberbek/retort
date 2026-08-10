@@ -179,63 +179,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
                             {{-- Modal Result --}}
                             <td class="text-center">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#resModal{{ $dep->uuid }}"
-                                    class="fw-bold text-decoration-underline">Result</a>
-                                    <div class="modal fade" id="resModal{{ $dep->uuid }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                            <div class="modal-content">
-                                                <div class="modal-header bg-warning text-white">
-                                                    <h5 class="modal-title">Detail Labelisasi PVDC</h5>
-                                                    <button type="button" class="btn-close"
-                                                    data-bs-dismiss="modal"></button>
-                                                </div>
-                                                <div class="modal-body table-responsive">
-                                                    <table class="table table-bordered table-sm text-center align-middle">
-                                                        <thead class="table-light">
-                                                            <tr>
-                                                                <th>Mesin</th>
-                                                                <th>Kode Batch</th>
-                                                                <th>Gambar</th>
-                                                                <th>Ket</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @foreach($dep->labelisasi_detail as $item)
-                                                            <tr>
-                                                                <td>{{ $item['mesin'] ?? '-' }}</td>
-
-                                                                <td>{{ $item['mincing']->kode_produksi ?? 'Batch tidak
-                                                                ditemukan' }}</td>
-
-                                                                <td>
-                                                                    @if(!empty($item['file']))
-                                                                    @php
-                                                                        $fileUrl = $item['file'];
-                                                                        if (preg_match('/^https?:\/\/[^\/]+\/storage\/(.+)$/i', $fileUrl, $matches)) {
-                                                                            $fileUrl = asset('storage/' . $matches[1]);
-                                                                        } elseif (!preg_match('/^https?:\/\//i', $fileUrl)) {
-                                                                            $fileUrl = asset('storage/' . ltrim($fileUrl, '/'));
-                                                                        }
-                                                                    @endphp
-                                                                    <a href="{{ $fileUrl }}" target="_blank">
-                                                                        <img src="{{ $fileUrl }}" width="50" class="img-thumbnail">
-                                                                    </a>
-                                                                @else
-                                                                -
-                                                                @endif
-                                                            </td>
-
-                                                            <td>{{ $item['keterangan'] ?? '-' }}</td>
-                                                        </tr>
-                                                        @endforeach
-
-                                                    </tbody>
-
-                                                </table>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <a href="#" class="fw-bold text-decoration-underline btn-result"
+                                    data-uuid="{{ $dep->uuid }}">Result</a>
                             </td>
 
                             <td class="text-center">{{ $dep->username }}</td>
@@ -371,7 +316,34 @@ document.addEventListener('DOMContentLoaded', function () {
             <div class="mt-3">{{ $data->withQueryString()->links('pagination::bootstrap-5') }}</div>
         </div>
         <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                document.querySelectorAll('.btn-result').forEach(function (button) {
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+
+                        const uuid = this.dataset.uuid;
+
+                        fetch("{{ url('/labelisasi-pvdc') }}/" + uuid + "/result")
+                            .then(response => response.text())
+                            .then(html => {
+                                document.body.insertAdjacentHTML('beforeend', html);
+
+                                const modalElement = document.getElementById('resultModal' + uuid);
+
+                                const modal = new bootstrap.Modal(modalElement);
+
+                                modalElement.addEventListener('hidden.bs.modal', function () {
+                                    this.remove();
+                                });
+
+                                modal.show();
+                            });
+                    });
+                });
+            });
+
             setTimeout(() => { document.querySelector('.alert')?.classList.remove('show'); }, 3000);
+            
         </script>
         <style>
             .table td,

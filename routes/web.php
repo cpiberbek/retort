@@ -730,6 +730,7 @@ Route::middleware('auth')->group(function () {
 
     // Labelisasi PVDC
     Route::get('/labelisasi_pvdc', [Labelisasi_pvdcController::class, 'index'])->name('labelisasi_pvdc.index');
+    Route::get('/labelisasi-pvdc/{uuid}/result', [Labelisasi_pvdcController::class, 'result'])->name('labelisasi_pvdc.result');
     Route::get('/labelisasi_pvdc/create', [Labelisasi_pvdcController::class, 'create'])->name('labelisasi_pvdc.create');
     Route::post('/labelisasi_pvdc', [Labelisasi_pvdcController::class, 'store'])->name('labelisasi_pvdc.store');
     Route::get('/labelisasi_pvdc/update/{uuid}', [Labelisasi_pvdcController::class, 'update'])->name('labelisasi_pvdc.update.form');
