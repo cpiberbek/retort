@@ -40,6 +40,7 @@ class MagnetTrapModel extends Model
         'catatan_spv',
         'verified_by_spv_uuid',
         'verified_at_spv',
+        'tanggal',
     ];
 
     public function updater()
