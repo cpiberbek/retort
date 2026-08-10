@@ -481,7 +481,7 @@
                                                         id="premix_start"
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_mixing_premix_start', $mincing->waktu_mixing_premix_start) }}"
-                                                        disabled>
+                                                        >
 
                                                     <span>-</span>
 
@@ -489,7 +489,7 @@
                                                         id="premix_end"
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_mixing_premix_end', $mincing->waktu_mixing_premix_end) }}"
-                                                        disabled>
+                                                        >
 
                                                     <span id="premix_result" class="badge bg-light text-dark">
                                                         ({{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix ?? 0) }}) Menit
@@ -533,7 +533,7 @@
                                                         id="bowl_start"
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_bowl_cutter_start', $mincing->waktu_bowl_cutter_start) }}"
-                                                        disabled>
+                                                        >
 
                                                     <span>-</span>
 
@@ -541,7 +541,7 @@
                                                         id="bowl_end"
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}"
-                                                        disabled>
+                                                        >
 
                                                     <span id="bowl_result" class="badge bg-light text-dark">
                                                         ({{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter ?? 0) }}) Menit
@@ -570,13 +570,11 @@
                                             <td class="text-start fw-semibold">Waktu Aging Emulsi (Menit)</td>
                                             <td><input type="time" name="waktu_aging_emulsi_awal"
                                                     class="form-control form-control-sm text-center"
-                                                    value="{{ old('waktu_aging_emulsi_awal', $mincing->waktu_aging_emulsi_awal) }}"
-                                                    {{ $mincing->waktu_aging_emulsi_awal ? 'readonly' : '' }}></td>
+                                                    value="{{ old('waktu_aging_emulsi_awal', $mincing->waktu_aging_emulsi_awal) }}"></td>
                                             <td class="fw-bold" style="width: 5%;">s/d</td>
                                             <td><input type="time" name="waktu_aging_emulsi_akhir"
                                                     class="form-control form-control-sm text-center"
-                                                    value="{{ old('waktu_aging_emulsi_akhir', $mincing->waktu_aging_emulsi_akhir) }}"
-                                                    {{ $mincing->waktu_aging_emulsi_akhir ? 'readonly' : '' }}></td>
+                                                    value="{{ old('waktu_aging_emulsi_akhir', $mincing->waktu_aging_emulsi_akhir) }}"></td>
                                         </tr>
 
                                         <tr>
@@ -605,14 +603,14 @@
                                                     <input type="time" id="mixing_start"
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_mixing_start', $mincing->waktu_mixing_start) }}"
-                                                        disabled>
+                                                        >
 
                                                     <span>-</span>
 
                                                     <input type="time" id="mixing_end"
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_mixing_end', $mincing->waktu_mixing_end) }}"
-                                                        disabled>
+                                                        >
 
                                                     <span id="mixing_result" class="badge bg-light text-dark">
                                                         ({{ old('waktu_mixing', $mincing->waktu_mixing ?? 0) }}) Menit
@@ -968,7 +966,7 @@
                 endHidden.value = end.value;
 
                 if (!start.value || !end.value) {
-                    result.textContent = "(0) Menit";
+                    result.textContent = "";
                     menit.value = "";
                     return;
                 }
@@ -1016,7 +1014,7 @@
                 endHidden.value = end.value;
 
                 if (!start.value || !end.value) {
-                    result.textContent = "(0) Menit";
+                    result.textContent = "";
                     menit.value = "";
                     return;
                 }
@@ -1064,8 +1062,8 @@
                 endHidden.value = end.value;
 
                 if (!start.value || !end.value) {
-                    menit.value = 0;
-                    result.innerText = '(0) Menit';
+                    menit.value = "";
+                    result.innerText = '';
                     return;
                 }
 
