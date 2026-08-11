@@ -156,11 +156,11 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <input type="number"
+                                                <input type="text"
                                                     name="non_premix[0][ph_bahan]"
                                                     class="form-control form-control-sm text-center"
-                                                    step="0.01"
-                                                    min="0">
+                                                    inputmode="decimal"
+                                                    oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/^\./, '').replace(/(\..*)\./g, '$1')">
                                             </td>
                                             <td><input type="number" name="non_premix[0][berat_bahan]" step="0.01"
                                                     class="form-control form-control-sm text-center"></td>
@@ -636,11 +636,11 @@
 
                         <td>
                             <input
-                                type="number"
+                                type="text"
                                 name="non_premix[${indexNonPremix}][ph_bahan]"
                                 class="form-control form-control-sm text-center"
-                                step="0.01"
-                                min="0">
+                                inputmode="decimal"
+                                oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/^\./, '').replace(/(\..*)\./g, '$1')">
                         </td>
 
                         <td>
@@ -727,15 +727,7 @@
                         e.preventDefault();
                         alert('Kode Batch tidak valid! Periksa kembali.');
                         kodeInput.focus();
-                        return;
                     }
-
-                    $('.kode-batch-select').each(function() {
-                        if ($(this).val() === null || $(this).val().length === 0) {
-                            $(this).prop('disabled', false);
-                            $(this).append(new Option('', '', true, true));
-                        }
-                    });
                 });
             });
 

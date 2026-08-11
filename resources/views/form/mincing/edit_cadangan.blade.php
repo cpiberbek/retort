@@ -7,10 +7,10 @@
             <div class="card-body">
                 <h4 class="mb-4 fw-bold text-primary">
                     <i class="bi bi-pencil-square me-2"></i>
-                    Update Pemeriksaan Mincing - Emulsifying - Aging
+                    Edit Pemeriksaan Mincing - Emulsifying - Aging (SPV)
                 </h4>
 
-                <form id="mincingForm" action="{{ route('mincing.update_qc', $mincing->uuid) }}" method="POST">
+                <form id="mincingForm" action="{{ route('mincing.edit_spv', $mincing->uuid) }}" method="POST">
                     @csrf
                     @method('PUT')
 
@@ -22,26 +22,19 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Tanggal</label>
                                     <input type="date" name="date" id="dateInput"
-                                        value="{{ old('date', $mincing->date) }}" class="form-control" required
-                                        {{ $mincing->date ? 'readonly' : '' }}>
+                                        value="{{ old('date', $mincing->date) }}" class="form-control" required>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Shift</label>
-                                    {{-- Catatan: attribute readonly pada select HTML butuh tambahan style pointer-events:
-                                none --}}
-                                    <select name="shift" id="shiftInput" class="form-control" required
-                                        {{ $mincing->shift ? 'readonly tabindex=-1 style=pointer-events:none;' : '' }}>
+                                    <select name="shift" id="shiftInput" class="form-control" required>
                                         <option value="">-- Pilih Shift --</option>
                                         <option value="1" {{ old('shift', $mincing->shift) == '1' ? 'selected' : '' }}>
-                                            Shift
-                                            1</option>
+                                            Shift 1</option>
                                         <option value="2" {{ old('shift', $mincing->shift) == '2' ? 'selected' : '' }}>
-                                            Shift
-                                            2</option>
+                                            Shift 2</option>
                                         <option value="3" {{ old('shift', $mincing->shift) == '3' ? 'selected' : '' }}>
-                                            Shift
-                                            3</option>
+                                            Shift 3</option>
                                     </select>
                                 </div>
                             </div>
@@ -49,30 +42,23 @@
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nama Varian</label>
-                                    @if ($mincing->nama_produk)
-                                        <input type="text" class="form-control" value="{{ $mincing->nama_produk }}"
-                                            readonly>
-                                        <input type="hidden" name="nama_produk" value="{{ $mincing->nama_produk }}">
-                                    @else
-                                        <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
-                                            required>
-                                            <option value="">-- Pilih Produk --</option>
-                                            @foreach ($produks as $produk)
-                                                <option value="{{ $produk->nama_produk }}"
-                                                    {{ old('nama_produk', $mincing->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
-                                                    {{ $produk->nama_produk }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    @endif
+                                    <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
+                                        required>
+                                        <option value="">-- Pilih Produk --</option>
+                                        @foreach ($produks as $produk)
+                                            <option value="{{ $produk->nama_produk }}"
+                                                {{ old('nama_produk', $mincing->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
+                                                {{ $produk->nama_produk }}
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
 
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Kode Batch</label>
                                     <input type="text" name="kode_produksi" id="kode_produksi"
                                         class="form-control text-uppercase" maxlength="10"
-                                        value="{{ old('kode_produksi', $mincing->kode_produksi) }}" required
-                                        {{ $mincing->kode_produksi ? 'readonly' : '' }}>
+                                        value="{{ old('kode_produksi', $mincing->kode_produksi) }}" required>
                                     <small id="kodeError" class="text-danger d-none"></small>
                                 </div>
                             </div>
@@ -99,12 +85,12 @@
                                         <tr>
                                             <td class="text-start fw-semibold">Waktu Mulai</td>
                                             <td><input type="time" name="waktu_mulai"
-                                                class="form-control form-control-sm text-center"
-                                                value="{{ old('waktu_mulai', $mincing->waktu_mulai) }}">
+                                                    class="form-control form-control-sm text-center"
+                                                    value="{{ old('waktu_mulai', $mincing->waktu_mulai) }}"></td>
                                             <td class="fw-bold">s/d</td>
                                             <td><input type="time" name="waktu_selesai"
-                                                class="form-control form-control-sm text-center"
-                                                value="{{ old('waktu_selesai', $mincing->waktu_selesai) }}">
+                                                    class="form-control form-control-sm text-center"
+                                                    value="{{ old('waktu_selesai', $mincing->waktu_selesai) }}"></td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -162,17 +148,7 @@
                                                 }
 
                                                 if (array_key_exists('inspection_uuid', $np)) {
-                                                    $inspectionUuid = $np['inspection_uuid'];
-
-                                                    if (is_array($inspectionUuid)) {
-                                                        foreach ($inspectionUuid as $uuid) {
-                                                            if (!empty($uuid)) {
-                                                                $groupedNonPremix[$key]['inspection_uuid'][] = $uuid;
-                                                            }
-                                                        }
-                                                    } elseif (!empty($inspectionUuid)) {
-                                                        $groupedNonPremix[$key]['inspection_uuid'][] = $inspectionUuid;
-                                                    }
+                                                    $groupedNonPremix[$key]['inspection_uuid'][] = $np['inspection_uuid'];
                                                 }
                                             }
                                         @endphp
@@ -181,22 +157,12 @@
 
                                             @foreach ($groupedNonPremix as $i => $np)
 
-                                                @php
-                                                    $hasBahan = !empty($np['nama_bahan']);
-                                                    $hasKode = !empty($np['inspection_uuid']);
-                                                    $hasSuhu = $np['suhu_bahan'] !== null && $np['suhu_bahan'] !== '';
-                                                    $hasPh = $np['ph_bahan'] !== null && $np['ph_bahan'] !== '';
-                                                    $hasBerat = $np['berat_bahan'] !== null && $np['berat_bahan'] !== '';
-                                                    $hasSensori = !empty($np['sensori']);
-                                                @endphp
-
                                                 <tr>
                                                     <td>
                                                         <select
                                                             name="non_premix[{{ $loop->index }}][nama_bahan]"
                                                             class="form-control form-select-sm text-center nama-bahan-select select2"
-                                                            required
-                                                            {{ $hasBahan ? 'disabled' : '' }}>
+                                                            required>
 
                                                             <option value="" disabled>
                                                                 -- Pilih Bahan --
@@ -209,22 +175,15 @@
                                                                     {{ $rm->nama_bahan_baku }}
                                                                 </option>
                                                             @endforeach
-                                                        </select>
 
-                                                        @if ($hasBahan)
-                                                            <input
-                                                                type="hidden"
-                                                                name="non_premix[{{ $loop->index }}][nama_bahan]"
-                                                                value="{{ $np['nama_bahan'] }}">
-                                                        @endif
+                                                        </select>
                                                     </td>
 
                                                     <td>
                                                         <select
                                                             name="non_premix[{{ $loop->index }}][inspection_uuid][]"
                                                             class="form-control form-select-sm text-center kode-batch-select select2"
-                                                            multiple
-                                                            {{ $hasKode ? 'disabled' : '' }}>
+                                                            multiple>
 
                                                             @foreach ($inspections as $insp)
                                                                 @if ($insp->inspection && $insp->inspection->bahan_baku === $np['nama_bahan'])
@@ -236,6 +195,7 @@
                                                                     </option>
                                                                 @endif
                                                             @endforeach
+
                                                         </select>
 
                                                         @foreach ($np['inspection_uuid'] as $uuid)
@@ -251,16 +211,14 @@
                                                             <button
                                                                 type="button"
                                                                 class="btn btn-outline-secondary btn-toggle-minus"
-                                                                tabindex="-1"
-                                                                {{ $hasSuhu ? 'disabled' : '' }}>±</button>
+                                                                tabindex="-1">±</button>
 
                                                             <input
                                                                 type="text"
                                                                 inputmode="decimal"
                                                                 name="non_premix[{{ $loop->index }}][suhu_bahan]"
                                                                 value="{{ $np['suhu_bahan'] }}"
-                                                                class="form-control form-control-sm text-center suhu-number-input"
-                                                                {{ $hasSuhu ? 'readonly' : '' }}>
+                                                                class="form-control form-control-sm text-center suhu-number-input">
                                                         </div>
                                                     </td>
 
@@ -271,8 +229,7 @@
                                                             value="{{ $np['ph_bahan'] }}"
                                                             step="0.01"
                                                             min="0"
-                                                            class="form-control form-control-sm text-center"
-                                                            {{ $hasPh ? 'readonly' : '' }}>
+                                                            class="form-control form-control-sm text-center">
                                                     </td>
 
                                                     <td>
@@ -281,8 +238,7 @@
                                                             name="non_premix[{{ $loop->index }}][berat_bahan]"
                                                             value="{{ $np['berat_bahan'] }}"
                                                             step="0.01"
-                                                            class="form-control form-control-sm text-center"
-                                                            {{ $hasBerat ? 'readonly' : '' }}>
+                                                            class="form-control form-control-sm text-center">
                                                     </td>
 
                                                     <td>
@@ -298,8 +254,7 @@
                                                         <button
                                                             type="button"
                                                             class="btn btn-sm btn-danger hapusBaris"
-                                                            title="Hapus"
-                                                            disabled>
+                                                            title="Hapus">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </td>
@@ -325,6 +280,7 @@
                                                                 {{ $rm->nama_bahan_baku }}
                                                             </option>
                                                         @endforeach
+
                                                     </select>
                                                 </td>
 
@@ -348,6 +304,7 @@
                                                                 </option>
                                                             @endif
                                                         @endforeach
+
                                                     </select>
                                                 </td>
 
@@ -415,6 +372,7 @@
                             </div>
 
 
+
                             {{-- ===================== PREMIX ===================== --}}
                             <div class="table-responsive mb-4">
                                 <table class="table table-bordered text-center align-middle" id="tabelPremix">
@@ -432,49 +390,34 @@
                                     </thead>
                                     <tbody id="tbodyPremix">
                                         @php
-                                            $premix =
-                                                $premixData ??
-                                                (is_array($mincing->premix)
-                                                    ? $mincing->premix
-                                                    : json_decode($mincing->premix ?? '[]', true));
+                                            $premixData = is_array($mincing->premix)
+                                                ? $mincing->premix
+                                                : json_decode($mincing->premix ?? '[]', true);
                                         @endphp
 
-                                        @if (!empty($premix) && is_array($premix))
-                                            @foreach ($premix as $i => $px)
+                                        @if (!empty($premixData) && is_array($premixData))
+                                            @foreach ($premixData as $i => $px)
                                                 <tr>
                                                     <td><input type="text"
                                                             name="premix[{{ $i }}][nama_premix]"
-                                                            value="{{ old(
-                                                                "
-                                                                                                                                                                                                                                                                                                premix.$i.nama_premix",
-                                                                $px['nama_premix'] ?? '',
-                                                            ) }}"
-                                                            class="form-control form-control-sm text-center"
-                                                            {{ !empty($px['nama_premix']) ? 'readonly' : '' }}></td>
+                                                            value="{{ old("premix.$i.nama_premix", $px['nama_premix'] ?? '') }}"
+                                                            class="form-control form-control-sm text-center"></td>
                                                     <td><input type="text"
                                                             name="premix[{{ $i }}][kode_premix]"
-                                                            value="{{ old(
-                                                                "
-                                                                                                                                                                                                                                                                                                premix.$i.kode_premix",
-                                                                $px['kode_premix'] ?? '',
-                                                            ) }}"
-                                                            class="form-control form-control-sm text-center"
-                                                            {{ !empty($px['kode_premix']) ? 'readonly' : '' }}></td>
+                                                            value="{{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') }}"
+                                                            class="form-control form-control-sm text-center"></td>
                                                     <td><input type="number"
                                                             name="premix[{{ $i }}][berat_premix]"
                                                             step="0.01"
-                                                            value="{{ old(" premix.$i.berat_premix", $px['berat_premix'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"
-                                                            {{ !empty($px['berat_premix']) ? 'readonly' : '' }}></td>
+                                                            value="{{ old("premix.$i.berat_premix", $px['berat_premix'] ?? '') }}"
+                                                            class="form-control form-control-sm text-center"></td>
                                                     <td class="text-center"><input type="checkbox"
                                                             name="premix[{{ $i }}][sensori_premix]"
                                                             value="Oke"
                                                             {{ old("premix.$i.sensori_premix", $px['sensori_premix'] ?? '') == 'Oke' ? 'checked' : '' }}
-                                                            {{ !empty($px['sensori_premix']) ? 'onclick=return false;' : '' }}
                                                             class="form-check-input"></td>
                                                     <td><button type="button"
-                                                            class="btn btn-danger btn-sm hapusBarisPremix"
-                                                            {{ !empty($px['nama_premix']) ? 'disabled' : '' }}><i
+                                                            class="btn btn-danger btn-sm hapusBarisPremix"><i
                                                                 class="bi bi-trash"></i></button></td>
                                                 </tr>
                                             @endforeach
@@ -528,10 +471,9 @@
                                                                 <td style="width: 45%;">
                                                                     <select
                                                                         name="suhu_grinding_input[{{ $key }}][daging]"
-                                                                        class="form-control form-select-sm"
-                                                                        {{ !empty($item['daging']) ? 'readonly tabindex=-1 style=pointer-events:none;' : '' }}>
-                                                                        <option value="" selected disabled>Pilih
-                                                                            Daging</option>
+                                                                        class="form-control form-select-sm">
+                                                                        <option value="" disabled>Pilih Daging
+                                                                        </option>
                                                                         <option value="BEEF"
                                                                             {{ ($item['daging'] ?? '') == 'BEEF' ? 'selected' : '' }}>
                                                                             BEEF</option>
@@ -554,20 +496,17 @@
                                                                 </td>
                                                                 <td style="width: 45%;">
                                                                     <div class="input-group input-group-sm">
-                                                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
-                                                                            {{ !empty($item['suhu']) ? 'disabled' : '' }}>±</button>
+                                                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
                                                                         <input type="text" inputmode="decimal"
                                                                             name="suhu_grinding_input[{{ $key }}][suhu]"
                                                                             value="{{ $item['suhu'] ?? '' }}"
                                                                             class="form-control form-control-sm text-center suhu-number-input"
-                                                                           
-                                                                            {{ !empty($item['suhu']) ? 'readonly' : '' }}>
+                                                                           >
                                                                     </div>
                                                                 </td>
                                                                 <td style="width: 10%;">
                                                                     <button type="button"
-                                                                        class="btn btn-sm btn-danger hapusBarisSuhu"
-                                                                        {{ !empty($item['daging']) ? 'disabled' : '' }}><i
+                                                                        class="btn btn-sm btn-danger hapusBarisSuhu"><i
                                                                             class="bi bi-trash"></i></button>
                                                                 </td>
                                                             </tr>
@@ -622,16 +561,14 @@
                                                     <input type="time"
                                                         id="premix_start"
                                                         class="form-control form-control-sm"
-                                                        value="{{ old('waktu_mixing_premix_start', $mincing->waktu_mixing_premix_start) }}"
-                                                        >
+                                                        value="{{ old('waktu_mixing_premix_start', $mincing->waktu_mixing_premix_start) }}">
 
                                                     <span>-</span>
 
                                                     <input type="time"
                                                         id="premix_end"
                                                         class="form-control form-control-sm"
-                                                        value="{{ old('waktu_mixing_premix_end', $mincing->waktu_mixing_premix_end) }}"
-                                                        >
+                                                        value="{{ old('waktu_mixing_premix_end', $mincing->waktu_mixing_premix_end) }}">
 
                                                     <span id="premix_result" class="badge bg-light text-dark">
                                                         ({{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix ?? 0) }}) Menit
@@ -674,16 +611,14 @@
                                                     <input type="time"
                                                         id="bowl_start"
                                                         class="form-control form-control-sm"
-                                                        value="{{ old('waktu_bowl_cutter_start', $mincing->waktu_bowl_cutter_start) }}"
-                                                        >
+                                                        value="{{ old('waktu_bowl_cutter_start', $mincing->waktu_bowl_cutter_start) }}">
 
                                                     <span>-</span>
 
                                                     <input type="time"
                                                         id="bowl_end"
                                                         class="form-control form-control-sm"
-                                                        value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}"
-                                                        >
+                                                        value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}">
 
                                                     <span id="bowl_result" class="badge bg-light text-dark">
                                                         ({{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter ?? 0) }}) Menit
@@ -707,28 +642,27 @@
                                                     value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}">
                                             </td>
                                         </tr>
-
                                         <tr>
                                             <td class="text-start fw-semibold">Waktu Aging Emulsi (Menit)</td>
                                             <td><input type="time" name="waktu_aging_emulsi_awal"
                                                     class="form-control form-control-sm text-center"
-                                                    value="{{ old('waktu_aging_emulsi_awal', $mincing->waktu_aging_emulsi_awal) }}"></td>
+                                                    value="{{ old('waktu_aging_emulsi_awal', $mincing->waktu_aging_emulsi_awal) }}">
+                                            </td>
                                             <td class="fw-bold" style="width: 5%;">s/d</td>
                                             <td><input type="time" name="waktu_aging_emulsi_akhir"
                                                     class="form-control form-control-sm text-center"
-                                                    value="{{ old('waktu_aging_emulsi_akhir', $mincing->waktu_aging_emulsi_akhir) }}"></td>
+                                                    value="{{ old('waktu_aging_emulsi_akhir', $mincing->waktu_aging_emulsi_akhir) }}">
+                                            </td>
                                         </tr>
 
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsi Gel (Std &lt;5°C)</td>
                                             <td colspan="3">
                                                 <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
-                                                        {{ $mincing->suhu_akhir_emulsi_gel ? 'disabled' : '' }}>±</button>
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
                                                     <input type="text" inputmode="decimal" name="suhu_akhir_emulsi_gel"
                                                         class="form-control form-control-sm text-center suhu-number-input"
-                                                        value="{{ rtrim(rtrim(old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel), '0'), '.') }}"
-                                                        {{ $mincing->suhu_akhir_emulsi_gel ? 'readonly' : '' }}>
+                                                        value="{{ rtrim(rtrim(old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel), '0'), '.') }}">
                                                 </div>
                                             </td>
                                         </tr>
@@ -744,15 +678,13 @@
                                                 <div class="d-flex align-items-center gap-2">
                                                     <input type="time" id="mixing_start"
                                                         class="form-control form-control-sm"
-                                                        value="{{ old('waktu_mixing_start', $mincing->waktu_mixing_start) }}"
-                                                        >
+                                                        value="{{ old('waktu_mixing_start', $mincing->waktu_mixing_start) }}">
 
                                                     <span>-</span>
 
                                                     <input type="time" id="mixing_end"
                                                         class="form-control form-control-sm"
-                                                        value="{{ old('waktu_mixing_end', $mincing->waktu_mixing_end) }}"
-                                                        >
+                                                        value="{{ old('waktu_mixing_end', $mincing->waktu_mixing_end) }}">
 
                                                     <span id="mixing_result" class="badge bg-light text-dark">
                                                         ({{ old('waktu_mixing', $mincing->waktu_mixing ?? 0) }}) Menit
@@ -773,57 +705,131 @@
                                             <td class="text-start fw-semibold">Suhu Akhir Mixing (Std 2–5°C)</td>
                                             <td>
                                                 <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
-                                                        {{ $mincing->suhu_akhir_mixing ? 'disabled' : '' }}>±</button>
-
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
                                                     <input type="text" inputmode="decimal" name="suhu_akhir_mixing"
                                                         class="form-control form-control-sm text-center suhu-number-input"
-                                                        value="{{ rtrim(rtrim(old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing), '0'), '.') }}"
-                                                        {{ $mincing->suhu_akhir_mixing ? 'readonly' : '' }}>
+                                                        value="{{ rtrim(rtrim(old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing), '0'), '.') }}">
                                                 </div>
                                             </td>
                                         </tr>
-
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsifying (Std 14±2°C)</td>
                                             <td>
                                                 <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
-                                                        {{ $mincing->suhu_akhir_emulsi ? 'disabled' : '' }}>±</button>
-
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
                                                     <input type="text" inputmode="decimal" name="suhu_akhir_emulsi"
                                                         class="form-control form-control-sm text-center suhu-number-input"
-                                                        value="{{ rtrim(rtrim(old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi), '0'), '.') }}"
-                                                        {{ $mincing->suhu_akhir_emulsi ? 'readonly' : '' }}>
+                                                        value="{{ rtrim(rtrim(old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi), '0'), '.') }}">
                                                 </div>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
+
                         </div>
                     </div>
 
+                    {{-- ===================== CATATAN ===================== --}}
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-header bg-secondary text-white fw-bold">Catatan</div>
                         <div class="card-body bg-light">
-                            <textarea name="catatan" class="form-control" rows="3" placeholder="Tambahkan catatan bila ada"
-                                {{ $mincing->catatan ? 'readonly' : '' }}>{{ old('catatan', $mincing->catatan) }}</textarea>
+                            <textarea name="catatan" class="form-control" rows="3" placeholder="Tambahkan catatan bila ada">{{ old('catatan', $mincing->catatan) }}</textarea>
                         </div>
                     </div>
 
+                    {{-- ===================== TOMBOL ===================== --}}
                     <div class="d-flex justify-content-between mt-3">
-                        <button type="submit" class="btn btn-success px-4"><i class="bi bi-save"></i> Update</button>
-                        <a href="{{ route('mincing.index') }}" class="btn btn-secondary px-4"><i
-                                class="bi bi-arrow-left"></i> Batal</a>
+                        <button type="submit" class="btn btn-success px-4">
+                            <i class="bi bi-save"></i> Update
+                        </button>
+                        <a href="{{ route('mincing.index') }}" class="btn btn-secondary px-4">
+                            <i class="bi bi-arrow-left"></i> Batal
+                        </a>
                     </div>
+
                 </form>
+
                 <hr>
                 <div id="resultArea"></div>
+
             </div>
         </div>
     </div>
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                width: '100%',
+                placeholder: '-- Pilih --',
+                allowClear: true
+            });
+        });
+    </script>
+
+    {{-- Auto date & shift (tetap set jika field kosong) --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dateInput = document.getElementById('dateInput');
+            const shiftInput = document.getElementById('shiftInput');
+
+            if (!dateInput.value) {
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                dateInput.value = `${yyyy}-${mm}-${dd}`;
+            }
+
+            if (!shiftInput.value) {
+                const hh = new Date().getHours();
+                if (hh >= 7 && hh < 15) shiftInput.value = "1";
+                else if (hh >= 15 && hh < 23) shiftInput.value = "2";
+                else shiftInput.value = "3";
+            }
+        });
+    </script>
+
+    {{-- Validasi Kode Produksi --}}
+    <script>
+        $(function() {
+            const kodeInput = $('#kode_produksi');
+            const kodeError = $('#kodeError');
+            const form = $('#mincingForm');
+
+            function validateKode() {
+                let value = kodeInput.val().toUpperCase().replace(/\s+/g, '');
+                kodeInput.val(value);
+                kodeError.text('').addClass('d-none');
+
+                if (value.length !== 10) {
+                    kodeError.text('Kode Batch harus 10 karakter').removeClass('d-none');
+                    return false;
+                }
+                if (!/^[A-Z0-9]+$/.test(value)) {
+                    kodeError.text('Hanya huruf besar & angka').removeClass('d-none');
+                    return false;
+                }
+                return true;
+            }
+
+            kodeInput.on('input', validateKode);
+
+            form.on('submit', function(e) {
+                if (!validateKode()) {
+                    e.preventDefault();
+                    alert('Kode Batch tidak valid! Periksa kembali.');
+                    kodeInput.focus();
+                }
+            });
+        });
+    </script>
+
+    {{-- Tambah / Hapus Row Dinamis --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const tbodyNon = document.getElementById('tbodyNonPremix');
@@ -1010,16 +1016,10 @@
                     const row = `
                         <tr>
                             <td>
-                                <select
+                                <input
+                                    type="text"
                                     name="premix[${indexPremix}][nama_premix]"
                                     class="form-control form-control-sm text-center">
-                                    <option value="">-- Pilih Premix --</option>
-                                    @foreach ($premixes as $premixItem)
-                                        <option value="{{ $premixItem->nama_premix }}">
-                                            {{ $premixItem->nama_premix }}
-                                        </option>
-                                    @endforeach
-                                </select>
                             </td>
 
                             <td>
@@ -1056,11 +1056,6 @@
                     `;
 
                     tbodyPremix.insertAdjacentHTML('beforeend', row);
-                    $(tbodyPremix.lastElementChild).find('select').select2({
-                        width: '100%',
-                        placeholder: '-- Pilih Premix --',
-                        allowClear: true
-                    });
                     indexPremix++;
                 });
             }
@@ -1074,7 +1069,7 @@
                             <td style="width: 45%;">
                                 <select
                                     name="suhu_grinding_input[${indexSuhu}][daging]"
-                                    class="form-control form-select-sm">
+                                    class="form-control form-select-sm select2">
                                     <option value="" selected disabled>Pilih Daging</option>
                                     <option value="BEEF">BEEF</option>
                                     <option value="SBB">SBB</option>
@@ -1112,11 +1107,7 @@
 
                     tbodySuhu.insertAdjacentHTML('beforeend', row);
 
-                    $(tbodySuhu.lastElementChild).find('select').select2({
-                        width: '100%',
-                        placeholder: '-- Pilih --',
-                        allowClear: true
-                    });
+                    initSelect2(tbodySuhu.lastElementChild);
 
                     indexSuhu++;
                 });
@@ -1140,88 +1131,6 @@
                 }
             });
         });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const dateInput = document.getElementById('dateInput');
-            const shiftInput = document.getElementById('shiftInput');
-
-            if (!dateInput.value) {
-                const now = new Date();
-                dateInput.value = now.toISOString().split('T')[0];
-            }
-
-            if (!shiftInput.value) {
-                const hh = new Date().getHours();
-
-                if (hh >= 7 && hh < 15) {
-                    shiftInput.value = "1";
-                } else if (hh >= 15 && hh < 23) {
-                    shiftInput.value = "2";
-                } else {
-                    shiftInput.value = "3";
-                }
-            }
-        });
-
-        $(function() {
-            const kodeInput = $('#kode_produksi');
-            const kodeError = $('#kodeError');
-            const form = $('#mincingForm');
-
-            function validateKode() {
-                let value = kodeInput.val().toUpperCase().replace(/\s+/g, '');
-
-                kodeInput.val(value);
-                kodeError.text('').addClass('d-none');
-
-                if (value.length !== 10) return false;
-                if (!/^[A-Z0-9]+$/.test(value)) return false;
-
-                return true;
-            }
-
-            kodeInput.on('input', validateKode);
-
-            form.on('submit', function(e) {
-                if (!validateKode()) {
-                    e.preventDefault();
-                    alert('Kode Batch tidak valid! Periksa kembali.');
-                    kodeInput.focus();
-                }
-            });
-        });
-    </script>
-
-    <script>
-        // --- Script Input Suhu (mendukung nilai minus di HP) ---
-        document.addEventListener('input', function(e) {
-            if (!e.target.classList.contains('suhu-number-input')) return;
-            let val = e.target.value;
-            val = val.replace(/[^0-9.,-]/g, '');
-            val = val.replace(',', '.');
-            if (val.indexOf('-') > 0) {
-                val = val.replace(/-/g, '');
-                val = '-' + val;
-            }
-            const parts = val.split('.');
-            if (parts.length > 2) {
-                val = parts[0] + '.' + parts.slice(1).join('');
-            }
-            e.target.value = val;
-        });
-
-        // --- Tombol ± Toggle Minus ---
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.btn-toggle-minus');
-            if (!btn) return;
-            const input = btn.closest('.input-group').querySelector('input');
-            if (!input) return;
-            input.value = input.value.startsWith('-')
-                ? input.value.slice(1)
-                : '-' + input.value;
-            input.dispatchEvent(new Event('input'));
-            input.focus();
-        });
     </script>
 
     {{-- JS WAKTU MIXING PREMIX --}}
@@ -1241,7 +1150,7 @@
                 endHidden.value = end.value;
 
                 if (!start.value || !end.value) {
-                    result.textContent = "";
+                    result.textContent = "(0) Menit";
                     menit.value = "";
                     return;
                 }
@@ -1289,7 +1198,7 @@
                 endHidden.value = end.value;
 
                 if (!start.value || !end.value) {
-                    result.textContent = "";
+                    result.textContent = "(0) Menit";
                     menit.value = "";
                     return;
                 }
@@ -1337,8 +1246,8 @@
                 endHidden.value = end.value;
 
                 if (!start.value || !end.value) {
-                    menit.value = "";
-                    result.innerText = '';
+                    menit.value = 0;
+                    result.innerText = '(0) Menit';
                     return;
                 }
 
@@ -1359,6 +1268,38 @@
             end.addEventListener('change', hitungMixing);
 
             hitungMixing();
+        });
+    </script>
+
+    <script>
+        // --- Script Input Suhu (mendukung nilai minus di HP) ---
+        document.addEventListener('input', function(e) {
+            if (!e.target.classList.contains('suhu-number-input')) return;
+            let val = e.target.value;
+            val = val.replace(/[^0-9.,-]/g, '');
+            val = val.replace(',', '.');
+            if (val.indexOf('-') > 0) {
+                val = val.replace(/-/g, '');
+                val = '-' + val;
+            }
+            const parts = val.split('.');
+            if (parts.length > 2) {
+                val = parts[0] + '.' + parts.slice(1).join('');
+            }
+            e.target.value = val;
+        });
+
+        // --- Tombol ± Toggle Minus ---
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-toggle-minus');
+            if (!btn) return;
+            const input = btn.closest('.input-group').querySelector('input');
+            if (!input) return;
+            input.value = input.value.startsWith('-')
+                ? input.value.slice(1)
+                : '-' + input.value;
+            input.dispatchEvent(new Event('input'));
+            input.focus();
         });
     </script>
 @endsection

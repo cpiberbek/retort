@@ -101,53 +101,96 @@
                                 <table class="table table-bordered text-center align-middle" id="tabelNonPremix">
                                     <thead class="table-primary">
                                         <tr>
-                                            <th colspan="7" class="text-start">Bahan Baku dan Bahan Tambahan (Non-Premix)
+                                            <th colspan="7" class="text-start">
+                                                Bahan Baku dan Bahan Tambahan (Non-Premix)
                                             </th>
                                         </tr>
                                         <tr>
-                                            <th>Bahan</th>
-                                            <th>Kode</th>
-                                            <th>(°C)</th>
-                                            <th>*pH</th>
-                                            <th>Kg</th>
-                                            <th>Sens</th>
-                                            <th>Aksi</th>
+                                            <th style="width: 30%;">Bahan</th>
+                                            <th style="width: 30%;">Kode</th>
+                                            <th style="width: 10%;">(°C)</th>
+                                            <th style="width: 10%;">*pH</th>
+                                            <th style="width: 10%;">Kg</th>
+                                            <th style="width: 5%;">Sens</th>
+                                            <th style="width: 5%;">Aksi</th>
                                         </tr>
                                     </thead>
+
                                     <tbody id="tbodyNonPremix">
+
                                         @php
                                             $nonPremixData = is_array($mincing->non_premix)
                                                 ? $mincing->non_premix
                                                 : json_decode($mincing->non_premix ?? '[]', true);
+
+                                            $nonPremixData = is_array($nonPremixData) ? $nonPremixData : [];
+
+                                            $groupedNonPremix = [];
+
+                                            foreach ($nonPremixData as $np) {
+                                                $key = implode('|', [
+                                                    $np['nama_bahan'] ?? '',
+                                                    $np['suhu_bahan'] ?? '',
+                                                    $np['ph_bahan'] ?? '',
+                                                    $np['berat_bahan'] ?? '',
+                                                    $np['sensori'] ?? '',
+                                                ]);
+
+                                                if (!isset($groupedNonPremix[$key])) {
+                                                    $groupedNonPremix[$key] = [
+                                                        'nama_bahan' => $np['nama_bahan'] ?? '',
+                                                        'suhu_bahan' => $np['suhu_bahan'] ?? '',
+                                                        'ph_bahan' => $np['ph_bahan'] ?? '',
+                                                        'berat_bahan' => $np['berat_bahan'] ?? '',
+                                                        'sensori' => $np['sensori'] ?? '',
+                                                        'inspection_uuid' => [],
+                                                    ];
+                                                }
+
+                                                if (array_key_exists('inspection_uuid', $np)) {
+                                                    $groupedNonPremix[$key]['inspection_uuid'][] = $np['inspection_uuid'];
+                                                }
+                                            }
                                         @endphp
 
-                                        @if (!empty($nonPremixData) && is_array($nonPremixData))
-                                            @foreach ($nonPremixData as $i => $np)
+                                        @if (!empty($groupedNonPremix))
+
+                                            @foreach ($groupedNonPremix as $i => $np)
+
                                                 <tr>
                                                     <td>
-                                                        <select name="non_premix[{{ $i }}][nama_bahan]"
-                                                            class="form-control form-select-sm text-center" required>
-                                                            <option value="" disabled>-- Pilih Bahan --</option>
+                                                        <select
+                                                            name="non_premix[{{ $loop->index }}][nama_bahan]"
+                                                            class="form-control form-select-sm text-center nama-bahan-select select2"
+                                                            required>
+
+                                                            <option value="" disabled>
+                                                                -- Pilih Bahan --
+                                                            </option>
+
                                                             @foreach ($rawMaterials as $rm)
-                                                                <option value="{{ $rm->nama_bahan_baku }}"
-                                                                    {{ old("non_premix.$i.nama_bahan", $np['nama_bahan'] ?? '') == $rm->nama_bahan_baku ? 'selected' : '' }}>
+                                                                <option
+                                                                    value="{{ $rm->nama_bahan_baku }}"
+                                                                    {{ $np['nama_bahan'] == $rm->nama_bahan_baku ? 'selected' : '' }}>
                                                                     {{ $rm->nama_bahan_baku }}
                                                                 </option>
                                                             @endforeach
+
                                                         </select>
                                                     </td>
-                                                    <td>
-                                                        <select name="non_premix[{{ $i }}][inspection_uuid]"
-                                                            class="form-control form-select-sm text-center kode-batch-select"
-                                                            {{ !empty($np['inspection_uuid']) ? 'disabled' : '' }}>
 
-                                                            <option value="">-- Pilih Batch --</option>
+                                                    <td>
+                                                        <select
+                                                            name="non_premix[{{ $loop->index }}][inspection_uuid][]"
+                                                            class="form-control form-select-sm text-center kode-batch-select select2"
+                                                            multiple>
 
                                                             @foreach ($inspections as $insp)
-                                                                @if ($insp->inspection)
-                                                                    <option value="{{ $insp->uuid }}"
+                                                                @if ($insp->inspection && $insp->inspection->bahan_baku === $np['nama_bahan'])
+                                                                    <option
+                                                                        value="{{ $insp->uuid }}"
                                                                         data-bahan="{{ $insp->inspection->bahan_baku }}"
-                                                                        {{ old("non_premix.$i.inspection_uuid", $np['inspection_uuid'] ?? '') == $insp->uuid ? 'selected' : '' }}>
+                                                                        {{ in_array($insp->uuid, $np['inspection_uuid']) ? 'selected' : '' }}>
                                                                         {{ $insp->kode_batch }}
                                                                     </option>
                                                                 @endif
@@ -155,60 +198,107 @@
 
                                                         </select>
 
-                                                        @if (!empty($np['inspection_uuid']))
-                                                            <input type="hidden"
-                                                                name="non_premix[{{ $i }}][inspection_uuid]"
-                                                                value="{{ $np['inspection_uuid'] }}">
-                                                        @endif
+                                                        @foreach ($np['inspection_uuid'] as $uuid)
+                                                            <input
+                                                                type="hidden"
+                                                                name="non_premix[{{ $loop->parent->index }}][inspection_uuid][]"
+                                                                value="{{ $uuid }}">
+                                                        @endforeach
                                                     </td>
-                                                    <td><div class="input-group input-group-sm">
-                                                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                        <input type="text" inputmode="decimal"
-                                                            name="non_premix[{{ $i }}][suhu_bahan]"
-                                                            value="{{ old("non_premix.$i.suhu_bahan", $np['suhu_bahan'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center suhu-number-input">
-                                                    </div></td>
-                                                    <td><input type="number"
-                                                            name="non_premix[{{ $i }}][ph_bahan]" step="0.01"
-                                                            value="{{ old("non_premix.$i.ph_bahan", $np['ph_bahan'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"></td>
-                                                    <td><input type="number"
-                                                            name="non_premix[{{ $i }}][berat_bahan]"
+
+                                                    <td>
+                                                        <div class="input-group input-group-sm">
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-outline-secondary btn-toggle-minus"
+                                                                tabindex="-1">±</button>
+
+                                                            <input
+                                                                type="text"
+                                                                inputmode="decimal"
+                                                                name="non_premix[{{ $loop->index }}][suhu_bahan]"
+                                                                value="{{ $np['suhu_bahan'] }}"
+                                                                class="form-control form-control-sm text-center suhu-number-input">
+                                                        </div>
+                                                    </td>
+
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            name="non_premix[{{ $loop->index }}][ph_bahan]"
+                                                            value="{{ $np['ph_bahan'] }}"
                                                             step="0.01"
-                                                            value="{{ old("non_premix.$i.berat_bahan", $np['berat_bahan'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"></td>
-                                                    <td class="text-center"><input type="checkbox"
-                                                            name="non_premix[{{ $i }}][sensori]"
+                                                            min="0"
+                                                            class="form-control form-control-sm text-center">
+                                                    </td>
+
+                                                    <td>
+                                                        <input
+                                                            type="number"
+                                                            name="non_premix[{{ $loop->index }}][berat_bahan]"
+                                                            value="{{ $np['berat_bahan'] }}"
+                                                            step="0.01"
+                                                            class="form-control form-control-sm text-center">
+                                                    </td>
+
+                                                    <td>
+                                                        <input
+                                                            type="checkbox"
+                                                            name="non_premix[{{ $loop->index }}][sensori]"
                                                             value="Oke"
-                                                            {{ old("non_premix.$i.sensori", $np['sensori'] ?? '') == 'Oke' ? 'checked' : '' }}
-                                                            class="form-check-input"></td>
-                                                    <td><button type="button" class="btn btn-danger btn-sm hapusBaris"><i
-                                                                class="bi bi-trash"></i></button></td>
+                                                            {{ $np['sensori'] === 'Oke' ? 'checked' : '' }}
+                                                            class="form-check-input">
+                                                    </td>
+
+                                                    <td>
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-sm btn-danger hapusBaris"
+                                                            title="Hapus">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
+
                                             @endforeach
+
                                         @else
+
                                             <tr>
                                                 <td>
-                                                    <select name="non_premix[0][nama_bahan]"
-                                                        class="form-control form-select-sm text-center" required>
-                                                        <option value="" selected disabled>-- Pilih Bahan --</option>
-                                                        @foreach ($rawMaterials as $rm)
-                                                            <option value="{{ $rm->nama_bahan_baku }}">
-                                                                {{ $rm->nama_bahan_baku }}</option>
-                                                        @endforeach
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <select name="non_premix[0][inspection_uuid]"
-                                                        class="form-control form-select-sm text-center kode-batch-select">
+                                                    <select
+                                                        name="non_premix[0][nama_bahan]"
+                                                        class="form-control form-select-sm text-center nama-bahan-select select2"
+                                                        required>
 
                                                         <option value="" selected disabled>
-                                                            -- Pilih Batch --
+                                                            -- Pilih Bahan --
+                                                        </option>
+
+                                                        @foreach ($rawMaterials as $rm)
+                                                            <option value="{{ $rm->nama_bahan_baku }}">
+                                                                {{ $rm->nama_bahan_baku }}
+                                                            </option>
+                                                        @endforeach
+
+                                                    </select>
+                                                </td>
+
+                                                <td>
+                                                    <select
+                                                        name="non_premix[0][inspection_uuid][]"
+                                                        class="form-control form-select-sm text-center kode-batch-select select2"
+                                                        multiple
+                                                        disabled>
+
+                                                        <option value="" disabled>
+                                                            Pilih Bahan dahulu
                                                         </option>
 
                                                         @foreach ($inspections as $insp)
                                                             @if ($insp->inspection)
-                                                                <option value="{{ $insp->uuid }}"
+                                                                <option
+                                                                    value="{{ $insp->uuid }}"
                                                                     data-bahan="{{ $insp->inspection->bahan_baku }}">
                                                                     {{ $insp->kode_batch }}
                                                                 </option>
@@ -217,30 +307,71 @@
 
                                                     </select>
                                                 </td>
-                                                <td><div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                    <input type="text" inputmode="decimal" name="non_premix[0][suhu_bahan]"
-                                                        class="form-control form-control-sm text-center suhu-number-input">
-                                                </div></td>
-                                                <td><input type="number" name="non_premix[0][ph_bahan]" step="0.01"
-                                                        class="form-control form-control-sm text-center"></td>
-                                                <td><input type="number" name="non_premix[0][berat_bahan]"
-                                                        step="0.01" class="form-control form-control-sm text-center">
+
+                                                <td>
+                                                    <div class="input-group input-group-sm">
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-outline-secondary btn-toggle-minus"
+                                                            tabindex="-1">±</button>
+
+                                                        <input
+                                                            type="text"
+                                                            inputmode="decimal"
+                                                            name="non_premix[0][suhu_bahan]"
+                                                            class="form-control form-control-sm text-center suhu-number-input">
+                                                    </div>
                                                 </td>
-                                                <td class="text-center"><input type="checkbox"
-                                                        name="non_premix[0][sensori]" value="Oke"
-                                                        class="form-check-input"></td>
-                                                <td><button type="button" class="btn btn-danger btn-sm hapusBaris"><i
-                                                            class="bi bi-trash"></i></button></td>
+
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        name="non_premix[0][ph_bahan]"
+                                                        step="0.01"
+                                                        min="0"
+                                                        class="form-control form-control-sm text-center">
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        type="number"
+                                                        name="non_premix[0][berat_bahan]"
+                                                        step="0.01"
+                                                        class="form-control form-control-sm text-center">
+                                                </td>
+
+                                                <td>
+                                                    <input
+                                                        type="checkbox"
+                                                        name="non_premix[0][sensori]"
+                                                        value="Oke"
+                                                        class="form-check-input">
+                                                </td>
+
+                                                <td>
+                                                    <button
+                                                        type="button"
+                                                        class="btn btn-sm btn-danger hapusBaris"
+                                                        title="Hapus">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
+
                                         @endif
+
                                     </tbody>
                                 </table>
 
-                                <button type="button" class="btn btn-success btn-sm" id="tambahBarisNonPremix">
+                                <button
+                                    type="button"
+                                    class="btn btn-success btn-sm"
+                                    id="tambahBarisNonPremix">
                                     <i class="bi bi-plus-circle"></i> Tambah Bahan
                                 </button>
                             </div>
+
+
 
                             {{-- ===================== PREMIX ===================== --}}
                             <div class="table-responsive mb-4">
@@ -267,43 +398,88 @@
                                         @if (!empty($premixData) && is_array($premixData))
                                             @foreach ($premixData as $i => $px)
                                                 <tr>
-                                                    <td><input type="text"
-                                                            name="premix[{{ $i }}][nama_premix]"
-                                                            value="{{ old("premix.$i.nama_premix", $px['nama_premix'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"></td>
-                                                    <td><input type="text"
+                                                    <td>
+                                                        <select name="premix[{{ $i }}][nama_premix]"
+                                                            class="form-control form-select-sm text-center select2" required>
+                                                            <option value="">-- Pilih Premix --</option>
+                                                            @foreach ($premixes as $premix)
+                                                                <option value="{{ $premix->nama_premix }}"
+                                                                    {{ old("premix.$i.nama_premix", $px['nama_premix'] ?? '') == $premix->nama_premix ? 'selected' : '' }}>
+                                                                    {{ $premix->nama_premix }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+
+                                                    <td>
+                                                        <input type="text"
                                                             name="premix[{{ $i }}][kode_premix]"
                                                             value="{{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"></td>
-                                                    <td><input type="number"
+                                                            class="form-control form-control-sm text-center">
+                                                    </td>
+
+                                                    <td>
+                                                        <input type="number"
                                                             name="premix[{{ $i }}][berat_premix]"
                                                             step="0.01"
                                                             value="{{ old("premix.$i.berat_premix", $px['berat_premix'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"></td>
-                                                    <td class="text-center"><input type="checkbox"
+                                                            class="form-control form-control-sm text-center">
+                                                    </td>
+
+                                                    <td class="text-center">
+                                                        <input type="checkbox"
                                                             name="premix[{{ $i }}][sensori_premix]"
                                                             value="Oke"
                                                             {{ old("premix.$i.sensori_premix", $px['sensori_premix'] ?? '') == 'Oke' ? 'checked' : '' }}
-                                                            class="form-check-input"></td>
-                                                    <td><button type="button"
-                                                            class="btn btn-danger btn-sm hapusBarisPremix"><i
-                                                                class="bi bi-trash"></i></button></td>
+                                                            class="form-check-input">
+                                                    </td>
+
+                                                    <td>
+                                                        <button type="button" class="btn btn-danger btn-sm hapusBarisPremix">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td><input type="text" name="premix[0][nama_premix]"
-                                                        class="form-control form-control-sm text-center"></td>
-                                                <td><input type="text" name="premix[0][kode_premix]"
-                                                        class="form-control form-control-sm text-center"></td>
-                                                <td><input type="number" name="premix[0][berat_premix]" step="0.01"
-                                                        class="form-control form-control-sm text-center"></td>
-                                                <td class="text-center"><input type="checkbox"
-                                                        name="premix[0][sensori_premix]" value="Oke"
-                                                        class="form-check-input"></td>
-                                                <td><button type="button"
-                                                        class="btn btn-danger btn-sm hapusBarisPremix"><i
-                                                            class="bi bi-trash"></i></button></td>
+                                                <td>
+                                                    <select name="premix[0][nama_premix]"
+                                                        class="form-control form-select-sm text-center select2" required>
+                                                        <option value="">-- Pilih Premix --</option>
+                                                        @foreach ($premixes as $premix)
+                                                            <option value="{{ $premix->nama_premix }}">
+                                                                {{ $premix->nama_premix }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+
+                                                <td>
+                                                    <input type="text"
+                                                        name="premix[0][kode_premix]"
+                                                        class="form-control form-control-sm text-center">
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                        name="premix[0][berat_premix]"
+                                                        step="0.01"
+                                                        class="form-control form-control-sm text-center">
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <input type="checkbox"
+                                                        name="premix[0][sensori_premix]"
+                                                        value="Oke"
+                                                        class="form-check-input">
+                                                </td>
+
+                                                <td>
+                                                    <button type="button" class="btn btn-danger btn-sm hapusBarisPremix">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         @endif
                                     </tbody>
@@ -626,15 +802,13 @@
         </div>
     </div>
 
-    {{-- ===================== SCRIPT & ASSETS ===================== --}}
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
-
     <script>
         $(document).ready(function() {
-            $('.selectpicker').selectpicker();
+            $('.select2').select2({
+                width: '100%',
+                placeholder: '-- Pilih --',
+                allowClear: true
+            });
         });
     </script>
 
@@ -699,209 +873,311 @@
     {{-- Tambah / Hapus Row Dinamis --}}
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Definisi Elemen Tabel
             const tbodyNon = document.getElementById('tbodyNonPremix');
             const tbodyPremix = document.getElementById('tbodyPremix');
             const tbodySuhu = document.getElementById('tbodySuhuGrinding');
 
-            // Index Counter berdasarkan jumlah baris saat ini
             let indexNon = tbodyNon ? tbodyNon.querySelectorAll('tr').length : 0;
             let indexPremix = tbodyPremix ? tbodyPremix.querySelectorAll('tr').length : 0;
             let indexSuhu = tbodySuhu ? tbodySuhu.querySelectorAll('tr').length : 0;
 
-            // 1. Tambah Non-Premix
+            function initSelect2(scope = document) {
+                $(scope).find('.select2').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        return;
+                    }
+
+                    $(this).select2({
+                        width: '100%',
+                        placeholder: '-- Pilih --',
+                        allowClear: true
+                    });
+                });
+            }
+
+            initSelect2();
+
             const btnTambahNon = document.getElementById('tambahBarisNonPremix');
 
             if (btnTambahNon) {
-
                 btnTambahNon.addEventListener('click', function() {
+                    let optionBahan = `
+                        <option value="" selected disabled>-- Pilih Bahan --</option>
+                        @foreach ($rawMaterials as $rm)
+                            <option value="{{ $rm->nama_bahan_baku }}">
+                                {{ $rm->nama_bahan_baku }}
+                            </option>
+                        @endforeach
+                    `;
 
-                    let optionBahan =
-                        `<option value="" selected disabled>-- Pilih Bahan --</option>`;
-
-                    @foreach ($rawMaterials as $rm)
-                        optionBahan += `
-                <option value="{{ $rm->nama_bahan_baku }}">
-                    {{ $rm->nama_bahan_baku }}
-                </option>
-            `;
-                    @endforeach
-
-                    let optionBatch =
-                        `<option value="" selected disabled>-- Pilih Batch --</option>`;
-
-                    @foreach ($inspections as $insp)
-                        @if ($insp->inspection)
-                            optionBatch += `
-                    <option
-                        value="{{ $insp->uuid }}"
-                        data-bahan="{{ $insp->inspection->bahan_baku }}">
-                        {{ $insp->kode_batch }}
-                    </option>
-                `;
-                        @endif
-                    @endforeach
+                    let optionBatch = `
+                        <option value="" disabled>-- Pilih Kode Batch --</option>
+                        @foreach ($inspections as $insp)
+                            @if ($insp->inspection)
+                                <option
+                                    value="{{ $insp->uuid }}"
+                                    data-bahan="{{ $insp->inspection->bahan_baku }}">
+                                    {{ $insp->kode_batch }}
+                                </option>
+                            @endif
+                        @endforeach
+                    `;
 
                     const row = `
-        <tr>
+                        <tr>
+                            <td>
+                                <select
+                                    name="non_premix[${indexNon}][nama_bahan]"
+                                    class="form-control form-select-sm text-center nama-bahan-select select2"
+                                    required>
+                                    ${optionBahan}
+                                </select>
+                            </td>
 
-            <td>
-                <select
-                    name="non_premix[${indexNon}][nama_bahan]"
-                    class="form-control form-select-sm text-center nama-bahan-select"
-                    required>
+                            <td>
+                                <select
+                                    name="non_premix[${indexNon}][inspection_uuid][]"
+                                    class="form-control form-select-sm text-center kode-batch-select select2"
+                                    multiple
+                                    disabled>
+                                    ${optionBatch}
+                                </select>
+                            </td>
 
-                    ${optionBahan}
+                            <td>
+                                <div class="input-group input-group-sm">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                        tabindex="-1">±</button>
 
-                </select>
-            </td>
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        name="non_premix[${indexNon}][suhu_bahan]"
+                                        class="form-control form-control-sm text-center suhu-number-input">
+                                </div>
+                            </td>
 
-            <td>
-                <select
-                    name="non_premix[${indexNon}][inspection_uuid]"
-                    class="form-control form-select-sm text-center kode-batch-select">
+                            <td>
+                                <input
+                                    type="number"
+                                    name="non_premix[${indexNon}][ph_bahan]"
+                                    step="0.01"
+                                    min="0"
+                                    class="form-control form-control-sm text-center">
+                            </td>
 
-                    ${optionBatch}
+                            <td>
+                                <input
+                                    type="number"
+                                    name="non_premix[${indexNon}][berat_bahan]"
+                                    step="0.01"
+                                    class="form-control form-control-sm text-center">
+                            </td>
 
-                </select>
-            </td>
+                            <td class="text-center">
+                                <input
+                                    type="checkbox"
+                                    name="non_premix[${indexNon}][sensori]"
+                                    value="Oke"
+                                    class="form-check-input">
+                            </td>
 
-            <td>
-                <div class="input-group input-group-sm">
-                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                    <input
-                        type="text" inputmode="decimal"
-                        name="non_premix[${indexNon}][suhu_bahan]"
-                        class="form-control form-control-sm text-center suhu-number-input">
-                </div>
-            </td>
-
-            <td>
-                <input
-                    type="number"
-                    name="non_premix[${indexNon}][ph_bahan]"
-                    step="0.01"
-                    class="form-control form-control-sm text-center">
-            </td>
-
-            <td>
-                <input
-                    type="number"
-                    name="non_premix[${indexNon}][berat_bahan]"
-                    step="0.01"
-                    class="form-control form-control-sm text-center">
-            </td>
-
-            <td class="text-center">
-                <input
-                    type="checkbox"
-                    name="non_premix[${indexNon}][sensori]"
-                    value="Oke"
-                    class="form-check-input">
-            </td>
-
-            <td>
-                <button
-                    type="button"
-                    class="btn btn-danger btn-sm hapusBaris">
-                    <i class="bi bi-trash"></i>
-                </button>
-            </td>
-
-        </tr>`;
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm hapusBaris">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
 
                     tbodyNon.insertAdjacentHTML('beforeend', row);
+
+                    const newRow = tbodyNon.lastElementChild;
+
+                    initSelect2(newRow);
 
                     indexNon++;
                 });
             }
 
-            // Filter batch berdasarkan bahan
-            document.addEventListener('change', function(e) {
+            $(document).on('change', '.nama-bahan-select', function() {
+                const selectedBahan = $(this).val();
+                const $row = $(this).closest('tr');
+                const $batchSelect = $row.find('.kode-batch-select');
 
-                if (!e.target.classList.contains('nama-bahan-select')) {
+                if (!$batchSelect.length) {
                     return;
                 }
 
-                const selectedBahan = e.target.value;
+                if ($batchSelect.hasClass('select2-hidden-accessible')) {
+                    $batchSelect.select2('destroy');
+                }
 
-                const row = e.target.closest('tr');
+                $batchSelect.empty();
 
-                const batchSelect = row.querySelector('.kode-batch-select');
+                $batchSelect.append(
+                    $('<option>', {
+                        value: '',
+                        disabled: true,
+                        text: '-- Pilih Kode Batch --'
+                    })
+                );
 
-                if (!batchSelect) return;
+                @foreach ($inspections as $insp)
+                    @if ($insp->inspection)
+                        if ("{{ $insp->inspection->bahan_baku }}" === selectedBahan) {
+                            $batchSelect.append(
+                                $('<option>', {
+                                    value: "{{ $insp->uuid }}",
+                                    text: "{{ $insp->kode_batch }}",
+                                    'data-bahan': "{{ $insp->inspection->bahan_baku }}"
+                                })
+                            );
+                        }
+                    @endif
+                @endforeach
 
-                batchSelect.value = '';
+                $batchSelect.prop('disabled', false);
 
-                [...batchSelect.options].forEach(option => {
-
-                    if (!option.value) {
-                        option.hidden = false;
-                        return;
-                    }
-
-                    option.hidden = option.dataset.bahan !== selectedBahan;
+                $batchSelect.select2({
+                    width: '100%',
+                    placeholder: '-- Pilih Kode Batch --',
+                    allowClear: true
                 });
             });
 
-            // 2. Tambah Premix
             const btnTambahPremix = document.getElementById('tambahBarisPremix');
+
             if (btnTambahPremix) {
                 btnTambahPremix.addEventListener('click', function() {
                     const row = `
-            <tr>
-                <td><input type="text" name="premix[${indexPremix}][nama_premix]" class="form-control form-control-sm text-center"></td>
-                <td><input type="text" name="premix[${indexPremix}][kode_premix]" class="form-control form-control-sm text-center"></td>
-                <td><input type="number" name="premix[${indexPremix}][berat_premix]" step="0.01" class="form-control form-control-sm text-center"></td>
-                <td class="text-center"><input type="checkbox" name="premix[${indexPremix}][sensori_premix]" value="Oke" class="form-check-input"></td>
-                <td><button type="button" class="btn btn-danger btn-sm hapusBarisPremix"><i class="bi bi-trash"></i></button></td>
-            </tr>`;
+                        <tr>
+                            <td>
+                                <select
+                                    name="premix[${indexPremix}][nama_premix]"
+                                    class="form-control form-select-sm text-center select2"
+                                    required>
+                                    <option value="">-- Pilih Premix --</option>
+                                    @foreach ($premixes as $premix)
+                                        <option value="{{ $premix->nama_premix }}">
+                                            {{ $premix->nama_premix }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+
+                            <td>
+                                <input
+                                    type="text"
+                                    name="premix[${indexPremix}][kode_premix]"
+                                    class="form-control form-control-sm text-center">
+                            </td>
+
+                            <td>
+                                <input
+                                    type="number"
+                                    name="premix[${indexPremix}][berat_premix]"
+                                    step="0.01"
+                                    class="form-control form-control-sm text-center">
+                            </td>
+
+                            <td class="text-center">
+                                <input
+                                    type="checkbox"
+                                    name="premix[${indexPremix}][sensori_premix]"
+                                    value="Oke"
+                                    class="form-check-input">
+                            </td>
+
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn btn-danger btn-sm hapusBarisPremix">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+
                     tbodyPremix.insertAdjacentHTML('beforeend', row);
+
+                    initSelect2(tbodyPremix.lastElementChild);
+
                     indexPremix++;
                 });
             }
 
-            // 3. Tambah Suhu Grinding
             const btnTambahSuhu = document.getElementById('tambahBarisSuhu');
+
             if (btnTambahSuhu) {
                 btnTambahSuhu.addEventListener('click', function() {
                     const row = `
-            <tr>
-                <td style="width: 45%;">
-                    <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm">
-                        <option value="" selected disabled>Pilih Daging</option>
-                        <option value="BEEF">BEEF</option>
-                        <option value="SBB">SBB</option>
-                        <option value="SBL">SBL</option>
-                        <option value="MDM">MDM</option>
-                        <option value="CCM">CCM</option>
-                        <option value="SURIMI">SURIMI</option>
-                    </select>
-                </td>
-                <td style="width: 45%;">
-                    <div class="input-group input-group-sm">
-                        <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                        <input type="text" inputmode="decimal" name="suhu_grinding_input[${indexSuhu}][suhu]" class="form-control form-control-sm text-center suhu-number-input">
-                    </div>
-                </td>
-                <td style="width: 10%;">
-                    <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
-                </td>
-            </tr>`;
+                        <tr>
+                            <td style="width: 45%;">
+                                <select
+                                    name="suhu_grinding_input[${indexSuhu}][daging]"
+                                    class="form-control form-select-sm select2">
+                                    <option value="" selected disabled>Pilih Daging</option>
+                                    <option value="BEEF">BEEF</option>
+                                    <option value="SBB">SBB</option>
+                                    <option value="SBL">SBL</option>
+                                    <option value="MDM">MDM</option>
+                                    <option value="CCM">CCM</option>
+                                    <option value="SURIMI">SURIMI</option>
+                                </select>
+                            </td>
+
+                            <td style="width: 45%;">
+                                <div class="input-group input-group-sm">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                        tabindex="-1">±</button>
+
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        name="suhu_grinding_input[${indexSuhu}][suhu]"
+                                        class="form-control form-control-sm text-center suhu-number-input">
+                                </div>
+                            </td>
+
+                            <td style="width: 10%;">
+                                <button
+                                    type="button"
+                                    class="btn btn-sm btn-danger hapusBarisSuhu">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+
                     tbodySuhu.insertAdjacentHTML('beforeend', row);
+
+                    initSelect2(tbodySuhu.lastElementChild);
+
                     indexSuhu++;
                 });
             }
 
-            // Event Delegation untuk Semua Tombol Hapus Baris
             document.addEventListener('click', function(e) {
-                if (e.target.closest('.hapusBaris')) e.target.closest('tr').remove();
-                if (e.target.closest('.hapusBarisPremix')) e.target.closest('tr').remove();
+                if (e.target.closest('.hapusBaris')) {
+                    e.target.closest('tr').remove();
+                }
+
+                if (e.target.closest('.hapusBarisPremix')) {
+                    e.target.closest('tr').remove();
+                }
+
                 if (e.target.closest('.hapusBarisSuhu')) {
                     if (tbodySuhu.querySelectorAll('tr').length > 1) {
                         e.target.closest('tr').remove();
                     } else {
-                        alert("Minimal harus ada satu input suhu.");
+                        alert('Minimal harus ada satu input suhu.');
                     }
                 }
             });
