@@ -221,7 +221,7 @@ class MincingController extends Controller
 
         // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
         $sanitasiSuhu = function ($val) {
-            return ($val === '' || $val === null || $val === '-') ? null : $val;
+            return ($val === '' || $val === null) ? null : $val;
         };
 
         // Sanitasi suhu_bahan di dalam non_premix
@@ -348,12 +348,7 @@ class MincingController extends Controller
 
         // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
         $sanitasiSuhu = function ($val) {
-            return ($val === '' || $val === null || $val === '-') ? null : $val;
-        };
-
-        // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
-        $sanitasiSuhu = function ($val) {
-            return ($val === '' || $val === null || $val === '-') ? null : $val;
+            return ($val === '' || $val === null) ? null : $val;
         };
 
         // Sanitasi suhu_bahan di dalam non_premix
@@ -503,7 +498,7 @@ class MincingController extends Controller
 
         // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
         $sanitasiSuhu = function ($val) {
-            return ($val === '' || $val === null || $val === '-') ? null : $val;
+            return ($val === '' || $val === null) ? null : $val;
         };
 
         // Sanitasi suhu_bahan di dalam non_premix

@@ -129,24 +129,24 @@
                                             </td>
 
                                            <td>
-    <select name="non_premix[0][inspection_uuid][]"
-        class="form-control form-select-sm text-center kode-batch-select select2"
-        multiple
-        disabled>
+                                                <select name="non_premix[0][inspection_uuid][]"
+                                                    class="form-control form-select-sm text-center kode-batch-select select2"
+                                                    multiple
+                                                    disabled>
 
-        <option value="" disabled selected>Pilih Bahan dahulu</option>
+                                                    <option value="" disabled selected>Pilih Bahan dahulu</option>
 
-        @foreach ($inspections as $insp)
-            @if ($insp->inspection)
-                <option value="{{ $insp->uuid }}"
-                    data-bahan="{{ $insp->inspection->bahan_baku }}">
-                    {{ $insp->kode_batch }}
-                </option>
-            @endif
-        @endforeach
+                                                    @foreach ($inspections as $insp)
+                                                        @if ($insp->inspection)
+                                                            <option value="{{ $insp->uuid }}"
+                                                                data-bahan="{{ $insp->inspection->bahan_baku }}">
+                                                                {{ $insp->kode_batch }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
 
-    </select>
-</td>
+                                                </select>
+                                            </td>
 
                                             <td>
                                                 <div class="input-group input-group-sm">
@@ -156,11 +156,13 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <input type="number"
-                                                    name="non_premix[0][ph_bahan]"
-                                                    class="form-control form-control-sm text-center"
-                                                    step="0.01"
-                                                    min="0">
+                                                <div class="input-group input-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                    <input type="text"
+                                                        inputmode="decimal"
+                                                        name="non_premix[0][ph_bahan]"
+                                                        class="form-control form-control-sm text-center suhu-number-input">
+                                                </div>
                                             </td>
                                             <td><input type="number" name="non_premix[0][berat_bahan]" step="0.01"
                                                     class="form-control form-control-sm text-center"></td>
@@ -635,12 +637,14 @@
                         </td>
 
                         <td>
-                            <input
-                                type="number"
-                                name="non_premix[${indexNonPremix}][ph_bahan]"
-                                class="form-control form-control-sm text-center"
-                                step="0.01"
-                                min="0">
+                            <div class="input-group input-group-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                <input
+                                    type="text"
+                                    inputmode="decimal"
+                                    name="non_premix[${indexNonPremix}][ph_bahan]"
+                                    class="form-control form-control-sm text-center suhu-number-input">
+                            </div>
                         </td>
 
                         <td>

@@ -223,13 +223,19 @@
                                                     </td>
 
                                                     <td>
-                                                        <input
-                                                            type="number"
-                                                            name="non_premix[{{ $loop->index }}][ph_bahan]"
-                                                            value="{{ $np['ph_bahan'] }}"
-                                                            step="0.01"
-                                                            min="0"
-                                                            class="form-control form-control-sm text-center">
+                                                        <div class="input-group input-group-sm">
+                                                            <button
+                                                                type="button"
+                                                                class="btn btn-outline-secondary btn-toggle-minus"
+                                                                tabindex="-1">±</button>
+
+                                                            <input
+                                                                type="text"
+                                                                inputmode="decimal"
+                                                                name="non_premix[{{ $loop->index }}][ph_bahan]"
+                                                                value="{{ $np['ph_bahan'] }}"
+                                                                class="form-control form-control-sm text-center suhu-number-input">
+                                                        </div>
                                                     </td>
 
                                                     <td>
@@ -960,12 +966,18 @@
                             </td>
 
                             <td>
-                                <input
-                                    type="number"
-                                    name="non_premix[${indexNon}][ph_bahan]"
-                                    step="0.01"
-                                    min="0"
-                                    class="form-control form-control-sm text-center">
+                                <div class="input-group input-group-sm">
+                                    <button
+                                        type="button"
+                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                        tabindex="-1">±</button>
+
+                                    <input
+                                        type="text"
+                                        inputmode="decimal"
+                                        name="non_premix[${indexNon}][ph_bahan]"
+                                        class="form-control form-control-sm text-center suhu-number-input">
+                                </div>
                             </td>
 
                             <td>
