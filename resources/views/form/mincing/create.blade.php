@@ -201,7 +201,7 @@
                                             <td>
 
                                                 <select name="premix[0][nama_premix]"
-                                                    class="form-control form-select-sm text-center select2" required>
+                                                    class="form-control form-select-sm text-center select2">
 
                                                     <option value="">-- Pilih Premix --</option>
 
@@ -805,7 +805,7 @@
                             <select
                                 name="premix[${indexPremix}][nama_premix]"
                                 class="form-control form-select-sm text-center select2"
-                                required>
+                                >
 
                                 ${optionPremix}
 

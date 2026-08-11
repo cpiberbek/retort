@@ -439,66 +439,121 @@
                                     </thead>
                                     <tbody id="tbodyPremix">
                                         @php
-                                            $premix =
-                                                $premixData ??
-                                                (is_array($mincing->premix)
-                                                    ? $mincing->premix
-                                                    : json_decode($mincing->premix ?? '[]', true));
+                                            $premixData = is_array($mincing->premix)
+                                                ? $mincing->premix
+                                                : json_decode($mincing->premix ?? '[]', true);
                                         @endphp
 
-                                        @if (!empty($premix) && is_array($premix))
-                                            @foreach ($premix as $i => $px)
+                                        @if (!empty($premixData) && is_array($premixData))
+                                            @foreach ($premixData as $i => $px)
+                                                @php
+                                                    $hasNamaPremix = !empty($px['nama_premix']);
+                                                    $hasKodePremix = !empty($px['kode_premix']);
+                                                    $hasBeratPremix = $px['berat_premix'] !== null && $px['berat_premix'] !== '';
+                                                    $hasSensoriPremix = !empty($px['sensori_premix']);
+                                                @endphp
+
                                                 <tr>
-                                                    <td><input type="text"
+                                                    <td>
+                                                        <select
                                                             name="premix[{{ $i }}][nama_premix]"
-                                                            value="{{ old(
-                                                                "
-                                                                                                                                                                                                                                                                                                premix.$i.nama_premix",
-                                                                $px['nama_premix'] ?? '',
-                                                            ) }}"
-                                                            class="form-control form-control-sm text-center"
-                                                            {{ !empty($px['nama_premix']) ? 'readonly' : '' }}></td>
-                                                    <td><input type="text"
+                                                            class="form-control form-select-sm text-center select2"
+                                                            {{ $hasNamaPremix ? 'disabled' : '' }}>
+                                                            <option value="">-- Pilih Premix --</option>
+                                                            @foreach ($premixes as $premix)
+                                                                <option
+                                                                    value="{{ $premix->nama_premix }}"
+                                                                    {{ old("premix.$i.nama_premix", $px['nama_premix'] ?? '') == $premix->nama_premix ? 'selected' : '' }}>
+                                                                    {{ $premix->nama_premix }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+
+                                                        @if ($hasNamaPremix)
+                                                            <input
+                                                                type="hidden"
+                                                                name="premix[{{ $i }}][nama_premix]"
+                                                                value="{{ $px['nama_premix'] }}">
+                                                        @endif
+                                                    </td>
+
+                                                    <td>
+                                                        <input
+                                                            type="text"
                                                             name="premix[{{ $i }}][kode_premix]"
-                                                            value="{{ old(
-                                                                "
-                                                                                                                                                                                                                                                                                                premix.$i.kode_premix",
-                                                                $px['kode_premix'] ?? '',
-                                                            ) }}"
+                                                            value="{{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') }}"
                                                             class="form-control form-control-sm text-center"
-                                                            {{ !empty($px['kode_premix']) ? 'readonly' : '' }}></td>
-                                                    <td><input type="number"
+                                                            {{ $hasKodePremix ? 'readonly' : '' }}>
+                                                    </td>
+
+                                                    <td>
+                                                        <input
+                                                            type="number"
                                                             name="premix[{{ $i }}][berat_premix]"
                                                             step="0.01"
-                                                            value="{{ old(" premix.$i.berat_premix", $px['berat_premix'] ?? '') }}"
+                                                            value="{{ old("premix.$i.berat_premix", $px['berat_premix'] ?? '') }}"
                                                             class="form-control form-control-sm text-center"
-                                                            {{ !empty($px['berat_premix']) ? 'readonly' : '' }}></td>
-                                                    <td class="text-center"><input type="checkbox"
+                                                            {{ $hasBeratPremix ? 'readonly' : '' }}>
+                                                    </td>
+
+                                                    <td class="text-center">
+                                                        <input
+                                                            type="checkbox"
                                                             name="premix[{{ $i }}][sensori_premix]"
                                                             value="Oke"
                                                             {{ old("premix.$i.sensori_premix", $px['sensori_premix'] ?? '') == 'Oke' ? 'checked' : '' }}
-                                                            {{ !empty($px['sensori_premix']) ? 'onclick=return false;' : '' }}
-                                                            class="form-check-input"></td>
-                                                    <td><button type="button"
+                                                            class="form-check-input">
+                                                    </td>
+
+                                                    <td>
+                                                        <button
+                                                            type="button"
                                                             class="btn btn-danger btn-sm hapusBarisPremix"
-                                                            {{ !empty($px['nama_premix']) ? 'disabled' : '' }}><i
-                                                                class="bi bi-trash"></i></button></td>
+                                                            {{ $hasNamaPremix ? 'disabled' : '' }}>
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td><input type="text" name="premix[0][nama_premix]"
-                                                        class="form-control form-control-sm text-center"></td>
-                                                <td><input type="text" name="premix[0][kode_premix]"
-                                                        class="form-control form-control-sm text-center"></td>
-                                                <td><input type="number" name="premix[0][berat_premix]" step="0.01"
-                                                        class="form-control form-control-sm text-center"></td>
-                                                <td class="text-center"><input type="checkbox"
-                                                        name="premix[0][sensori_premix]" value="Oke"
-                                                        class="form-check-input"></td>
-                                                <td><button type="button"
-                                                        class="btn btn-danger btn-sm hapusBarisPremix"><i
-                                                            class="bi bi-trash"></i></button></td>
+                                                <td>
+                                                    <select name="premix[0][nama_premix]"
+                                                        class="form-control form-select-sm text-center select2" >
+                                                        <option value="">-- Pilih Premix --</option>
+                                                        @foreach ($premixes as $premix)
+                                                            <option value="{{ $premix->nama_premix }}">
+                                                                {{ $premix->nama_premix }}
+                                                            </option>
+                                                        @endforeach
+                                                    </select>
+                                                </td>
+
+                                                <td>
+                                                    <input type="text"
+                                                        name="premix[0][kode_premix]"
+                                                        class="form-control form-control-sm text-center">
+                                                </td>
+
+                                                <td>
+                                                    <input type="number"
+                                                        name="premix[0][berat_premix]"
+                                                        step="0.01"
+                                                        class="form-control form-control-sm text-center">
+                                                </td>
+
+                                                <td class="text-center">
+                                                    <input type="checkbox"
+                                                        name="premix[0][sensori_premix]"
+                                                        value="Oke"
+                                                        class="form-check-input">
+                                                </td>
+
+                                                <td>
+                                                    <button type="button" class="btn btn-danger btn-sm hapusBarisPremix">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         @endif
                                     </tbody>

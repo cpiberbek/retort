@@ -406,7 +406,7 @@
                                                 <tr>
                                                     <td>
                                                         <select name="premix[{{ $i }}][nama_premix]"
-                                                            class="form-control form-select-sm text-center select2" required>
+                                                            class="form-control form-select-sm text-center select2" >
                                                             <option value="">-- Pilih Premix --</option>
                                                             @foreach ($premixes as $premix)
                                                                 <option value="{{ $premix->nama_premix }}"
@@ -451,7 +451,7 @@
                                             <tr>
                                                 <td>
                                                     <select name="premix[0][nama_premix]"
-                                                        class="form-control form-select-sm text-center select2" required>
+                                                        class="form-control form-select-sm text-center select2" >
                                                         <option value="">-- Pilih Premix --</option>
                                                         @foreach ($premixes as $premix)
                                                             <option value="{{ $premix->nama_premix }}">
@@ -1072,7 +1072,7 @@
                                 <select
                                     name="premix[${indexPremix}][nama_premix]"
                                     class="form-control form-select-sm text-center select2"
-                                    required>
+                                    >
                                     <option value="">-- Pilih Premix --</option>
                                     @foreach ($premixes as $premix)
                                         <option value="{{ $premix->nama_premix }}">
