@@ -79,14 +79,14 @@
                                     <tr>
                                         <td class="text-left align-middle">Panjang Varian Akhir (Cm)</td>
                                         <td>
-                                            <input type="number" name="panjang_produk" id="panjang_produk" class="form-control form-control-sm text-center" step="0.01 " min="0"
+                                            <input type="text" inputmode="decimal" name="panjang_produk" id="panjang_produk" class="form-control form-control-sm text-center" step="0.01 " min="0"
                                             value="{{ old('panjang_produk', $washing->panjang_produk ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-left align-middle">Diameter Varian Akhir (Mm)</td>
                                         <td>
-                                            <input type="number" name="diameter_produk" id="diameter_produk" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="diameter_produk" id="diameter_produk" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('diameter_produk', $washing->diameter_produk ?? '') }}">
                                         </td>
                                     </tr>
@@ -289,21 +289,21 @@
                                     <tr>
                                         <td class="text-left align-middle">Konsentrasi Pottasium Sorbate (%)</td>
                                         <td>
-                                            <input type="number" name="konsentrasi_pottasium" id="konsentrasi_pottasium" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="konsentrasi_pottasium" id="konsentrasi_pottasium" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('konsentrasi_pottasium', $washing->konsentrasi_pottasium ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-left align-middle">Suhu Pottasium Sorbate (°C)</td>
                                         <td>
-                                            <input type="number" name="suhu_pottasium" id="suhu_pottasium" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="suhu_pottasium" id="suhu_pottasium" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('suhu_pottasium', $washing->suhu_pottasium ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-left align-middle">pH Pottasium Sorbate</td>
                                         <td>
-                                            <input type="number" name="ph_pottasium" id="ph_pottasium" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="ph_pottasium" id="ph_pottasium" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('ph_pottasium', $washing->ph_pottasium ?? '') }}">
                                         </td>
                                     </tr>
@@ -339,35 +339,35 @@
                                     <tr>
                                         <td class="text-left align-middle">Suhu Heater (°C)</td>
                                         <td>
-                                            <input type="number" name="suhu_heater" id="suhu_heater" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="suhu_heater" id="suhu_heater" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('suhu_heater', $washing->suhu_heater ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-left align-middle">Speed Conv. Drying 1</td>
                                         <td>
-                                            <input type="number" name="speed_1" id="speed_1" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="speed_1" id="speed_1" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('speed_1', $washing->speed_1 ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-left align-middle">Speed Conv. Drying 2</td>
                                         <td>
-                                            <input type="number" name="speed_2" id="speed_2" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="speed_2" id="speed_2" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('speed_2', $washing->speed_2 ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-left align-middle">Speed Conv. Drying 3</td>
                                         <td>
-                                            <input type="number" name="speed_3" id="speed_3" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="speed_3" id="speed_3" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('speed_3', $washing->speed_3 ?? '') }}">
                                         </td>
                                     </tr>
                                     <tr>
                                         <td class="text-left align-middle">Speed Conv. Drying 4</td>
                                         <td>
-                                            <input type="number" name="speed_4" id="speed_4" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                            <input type="text" inputmode="decimal" name="speed_4" id="speed_4" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old('speed_4', $washing->speed_4 ?? '') }}">
                                         </td>
                                     </tr>
