@@ -142,13 +142,24 @@
                                             $groupedNonPremix = [];
 
                                             foreach ($nonPremixData as $np) {
-                                                $key = implode('|', [
-                                                    $np['nama_bahan'] ?? '',
-                                                    $np['suhu_bahan'] ?? '',
-                                                    $np['ph_bahan'] ?? '',
-                                                    $np['berat_bahan'] ?? '',
-                                                    $np['sensori'] ?? '',
-                                                ]);
+                                            if (
+                                                empty($np['inspection_uuid']) &&
+                                                empty($np['nama_bahan']) &&
+                                                empty($np['suhu_bahan']) &&
+                                                empty($np['ph_bahan']) &&
+                                                empty($np['berat_bahan']) &&
+                                                empty($np['sensori'])
+                                            ) {
+                                                continue;
+                                            }
+
+                                            $key = implode('|', [
+                                                $np['nama_bahan'] ?? '',
+                                                $np['suhu_bahan'] ?? '',
+                                                $np['ph_bahan'] ?? '',
+                                                $np['berat_bahan'] ?? '',
+                                                $np['sensori'] ?? '',
+                                            ]);
 
                                                 if (!isset($groupedNonPremix[$key])) {
                                                     $groupedNonPremix[$key] = [
@@ -195,7 +206,7 @@
                                                         <select
                                                             name="non_premix[{{ $loop->index }}][nama_bahan]"
                                                             class="form-control form-select-sm text-center nama-bahan-select select2"
-                                                            required
+                                                            
                                                             {{ $hasBahan ? 'disabled' : '' }}>
 
                                                             <option value="" disabled>
@@ -321,7 +332,7 @@
                                                     <select
                                                         name="non_premix[0][nama_bahan]"
                                                         class="form-control form-select-sm text-center nama-bahan-select select2"
-                                                        required>
+                                                        >
 
                                                         <option value="" selected disabled>
                                                             -- Pilih Bahan --
@@ -944,7 +955,7 @@
                                 <select
                                     name="non_premix[${indexNon}][nama_bahan]"
                                     class="form-control form-select-sm text-center nama-bahan-select select2"
-                                    required>
+                                    >
                                     ${optionBahan}
                                 </select>
                             </td>

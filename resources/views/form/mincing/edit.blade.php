@@ -162,11 +162,9 @@
                                                         <select
                                                             name="non_premix[{{ $loop->index }}][nama_bahan]"
                                                             class="form-control form-select-sm text-center nama-bahan-select select2"
-                                                            required>
+                                                            >
 
-                                                            <option value="" disabled>
-                                                                -- Pilih Bahan --
-                                                            </option>
+                                                            <option value="" selected>-- Pilih Bahan --</option>
 
                                                             @foreach ($rawMaterials as $rm)
                                                                 <option
@@ -185,12 +183,14 @@
                                                             class="form-control form-select-sm text-center kode-batch-select select2"
                                                             multiple>
 
+                                                            <option value=""></option>
+
                                                             @foreach ($inspections as $insp)
                                                                 @if ($insp->inspection && $insp->inspection->bahan_baku === $np['nama_bahan'])
                                                                     <option
                                                                         value="{{ $insp->uuid }}"
                                                                         data-bahan="{{ $insp->inspection->bahan_baku }}"
-                                                                        {{ in_array($insp->uuid, $np['inspection_uuid']) ? 'selected' : '' }}>
+                                                                        {{ !empty($np['inspection_uuid']) && in_array($insp->uuid, $np['inspection_uuid']) ? 'selected' : '' }}>
                                                                         {{ $insp->kode_batch }}
                                                                     </option>
                                                                 @endif
@@ -275,7 +275,7 @@
                                                     <select
                                                         name="non_premix[0][nama_bahan]"
                                                         class="form-control form-select-sm text-center nama-bahan-select select2"
-                                                        required>
+                                                        >
 
                                                         <option value="" selected disabled>
                                                             -- Pilih Bahan --
@@ -935,7 +935,7 @@
                                 <select
                                     name="non_premix[${indexNon}][nama_bahan]"
                                     class="form-control form-select-sm text-center nama-bahan-select select2"
-                                    required>
+                                    >
                                     ${optionBahan}
                                 </select>
                             </td>
