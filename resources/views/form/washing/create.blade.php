@@ -166,31 +166,51 @@
                                     <tr>
                                         <td class="text-left align-middle">Konsentrasi PC Kleer 1 (%)</td>
                                         <td>
-                                            <input type="number" name="konsentrasi_pckleer" id="konsentrasi_pckleer"
-                                                class="form-control form-control-sm text-center" step="0.01" min="0">
+                                            <div class="input-group input-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary toggle-sign"
+                                                    data-target="konsentrasi_pckleer">±</button>
+                                                <input type="text" name="konsentrasi_pckleer" id="konsentrasi_pckleer"
+                                                    class="form-control text-center numeric-sign" inputmode="decimal">
+                                            </div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <td class="text-left align-middle">Suhu PC Kleer 1 (°C)</td>
                                         <td>
-                                            <input type="number" name="suhu_pckleer_1" id="suhu_pckleer_1"
-                                                class="form-control form-control-sm text-center" step="0.01" min="0"> 
+                                            <div class="input-group input-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary toggle-sign"
+                                                    data-target="suhu_pckleer_1">±</button>
+                                                <input type="text" name="suhu_pckleer_1" id="suhu_pckleer_1"
+                                                    class="form-control text-center numeric-sign" inputmode="decimal">
+                                            </div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <td class="text-left align-middle">Suhu PC Kleer 2 (°C)</td>
                                         <td>
-                                            <input type="number" name="suhu_pckleer_2" id="suhu_pckleer_2"
-                                                class="form-control form-control-sm text-center" step="0.01" min="0">
+                                            <div class="input-group input-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary toggle-sign"
+                                                    data-target="suhu_pckleer_2">±</button>
+                                                <input type="text" name="suhu_pckleer_2" id="suhu_pckleer_2"
+                                                    class="form-control text-center numeric-sign" inputmode="decimal">
+                                            </div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <td class="text-left align-middle">pH PC Kleer</td>
                                         <td>
-                                            <input type="number" name="ph_pckleer" id="ph_pckleer"
-                                                class="form-control form-control-sm text-center" step="0.01" min="0">
+                                            <div class="input-group input-group-sm">
+                                                <button type="button" class="btn btn-outline-secondary toggle-sign"
+                                                    data-target="ph_pckleer">±</button>
+                                                <input type="text" name="ph_pckleer" id="ph_pckleer"
+                                                    class="form-control text-center numeric-sign" inputmode="decimal">
+                                            </div>
                                         </td>
                                     </tr>
+
                                     <tr>
                                         <td class="text-left align-middle">Kondisi Air PC Kleer</td>
                                         <td>
@@ -206,6 +226,51 @@
                         </div>
                     </div>
                 </div>
+
+                {{-- JS -+ PC KLEER --}}
+                <script>
+                document.querySelectorAll('.numeric-sign').forEach(input => {
+                    input.addEventListener('input', function () {
+                        let value = this.value.replace(/[^0-9.,-]/g, '');
+
+                        let negative = value.startsWith('-');
+                        value = value.replace(/-/g, '');
+
+                        let separator = value.match(/[.,]/);
+
+                        if (separator) {
+                            let parts = value.split(/[.,]/);
+                            value = parts[0] + separator[0] + parts.slice(1).join('');
+                        }
+
+                        this.value = (negative ? '-' : '') + value;
+                    });
+                });
+
+                document.querySelectorAll('.toggle-sign').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const input = document.getElementById(this.dataset.target);
+
+                        if (input.value === '') {
+                            input.value = '-';
+                        } else if (input.value === '-') {
+                            input.value = '';
+                        } else if (input.value.startsWith('-')) {
+                            input.value = input.value.substring(1);
+                        } else {
+                            input.value = '-' + input.value;
+                        }
+                    });
+                });
+
+                document.querySelector('form').addEventListener('submit', function () {
+                    document.querySelectorAll('.numeric-sign').forEach(input => {
+                        if (input.value.trim() === '' || input.value === '-') {
+                            input.value = '';
+                        }
+                    });
+                });
+                </script>
 
                 {{-- Pottasium Sorbate --}}
                 <div class="card mb-4">
