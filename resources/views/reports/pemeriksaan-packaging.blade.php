@@ -109,7 +109,7 @@ $shift = $firstInspection ? $firstInspection->shift : '';
                     <td class="center">{{ $item->condition_sealing ?? '' }}</td>
                     <td class="center">{{ $item->condition_color ?? '' }}</td>
                     <td>{{ $item->condition_dimension ?? '' }}</td>
-                    <td>{{ $item->condition_weight_pcs ?? '' }}</td>
+                    <td>{{ $item->condition_weight ?? '' }}</td>
                     <td class="center">{{ $item->quantity_goods ?? '' }}</td>
                     <td class="center">{{ $item->quantity_sample ?? '' }}</td>
                     <td class="center">{{ $item->quantity_reject ?? '' }}</td>

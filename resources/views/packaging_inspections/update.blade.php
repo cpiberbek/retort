@@ -172,6 +172,7 @@
             const supplier = data?.supplier || '';
             const lot_batch = data?.lot_batch || '';
             const dimension = data?.condition_dimension || '';
+            const weight = data?.condition_weight || '';
             const qty_goods = data?.quantity_goods ?? '';
             const qty_sample = data?.quantity_sample ?? '';
             const qty_reject = data?.quantity_reject ?? '';
@@ -247,9 +248,14 @@
 
                     ${checksHtml} {{-- Render Tombol Loop Disini --}}
 
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-1 col-md-6">
                         <label class="form-label">Dimensi</label>
                         <input type="text" name="items[${i}][condition_dimension]" class="form-control" value="${dimension}" ${getReadonlyAttr(dimension)}>
+                    </div>
+
+                    <div class="col-lg-1 col-md-6">
+                        <label class="form-label">Berat</label>
+                        <input type="number" name="items[${i}][condition_weight]" class="form-control" value="${weight}" min="0" step="0.01" ${getReadonlyAttr(weight)}>
                     </div>
 
                     <div class="col-md-2">

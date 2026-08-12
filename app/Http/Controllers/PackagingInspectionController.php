@@ -83,6 +83,7 @@ class PackagingInspectionController extends Controller
             'items.*.condition_sealing'   => 'required|string|max:10',
             'items.*.condition_color'     => 'required|string|max:10',
             'items.*.condition_dimension' => 'nullable|string|max:255',
+            'items.*.condition_weight'    => 'nullable|numeric|min:0',
             'items.*.condition_weight_pcs'=> 'nullable|string|max:255',
             'items.*.quantity_goods'      => 'required|integer|min:0',
             'items.*.quantity_sample'     => 'required|integer|min:0',
@@ -181,6 +182,7 @@ class PackagingInspectionController extends Controller
             'items.*.quantity_reject'     => 'required|integer|min:0',
             'items.*.acceptance_status'   => 'required|in:OK,Tolak',
             'items.*.notes'               => 'nullable|string',
+            'items.*.condition_weight'    => 'nullable|numeric|min:0',
         ]);
 
         try {

@@ -150,6 +150,7 @@
                         <th>Sealing</th>
                         <th>Warna</th>
                         <th>Dimensi</th>
+                        <th>Berat</th>
                         <th>Qty Barang</th>
                         <th>Qty Sampel</th>
                         <th>Qty Reject</th>
@@ -186,6 +187,7 @@
                                 </span>
                             </td>
                             <td>{{ $item->condition_dimension ?? '-' }}</td>
+                            <td>{{ $item->condition_weight ?? '-' }} gr</td>
                             <td>{{ $item->quantity_goods }}</td>
                             <td>{{ $item->quantity_sample }}</td>
                             <td>{{ $item->quantity_reject }}</td>
