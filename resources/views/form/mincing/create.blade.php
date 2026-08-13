@@ -39,7 +39,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nama Varian <span
                                             class="text-danger">*</span></label>
-                                    <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
+                                    <select name="nama_produk" class="form-control select2"
                                         required>
                                         <option value="">-- Pilih Produk --</option>
                                         @foreach ($produks as $produk)
@@ -97,24 +97,23 @@
                                 <table class="table table-bordered text-center align-middle" id="tabelNonPremix">
                                     <thead class="table-primary">
                                         <tr>
-                                            <th colspan="7" class="text-left">Bahan Baku dan Bahan Tambahan (Non-Premix)
-                                            </th>
+                                            <th colspan="7" class="text-left">Bahan Baku dan Bahan Tambahan (Non-Premix)</th>
                                         </tr>
                                         <tr>
-                                            <th>Bahan</th>
-                                            <th>Kode</th>
-                                            <th>(°C)</th>
-                                            <th>*pH</th>
-                                            <th>Kg</th>
-                                            <th>Sens</th>
-                                            <th>Aksi</th>
+                                            <th style="width: 30%;">Bahan</th>
+                                            <th style="width: 30%;">Kode</th>
+                                            <th style="width: 10%;">(°C)</th>
+                                            <th style="width: 10%;">*pH</th>
+                                            <th style="width: 10%;">Kg</th>
+                                            <th style="width: 5%;">Sens</th>
+                                            <th style="width: 5%;">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="tbodyNonPremix">
                                         <tr>
                                             <td>
                                                 <select name="non_premix[0][nama_bahan]"
-                                                    class="form-control form-select-sm text-center nama-bahan-select">
+                                                    class="form-control form-select-sm text-center nama-bahan-select select2">
 
                                                     <option value="" selected disabled>
                                                         -- Pilih Bahan --
@@ -129,27 +128,26 @@
                                                 </select>
                                             </td>
 
-                                            <td>
-                                                <select name="non_premix[0][inspection_uuid]"
-                                                    class="form-control form-select-sm text-center kode-batch-select">
+                                           <td>
+                                                <select name="non_premix[0][inspection_uuid][]"
+                                                    class="form-control form-select-sm text-center kode-batch-select select2"
+                                                    multiple
+                                                    disabled>
 
-                                                    <option value="" disabled selected>
-                                                        -- Pilih Batch --
-                                                    </option>
+                                                    <option value="" disabled selected>Pilih Bahan dahulu</option>
 
                                                     @foreach ($inspections as $insp)
                                                         @if ($insp->inspection)
                                                             <option value="{{ $insp->uuid }}"
                                                                 data-bahan="{{ $insp->inspection->bahan_baku }}">
-
                                                                 {{ $insp->kode_batch }}
-
                                                             </option>
                                                         @endif
                                                     @endforeach
 
                                                 </select>
                                             </td>
+
                                             <td>
                                                 <div class="input-group input-group-sm">
                                                     <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
@@ -158,15 +156,23 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <input type="text" name="non_premix[0][ph_bahan]"
-                                                    class="form-control form-control-sm text-center">
+                                                <div class="input-group input-group-sm">
+                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                                    <input type="text"
+                                                        inputmode="decimal"
+                                                        name="non_premix[0][ph_bahan]"
+                                                        class="form-control form-control-sm text-center suhu-number-input">
+                                                </div>
                                             </td>
                                             <td><input type="number" name="non_premix[0][berat_bahan]" step="0.01"
                                                     class="form-control form-control-sm text-center"></td>
                                             <td><input type="checkbox" name="non_premix[0][sensori]" value="Oke"
                                                     class="form-check-input"></td>
-                                            <td><button type="button" class="btn btn-sm btn-danger hapusBaris"><i
-                                                        class="bi bi-trash"></i></button></td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-danger hapusBaris" title="Hapus">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -195,7 +201,7 @@
                                             <td>
 
                                                 <select name="premix[0][nama_premix]"
-                                                    class="form-control form-select-sm text-center" required>
+                                                    class="form-control form-select-sm text-center select2">
 
                                                     <option value="">-- Pilih Premix --</option>
 
@@ -243,7 +249,7 @@
                                                         <tr>
                                                             <td style="width: 45%;">
                                                                 <select name="suhu_grinding_input[0][daging]"
-                                                                    class="form-control form-select-sm">
+                                                                    class="form-control form-select-sm select2">
                                                                     <option value="" selected disabled>Pilih Daging
                                                                     </option>
                                                                     <option value="BEEF">BEEF</option>
@@ -438,10 +444,55 @@
         </div>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+
+            $('.select2').select2({
+                width: '100%',
+                placeholder: '-- Pilih --',
+                allowClear: true
+            });
+
+            $('.kode-batch-select').each(function() {
+                $(this).data('all-options', $(this).find('option').clone());
+            });
+
+            //JS BAHAN NON PREMIX
+            $(document).on('change', '.nama-bahan-select', function() {
+                const row = $(this).closest('tr');
+                const selectedBahan = $(this).val();
+                const batchSelect = row.find('.kode-batch-select');
+
+                batchSelect.select2('destroy');
+
+                const options = batchSelect.data('all-options');
+
+                batchSelect.empty();
+
+                if (!selectedBahan) {
+                    batchSelect.append('<option value="" disabled selected>Pilih Bahan dahulu</option>');
+                    batchSelect.prop('disabled', true);
+                } else {
+                    options.each(function() {
+                        const option = $(this).clone();
+
+                        if (option.attr('data-bahan') === selectedBahan) {
+                            batchSelect.append(option);
+                        }
+                    });
+
+                    batchSelect.prop('disabled', false);
+                }
+
+                batchSelect.val(null);
+
+                batchSelect.select2({
+                    width: '100%',
+                    placeholder: selectedBahan ? '-- Pilih Batch --' : 'Pilih Bahan dahulu',
+                    allowClear: true
+                });
+            });
 
             // =========================
             // AUTO DATE & SHIFT
@@ -533,127 +584,116 @@
 
                 @foreach ($rawMaterials as $rm)
                     optionBahan += `
-                    <option value="{{ $rm->nama_bahan_baku }}">
-                        {{ $rm->nama_bahan_baku }}
-                    </option>
-                `;
-                @endforeach
-
-                let optionBatch = `<option value="" disabled selected>-- Pilih Batch --</option>`;
-
-                @foreach ($inspections as $insp)
-
-                    @if ($insp->inspection)
-
-                        optionBatch += `
-                        <option
-                            value="{{ $insp->uuid }}"
-                            data-bahan="{{ $insp->inspection->bahan_baku }}">
-
-                            {{ $insp->kode_batch }}
-
+                        <option value="{{ $rm->nama_bahan_baku }}">
+                            {{ $rm->nama_bahan_baku }}
                         </option>
                     `;
+                @endforeach
+
+                let optionBatch = '';
+
+                @foreach ($inspections as $insp)
+                    @if ($insp->inspection)
+                        optionBatch += `
+                            <option
+                                value="{{ $insp->uuid }}"
+                                data-bahan="{{ $insp->inspection->bahan_baku }}">
+                                {{ $insp->kode_batch }}
+                            </option>
+                        `;
                     @endif
                 @endforeach
 
                 const row = `
-                <tr>
+                    <tr>
 
-                    <td>
-                        <select
-                            name="non_premix[${indexNonPremix}][nama_bahan]"
-                            class="form-control form-select-sm nama-bahan-select">
+                        <td>
+                            <select
+                                name="non_premix[${indexNonPremix}][nama_bahan]"
+                                class="form-control form-select-sm nama-bahan-select select2">
+                                ${optionBahan}
+                            </select>
+                        </td>
 
-                            ${optionBahan}
+                        <td>
+                            <select
+                                name="non_premix[${indexNonPremix}][inspection_uuid][]"
+                                class="form-control form-select-sm kode-batch-select select2"
+                                multiple
+                                disabled>
+                                ${optionBatch}
+                            </select>
+                        </td>
 
-                        </select>
-                    </td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                <input
+                                    type="text"
+                                    inputmode="decimal"
+                                    name="non_premix[${indexNonPremix}][suhu_bahan]"
+                                    class="form-control form-control-sm suhu-number-input">
+                            </div>
+                        </td>
 
-                    <td>
-                        <select
-                            name="non_premix[${indexNonPremix}][inspection_uuid]"
-                            class="form-control form-select-sm kode-batch-select">
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
+                                <input
+                                    type="text"
+                                    inputmode="decimal"
+                                    name="non_premix[${indexNonPremix}][ph_bahan]"
+                                    class="form-control form-control-sm text-center suhu-number-input">
+                            </div>
+                        </td>
 
-                            ${optionBatch}
+                        <td>
+                            <input
+                                type="number"
+                                name="non_premix[${indexNonPremix}][berat_bahan]"
+                                step="0.01"
+                                class="form-control form-control-sm">
+                        </td>
 
-                        </select>
-                    </td>
+                        <td>
+                            <input
+                                type="checkbox"
+                                name="non_premix[${indexNonPremix}][sensori]"
+                                value="Oke">
+                        </td>
 
-                    <td>
-                        <div class="input-group input-group-sm">
-                            <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                            <input type="text" inputmode="decimal"
-                                name="non_premix[${indexNonPremix}][suhu_bahan]"
-                                class="form-control form-control-sm suhu-number-input">
-                        </div>
-                    </td>
+                        <td>
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm hapusBaris"
+                                title="Hapus">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
 
-                    <td>
-                        <input type="number"
-                            name="non_premix[${indexNonPremix}][ph_bahan]"
-                            step="0.01"
-                            class="form-control form-control-sm">
-                    </td>
-
-                    <td>
-                        <input type="number"
-                            name="non_premix[${indexNonPremix}][berat_bahan]"
-                            step="0.01"
-                            class="form-control form-control-sm">
-                    </td>
-
-                    <td>
-                        <input type="checkbox"
-                            name="non_premix[${indexNonPremix}][sensori]"
-                            value="Oke">
-                    </td>
-
-                    <td>
-                        <button type="button"
-                            class="btn btn-danger btn-sm hapusBaris">
-                            Hapus
-                        </button>
-                    </td>
-
-                </tr>
-            `;
+                    </tr>
+                `;
 
                 tbodyNon.insertAdjacentHTML('beforeend', row);
+
+                const newRow = tbodyNon.lastElementChild;
+                const batchSelect = $(newRow).find('.kode-batch-select');
+
+                batchSelect.data(
+                    'all-options',
+                    batchSelect.find('option').clone()
+                );
+
+                $(newRow).find('.select2').select2({
+                    width: '100%',
+                    placeholder: '-- Pilih --',
+                    allowClear: true
+                });
 
                 indexNonPremix++;
             });
 
-            document.addEventListener('change', function(e) {
-
-                if (e.target.classList.contains('nama-bahan-select')) {
-
-                    const selectedBahan = e.target.value;
-
-                    const row = e.target.closest('tr');
-
-                    const batchSelect = row.querySelector('.kode-batch-select');
-
-                    const options = batchSelect.querySelectorAll('option');
-
-                    batchSelect.value = '';
-
-                    options.forEach(option => {
-
-                        if (!option.dataset.bahan) return;
-
-                        if (option.dataset.bahan === selectedBahan) {
-                            option.hidden = false;
-                        } else {
-                            option.hidden = true;
-                        }
-
-                    });
-
-                }
-
-            });
-
+            //validasi Main Kode Batch
             $(function() {
                 const kodeInput = $('#kode_produksi');
                 const kodeError = $('#kodeError');
@@ -691,7 +731,15 @@
                         e.preventDefault();
                         alert('Kode Batch tidak valid! Periksa kembali.');
                         kodeInput.focus();
+                        return;
                     }
+
+                    $('.kode-batch-select').each(function() {
+                        if ($(this).val() === null || $(this).val().length === 0) {
+                            $(this).prop('disabled', false);
+                            $(this).append(new Option('', '', true, true));
+                        }
+                    });
                 });
             });
 
@@ -700,7 +748,7 @@
                 const row = `
                 <tr>
                     <td style="width: 45%;">
-                        <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm">
+                        <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm select2">
                             <option value="" selected disabled>Pilih Daging</option>
                             <option value="BEEF">BEEF</option>
                             <option value="SBB">SBB</option>
@@ -721,86 +769,102 @@
                     </td>
                 </tr>`;
                 tbodySuhu.insertAdjacentHTML('beforeend', row);
+
+                const newRow = tbodySuhu.lastElementChild;
+
+                $(newRow).find('.select2').select2({
+                    width: '100%',
+                    placeholder: '-- Pilih --',
+                    allowClear: true
+                });
                 indexSuhu++;
             });
 
             // PREMIX
             document.getElementById('tambahBarisPremix')?.addEventListener('click', () => {
 
-                let optionPremix = `
-        <option value="">-- Pilih Premix --</option>
-    `;
+                            let optionPremix = `
+                    <option value="">-- Pilih Premix --</option>
+                `;
 
-                @foreach ($premixes as $premix)
+                            @foreach ($premixes as $premix)
 
-                    optionPremix += `
-            <option value="{{ $premix->nama_premix }}">
-                {{ $premix->nama_premix }}
-            </option>
-        `;
-                @endforeach
+                                optionPremix += `
+                        <option value="{{ $premix->nama_premix }}">
+                            {{ $premix->nama_premix }}
+                        </option>
+                    `;
+                            @endforeach
 
-                const row = `
+                            const row = `
 
-        <tr>
+                    <tr>
 
-            <td>
+                        <td>
 
-                <select
-                    name="premix[${indexPremix}][nama_premix]"
-                    class="form-control form-select-sm text-center"
-                    required>
+                            <select
+                                name="premix[${indexPremix}][nama_premix]"
+                                class="form-control form-select-sm text-center select2"
+                                >
 
-                    ${optionPremix}
+                                ${optionPremix}
 
-                </select>
+                            </select>
 
-            </td>
+                        </td>
 
-            <td>
+                        <td>
 
-                <input
-                    type="text"
-                    name="premix[${indexPremix}][kode_premix]"
-                    class="form-control form-control-sm text-center">
+                            <input
+                                type="text"
+                                name="premix[${indexPremix}][kode_premix]"
+                                class="form-control form-control-sm text-center">
 
-            </td>
+                        </td>
 
-            <td>
+                        <td>
 
-                <input
-                    type="number"
-                    name="premix[${indexPremix}][berat_premix]"
-                    step="0.01"
-                    class="form-control form-control-sm text-center">
+                            <input
+                                type="number"
+                                name="premix[${indexPremix}][berat_premix]"
+                                step="0.01"
+                                class="form-control form-control-sm text-center">
 
-            </td>
+                        </td>
 
-            <td>
+                        <td>
 
-                <input
-                    type="checkbox"
-                    name="premix[${indexPremix}][sensori_premix]"
-                    value="Oke">
+                            <input
+                                type="checkbox"
+                                name="premix[${indexPremix}][sensori_premix]"
+                                value="Oke">
 
-            </td>
+                        </td>
 
-            <td>
+                        <td>
 
-                <button
-                    type="button"
-                    class="btn btn-danger btn-sm hapusBarisPremix">
+                            <button
+                                type="button"
+                                class="btn btn-danger btn-sm hapusBarisPremix">
 
-                    Hapus
+                                Hapus
 
-                </button>
+                            </button>
 
-            </td>
+                        </td>
 
-        </tr>
-    `;
+                    </tr>
+                `;
 
                 tbodyPremix.insertAdjacentHTML('beforeend', row);
+
+                const newRow = tbodyPremix.lastElementChild;
+
+                $(newRow).find('.select2').select2({
+                    width: '100%',
+                    placeholder: '-- Pilih --',
+                    allowClear: true
+                });
 
                 indexPremix++;
 
@@ -808,12 +872,31 @@
 
             // HAPUS ROW
             document.addEventListener('click', function(e) {
-                if (e.target.closest('.hapusBaris')) e.target.closest('tr').remove();
-                if (e.target.closest('.hapusBarisPremix')) e.target.closest('tr').remove();
+                const hapusNonPremix = e.target.closest('.hapusBaris');
 
-                if (e.target.closest('.hapusBarisSuhu')) {
+                if (hapusNonPremix) {
+                    if (tbodyNon.querySelectorAll('tr').length > 1) {
+                        hapusNonPremix.closest('tr').remove();
+                    } else {
+                        alert("Minimal satu baris Non-Premix wajib ada");
+                    }
+                }
+
+                const hapusPremix = e.target.closest('.hapusBarisPremix');
+
+                if (hapusPremix) {
+                    if (tbodyPremix.querySelectorAll('tr').length > 1) {
+                        hapusPremix.closest('tr').remove();
+                    } else {
+                        alert("Minimal satu baris Premix wajib ada");
+                    }
+                }
+
+                const hapusSuhu = e.target.closest('.hapusBarisSuhu');
+
+                if (hapusSuhu) {
                     if (tbodySuhu.querySelectorAll('tr').length > 1) {
-                        e.target.closest('tr').remove();
+                        hapusSuhu.closest('tr').remove();
                     } else {
                         alert("Minimal satu baris suhu wajib ada");
                     }

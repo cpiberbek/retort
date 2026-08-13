@@ -121,7 +121,7 @@
                                             <input type="hidden" name="{{ $column }}" value="{{ $washing->$column }}">
                                         @endif
                                     @else
-                                        <input type="number" name="{{ $column }}" class="form-control form-control-sm text-center" step="0.01" min="0"
+                                        <input type="text" inputmode="decimal" name="{{ $column }}" class="form-control form-control-sm text-center" step="0.01" min="0"
                                             value="{{ old($column, $washing->$column) }}"
                                             @if($washing->$column) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif>
                                     @endif
@@ -137,47 +137,179 @@
     {{-- PC KLEER --}}
     <div class="card mb-4">
         <div class="card-header bg-info text-white"><strong>PC Kleer</strong></div>
+
         <div class="card-body">
-           <div class="alert alert-danger mt-2 py-3 px-3" style="font-size: 0.9rem;">
-            <i class="bi bi-info-circle"></i>
-            <strong> Standar Pemeriksaan:</strong>
-            <ul class="mb-2 mt-2">
-                <li>Suhu PC Kleer : 46 ± 3 °C</li>
-                <li>Kons. PC Kleer : 0.7% (ayam); 1% (sapi dan RTE); 0.8% (cuci ulang)</li>
-            </ul>
+
+            <div class="alert alert-danger mt-2 py-3 px-3" style="font-size: 0.9rem;">
+                <i class="bi bi-info-circle"></i>
+                <strong> Standar Pemeriksaan:</strong>
+                <ul class="mb-2 mt-2">
+                    <li>Suhu PC Kleer : 46 ± 3 °C</li>
+                    <li>Kons. PC Kleer : 0.7% (ayam); 1% (sapi dan RTE); 0.8% (cuci ulang)</li>
+                </ul>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle text-center">
+                    <tbody>
+                        @php
+                            $pckleer_fields = [
+                                'konsentrasi_pckleer',
+                                'suhu_pckleer_1',
+                                'suhu_pckleer_2',
+                                'ph_pckleer',
+                                'kondisi_air_pckleer'
+                            ];
+                        @endphp
+
+                        @foreach($pckleer_fields as $field)
+                            <tr>
+                                <td class="text-left align-middle">
+                                    {{ ucwords(str_replace('_', ' ', $field)) }}
+                                </td>
+
+                                <td>
+                                    @if($field == 'kondisi_air_pckleer')
+
+                                        <select name="{{ $field }}_display"
+                                            class="form-control form-control-sm text-center"
+                                            @if($washing->$field)
+                                                style="pointer-events:none;background-color:#e9ecef;"
+                                            @endif>
+                                            <option value="OK" {{ $washing->$field == 'OK' ? 'selected' : '' }}>OK</option>
+                                            <option value="Tidak OK" {{ $washing->$field == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
+                                        </select>
+
+                                        @if($washing->$field)
+                                            <input type="hidden" name="{{ $field }}" value="{{ $washing->$field }}">
+                                        @endif
+
+                                    @else
+
+                                        @if($washing->$field !== null && $washing->$field !== '')
+                                            <input type="text"
+                                                name="{{ $field }}"
+                                                class="form-control form-control-sm text-center"
+                                                value="{{ old($field, $washing->$field) }}"
+                                                readonly
+                                                style="background-color:#e9ecef;cursor:not-allowed;">
+                                        @else
+                                            <div class="input-group input-group-sm">
+                                                <button type="button"
+                                                    class="btn btn-outline-secondary toggle-sign"
+                                                    data-target="{{ $field }}">±</button>
+
+                                                <input type="text"
+                                                    name="{{ $field }}"
+                                                    id="{{ $field }}"
+                                                    class="form-control text-center numeric-sign"
+                                                    inputmode="decimal"
+                                                    value="{{ old($field, '') }}">
+                                            </div>
+                                        @endif
+
+                                    @endif
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
         </div>
-        <div class="table-responsive">
-            <table class="table table-bordered align-middle text-center">
-                <tbody>
-                    @php
-                    $pckleer_fields = ['konsentrasi_pckleer','suhu_pckleer_1','suhu_pckleer_2','ph_pckleer','kondisi_air_pckleer'];
-                    @endphp
-                    @foreach($pckleer_fields as $field)
-                    <tr>
-                        <td class="text-left align-middle">{{ ucwords(str_replace('_',' ',$field)) }}</td>
-                        <td>
-                            @if($field=='kondisi_air_pckleer')
-                            <select name="{{ $field }}_display" class="form-control form-control-sm text-center" 
-                            @if($washing->$field) style="pointer-events:none;background-color:#e9ecef;" @endif>
-                            <option value="OK" {{ $washing->$field=='OK' ? 'selected' : '' }}>OK</option>
-                            <option value="Tidak OK" {{ $washing->$field=='Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
-                        </select>
-                        @if($washing->$field)
-                        <input type="hidden" name="{{ $field }}" value="{{ $washing->$field }}">
-                        @endif
-                        @else
-                        <input type="number" name="{{ $field }}" class="form-control form-control-sm text-center" step="0.01" min="0"
-                        value="{{ old($field, $washing->$field) }}"
-                        @if($washing->$field) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif>
-                        @endif
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
     </div>
-</div>
-</div>
+
+    {{-- JS -+ PC KLEER --}}
+    <script>
+        document.querySelectorAll('.numeric-sign').forEach(input => {
+            input.addEventListener('input', function () {
+                let value = this.value.replace(/[^0-9.,-]/g, '');
+                let negative = value.startsWith('-');
+
+                value = value.replace(/-/g, '');
+
+                const separator = value.match(/[.,]/);
+
+                if (separator) {
+                    const parts = value.split(/[.,]/);
+                    value = parts[0] + separator[0] + parts.slice(1).join('');
+                }
+
+                this.value = (negative ? '-' : '') + value;
+
+                if (this.value !== '-') {
+                    this.classList.remove('is-invalid');
+
+                    const error = this.closest('td').querySelector('.numeric-error');
+
+                    if (error) {
+                        error.remove();
+                    }
+                }
+            });
+        });
+
+        document.querySelectorAll('.toggle-sign').forEach(button => {
+            button.addEventListener('click', function () {
+                const input = document.getElementById(this.dataset.target);
+
+                if (input.value === '') {
+                    input.value = '-';
+                } else if (input.value === '-') {
+                    input.value = '';
+                } else if (input.value.startsWith('-')) {
+                    input.value = input.value.substring(1);
+                } else {
+                    input.value = '-' + input.value;
+                }
+
+                input.dispatchEvent(new Event('input'));
+            });
+        });
+
+        document.getElementById('washingForm').addEventListener('submit', function (e) {
+            let firstInvalid = null;
+
+            document.querySelectorAll('.numeric-sign').forEach(input => {
+                const value = input.value.trim();
+                const td = input.closest('td');
+                let error = td.querySelector('.numeric-error');
+
+                if (value === '-') {
+                    if (!firstInvalid) {
+                        firstInvalid = input;
+                    }
+
+                    input.classList.add('is-invalid');
+
+                    if (!error) {
+                        error = document.createElement('div');
+                        error.className = 'text-danger numeric-error mt-1';
+                        error.textContent = 'Wajib diisi angka atau kosongkan apabila tidak ada isian.';
+                        td.appendChild(error);
+                    }
+                } else {
+                    input.classList.remove('is-invalid');
+
+                    if (error) {
+                        error.remove();
+                    }
+                }
+            });
+
+            if (firstInvalid) {
+                e.preventDefault();
+
+                firstInvalid.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                setTimeout(() => {
+                    firstInvalid.focus();
+                }, 300);
+            }
+        });
+    </script>
 
 {{-- Pottasium Sorbate --}}
 <div class="card mb-4">
@@ -210,7 +342,7 @@
                         <input type="hidden" name="{{ $field }}" value="{{ $washing->$field }}">
                         @endif
                         @else
-                        <input type="number" name="{{ $field }}" class="form-control form-control-sm text-center" step="0.01" min="0"
+                        <input type="text" inputmode="decimal" name="{{ $field }}" class="form-control form-control-sm text-center" step="0.01" min="0"
                         value="{{ old($field, $washing->$field) }}"
                         @if($washing->$field) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif>
                         @endif
@@ -242,7 +374,7 @@
                     <tr>
                         <td class="text-left align-middle">{{ ucwords(str_replace('_',' ',$field)) }}</td>
                         <td>
-                            <input type="number" name="{{ $field }}" class="form-control form-control-sm text-center" step="0.01" min="0"
+                            <input type="text" inputmode="decimal" name="{{ $field }}" class="form-control form-control-sm text-center" step="0.01" min="0"
                             value="{{ old($field, $washing->$field) }}"
                             @if($washing->$field) readonly style="background-color:#e9ecef;cursor:not-allowed;" @endif>
                         </td>

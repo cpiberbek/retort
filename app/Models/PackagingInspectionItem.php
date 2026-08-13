@@ -43,6 +43,7 @@ class PackagingInspectionItem extends Model
         'condition_sealing',
         'condition_color',
         'condition_dimension',
+        'condition_weight',
         'condition_weight_pcs', // Ini sudah ada di form lama (hidden), saya biarkan
         
         // Field Kuantitas

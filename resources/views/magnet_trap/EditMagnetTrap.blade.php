@@ -109,16 +109,39 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
+                                <label for="tanggal" class="form-label">{{ __('Tanggal') }}</label>
+                                <input id="tanggal" type="date"
+                                    class="form-control @error('tanggal') is-invalid @enderror"
+                                    name="tanggal"
+                                    value="{{ old('tanggal', $checklistmagnettrap->tanggal ?? $checklistmagnettrap->created_at->format('Y-m-d')) }}"
+                                    required>
+                                @error('tanggal')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
+
+                            <div class="col-md-4 mb-3">
                                 <label for="pukul" class="form-label">{{ __('Pukul') }}</label>
-                                <input id="pukul" type="time" class="form-control @error('pukul') is-invalid @enderror" name="pukul" value="{{ old('pukul', $checklistmagnettrap->pukul) }}" required>
+                                <input id="pukul" type="time"
+                                    class="form-control @error('pukul') is-invalid @enderror"
+                                    name="pukul"
+                                    value="{{ old('pukul', $checklistmagnettrap->pukul) }}"
+                                    required>
                                 @error('pukul')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
                             </div>
-                            <div class="col-md-6 mb-3">
+
+                            <div class="col-md-4 mb-3">
                                 <label for="jumlah_temuan" class="form-label">{{ __('Jumlah Temuan') }}</label>
-                                <input id="jumlah_temuan" type="number" class="form-control @error('jumlah_temuan') is-invalid @enderror" name="jumlah_temuan" value="{{ old('jumlah_temuan', $checklistmagnettrap->jumlah_temuan) }}" required placeholder="Contoh: 0" min="0">
+                                <input id="jumlah_temuan" type="number"
+                                    class="form-control @error('jumlah_temuan') is-invalid @enderror"
+                                    name="jumlah_temuan"
+                                    value="{{ old('jumlah_temuan', $checklistmagnettrap->jumlah_temuan) }}"
+                                    required
+                                    placeholder="Contoh: 0"
+                                    min="0">
                                 @error('jumlah_temuan')
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
                                 @enderror
