@@ -115,6 +115,14 @@ Route::middleware('auth')->group(function () {
     // Halo test
     Route::get('/halo', [HaloController::class, 'index']);
 
+    //update plant opsi user 
+    Route::put('/users/{uuid}/plant-option', [UserController::class, 'updatePlantOption'])
+    ->name('user.updatePlantOption');
+
+    //update plant yang ingin dilihat (ubah plant session)
+    Route::post('/user/change-plant', [UserController::class, 'changePlant'])
+    ->name('user.change-plant');
+
 
     /*MASTER DATA*/
     // Departemen
@@ -730,6 +738,7 @@ Route::middleware('auth')->group(function () {
 
     // Labelisasi PVDC
     Route::get('/labelisasi_pvdc', [Labelisasi_pvdcController::class, 'index'])->name('labelisasi_pvdc.index');
+    Route::get('/labelisasi-pvdc/{uuid}/result', [Labelisasi_pvdcController::class, 'result'])->name('labelisasi_pvdc.result');
     Route::get('/labelisasi_pvdc/create', [Labelisasi_pvdcController::class, 'create'])->name('labelisasi_pvdc.create');
     Route::post('/labelisasi_pvdc', [Labelisasi_pvdcController::class, 'store'])->name('labelisasi_pvdc.store');
     Route::get('/labelisasi_pvdc/update/{uuid}', [Labelisasi_pvdcController::class, 'update'])->name('labelisasi_pvdc.update.form');

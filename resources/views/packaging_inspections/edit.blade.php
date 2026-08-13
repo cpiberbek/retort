@@ -234,9 +234,14 @@
 
                     ${checksHtml} {{-- Render Tombol Loop Disini --}}
 
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-1 col-md-6">
                         <label class="form-label">Dimensi</label>
                         <input type="text" name="items[${i}][condition_dimension]" class="form-control" value="${dimension}">
+                    </div>
+
+                    <div class="col-lg-1 col-md-6">
+                        <label class="form-label">Berat</label>
+                        <input type="number" name="items[${i}][condition_weight]" class="form-control" value="${data?.condition_weight || ''}" min="0" step="0.01">
                     </div>
 
                     <div class="col-md-2">

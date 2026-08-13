@@ -29,27 +29,31 @@ class MagnetTrapController extends Controller
      */
     public function index(Request $request)
     {
-        // Eager load updater untuk performa
         $query = MagnetTrapModel::query()->with(['updater', 'mincing', 'produksi', 'engineer']);
 
-        // 0. Filter Plant (Data Isolation)
-        // Menampilkan data hanya sesuai Plant user yang login
         if (Auth::check() && !empty(Auth::user()->plant)) {
             $query->where('plant_uuid', Auth::user()->plant);
         }
 
-        // 1. Filter Pencarian
         $query->when($request->search, function ($q, $search) {
-            return $q->where('nama_produk', 'like', "%{$search}%")
-            ->orWhere('kode_batch', 'like', "%{$search}%");
+            return $q->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                    ->orWhere('kode_batch', 'like', "%{$search}%");
+            });
         });
 
-        // 2. Filter Tanggal
         if ($request->filled('date')) {
-            $query->whereDate('created_at', $request->input('date'));
+            $date = $request->input('date');
+
+            $query->where(function ($q) use ($date) {
+                $q->whereDate('tanggal', $date)
+                    ->orWhere(function ($q) use ($date) {
+                        $q->whereNull('tanggal')
+                            ->whereDate('created_at', $date);
+                    });
+            });
         }
 
-        // 3. Get Data
         $data = $query->latest()->paginate(10)->withQueryString();
 
         return view('magnet_trap.IndexMagnetTrap', compact('data'));
@@ -109,6 +113,7 @@ class MagnetTrapController extends Controller
             'keterangan' => 'nullable|string',
             'produksi_id' => 'required|integer',
             'engineer_id' => 'required|integer',
+            'tanggal' => 'required|date',
         ]);
 
         $user = Auth::user();
@@ -196,6 +201,7 @@ class MagnetTrapController extends Controller
         'keterangan' => 'nullable|string',
         'produksi_id' => 'required|integer',
         'engineer_id' => 'required|integer',
+        'tanggal' => 'required|date',
     ]);
 
        $dataToUpdate = $request->all();
@@ -373,18 +379,29 @@ class MagnetTrapController extends Controller
     {
         $date = $request->input('date');
         $userPlant = Auth::user()->plant;
+
         $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Checklist Cleaning Magnet Trap')
             ->value('no_dokumen');
 
-
         $magnetTraps = MagnetTrapModel::query()
-        ->where('plant_uuid', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('created_at', $date);
-        })
-        ->orderBy('created_at', 'asc')
-        ->get();
+            ->where('plant_uuid', $userPlant)
+            ->when($date, function ($query) use ($date) {
+                $query->where(function ($query) use ($date) {
+                    $query->whereDate('tanggal', $date)
+                        ->orWhere(function ($query) use ($date) {
+                            $query->whereNull('tanggal')
+                                ->whereDate('created_at', $date);
+                        });
+                });
+            })
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if ($magnetTraps->isEmpty()) {
+            return redirect()->back()
+                ->with('error', 'Tidak ada data untuk tanggal yang dipilih.');
+        }
 
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {

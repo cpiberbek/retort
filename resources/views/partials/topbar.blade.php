@@ -4,6 +4,106 @@
         <i class="fa fa-bars"></i>
     </button>
 
+    @php
+        $user = auth()->user();
+
+        $plantAkun = \App\Models\Plant::where(
+            'uuid',
+            $user->getRawOriginal('plant')
+        )->value('plant');
+
+        $plantActive = \App\Models\Plant::where(
+            'uuid',
+            $user->plant_active
+        )->value('plant') ?? $plantAkun;
+
+        $roleAkun = ucfirst(
+            \Spatie\Permission\Models\Role::whereIn('id', function ($query) use ($user) {
+                $query->select('role_id')
+                    ->from('model_has_roles')
+                    ->where('model_id', $user->uuid);
+            })->value('name') ?? '-'
+        );
+
+        $plantOpsiRaw = \Illuminate\Support\Facades\DB::table('users')
+            ->where('uuid', $user->uuid)
+            ->value('plant_option');
+
+        $plantOpsi = json_decode($plantOpsiRaw, true) ?? [];
+
+        $plants = \App\Models\Plant::whereIn('uuid', $plantOpsi)->get();
+    @endphp
+
+    <div class="card border-0 shadow-sm mb-2 mt-2 w-60" style="border-radius: 12px;">
+        <div class="card-body py-2 px-4">
+            <div class="d-flex align-items-center">
+
+                <div class="d-flex align-items-center" style="gap: 30px; font-weight: 700;">
+
+                    <div>
+                        <div class="text-muted" style="font-size: 11px; font-weight: 700;">
+                            Role Akun:
+                        </div>
+                        <div style="font-size: 13px; font-weight: 700;">
+                            {{ $roleAkun }}
+                        </div>
+                    </div>
+
+                    <span class="text-muted" style="font-size: 20px; font-weight: 300;">│</span>
+
+                    <div>
+                        <div class="text-muted" style="font-size: 11px; font-weight: 700;">
+                            Plant Akun Asal:
+                        </div>
+                        <div style="font-size: 13px; font-weight: 700;">
+                            Plant {{ $plantAkun ?? '-' }}
+                        </div>
+                    </div>
+
+                    <span class="text-muted" style="font-size: 20px; font-weight: 300;">│</span>
+
+                    <div>
+                        <div class="text-muted" style="font-size: 11px; font-weight: 700;">
+                            Data Plant yang Sedang Diakses:
+                        </div>
+                        <div class="text-primary" style="font-size: 13px; font-weight: 700;">
+                            Plant {{ $plantActive ?? '-' }}
+                        </div>
+                    </div>
+
+                    {{-- hide if plant opsi null --}}
+                    @if (!empty($plantOpsi))
+                        <span class="text-muted" style="font-size: 20px; font-weight: 300;">│</span>
+
+                        <div>
+                            <div class="text-muted" style="font-size: 11px; font-weight: 700;">
+                                Ganti Data Plant yang Ingin Diakses:
+                            </div>
+
+                            <div class="d-flex align-items-center" style="gap: 8px;">
+                                <select id="plantActiveSelect" class="form-select form-select-sm" style="min-width: 180px;">
+                                    <option value="" disabled selected>Pilih Data Plant</option>
+                                    @foreach ($plants as $plant)
+                                        <option value="{{ $plant->uuid }}">
+                                            Plant {{ $plant->plant }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                <button type="button" id="btnPindahPlant" class="btn btn-sm btn-primary" disabled>
+                                    Pindah
+                                </button>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    
     <ul class="navbar-nav ml-auto">
 
 
@@ -36,6 +136,45 @@
 
     </ul>
 </nav>
+
+<script>
+const plantSelect = document.getElementById('plantActiveSelect');
+const btnPindahPlant = document.getElementById('btnPindahPlant');
+
+if (plantSelect && btnPindahPlant) {
+    plantSelect.addEventListener('change', function () {
+        btnPindahPlant.disabled = !this.value;
+    });
+
+    btnPindahPlant.addEventListener('click', function () {
+        if (!plantSelect.value) return;
+
+        this.disabled = true;
+
+        fetch('{{ route('user.change-plant') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                plant_active: plantSelect.value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                this.disabled = false;
+            }
+        })
+        .catch(() => {
+            this.disabled = false;
+        });
+    });
+}
+</script>
 
 <style>
 /* Gunakan font modern Poppins */
