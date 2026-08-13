@@ -229,47 +229,89 @@
 
                 {{-- JS -+ PC KLEER --}}
                 <script>
-                document.querySelectorAll('.numeric-sign').forEach(input => {
-                    input.addEventListener('input', function () {
-                        let value = this.value.replace(/[^0-9.,-]/g, '');
-
-                        let negative = value.startsWith('-');
-                        value = value.replace(/-/g, '');
-
-                        let separator = value.match(/[.,]/);
-
-                        if (separator) {
-                            let parts = value.split(/[.,]/);
-                            value = parts[0] + separator[0] + parts.slice(1).join('');
-                        }
-
-                        this.value = (negative ? '-' : '') + value;
-                    });
-                });
-
-                document.querySelectorAll('.toggle-sign').forEach(button => {
-                    button.addEventListener('click', function () {
-                        const input = document.getElementById(this.dataset.target);
-
-                        if (input.value === '') {
-                            input.value = '-';
-                        } else if (input.value === '-') {
-                            input.value = '';
-                        } else if (input.value.startsWith('-')) {
-                            input.value = input.value.substring(1);
-                        } else {
-                            input.value = '-' + input.value;
-                        }
-                    });
-                });
-
-                document.querySelector('form').addEventListener('submit', function () {
                     document.querySelectorAll('.numeric-sign').forEach(input => {
-                        if (input.value.trim() === '' || input.value === '-') {
-                            input.value = '';
+                        input.addEventListener('input', function () {
+                            let value = this.value.replace(/[^0-9.,-]/g, '');
+                            let negative = value.startsWith('-');
+
+                            value = value.replace(/-/g, '');
+
+                            const separator = value.match(/[.,]/);
+
+                            if (separator) {
+                                const parts = value.split(/[.,]/);
+                                value = parts[0] + separator[0] + parts.slice(1).join('');
+                            }
+
+                            this.value = (negative ? '-' : '') + value;
+
+                            if (this.value !== '-') {
+                                this.classList.remove('is-invalid');
+
+                                const error = this.parentElement.querySelector('.numeric-error');
+
+                                if (error) {
+                                    error.remove();
+                                }
+                            }
+                        });
+                    });
+
+                    document.querySelectorAll('.toggle-sign').forEach(button => {
+                        button.addEventListener('click', function () {
+                            const input = document.getElementById(this.dataset.target);
+
+                            if (input.value === '') {
+                                input.value = '-';
+                            } else if (input.value === '-') {
+                                input.value = '';
+                            } else if (input.value.startsWith('-')) {
+                                input.value = input.value.substring(1);
+                            } else {
+                                input.value = '-' + input.value;
+                            }
+                        });
+                    });
+
+                    document.getElementById('washingForm').addEventListener('submit', function (e) {
+                        let firstInvalid = null;
+
+                        document.querySelectorAll('.numeric-sign').forEach(input => {
+                            const value = input.value.trim();
+                            let error = input.parentElement.querySelector('.numeric-error');
+
+                            if (value === '-') {
+                                if (!firstInvalid) {
+                                    firstInvalid = input;
+                                }
+
+                                input.classList.add('is-invalid');
+
+                                if (!error) {
+                                    error = document.createElement('small');
+                                    error.className = 'text-danger numeric-error d-block';
+                                    error.textContent = 'Wajib diisi angka atau kosongkan apabila tidak ada isian.';
+                                    input.parentElement.appendChild(error);
+                                }
+                            } else {
+                                input.classList.remove('is-invalid');
+
+                                if (error) {
+                                    error.remove();
+                                }
+                            }
+                        });
+
+                        if (firstInvalid) {
+                            e.preventDefault();
+
+                            firstInvalid.focus();
+                            firstInvalid.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
                         }
                     });
-                });
                 </script>
 
                 {{-- Pottasium Sorbate --}}

@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasActivePlant;
 
 class User extends Authenticatable
 {
-    use HasFactory, HasUuids, HasRoles, SoftDeletes;
+    use HasFactory, HasUuids, HasRoles, SoftDeletes, HasActivePlant;
 
     protected $table = 'users';
     protected $primaryKey = 'uuid';
@@ -21,7 +22,7 @@ class User extends Authenticatable
     protected $fillable = [
         'uuid', 'name', 'username', 'password', 'plant',
         'department', 'type_user', 'photo', 'email',
-        'activation', 'updater'
+        'activation', 'updater', 'plant_active', 'plant_option',
     ];
 
     protected $hidden = [
@@ -41,6 +42,11 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Departemen::class, 'department');
     }
+
+    protected $casts = [
+        'plant_option' => 'array',
+    ];
+
 
     public const TYPE_USER_ROLE_MAP = [
         0 => 'admin',

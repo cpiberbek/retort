@@ -33,69 +33,57 @@
             </form>
 
             {{-- Table User --}}
-            <div class="table-responsive">
+           <div class="table-responsive">
                 <table class="table table-striped table-bordered align-middle">
                     <thead class="table-primary text-center">
                         <tr>
-                            <th>No. </th>
+                            <th>No.</th>
                             <th>Nama</th>
                             <th>Username</th>
                             <th>Email</th>
                             <th>Plant</th>
                             <th>Department</th>
                             <th>Type</th>
-                            {{-- <th style="width: 15%;">Aksi</th> --}}
+                            <th>Akses Multiplant</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse ($users as $index => $user)
-                        <tr>
-                            {{-- nomor urut sesuai pagination --}}
-                            <td class="text-center align-middle">
-                                {{ $users->firstItem() + $index }}
-                            </td>
-                            <td class="text-center align-middle">{{ $user->name }}</td>
-                            <td class="text-center align-middle">{{ $user->username }}</td>
-                            <td class="text-left align-middle">{{ $user->email }}</td>
-                            <td class="text-center align-middle">{{ $user->plantRelasi->plant ?? '-' }}</td>
-                            <td class="text-center align-middle">{{ $user->departmentRelasi->nama ?? '-' }}</td>
-                            <td class="text-center align-middle">
-                                @switch($user->type_user)
-                                @case(0) Admin @break
-                                @case(1) Manager @break
-                                @case(2) Supervisor @break
-                                @case(3) Foreman/Forelady Produksi @break
-                                @case(8) Foreman/Forelady QC @break
-                                @case(4) Inspector @break
-                                @case(5) Engineer @break
-                                @case(6) Warehouse @break
-                                @case(7) Lab @break
-                                @default -
-                                @endswitch
-                            </td>
-                            {{-- <td class="text-center align-middle">
-                                <a href="{{ route('user.edit', $user->uuid) }}" class="btn btn-warning btn-sm me-1">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <form action="{{ route('user.destroy', $user->uuid) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                        onclick="return confirm('Yakin ingin menghapus?')">
-                                        <i class="bi bi-trash"></i>
+                            <tr>
+                                <td class="text-center align-middle">
+                                    {{ $users->firstItem() + $index }}
+                                </td>
+                                <td class="text-center align-middle">{{ $user->name }}</td>
+                                <td class="text-center align-middle">{{ $user->username }}</td>
+                                <td class="text-left align-middle">{{ $user->email }}</td>
+                                <td class="text-center align-middle">{{ $user->plantRelasi->plant ?? '-' }}</td>
+                                <td class="text-center align-middle">{{ $user->departmentRelasi->nama ?? '-' }}</td>
+                                <td class="text-center align-middle">
+                                    {{ ucfirst(\Spatie\Permission\Models\Role::whereIn('id', function ($query) use ($user) {
+                                        $query->select('role_id')
+                                            ->from('model_has_roles')
+                                            ->where('model_id', $user->uuid);
+                                    })->value('name') ?? '-') }}
+                                </td>
+                                <td class="text-center align-middle">
+                                    <button type="button"
+                                        class="btn btn-sm btn-primary btn-plant-option"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#plantOptionModal"
+                                        data-uuid="{{ $user->uuid }}"
+                                        data-plant-option='@json($user->plant_option ?? [])'>
+                                        Buka / Edit
                                     </button>
-                                </form>
-                            </td> --}}
-                        </tr>
+                                </td>
+                            </tr>
                         @empty
-                        <tr>
-                            <td colspan="7" class="text-center">Belum ada data user.</td>
-                        </tr>
+                            <tr>
+                                <td colspan="8" class="text-center">Belum ada data user.</td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
-
             {{-- Pagination --}}
             <div class="d-flex justify-content-end">
                 {{ $users->links('pagination::bootstrap-5') }}
@@ -103,6 +91,98 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade" id="plantOptionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="plantOptionForm" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Akses Multiplant</h5>
+                    <button type="button" class="btn btn-sm" data-bs-dismiss="modal">
+                        X
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <label class="form-label">Plant yang dapat diakses akun ini:</label>
+
+                    <div id="plantOptionList">
+                        @foreach ($plants as $plant)
+                            <div class="form-check">
+                                <input class="form-check-input plant-option-check"
+                                    type="checkbox"
+                                    name="plant_option[]"
+                                    value="{{ $plant->uuid }}"
+                                    id="plant_{{ $plant->uuid }}">
+
+                                <label class="form-check-label" for="plant_{{ $plant->uuid }}">
+                                    {{ $plant->plant }}
+                                </label>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.btn-plant-option').forEach(button => {
+        button.addEventListener('click', function () {
+            const uuid = this.dataset.uuid;
+            const options = JSON.parse(this.dataset.plantOption || '[]');
+
+            document.getElementById('plantOptionForm').action =
+                `/users/${uuid}/plant-option`;
+
+            document.querySelectorAll('.plant-option-check').forEach(checkbox => {
+                checkbox.checked = options.includes(checkbox.value);
+            });
+        });
+    });
+
+    const select = document.getElementById('plantActiveSelect');
+
+    if (!select) {
+        return;
+    }
+
+    select.addEventListener('change', function () {
+        fetch('{{ route('user.change-plant') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({
+                plant_active: this.value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message ?? 'Gagal mengubah plant.');
+            }
+        })
+        .catch(error => {
+            console.error(error);
+            alert('Terjadi error saat mengubah plant.');
+        });
+    });
+});
+</script>
 
 {{-- Auto-hide alert setelah 3 detik --}}
 <script>

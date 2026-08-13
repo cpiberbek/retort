@@ -115,6 +115,14 @@ Route::middleware('auth')->group(function () {
     // Halo test
     Route::get('/halo', [HaloController::class, 'index']);
 
+    //update plant opsi user 
+    Route::put('/users/{uuid}/plant-option', [UserController::class, 'updatePlantOption'])
+    ->name('user.updatePlantOption');
+
+    //update plant yang ingin dilihat (ubah plant session)
+    Route::post('/user/change-plant', [UserController::class, 'changePlant'])
+    ->name('user.change-plant');
+
 
     /*MASTER DATA*/
     // Departemen

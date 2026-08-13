@@ -232,18 +232,29 @@
                     document.querySelectorAll('.numeric-sign').forEach(input => {
                         input.addEventListener('input', function () {
                             let value = this.value.replace(/[^0-9.,-]/g, '');
-
                             let negative = value.startsWith('-');
+
                             value = value.replace(/-/g, '');
 
-                            let separator = value.match(/[.,]/);
+                            const separator = value.match(/[.,]/);
 
                             if (separator) {
-                                let parts = value.split(/[.,]/);
+                                const parts = value.split(/[.,]/);
                                 value = parts[0] + separator[0] + parts.slice(1).join('');
                             }
 
                             this.value = (negative ? '-' : '') + value;
+
+                            if (this.value !== '-') {
+                                this.classList.remove('is-invalid');
+
+                                const td = this.closest('td');
+                                const error = td.querySelector('.numeric-error');
+
+                                if (error) {
+                                    error.remove();
+                                }
+                            }
                         });
                     });
 
@@ -260,15 +271,53 @@
                             } else {
                                 input.value = '-' + input.value;
                             }
+
+                            input.dispatchEvent(new Event('input'));
                         });
                     });
 
-                    document.querySelector('form').addEventListener('submit', function () {
+                    document.getElementById('washingForm').addEventListener('submit', function (e) {
+                        let firstInvalid = null;
+
                         document.querySelectorAll('.numeric-sign').forEach(input => {
-                            if (input.value.trim() === '' || input.value === '-') {
-                                input.value = '';
+                            const value = input.value.trim();
+                            const td = input.closest('td');
+                            let error = td.querySelector('.numeric-error');
+
+                            if (value === '-') {
+                                if (!firstInvalid) {
+                                    firstInvalid = input;
+                                }
+
+                                input.classList.add('is-invalid');
+
+                                if (!error) {
+                                    error = document.createElement('div');
+                                    error.className = 'text-danger numeric-error mt-1';
+                                    error.textContent = 'Wajib diisi angka atau kosongkan apabila tidak ada isian.';
+                                    td.appendChild(error);
+                                }
+                            } else {
+                                input.classList.remove('is-invalid');
+
+                                if (error) {
+                                    error.remove();
+                                }
                             }
                         });
+
+                        if (firstInvalid) {
+                            e.preventDefault();
+
+                            firstInvalid.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center'
+                            });
+
+                            setTimeout(() => {
+                                firstInvalid.focus();
+                            }, 300);
+                        }
                     });
                 </script>
 
