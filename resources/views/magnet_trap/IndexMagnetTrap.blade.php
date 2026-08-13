@@ -67,6 +67,11 @@
                 </div>
             </div>
         </div>
+        <div class="col-lg-2 col-md-1 mt-3">
+                <a href="{{ route('checklistmagnettrap.index') }}" class="btn btn-primary w-100">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
     </form>
 
     <div class="modal fade" id="warningModal" tabindex="-1">
@@ -161,9 +166,10 @@
                             <td class="text-center align-middle">{{ $item->nama_produk }}</td>
                             <td class="text-center align-middle">{{ $item->mincing->kode_produksi ?? '-' }}</td>
                             <td class="text-center align-middle">
-                                {{ \Carbon\Carbon::parse($item->created_at)->format('d-m-Y') }} <br>
-                                <span class="text-muted small">{{ \Carbon\Carbon::parse($item->pukul)->format('H:i')
-                                }}</span>
+                                {{ \Carbon\Carbon::parse($item->tanggal ?? $item->created_at)->format('d-m-Y') }} <br>
+                                <span class="text-muted small">
+                                    {{ \Carbon\Carbon::parse($item->pukul)->format('H:i') }}
+                                </span>
                             </td>
                             <td class="text-center align-middle">{{ $item->jumlah_temuan }}</td>
                             <td class="text-center align-middle">

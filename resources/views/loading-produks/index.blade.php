@@ -96,7 +96,7 @@
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('loading-produks.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
         <div class="row w-100">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0">
@@ -106,7 +106,7 @@
                     value="{{ request('date') ?? request('start_date') }}" placeholder="Tanggal">
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-1">Pilih Shift</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0">
@@ -122,7 +122,7 @@
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="mb-1">Cari Data</div>
                 <div class="input-group mb-2">
                     <span class="input-group-text bg-white border-end-0">
@@ -131,6 +131,11 @@
                     <input type="text" name="search" id="search" class="form-control border-start-0"
                     value="{{ request('search') }}" placeholder="Cari No. Pol / Supir / Ekspedisi...">
                 </div>
+            </div>
+            <div class="col-md-3 mt-4">
+                <a href="{{ route('loading-produks.index') }}" class="btn btn-primary mb-2">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
             </div>
         </div>
     </form>

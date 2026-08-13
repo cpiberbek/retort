@@ -66,6 +66,14 @@ class Labelisasi_pvdcController extends Controller
         return view('form.labelisasi_pvdc.index', compact('data', 'search', 'date', 'shift'));
     }
 
+    //modal new function supaya ringan
+    public function result($uuid)
+    {
+        $dep = Labelisasi_pvdc::where('uuid', $uuid)->firstOrFail();
+
+        return view('form.labelisasi_pvdc.result', compact('dep'));
+    }
+
     public function create()
     {
         $userPlant = Auth::user()->plant;

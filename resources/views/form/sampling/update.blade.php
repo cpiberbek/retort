@@ -134,12 +134,12 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Jumlah</label>
-                                <input type="number" name="jumlah" class="form-control" step="1"
-                                    value="{{ old('jumlah', round($sampling->jumlah)) }}"
+                                <input type="number" name="jumlah" class="form-control" step="0.01" min="0"
+                                    value="{{ old('jumlah', $sampling->jumlah) }}"
                                     {{ $sampling->jumlah ? 'readonly' : '' }} required>
 
                                 @if($sampling->jumlah)
-                                <input type="hidden" name="jumlah" value="{{ round($sampling->jumlah) }}">
+                                <input type="hidden" name="jumlah" value="{{ $sampling->jumlah }}">
                                 @endif
                             </div>
                         </div>
@@ -157,11 +157,11 @@
                             <div class="col-md-3 mb-3">
                                 <label class="form-label">{{ ucwords(str_replace('_', ' ', $field)) }}</label>
                                 <input type="number" name="{{ $field }}" class="form-control" step="1"
-                                    value="{{ old($field, round($sampling->$field)) }}"
+                                    value="{{ old($field, $sampling->$field) }}"
                                     {{ $sampling->$field !== null ? 'readonly' : '' }}>
 
                                 @if($sampling->$field !== null)
-                                <input type="hidden" name="{{ $field }}" value="{{ round($sampling->$field) }}">
+                                <input type="hidden" name="{{ $field }}" value="{{ $sampling->$field }}">
                                 @endif
                             </div>
                             @endforeach

@@ -137,8 +137,19 @@
                         </div>
 
                         <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="tanggal" class="form-label">{{ __('Tanggal') }}</label>
+                                <input id="tanggal" type="date"
+                                    class="form-control bg-body-secondary @error('tanggal') is-invalid @enderror"
+                                    name="tanggal"
+                                    value="{{ old('tanggal', $checklistmagnettrap->tanggal ?? $checklistmagnettrap->created_at->format('Y-m-d')) }}"
+                                    readonly>
+                                @error('tanggal')
+                                    <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span>
+                                @enderror
+                            </div>
                             {{-- Field: Pukul --}}
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="pukul" class="form-label">{{ __('Pukul') }}</label>
                                 <input id="pukul" type="time"
                                        class="form-control @error('pukul') is-invalid @enderror {{ !empty($checklistmagnettrap->pukul) ? 'bg-body-secondary' : '' }}"
@@ -152,7 +163,7 @@
                             </div>
 
                             {{-- Field: Jumlah Temuan --}}
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label for="jumlah_temuan" class="form-label">{{ __('Jumlah Temuan') }}</label>
                                 {{-- Catatan: Biasanya '0' dianggap ada isi, tapi jika null baru boleh diedit.
                                      Jika logika Anda 0 boleh diedit, ganti !empty dengan check null --}}

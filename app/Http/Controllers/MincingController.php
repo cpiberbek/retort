@@ -170,6 +170,27 @@ class MincingController extends Controller
             'suhu_akhir_emulsi'     => $request->suhu_akhir_emulsi === '-' ? null : $request->suhu_akhir_emulsi,
         ]);
 
+        $nonPremix = $request->input('non_premix', []);
+        $expandedNonPremix = [];
+
+        foreach ($nonPremix as $np) {
+            foreach ((array) ($np['inspection_uuid'] ?? []) as $uuid) {
+                $item = $np;
+                $item['inspection_uuid'] = $uuid;
+                $expandedNonPremix[] = $item;
+            }
+        }
+
+        $request->merge([
+            'non_premix' => $expandedNonPremix
+        ]);
+
+        $expandedNonPremix = array_map('unserialize', array_unique(array_map('serialize', $expandedNonPremix)));
+
+        $request->merge([
+            'non_premix' => $expandedNonPremix
+        ]);
+
         $request->validate([
             'date'          => 'required|date',
             'shift'         => 'required',
@@ -200,7 +221,7 @@ class MincingController extends Controller
 
         // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
         $sanitasiSuhu = function ($val) {
-            return ($val === '' || $val === null || $val === '-') ? null : $val;
+            return ($val === '' || $val === null) ? null : $val;
         };
 
         // Sanitasi suhu_bahan di dalam non_premix
@@ -272,6 +293,9 @@ class MincingController extends Controller
         $produks = Produk::where('plant', $userPlant)->get();
         $rawMaterials = Master_Raw_Material::where('plant_uuid', $userPlant)->get();
 
+        $premixes = Master_Premix::where('plant_uuid', $userPlant)->get();
+
+
         $inspections = InspectionProductDetail::with('inspection')
             ->whereHas('inspection', function ($q) use ($userPlant) {
                 $q->where('plant_uuid', $userPlant);
@@ -286,7 +310,7 @@ class MincingController extends Controller
             ? json_decode($mincing->non_premix, true)
             : [];
 
-        return view('form.mincing.update', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials', 'inspections'));
+        return view('form.mincing.update', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials', 'inspections', 'premixes'));
     }
 
     public function update_qc(Request $request, string $uuid)
@@ -324,11 +348,38 @@ class MincingController extends Controller
 
         // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
         $sanitasiSuhu = function ($val) {
-            return ($val === '' || $val === null || $val === '-') ? null : $val;
+            return ($val === '' || $val === null) ? null : $val;
         };
 
         // Sanitasi suhu_bahan di dalam non_premix
         $nonPremix = $request->input('non_premix', []);
+        $expandedNonPremix = [];
+
+        foreach ($nonPremix as $np) {
+            $inspectionUuids = (array) ($np['inspection_uuid'] ?? []);
+
+            if (empty($inspectionUuids)) {
+                $np['inspection_uuid'] = null;
+                $expandedNonPremix[] = $np;
+                continue;
+            }
+
+            foreach ($inspectionUuids as $uuid) {
+                $item = $np;
+                $item['inspection_uuid'] = $uuid;
+                $expandedNonPremix[] = $item;
+            }
+        }
+
+        $expandedNonPremix = array_map(
+            'unserialize',
+            array_unique(
+                array_map('serialize', $expandedNonPremix)
+            )
+        );
+
+        $nonPremix = $expandedNonPremix;
+
         foreach ($nonPremix as &$np) {
             if (isset($np['suhu_bahan'])) {
                 $np['suhu_bahan'] = $sanitasiSuhu($np['suhu_bahan']);
@@ -390,6 +441,9 @@ class MincingController extends Controller
                 $q->where('plant_uuid', $userPlant);
             })
             ->get();
+
+        $premixes = Master_Premix::where('plant_uuid', $userPlant)->get();
+
         $premixData = !empty($mincing->premix)
             ? json_decode($mincing->premix, true)
             : [];
@@ -398,7 +452,15 @@ class MincingController extends Controller
             ? json_decode($mincing->non_premix, true)
             : [];
 
-        return view('form.mincing.edit', compact('mincing', 'produks', 'premixData', 'nonPremixData', 'rawMaterials', 'inspections'));
+        return view('form.mincing.edit', compact(
+            'mincing',
+            'produks',
+            'premixData',
+            'nonPremixData',
+            'rawMaterials',
+            'inspections',
+            'premixes'
+        ));
     }
 
     public function edit_spv(Request $request, string $uuid)
@@ -433,13 +495,41 @@ class MincingController extends Controller
             'catatan'                    => 'nullable|string',
         ]);
 
+
         // Sanitasi field suhu: jika hanya '-' atau kosong, simpan null
         $sanitasiSuhu = function ($val) {
-            return ($val === '' || $val === null || $val === '-') ? null : $val;
+            return ($val === '' || $val === null) ? null : $val;
         };
 
         // Sanitasi suhu_bahan di dalam non_premix
         $nonPremix = $request->input('non_premix', []);
+        $expandedNonPremix = [];
+
+        foreach ($nonPremix as $np) {
+            $inspectionUuids = (array) ($np['inspection_uuid'] ?? []);
+
+            if (empty($inspectionUuids)) {
+                $np['inspection_uuid'] = null;
+                $expandedNonPremix[] = $np;
+                continue;
+            }
+
+            foreach ($inspectionUuids as $uuid) {
+                $item = $np;
+                $item['inspection_uuid'] = $uuid;
+                $expandedNonPremix[] = $item;
+            }
+        }
+
+        $expandedNonPremix = array_map(
+            'unserialize',
+            array_unique(
+                array_map('serialize', $expandedNonPremix)
+            )
+        );
+
+        $nonPremix = $expandedNonPremix;
+
         foreach ($nonPremix as &$np) {
             if (isset($np['suhu_bahan'])) {
                 $np['suhu_bahan'] = $sanitasiSuhu($np['suhu_bahan']);

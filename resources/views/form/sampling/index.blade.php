@@ -220,8 +220,10 @@
                                     <td class="text-center align-middle">{{ $dep->jenis_sampel }}</td>
                                     <td class="text-center align-middle">{{ $dep->nama_produk }}</td>
                                     <td class="text-center align-middle">{{ $dep->kode_produksi }}</td>
-                                    <td class="text-center align-middle">{{ number_format($dep->jumlah, 0, ',', '.') }} {{ $dep->jenis_kemasan }}
+                                    <td class="text-center align-middle">{{ $dep->jumlah }} {{ $dep->jenis_kemasan }}
                                     </td>
+                                    {{-- <td class="text-center align-middle">{{ number_format($dep->jumlah, 0, ',', '.') }} {{ $dep->jenis_kemasan }}
+                                    </td> --}}
                                     <td class="text-center align-middle">{{ formatAngka($dep->jamur) }}</td>
                                     <td class="text-center align-middle">{{ formatAngka($dep->lendir) }}</td>
                                     <td class="text-center align-middle">{{ formatAngka($dep->klip_tajam) }}</td>

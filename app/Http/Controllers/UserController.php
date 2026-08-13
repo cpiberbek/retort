@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\Departemen;
 use App\Models\Plant;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Crypt;
 
 class UserController extends Controller
 {
@@ -18,22 +19,21 @@ class UserController extends Controller
     // Menampilkan semua user sesuai UUID plant user login
     public function index(Request $request)
     {
-        $userPlantUuid = auth()->user()->plant; // ambil UUID plant user login
- 
-        // mulai query, filter berdasarkan plant UUID
+        $userPlantUuid = auth()->user()->plant;
+
         $query = User::with(['plantRelasi', 'departmentRelasi'])
-                     ->where('plant', $userPlantUuid);
+            ->where('plant', $userPlantUuid);
 
         if ($request->filled('search')) {
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('username', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('username', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             })
             ->orWhereHas('plantRelasi', function ($q) use ($search) {
-                $q->where('uuid', 'like', "%{$search}%"); // search by UUID plant
+                $q->where('uuid', 'like', "%{$search}%");
             })
             ->orWhereHas('departmentRelasi', function ($q) use ($search) {
                 $q->where('nama', 'like', "%{$search}%");
@@ -43,7 +43,56 @@ class UserController extends Controller
         $users = $query->orderBy('name')->paginate(10);
         $users->appends($request->all());
 
-        return view('user.index', compact('users'));
+        $plants = Plant::get();
+
+        return view('user.index', compact('users', 'plants'));
+    }
+
+
+    //save multiplant options dari tabel user
+    public function updatePlantOption(Request $request, $uuid)
+    {
+        $user = User::where('uuid', $uuid)->firstOrFail();
+
+        $user->plant_option = $request->filled('plant_option')
+            ? $request->plant_option
+            : null;
+
+        $user->save();
+
+        return back()->with('success', 'Akses multiplant berhasil diperbarui.');
+    }
+
+
+    //merubah plant session 
+    public function changePlant(Request $request)
+    {
+        $user = auth()->user();
+
+        $plantOption = json_decode(
+            \Illuminate\Support\Facades\DB::table('users')
+                ->where('uuid', $user->uuid)
+                ->value('plant_option'),
+            true
+        ) ?? [];
+
+        if (!in_array($request->plant_active, $plantOption)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Plant tidak tersedia.'
+            ], 403);
+        }
+
+        \Illuminate\Support\Facades\DB::table('users')
+            ->where('uuid', $user->uuid)
+            ->update([
+                'plant_active' => $request->plant_active,
+                'updated_at' => now(),
+            ]);
+
+        return response()->json([
+            'success' => true
+        ]);
     }
 
     public function create()

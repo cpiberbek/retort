@@ -346,7 +346,7 @@
 
     async function compressImage(file) {
         if (!file.type.startsWith('image/')) return file;
-        if (file.size <= 5 * 1024 * 1024) return file;
+        if (file.size <= 3 * 1024 * 1024) return file;
 
         return new Promise((resolve) => {
             const reader = new FileReader();
@@ -375,7 +375,7 @@
 
                     const exportBlob = () => {
                         canvas.toBlob(function (blob) {
-                            if (blob.size <= 5 * 1024 * 1024 || quality <= 0.4) {
+                            if (blob.size <= 3 * 1024 * 1024 || quality <= 0.4) {
                                 resolve(new File([blob], file.name, {
                                     type: 'image/jpeg',
                                     lastModified: Date.now()
