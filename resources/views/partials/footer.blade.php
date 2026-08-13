@@ -1,7 +1,7 @@
 <footer class="sticky-footer bg-white custom-footer">
     <div class="container my-auto">
         <div class="text-center my-auto footer-text">
-            <span>Copyright &copy; <strong style="color: #A60000;">E-Retort</strong> {{ date('Y') }} | Version 1.0</span>
+            <span>Copyright &copy; <strong style="color: #A60000;">E-Retort</strong> {{ date('Y') }} | Version 1.6</span>
         </div>
     </div>
 </footer>

@@ -32,6 +32,15 @@
             padding: 2px;
             font-size: 8px;
         }
+          /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 
@@ -39,16 +48,69 @@
 
 {{-- HEADER --}}
 
-<table width="100%">
+<table width="100%" style="border-collapse:collapse;border:1px solid #000;">
     <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
+        <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
+            <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
         </td>
-        
+
+        <td width="50%" style="border:1px solid #000;padding:0;text-align:center;vertical-align:middle;">
+            <table width="100%" style="border-collapse:collapse;">
+                <tr>
+                    <td style="border-bottom:1px solid #000;padding:5px;font-size:19px;">
+                        <b>FORM</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px;font-size:18px;">
+                        <b>PENGECEKAN RETAIN SAMPEL</b>
+                    </td>
+                </tr>
+            </table>
+        </td>
+
+        <td width="25%" style="border:1px solid #000;padding:0;font-size:10px;">
+            <table width="100%" style="border-collapse:collapse;">
+                <tr>
+                    <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        No. Dokumen
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : {{ $noDokumen }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        Revisi
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        Tanggal Efektif
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : 27-09-2017
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;padding:3px;">
+                        Halaman
+                    </td>
+                    <td style="padding:3px;">
+                        : {{ $pageIndex + 1 }} dari {{ $totalPage }}
+                    </td>
+                </tr>
+            </table>
+        </td>
     </tr>
 </table>
-<h2 class="title">PENGECEKAN RETAIN SAMPEL</h2>
+
 <br>
 <br>
 
@@ -56,17 +118,16 @@
 $firstRetain = $retains->first();
 $date = $firstRetain ? \Carbon\Carbon::parse($firstRetain->tanggal)->format('d-m-Y') : '';
 @endphp
-{{-- INFO --}}
+
 <table width="100%" class="tbl-header">
     <tr>
-        <td width="15%">Hari / Tanggal</td>
-        <td width="85%">: {{ $date }}</td>
+        <td width="15%">Hari / Tanggal: {{ $date }}</td>
+        <td width="85%"></td>
     </tr>
 </table>
 
 <br>
 
-{{-- TABEL UTAMA --}}
 <table width="100%" class="tbl-main small">
     <tr>
         <th rowspan="2" class="center">Kode Batch</th>
@@ -96,56 +157,74 @@ $date = $firstRetain ? \Carbon\Carbon::parse($firstRetain->tanggal)->format('d-m
         <th class="center">Mikro</th>
     </tr>
 
-    @php
-    $allItems = [];
-    foreach($retains as $retain) {
-        if($retain->items && $retain->items->count() > 0) {
-            foreach($retain->items as $item) {
-                $allItems[] = $item;
-            }
-        }
-    }
-    @endphp
+    @foreach($retains as $retain)
+        @if($retain->items && $retain->items->count() > 0)
 
-    @if(count($allItems) > 0)
-        @foreach($allItems as $index => $item)
-        <tr>
-            <td>{{ $item->kode_produksi ?? '' }}</td>
-            <td>{{ $item->varian ?? '' }}</td>
-            <td>{{ $item->panjang ?? '' }}</td>
-            <td>{{ $item->diameter ?? '' }}</td>
-            <td>{{ $item->sensori_rasa ?? '' }}</td>
-            <td>{{ $item->sensori_warna ?? '' }}</td>
-            <td>{{ $item->sensori_aroma ?? '' }}</td>
-            <td>{{ $item->sensori_texture ?? '' }}</td>
-            <td>{{ $item->temuan_jamur ? 'V' : '' }}</td>
-            <td>{{ $item->temuan_lendir ? 'V' : '' }}</td>
-            <td>{{ $item->temuan_pinehole ? 'V' : '' }}</td>
-            <td>{{ $item->temuan_kejepit ? 'V' : '' }}</td>
-            <td>{{ $item->temuan_seal ? 'V' : '' }}</td>
-            <td></td>
-            <td>{{ $item->lab_garam ?? '' }}</td>
-            <td>{{ $item->lab_air ?? '' }}</td>
-            <td>{{ $item->lab_mikro ?? '' }}</td>
-            <td></td>
-        </tr>
-        @endforeach
-    @endif
+            @foreach($retain->items as $item)
+            <tr>
+                <td>{{ $item->kode_produksi ?? '' }}</td>
+                <td>{{ $item->varian ?? '' }}</td>
+                <td>{{ $item->panjang ?? '' }}</td>
+                <td>{{ $item->diameter ?? '' }}</td>
+
+                <td>{{ $item->sensori_rasa ?? '' }}</td>
+                <td>{{ $item->sensori_warna ?? '' }}</td>
+                <td>{{ $item->sensori_aroma ?? '' }}</td>
+                <td>{{ $item->sensori_texture ?? '' }}</td>
+
+                <td>{{ $item->temuan_jamur ? 'V' : '' }}</td>
+                <td>{{ $item->temuan_lendir ? 'V' : '' }}</td>
+                <td>{{ $item->temuan_pinehole ? 'V' : '' }}</td>
+                <td>{{ $item->temuan_kejepit ? 'V' : '' }}</td>
+                <td>{{ $item->temuan_seal ? 'V' : '' }}</td>
+
+                <td>{{ $item->lab_garam ?? '' }}</td>
+                <td>{{ $item->lab_air ?? '' }}</td>
+                <td>{{ $item->lab_mikro ?? '' }}</td>
+
+                <td>{{ $retain->keterangan ?? '' }}</td>
+            </tr>
+            @endforeach
+
+        @endif
+    @endforeach
 
 </table>
+
+
+@if($lastPage)
+
+@php
+    $namaSpv = null;
+
+    if ($retains->isNotEmpty() && $retains->every(fn($retain) => !empty($retain->verified_by))) {
+        $namaSpv = \App\Models\User::where('uuid', $retains->first()->verified_by)->value('name');
+    }
+@endphp
 
 <br><br>
 
 <table width="100%" class="small">
     <tr>
-        <td width="60%"></td>
-        <td width="40%" class="sign">
-            Mengetahui,<br><br><br>
-            ( ___________________ )<br>
-            SPV QC
+        <td width="70%"></td>
+
+        <td width="30%" class="sign">
+            Diverifikasi oleh,
+            <br><br><br><br><br>
+
+            @if($namaSpv)
+                (<u>{{ $namaSpv }}</u>)
+            @else
+                (<u>Belum Semua Entry Disetujui Oleh SPV</u>)
+            @endif
+
+            <br>
+            QC SPV
         </td>
     </tr>
 </table>
+
+@endif
 
 </body>
 </html>

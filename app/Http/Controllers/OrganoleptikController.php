@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Organoleptik;
 use App\Models\Produk;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
@@ -383,6 +384,10 @@ class OrganoleptikController extends Controller
         ->orderBy('shift', 'asc')
         ->get();
 
+        $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pemeriksaan Organoleptik')
+        ->value('no_dokumen');
+
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {
             ob_end_clean();
@@ -404,7 +409,7 @@ class OrganoleptikController extends Controller
         $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
 
         // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
+        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
         $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
         $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
 
@@ -424,10 +429,10 @@ class OrganoleptikController extends Controller
         $pdf->SetFont('helvetica', '', 10);
 
         // Add a page
-        $pdf->AddPage('L', 'A4'); // Landscape A4
+        $pdf->AddPage('L', 'F4'); // Landscape A4
 
         // Convert the Blade view to HTML
-        $html = view('reports.organoleptik', compact('organoleptiks', 'request'))->render();
+        $html = view('reports.organoleptik', compact('organoleptiks', 'request', 'noDokumen'))->render();
 
         // Print text using writeHTMLCell()
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);

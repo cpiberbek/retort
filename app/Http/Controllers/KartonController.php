@@ -6,6 +6,7 @@ use App\Models\Karton;
 use App\Models\Operator;
 use App\Models\Produk;
 use App\Models\Supplier;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -384,72 +385,68 @@ public function exportPdf(Request $request)
 {
     $date = $request->input('date');
     $nama_produk = $request->input('nama_produk');
+    $search = $request->input('search');
     $userPlant = Auth::user()->plant;
 
     $kartons = Karton::query()
-    ->where('plant', $userPlant)
-    ->when($date, function ($query) use ($date) {
-        $query->whereDate('date', $date);
-    })
-    ->when($nama_produk, function ($query) use ($nama_produk) {
-        $query->where('nama_produk', $nama_produk);
-    })
-    ->orderBy('date', 'asc')
-    ->orderBy('created_at', 'asc')
-    ->get();
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($nama_produk, function ($query) use ($nama_produk) {
+            $query->where('nama_produk', $nama_produk);
+        })
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                  ->orWhereHas('mincing', function ($m) use ($search) {
+                      $m->where('kode_produksi', 'like', "%{$search}%");
+                  });
+            });
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('created_at', 'asc')
+        ->get()
+        ->chunk(4);
 
-    // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Kontrol Labelisasi Cartooning')
+        ->value('no_dokumen');
+
     if (ob_get_length()) {
         ob_end_clean();
     }
 
-    // Create new TCPDF object
     $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
 
-    // Set document information
     $pdf->SetCreator(PDF_CREATOR);
-    $pdf->SetAuthor('Your Name/Company');
+    $pdf->SetAuthor('Company');
     $pdf->SetTitle('Kontrol Labelisasi Karton');
-    $pdf->SetSubject('Kontrol Labelisasi Karton');
 
     $pdf->SetPrintHeader(false);
     $pdf->SetPrintFooter(false);
 
-    // Set default monospaced font
-    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-
-    // Set margins
-    $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
-    $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-    $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
-    // Set auto page breaks
-    $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-    // Set image scale factor
-    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-    // Set some language-dependent strings (optional)
-    if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-        require_once(dirname(__FILE__).'/lang/eng.php');
-        $pdf->setLanguageArray($l);
-    }
-
-    // Set font
+    $pdf->SetMargins(10, 10, 10);
+    $pdf->SetAutoPageBreak(true, 10);
     $pdf->SetFont('helvetica', '', 8);
 
-    // Add a page
-    $pdf->AddPage('L', 'A3'); // Landscape A3 for many columns
+    $totalPage = $kartons->count();
 
-    // Convert the Blade view to HTML
-    $html = view('reports.kontrol-labelisasi-karton', compact('kartons', 'request'))->render();
+    foreach ($kartons as $index => $data) {
+        $pdf->AddPage('L', 'F4');
 
-    // Print text using writeHTMLCell()
-    $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
+        $html = view('reports.kontrol-labelisasi-karton', [
+            'kartons' => $data,
+            'request' => $request,
+            'noDokumen' => $noDokumen,
+            'pageIndex' => $index,
+            'totalPage' => $totalPage
+        ])->render();
 
-    // Close and output PDF document (Inline/Preview)
+        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
+    }
+
     $pdf->Output('Kontrol_Labelisasi_Karton_' . date('Ymd_His') . '.pdf', 'I');
-
     exit();
 }
 

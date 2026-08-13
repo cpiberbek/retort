@@ -27,28 +27,43 @@
         .center { text-align: center; }
         .sign { text-align: center; }
         .small { font-size: 8px; }
+
+        /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
+        }
     </style>
 </head>
 <body>
 
 {{-- HEADER LOGO + TITLE --}}
-<table width="100%">
-    <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
-        </td>
-        
-    </tr>
-</table>
+<div style="margin-left:-30px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="55">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td>
+                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
 <h2 class="title">PEMERIKSAAN ORGANOLEPTIK</h2>
 <br>
 <br>
 
 @php
     $dateFilter = request('date') ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y') : 'All Dates';
-    $shiftFilter = request('shift') ?? 'All Shifts';
-    $namaProdukFilter = request('nama_produk') ?? 'All Products';
+    $shiftFilter = request('shift') ?? 'Semua Shift';
+    $namaProdukFilter = request('nama_produk') ?? 'Semua Produk';
 @endphp
 
 <table width="100%" class="tbl-header">
@@ -105,7 +120,7 @@
 
     @forelse($allSensori as $sensor)
         <tr>
-            <td class="center">{{ $sensor['kode_produksi'] }}</td>
+            <td class="center">{{ optional(\App\Models\Mincing::find($sensor['kode_produksi']))->kode_produksi ?? '-' }}</td>
             <td class="center">{{ $sensor['penampilan'] }}</td>
             <td class="center">{{ $sensor['aroma'] }}</td>
             <td class="center">{{ $sensor['kekenyalan'] }}</td>
@@ -126,12 +141,29 @@
 
 
 </table>
-<div style="text-align:right; font-size:8px;font-style:italic;">QT 39 / 00</div>
+<table width="100%">
+    <tr>
+        <td width="75%"></td>
+        <td width="25%" align="right" style="font-style: italic;">
+            {{ $noDokumen }}
+        </td>
+    </tr>
+</table>
+
 <br>
 
 {{-- Keterangan Parameter --}}
+@php
+    $allApproved = $organoleptiks->every(fn($item) => !empty($item->nama_spv));
+    $namaSpv = $allApproved && $organoleptiks->isNotEmpty()
+        ? $organoleptiks->first()->nama_spv
+        : null;
+@endphp
+
 <table width="100%" class="small">
-    <tr><td><strong>Keterangan Parameter:</strong></td></tr>
+    <tr>
+        <td><strong>Keterangan Parameter:</strong></td>
+    </tr>
     <tr>
         <td width="25%">
             Penampilan, Aroma, Rasa Keseluruhan:<br>
@@ -151,14 +183,26 @@
             1,6 - 3 = Release
         </td>
         <td>
-            {{-- SIGN --}}
             <table width="100%" class="sign">
                 <tr>
                     <td>Disetujui Oleh,</td>
                 </tr>
-                <tr><td><br><br><br></td></tr>
                 <tr>
-                    <td>(___________________)<br>QC SPV</td>
+                    <td><br><br><br></td>
+                </tr>
+                <tr>
+                    <td>
+                        (<u>
+                        @if($namaSpv)
+                            {{ $namaSpv }}
+                        @else
+                            Belum Semua Entry Disetujui Oleh SPV
+                        @endif
+                        </u>
+                        )
+                        <br>
+                        QC SPV
+                    </td>
                 </tr>
             </table>
         </td>

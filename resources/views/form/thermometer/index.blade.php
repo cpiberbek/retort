@@ -27,7 +27,10 @@
             </a>
             @endcan
             @can('can access export')
-            <a href="{{ route('thermometer.exportPdf', ['date' => request('date'), 'shift' => request('shift')]) }}" target="_blank" class="btn btn-danger">
+            <a href="{{ route('thermometer.exportPdf', ['date' => request('date')]) }}"
+            target="_blank"
+            id="exportPdfBtn"
+            class="btn btn-danger">
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </a>
             @endcan
@@ -41,8 +44,8 @@
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('thermometer.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
-            <div class="col-md-4">
+        <div class="row w-100">
+            <div class="col-md-2">
                 <div class="mb-1">Pilih Tanggal</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -54,7 +57,7 @@
                     value="{{ request('date') }}" placeholder="Tanggal Produksi">
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-2">
                 <div class="mb-1">Pilih Shift</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -63,13 +66,14 @@
                         </span>
                     </div>
                     <select name="shift" id="filter_shift" class="form-select form-control border-start-0">
+                        <option value="">Pilih Shift</option>
                         <option value="1" {{ request('shift') == '1' ? 'selected' : '' }}>Shift 1</option>
                         <option value="2" {{ request('shift') == '2' ? 'selected' : '' }}>Shift 2</option>
                         <option value="3" {{ request('shift') == '3' ? 'selected' : '' }}>Shift 3</option>
                     </select>
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-2">
                 <div class="mb-1">Cari Data</div>
                 <div class="input-group mb-2">
                     <div class="input-group-prepend">
@@ -81,8 +85,33 @@
                     value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Produksi...">
                 </div>
             </div>
+
+            <div class="col-md-2 mt-4">
+                <a href="{{ route('thermometer.index') }}" class="btn btn-primary w-100">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </a>
+            </div>
         </div>
     </form>
+
+        {{-- warning modal --}}
+    <div class="modal fade" id="warningModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
+                </div>
+                <div class="modal-body">
+                    Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
@@ -359,6 +388,27 @@
         }
     }, 3000);
 </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const exportPdfBtn = document.getElementById('exportPdfBtn');
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            const dateInput = document.getElementById('filter_date');
+            const warningModal = document.getElementById('warningModal');
+
+            function checkExport(e) {
+                if (!dateInput.value) {
+                    e.preventDefault();
+
+                    const modal = new bootstrap.Modal(warningModal);
+                    modal.show();
+                }
+            }
+
+            exportPdfBtn?.addEventListener('click', checkExport);
+            exportExcelBtn?.addEventListener('click', checkExport);
+        });
+    </script>
 
 {{-- CSS tambahan agar tabel lebih rapi --}}
 <style>

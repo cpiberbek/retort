@@ -3,111 +3,219 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-size: 9px; }
-        table { border-collapse: collapse; }
+    body { font-size: 9px; }
+    table { border-collapse: collapse; }
 
-        .title { font-weight: bold; font-size: 12px; text-align: center; }
-        .small { font-size: 8px; }
-        .center { text-align: center; }
-        .right { text-align: right; }
+    .title { font-weight: bold; font-size: 12px; text-align: center; }
+    .small { font-size: 8px; }
+    .center { text-align: center; }
+    .right { text-align: right; }
 
-        .box, .box td, .box th {
-            border: 0.5px solid #000;
+    .box, .box td, .box th {
+        border: 0.3px solid #000;
+    }
+
+    .box td {
+        padding: 4px;
+        vertical-align: top;
+    }
+
+    .header td {
+        border: 0.3px solid #000;
+        padding: 4px;
+        vertical-align: middle;
+    }
+
+    .sign {
+        text-align: center;
+    }
+    .no-border {
+    border: none !important;
+    }
+    /* tnr */
+        body,
+        table,
+        tr,
+        td,
+        th {
+            font-family: times;
+            font-size: 9pt;
         }
-
-        .box td {
-            padding: 4px;
-            vertical-align: top;
-        }
-
-        .header td {
-            border: 0.5px solid #000;
-            padding: 4px;
-            vertical-align: middle;
-        }
-
-        .sign { text-align: center; }
-    </style>
+</style>
 </head>
-<body>
+{{-- BODY --}}
 
-{{-- HEADER --}}
-<table width="100%" class="header">
+<table width="101%" style="border-collapse:collapse;border:1px solid #000;">
     <tr>
-        <td width="15%" class="center">
-            <strong>CP</strong>
+        <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
+            <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
         </td>
-        <td width="45%" class="center">
-            <div class="title">FORM</div>
-            <div><strong>KONTROL LABELISASI KARTON</strong></div>
+
+        <td width="50%" style="border:1px solid #000;padding:0;text-align:center;vertical-align:middle;">
+            <table width="100%" style="border-collapse:collapse;">
+                <tr>
+                    <td style="border-bottom:1px solid #000;padding:5px;font-size:19px;">
+                        <b>FORM</b>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding:5px;font-size:18px;">
+                        <b>KONTROL LABELISASI KARTON</b>
+                    </td>
+                </tr>
+            </table>
         </td>
-        <td width="40%" class="small">
-            <table width="100%">
-                <tr><td>No. Dokumen</td><td>: FR-QC-14</td></tr>
-                <tr><td>Revisi</td><td>: 2</td></tr>
-                <tr><td>Tanggal Efektif</td><td>: 18/12/2003</td></tr>
-                <tr><td>Halaman</td><td>: 1 dari 1</td></tr>
+
+        <td width="25%" style="border:1px solid #000;padding:0;font-size:10px;">
+            <table width="100%" style="border-collapse:collapse;">
+                <tr>
+                    <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        No. Dokumen
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : {{ $noDokumen }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        Revisi
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
+                        Tanggal Efektif
+                    </td>
+                    <td style="border-bottom:1px solid #000;padding:3px;">
+                        : 01-04-2016
+                    </td>
+                </tr>
+
+                <tr>
+                    <td style="border-right:1px solid #000;padding:3px;">
+                        Halaman
+                    </td>
+                    <td style="padding:3px;">
+                        : {{ $pageIndex + 1 }} dari {{ $totalPage }}
+                    </td>
+                </tr>
             </table>
         </td>
     </tr>
 </table>
-
-<br>
-
-@php
-    $dateFilter = request('date') ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y') : 'All Dates';
-@endphp
-
-{{-- BODY --}}
-<table width="100%" class="box">
+<table width="101%" class="box">
     <tr>
-        <th width="5%">No.</th>
-        <th width="10%">Tanggal</th>
-        <th width="10%">Start - Finish</th>
-        <th width="15%">Nama Varian</th>
-        <th width="15%">Kode Batch</th>
-        <th width="15%">Nama Supplier</th>
-        <th width="10%">No. Lot Karton</th>
-        <th width="5%">Operator</th>
-        <th width="5%">QC</th>
-        <th width="5%">Koordinator</th>
-        <th width="10%">Keterangan</th>
+        <th width="10%" class="center">No.</th>
+        <th width="50%" class="center">Bukti Kode</th>
+        <th width="40%" colspan="2" class="center">Detail</th>
     </tr>
 
-    @forelse($kartons as $index => $karton)
+    @foreach($kartons as $karton)
     <tr>
-        <td class="center">{{ $index + 1 }}</td>
-        <td class="center">{{ \Carbon\Carbon::parse($karton->date)->format('d-m-Y') }}</td>
-        <td class="center">{{ \Carbon\Carbon::parse($karton->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($karton->waktu_selesai)->format('H:i') }}</td>
-        <td class="center">{{ $karton->nama_produk ?? '-' }}</td>
-        <td class="center">{{ $karton->kode_produksi ?? '-' }}</td>
-        <td class="center">{{ $karton->nama_supplier ?? '-' }}</td>
-        <td class="center">{{ $karton->no_lot ?? '-' }}</td>
-        <td class="center">{{ $karton->nama_operator ?? '-' }}</td>
-        <td class="center">{{ $karton->username ?? '-' }}</td>
-        <td class="center">{{ $karton->nama_koordinator ?? '-' }}</td>
-        <td class="center">{{ $karton->keterangan ?? '-' }}</td>
-    </tr>
-    @empty
-    <tr>
-        <td colspan="11" class="center">Tidak ada data kontrol labelisasi karton</td>
-    </tr>
-    @endforelse
-</table>
+    <td class="center" rowspan="9" style="vertical-align:middle;">
+        {{ $loop->iteration }}
+    </td>
 
-<br><br><br>
+    <td rowspan="9" class="no-border center" style="vertical-align:middle; text-align:center;">
+        @php
+            $path = $karton->kode_karton
+                ? public_path(str_replace('public/', 'storage/', $karton->kode_karton))
+                : null;
+        @endphp
 
-{{-- TTD --}}
-<table width="100%" class="small">
+        @if($path && file_exists($path))
+            <img src="{{ $path }}" style="width:180px; height:auto;">
+        @else
+            <div style="font-size:10px; color:#666;">
+                Belum ada dokumentasi<br>Kode Karton
+            </div>
+        @endif
+    </td>
+
+    <td colspan="2" class="center">
+        <strong>Nama Produk</strong>
+    </td>
+    </tr>
+
     <tr>
-        <td width="60%"></td>
-        <td width="40%" class="sign">
-            Diverifikasi oleh,<br><br><br><br>
-            ( ___________________ )<br>
-            QC SPV
+        <td colspan="2" class="center">
+            {{ $karton->nama_produk ?? '-' }}
         </td>
     </tr>
+
+    <tr>
+        <td colspan="2" class="center">
+            <strong>Start-Finish</strong>
+        </td>
+    </tr>
+
+    <tr>
+        <td colspan="2" class="center">
+            {{ \Carbon\Carbon::parse($karton->waktu_mulai)->format('H:i') }}
+            -
+            {{ \Carbon\Carbon::parse($karton->waktu_selesai)->format('H:i') }}
+        </td>
+    </tr>
+
+    <tr>
+        <td>Supplier</td>
+        <td>{{ $karton->nama_supplier ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>No. Lot Karton</td>
+        <td>{{ $karton->no_lot ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Paraf Operator</td>
+        <td>{{ $karton->nama_operator ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Paraf QC</td>
+        <td>{{ $karton->username ?? '-' }}</td>
+    </tr>
+
+    <tr>
+        <td>Paraf Koordinator</td>
+        <td>{{ $karton->nama_koordinator ?? '-' }}</td>
+    </tr>
+
+    @endforeach
 </table>
 
-</body>
+@if($pageIndex + 1 == $totalPage)
+    @php
+        $namaSpv = $kartons->every(fn($item) => !empty($item->nama_spv))
+            ? $kartons->first()->nama_spv
+            : null;
+    @endphp
+
+    <br><br>
+
+    <table width="100%" class="small">
+        <tr>
+            <td width="70%"></td>
+
+            <td width="30%" class="sign">
+                Diverifikasi oleh,
+                <br><br><br><br><br>
+
+                @if($namaSpv)
+                    (<u>{{ $namaSpv }}</u>)
+                @else
+                    (<u>Belum Semua Entry Disetujui Oleh SPV</u>)
+                @endif
+
+                <br>
+                QC SPV
+            </td>
+        </tr>
+    </table>
+@endif
 </html>
