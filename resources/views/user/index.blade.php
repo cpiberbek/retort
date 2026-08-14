@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const options = JSON.parse(this.dataset.plantOption || '[]');
 
             document.getElementById('plantOptionForm').action =
-                `/users/${uuid}/plant-option`;
+                `{{ url('users') }}/${uuid}/plant-option`;
 
             document.querySelectorAll('.plant-option-check').forEach(checkbox => {
                 checkbox.checked = options.includes(checkbox.value);
