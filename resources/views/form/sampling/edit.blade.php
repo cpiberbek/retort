@@ -99,30 +99,70 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Jumlah</label>
-                                <input type="number" name="jumlah" id="jumlah" class="form-control"
-                                    value="{{ old('jumlah', $sampling->jumlah) }}" required step="0.01" min="0">
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="jumlah">(-)</button>
+                                    <input type="text" name="jumlah" id="jumlah" class="form-control"
+                                        value="{{ old('jumlah', $sampling->jumlah === -1 ? '-' : $sampling->jumlah) }}"
+                                        required>
+                                </div>
                             </div>
                         </div>
 
                         @php
                             $fields = [
-                                'jamur','lendir','klip_tajam','pin_hole','air_trap_pvdc','air_trap_produk',
-                                'keriput','bengkok','non_kode','over_lap','kecil','terjepit',
-                                'double_klip','seal_halus','basah','dll'
+                                'jamur','lendir','klip_tajam','pin_hole','air_trap_pvdc',
+                                'air_trap_produk','keriput','bengkok','non_kode','over_lap',
+                                'kecil','terjepit','double_klip','seal_halus','basah','dll'
                             ];
                         @endphp
 
                         <div class="row mb-3">
                             @foreach($fields as $field)
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">{{ ucwords(str_replace('_', ' ', $field)) }}</label>
-                                <input type="number" name="{{ $field }}" class="form-control"
-                                    value="{{ old($field, $sampling->$field !== null ? number_format($sampling->$field, 2, '.', '') : '') }}" step="0.01" min="0">
-                            </div>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">{{ ucwords(str_replace('_', ' ', $field)) }}</label>
+
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary toggle-minus"
+                                            data-target="{{ $field }}">(-)</button>
+
+                                        <input type="text" name="{{ $field }}" class="form-control"
+                                            value="{{ old($field, $sampling->$field === -1 ? '-' : ($sampling->$field ?? '')) }}">
+                                    </div>
+                                </div>
                             @endforeach
                         </div>
                     </div>
                 </div>
+
+                <script>
+                document.querySelectorAll('.toggle-minus').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const input = document.querySelector(`[name="${this.dataset.target}"]`);
+
+                        if (!input) {
+                            return;
+                        }
+
+                        input.value = '-';
+                    });
+                });
+
+                document.querySelectorAll(
+                    '#jumlah, input[name="jamur"], input[name="lendir"], input[name="klip_tajam"], ' +
+                    'input[name="pin_hole"], input[name="air_trap_pvdc"], input[name="air_trap_produk"], ' +
+                    'input[name="keriput"], input[name="bengkok"], input[name="non_kode"], input[name="over_lap"], ' +
+                    'input[name="kecil"], input[name="terjepit"], input[name="double_klip"], ' +
+                    'input[name="seal_halus"], input[name="basah"], input[name="dll"]'
+                ).forEach(input => {
+                    input.addEventListener('input', function () {
+                        if (this.value === '-') {
+                            return;
+                        }
+
+                        this.value = this.value.replace(/[^0-9.]/g, '');
+                    });
+                });
+                </script>
 
                 {{-- ===================== CATATAN ===================== --}}
                 <div class="card mb-4">

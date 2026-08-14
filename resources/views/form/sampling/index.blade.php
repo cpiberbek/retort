@@ -4,11 +4,15 @@
     @php
         function formatAngka($value)
         {
-            if ($value === null || $value === '') {
+            if ($value === null || $value === '' || $value === '-') {
                 return '-';
             }
 
-            return rtrim(rtrim(number_format($value, 2, ',', '.'), '0'), ',');
+            if (!is_numeric($value)) {
+                return $value;
+            }
+
+            return rtrim(rtrim(number_format((float) $value, 2, ',', '.'), '0'), ',');
         }
     @endphp
     <div class="container-fluid py-0">
