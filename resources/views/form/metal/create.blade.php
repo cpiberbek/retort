@@ -80,6 +80,18 @@
             </div>
         </div>
 
+        <div class="row mb-3">
+            <div class="col-md-12">
+                <label class="form-label">Nama Karyawan Produksi</label>
+                <select name="selected_produksi" class="form-control" required>
+                    <option value="">-- Pilih Karyawan Produksi --</option>
+                    @foreach($produksi as $prod)
+                        <option value="{{ $prod->uuid }}">{{ $prod->nama_karyawan }}</option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
     </div>
 </div>
 
