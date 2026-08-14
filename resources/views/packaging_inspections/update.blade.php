@@ -239,7 +239,15 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Supplier</label>
-                        <input type="text" name="items[${i}][supplier]" class="form-control" value="${supplier}" ${getReadonlyAttr(supplier)} required>
+                        <select name="items[${i}][supplier]" class="form-control select2" ${getReadonlyAttr(supplier)} required>
+                            <option value="">-- Pilih Supplier --</option>
+                            @foreach ($suppliers as $supplierItem)
+                                <option value="{{ $supplierItem->nama_supplier }}"
+                                    ${supplier === @json($supplierItem->nama_supplier) ? 'selected' : ''}>
+                                    {{ $supplierItem->nama_supplier }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Lot Batch</label>
@@ -291,8 +299,11 @@
                                 const isChecked = vehicle_cond?.split(',').includes(c);
                                 return `
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" value="${c}" id="vehicle_${i}_${index}" ${isChecked ? 'checked' : ''} disabled>
-                                    ${isChecked ? `<input type="hidden" name="items[${i}][vehicle_condition][]" value="${c}">` : ''}
+                                    <input class="form-check-input" type="checkbox"
+                                        name="items[${i}][vehicle_condition][]"
+                                        value="${c}"
+                                        id="vehicle_${i}_${index}"
+                                        ${isChecked ? 'checked' : ''}>
                                     <label class="form-check-label" for="vehicle_${i}_${index}">${c}</label>
                                 </div>`;
                             }).join('')}

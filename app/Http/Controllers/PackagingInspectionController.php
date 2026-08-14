@@ -59,7 +59,7 @@ class PackagingInspectionController extends Controller
     {
         // Opsi untuk dropdown KONDISI KENDARAAN (sekarang dipakai di level item)
         $vehicleConditions = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
-        $suppliers = Supplier::all();
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
         return view('packaging_inspections.create', compact('vehicleConditions', 'suppliers'));
     }
     /**
@@ -152,8 +152,8 @@ class PackagingInspectionController extends Controller
     {
         $packagingInspection->load('items');
         $vehicleConditions = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
-
-        return view('packaging_inspections.edit', compact('packagingInspection', 'vehicleConditions'));
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
+        return view('packaging_inspections.edit', compact('packagingInspection', 'vehicleConditions', 'suppliers'));
     }
 
     /**
@@ -347,9 +347,9 @@ class PackagingInspectionController extends Controller
     {
         $packagingInspection->load('items');
         $vehicleConditions = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
-
+        $suppliers = Supplier::orderBy('nama_supplier', 'asc')->get();
         // Return ke view baru: packaging_inspections.update
-        return view('packaging_inspections.update', compact('packagingInspection', 'vehicleConditions'));
+        return view('packaging_inspections.update', compact('packagingInspection', 'vehicleConditions', 'suppliers'));
     }
 
     public function exportPdf(Request $request)

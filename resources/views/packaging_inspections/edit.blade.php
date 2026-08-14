@@ -225,7 +225,15 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Supplier</label>
-                        <input type="text" name="items[${i}][supplier]" class="form-control" value="${supplier}" required>
+                        <select name="items[${i}][supplier]" class="form-control select2" required>
+                            <option value="">-- Pilih Supplier --</option>
+                            @foreach ($suppliers as $supplierItem)
+                                <option value="{{ $supplierItem->nama_supplier }}"
+                                    ${supplier === @json($supplierItem->nama_supplier) ? 'selected' : ''}>
+                                    {{ $supplierItem->nama_supplier }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Lot Batch</label>
