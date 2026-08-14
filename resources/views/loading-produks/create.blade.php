@@ -406,9 +406,29 @@
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
-                        <select name="details[${i}][kode_produksi]" class="form-control var-batch-select" required>
-                            <option value="">Pilih Varian Terlebih Dahulu</option>
-                        </select>
+
+                        <div class="existing-batch-mode">
+                            <select name="details[${i}][kode_produksi]" class="form-control var-batch-select" required>
+                                <option value="">Pilih Varian Terlebih Dahulu</option>
+                            </select>
+
+                            <button type="button" class="btn btn-primary btn-sm mt-1 switch-to-manual">
+                                Input Kode Batch Manual
+                            </button>
+                        </div>
+
+                        <div class="manual-batch-mode d-none">
+                            <input type="text"
+                                name="details[${i}][kode_produksi]"
+                                class="form-control var-batch-manual"
+                                placeholder="Ketik Kode Batch"
+                                disabled
+                                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+
+                            <button type="button" class="btn btn-info btn-sm mt-1 switch-to-existing text-white">
+                                Input Kode Batch Existing
+                            </button>
+                        </div>
                     </div>
                     <div class="col-md-2">
                         <label class="form-label">Kode Expired</label>
@@ -443,6 +463,9 @@
             let batchSelect = $(newDetail).find('.var-batch-select');
             let expiredInput = $(newDetail).find('.expired-date');
             let warning = $(newDetail).find('.exp-warning');
+            let existingMode = $(newDetail).find('.existing-batch-mode');
+            let manualMode = $(newDetail).find('.manual-batch-mode');
+            let manualBatch = $(newDetail).find('.var-batch-manual');
 
             // Initialize produk as Select2 (with search)
             produkSelect.select2({
@@ -476,6 +499,34 @@
                 }
             });
 
+            newDetail.querySelector('.switch-to-manual').addEventListener('click', function() {
+                batchSelect.val(null).trigger('change');
+                batchSelect.prop('disabled', true);
+                batchSelect.prop('required', false);
+
+                manualBatch.prop('disabled', false);
+                manualBatch.prop('required', true);
+
+                existingMode.addClass('d-none');
+                manualMode.removeClass('d-none');
+
+                updateTotalItem();
+            });
+
+            newDetail.querySelector('.switch-to-existing').addEventListener('click', function() {
+                manualBatch.val('');
+                manualBatch.prop('disabled', true);
+                manualBatch.prop('required', false);
+
+                batchSelect.prop('disabled', !produkSelect.val());
+                batchSelect.prop('required', true);
+
+                existingMode.removeClass('d-none');
+                manualMode.addClass('d-none');
+
+                updateTotalItem();
+            });
+
             // Set old batch value if exists
             if (kode_produksi) {
                 let newOption = new Option(kode_produksi, kode_produksi, true, true);
@@ -498,6 +549,20 @@
 
             batchSelect.on('select2:select', function() {
                 let kode = $(this).find(':selected').text();
+
+                let expired = hitungExpired(kode);
+
+                if (expired) {
+                    expiredInput.val(expired);
+                    warning.addClass('d-none');
+                } else {
+                    expiredInput.val('');
+                    warning.removeClass('d-none');
+                }
+            });
+
+            manualBatch.on('input', function() {
+                let kode = $(this).val();
 
                 let expired = hitungExpired(kode);
 
