@@ -209,7 +209,7 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Jumlah Produk</label>
+                                <label class="form-label fw-bold">Jumlah Produk per Pack/Toples</label>
                                 @php $hasJml = !is_null($packing->jumlah_produk) && $packing->jumlah_produk !== ''; @endphp
                                 <input type="number" name="jumlah_produk" class="form-control" value="{{ old('jumlah_produk', $packing->jumlah_produk) }}" {{ $hasJml ? 'readonly' : '' }} min="0">
                                 @if($hasJml)
