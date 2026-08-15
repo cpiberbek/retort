@@ -111,67 +111,165 @@
         $('.selectpicker').selectpicker();
     });
 
-// PEMERIKSAAN DINAMIS
     document.addEventListener("DOMContentLoaded", function() {
         const areaSelect = document.getElementById('areaSelect');
         const wrapper = document.getElementById('pemeriksaan-wrapper');
         const sanitasiData = @json($sanitasi);
 
+        const kondisiMap = {
+            "✔": "OK (Bersih)",
+            "1": "Basah",
+            "2": "Berdebu",
+            "3": "Kerak",
+            "4": "Noda",
+            "5": "Karat",
+            "6": "Sampah",
+            "7": "Retak/Pecah",
+            "8": "Sisa Produk",
+            "9": "Sisa Adonan",
+            "10": "Berjamur",
+            "11": "Lain-lain"
+        };
+
         function renderPemeriksaan(bagianArray, pemeriksaanData = {}) {
             wrapper.innerHTML = '';
-            if(!bagianArray || bagianArray.length === 0) return;
+            if (!bagianArray || bagianArray.length === 0) return;
 
             bagianArray.forEach(b => {
                 const rowData = pemeriksaanData[b] || {};
+                const kondisi = Array.isArray(rowData.kondisi)
+                    ? rowData.kondisi
+                    : (rowData.kondisi ? [rowData.kondisi] : []);
+
                 const table = document.createElement('table');
                 table.classList.add('table', 'table-bordered', 'mb-3');
+
                 table.innerHTML = `
-            <thead class="table-secondary">
-                <tr><th colspan="7">${b}</th></tr>
-                <tr>
-                    <th>Waktu</th>
-                    <th>Kondisi</th>
-                    <th>Keterangan</th>
-                    <th>Rencana Tindakan</th>
-                    <th>Waktu Pengerjaan</th>
-                    <th>Dikerjakan Oleh</th>
-                    <th>Waktu Verifikasi</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td><input type="time" name="pemeriksaan[${b}][waktu]" class="form-control" value="${rowData.waktu ?? ''}"></td>
-                    <td>
-                        <select name="pemeriksaan[${b}][kondisi]" class="form-control">
-                            <option value="✔" ${rowData.kondisi === '✔' ? 'selected' : ''}>✔</option>
-                    ${[...Array(11)].map((_, i) => `<option value="${i+1}" ${rowData.kondisi == (i+1) ? 'selected' : ''}>${i+1}</option>`).join('')}
-                        </select>
-                    </td>
-                    <td><input type="text" name="pemeriksaan[${b}][keterangan]" class="form-control" value="${rowData.keterangan ?? ''}"></td>
-                    <td><input type="text" name="pemeriksaan[${b}][tindakan]" class="form-control" value="${rowData.tindakan ?? ''}"></td>
-                    <td><input type="time" name="pemeriksaan[${b}][waktu_koreksi]" class="form-control" value="${rowData.waktu_koreksi ?? ''}"></td>
-                    <td><input type="text" name="pemeriksaan[${b}][dikerjakan_oleh]" class="form-control" value="${rowData.dikerjakan_oleh ?? ''}"></td>
-                    <td><input type="time" name="pemeriksaan[${b}][waktu_verifikasi]" class="form-control" value="${rowData.waktu_verifikasi ?? ''}"></td>
-                </tr>
-            </tbody>
+                    <thead class="table-secondary">
+                        <tr><th colspan="7">${b}</th></tr>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Kondisi</th>
+                            <th>Keterangan</th>
+                            <th>Rencana Tindakan</th>
+                            <th>Waktu Pengerjaan</th>
+                            <th>Dikerjakan Oleh</th>
+                            <th>Waktu Verifikasi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="time"
+                                    name="pemeriksaan[${b}][waktu]"
+                                    class="form-control"
+                                    value="${rowData.waktu ?? ''}">
+                            </td>
+
+                            <td>
+                                <select
+                                    name="pemeriksaan[${b}][kondisi][]"
+                                    class="form-control kondisi-select"
+                                    multiple>
+                                    <option value="✔" ${kondisi.includes('✔') ? 'selected' : ''}>
+                                        OK (Bersih)
+                                    </option>
+
+                                    ${[...Array(11)].map((_, i) => `
+                                        <option value="${i + 1}" ${kondisi.includes(String(i + 1)) ? 'selected' : ''}>
+                                            ${kondisiMap[i + 1]}
+                                        </option>
+                                    `).join('')}
+                                </select>
+                            </td>
+
+                            <td>
+                                <input type="text"
+                                    name="pemeriksaan[${b}][keterangan]"
+                                    class="form-control keterangan-input"
+                                    value="${rowData.keterangan ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="text"
+                                    name="pemeriksaan[${b}][tindakan]"
+                                    class="form-control"
+                                    value="${rowData.tindakan ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="time"
+                                    name="pemeriksaan[${b}][waktu_koreksi]"
+                                    class="form-control"
+                                    value="${rowData.waktu_koreksi ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="text"
+                                    name="pemeriksaan[${b}][dikerjakan_oleh]"
+                                    class="form-control"
+                                    value="${rowData.dikerjakan_oleh ?? ''}">
+                            </td>
+
+                            <td>
+                                <input type="time"
+                                    name="pemeriksaan[${b}][waktu_verifikasi]"
+                                    class="form-control"
+                                    value="${rowData.waktu_verifikasi ?? ''}">
+                            </td>
+                        </tr>
+                    </tbody>
                 `;
+
                 wrapper.appendChild(table);
+
+                $(table).find('.kondisi-select').select2({
+                    width: '100%',
+                    placeholder: '-- Pilih Kondisi --'
+                });
             });
         }
 
-    // Render pemeriksaan saat load
-        if(areaSelect.value) {
+        if (areaSelect.value) {
             const selected = areaSelect.selectedOptions[0];
             const bagianArray = JSON.parse(selected.dataset.bagian || '[]');
-            const pemeriksaanData = sanitasiData.pemeriksaan ? JSON.parse(sanitasiData.pemeriksaan) : {};
+            const pemeriksaanData = sanitasiData.pemeriksaan
+                ? JSON.parse(sanitasiData.pemeriksaan)
+                : {};
+
             renderPemeriksaan(bagianArray, pemeriksaanData);
         }
 
-    // Render saat ganti area (tanpa data lama)
         areaSelect.addEventListener('change', function() {
             const selected = this.selectedOptions[0];
             const bagianArray = JSON.parse(selected.dataset.bagian || '[]');
             renderPemeriksaan(bagianArray);
+        });
+
+        $(document).on('select2:select', '.kondisi-select', function(e) {
+            let values = $(this).val() || [];
+
+            if (e.params.data.id === '✔') {
+                values = ['✔'];
+            } else {
+                values = values.filter(value => value !== '✔');
+            }
+
+            $(this).val(values).trigger('change.select2');
+
+            const row = $(this).closest('tr');
+            row.find('.keterangan-input').val(
+                values.map(value => kondisiMap[value]).join(', ')
+            );
+        });
+
+        $(document).on('select2:unselect', '.kondisi-select', function() {
+            const values = $(this).val() || [];
+            const row = $(this).closest('tr');
+
+            row.find('.keterangan-input').val(
+                values.map(value => kondisiMap[value]).join(', ')
+            );
         });
     });
 </script>

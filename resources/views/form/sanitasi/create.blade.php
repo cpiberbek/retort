@@ -140,67 +140,6 @@
 
                 const wrapper = $("#pemeriksaan-wrapper");
 
-                function renderPemeriksaan(bagianArray) {
-                    wrapper.html('');
-                    if (!bagianArray) return;
-
-                    bagianArray.forEach(b => {
-
-                        const table = $(`
-        <div class="table-responsive">
-            <table class="table table-bordered mb-3">
-                <thead>
-                    <tr><th colspan="7">${b}</th></tr>
-                    <tr>
-                        <th>Waktu</th>
-                        <th>Kondisi</th>
-                        <th>Keterangan</th>
-                        <th>Tindakan</th>
-                        <th>Waktu</th>
-                        <th>Oleh</th>
-                        <th>Verifikasi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><input type="time" name="pemeriksaan[${b}][waktu]" class="form-control"></td>
-
-                        <td>
-                            <select name="pemeriksaan[${b}][kondisi]" class="form-control kondisi-select">
-                                <option value="" selected disabled>-- Pilih Kondisi --</option>
-                                <option value="✔">✔</option>
-                                ${[...Array(11)].map((_,i)=>`<option value="${i+1}">${i+1}</option>`).join('')}
-                            </select>
-                        </td>
-
-                        <td>
-                            <input type="text" name="pemeriksaan[${b}][keterangan]"
-                            class="form-control keterangan-input">
-                        </td>
-
-                        <td><input type="text" name="pemeriksaan[${b}][tindakan]" class="form-control"></td>
-                        <td><input type="time" name="pemeriksaan[${b}][waktu_koreksi]" class="form-control"></td>
-                        <td><input type="text" name="pemeriksaan[${b}][dikerjakan_oleh]" class="form-control"></td>
-                        <td><input type="time" name="pemeriksaan[${b}][waktu_verifikasi]" class="form-control"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        `);
-
-                        wrapper.append(table);
-                    });
-                }
-
-                $('#areaSelect').on('change', function() {
-                    let selected = $(this).find(':selected');
-                    let bagianArray = selected.data('bagian');
-
-                    renderPemeriksaan(bagianArray);
-                    $('#subAreaInput').val(selected.data('sub_area') || '');
-                });
-
-                // ================= AUTO KETERANGAN =================
                 const kondisiMap = {
                     "✔": "OK (Bersih)",
                     "1": "Basah",
@@ -216,16 +155,122 @@
                     "11": "Lain-lain"
                 };
 
-                $(document).on('change', '.kondisi-select', function() {
-                    let value = $(this).val();
-                    let row = $(this).closest('tr');
-                    let keteranganInput = row.find('.keterangan-input');
+                function renderPemeriksaan(bagianArray) {
+                    wrapper.html('');
+                    if (!bagianArray) return;
 
-                    if (kondisiMap[value]) {
-                        keteranganInput.val(kondisiMap[value]);
-                    }
+                    bagianArray.forEach(b => {
+
+                        const table = $(`
+                            <div class="table-responsive">
+                                <table class="table table-bordered mb-3">
+                                    <thead>
+                                        <tr><th colspan="7">${b}</th></tr>
+                                        <tr>
+                                            <th>Waktu</th>
+                                            <th>Kondisi</th>
+                                            <th>Keterangan</th>
+                                            <th>Tindakan</th>
+                                            <th>Waktu</th>
+                                            <th>Oleh</th>
+                                            <th>Verifikasi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <input type="time"
+                                                    name="pemeriksaan[${b}][waktu]"
+                                                    class="form-control">
+                                            </td>
+
+                                            <td>
+                                                <select
+                                                    name="pemeriksaan[${b}][kondisi][]"
+                                                    class="form-control kondisi-select"
+                                                    multiple>
+                                                    <option value="✔">OK (Bersih)</option>
+                                                    ${[...Array(11)].map((_, i) => `
+                                                        <option value="${i + 1}">
+                                                            ${kondisiMap[i + 1]}
+                                                        </option>
+                                                    `).join('')}
+                                                </select>
+                                            </td>
+
+                                            <td>
+                                                <input type="text"
+                                                    name="pemeriksaan[${b}][keterangan]"
+                                                    class="form-control keterangan-input">
+                                            </td>
+
+                                            <td>
+                                                <input type="text"
+                                                    name="pemeriksaan[${b}][tindakan]"
+                                                    class="form-control">
+                                            </td>
+
+                                            <td>
+                                                <input type="time"
+                                                    name="pemeriksaan[${b}][waktu_koreksi]"
+                                                    class="form-control">
+                                            </td>
+
+                                            <td>
+                                                <input type="text"
+                                                    name="pemeriksaan[${b}][dikerjakan_oleh]"
+                                                    class="form-control">
+                                            </td>
+
+                                            <td>
+                                                <input type="time"
+                                                    name="pemeriksaan[${b}][waktu_verifikasi]"
+                                                    class="form-control">
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        `);
+
+                        wrapper.append(table);
+
+                        table.find('.kondisi-select').select2({
+                            width: '100%',
+                            placeholder: '-- Pilih Kondisi --'
+                        });
+                    });
+                }
+
+                $('#areaSelect').on('change', function() {
+                    let selected = $(this).find(':selected');
+                    let bagianArray = selected.data('bagian');
+
+                    renderPemeriksaan(bagianArray);
+                    $('#subAreaInput').val(selected.data('sub_area') || '');
                 });
 
+
+                $(document).on('change', '.kondisi-select', function() {
+    let select = $(this);
+    let values = select.val() || [];
+    let previous = select.data('previous') || [];
+    let row = select.closest('tr');
+    let keteranganInput = row.find('.keterangan-input');
+
+    if (values.includes('✔') && !previous.includes('✔')) {
+        values = ['✔'];
+    } else if (values.includes('✔') && values.length > 1) {
+        values = values.filter(value => value !== '✔');
+    }
+
+    select.val(values).trigger('change.select2');
+    select.data('previous', values);
+
+    keteranganInput.val(
+        values.map(value => kondisiMap[value]).join(', ')
+    );
+});
             });
         </script>
     @endpush
