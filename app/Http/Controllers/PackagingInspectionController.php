@@ -19,38 +19,36 @@ class PackagingInspectionController extends Controller
      */
     public function index(Request $request): View
     {
-        // 1. Memulai query builder
-        $query = PackagingInspection::query()
+        $query = PackagingInspection::with('items')
             ->where('plant_uuid', auth()->user()->plant);
 
-        // 2. Terapkan filter pencarian
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
 
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('shift', 'LIKE', "%{$searchTerm}%") // Pencarian shift
-                  ->orWhere('uuid', 'LIKE', "%{$searchTerm}%"); // Opsional: Cari UUID juga
-              });
+                $q->where('shift', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('uuid', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('items', function ($q) use ($searchTerm) {
+                        $q->where('packaging_type', 'LIKE', "%{$searchTerm}%");
+                    });
+            });
         }
 
-        // 3. Terapkan filter tanggal
         if ($request->filled('start_date')) {
-            $query->whereDate('inspection_date', '=', $request->input('start_date'));
+            $query->whereDate('inspection_date', $request->input('start_date'));
         }
 
-        // 4. Terapkan filter shift
         if ($request->filled('shift')) {
             $query->where('shift', $request->input('shift'));
         }
 
-        // 5. Urutkan dan Paginate
         $inspections = $query->latest('inspection_date')
-                             ->latest('created_at') // Urutan tambahan agar data baru selalu di atas
-                             ->paginate(10)
-                             ->withQueryString();
+            ->latest('created_at')
+            ->paginate(10)
+            ->withQueryString();
 
-                             return view('packaging_inspections.index', compact('inspections'));
-                         }
+        return view('packaging_inspections.index', compact('inspections'));
+    }
 
     /**
      * Menampilkan form untuk membuat inspeksi baru.

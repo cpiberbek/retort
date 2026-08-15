@@ -139,6 +139,7 @@
                         <tr>
                             <th width="5%">NO.</th>
                             <th>Tanggal Inspeksi</th>
+                            <th>Jenis Packaging</th>
                             <th>Shift</th>
                             <th>Status SPV</th> {{-- Tambahan Kolom Status --}}
                             <th>Aksi</th>
@@ -152,6 +153,11 @@
                             {{-- Tanggal --}}
                             <td class="text-center align-middle">
                                 {{ $inspection->inspection_date ? \Carbon\Carbon::parse($inspection->inspection_date)->format('d-m-Y') : '-' }}
+                            </td>
+
+                            {{-- Tanggal --}}
+                            <td class="text-center align-middle">
+                                {{ $inspection->items->pluck('packaging_type')->filter()->unique()->implode(', ') ?: '-' }}
                             </td>
 
                             {{-- Shift --}}
