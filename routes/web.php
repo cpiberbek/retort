@@ -66,10 +66,13 @@ use App\Http\Controllers\{
     RoleController,
     MasterRawMaterialController,
     RetortController,
-    MasterPremixController
+    MasterPremixController,
+    SsoLoginController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
+
+Route::get('/sso/login', [SsoLoginController::class, 'login'])->name('sso.login');
 
 Route::get('/', function () {
     return redirect()->route('login');

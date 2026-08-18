@@ -31,4 +31,10 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'employee_api' => [
+    'url' => env('EMPLOYEE_API_URL'),
+    'sso_secret' => env('EMPLOYEE_API_SSO_SECRET'),
+    'this_project_uuid' => env('THIS_PROJECT_UUID'),
+    ],
+
 ];
