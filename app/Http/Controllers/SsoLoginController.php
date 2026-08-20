@@ -58,6 +58,6 @@ class SsoLoginController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/Dashboard');
+        return redirect()->intended('/dashboard');
     }
 }
