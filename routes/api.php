@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ApiController;
 use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SsoLoginController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,3 +23,5 @@ Route::post('user-sync', [ApiController::class, 'syncUser']);
 Route::post('user-desync', [ApiController::class, 'desyncUser']);
 Route::post('activation', [ApiController::class, 'activation']);
 Route::post('password-change', [ApiController::class, 'changePassword']);
+
+Route::post('/sso/logout', [SsoLoginController::class, 'ssoLogout']);

@@ -66,10 +66,13 @@ use App\Http\Controllers\{
     RoleController,
     MasterRawMaterialController,
     RetortController,
-    MasterPremixController
+    MasterPremixController,
+    SsoLoginController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
+
+Route::get('/sso/login', [SsoLoginController::class, 'login'])->name('sso.login');
 
 Route::get('/', function () {
     return redirect()->route('login');
@@ -101,13 +104,13 @@ Route::middleware('auth')->group(function () {
             ->name('roles.saveAccess');
     });
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-    Route::get('/logout', function () {
-        // Kembalikan mereka ke dashboard atau halaman sebelumnya
-        return redirect('/dashboard');
+    // Route::get('/logout', function () {
+    //     // Kembalikan mereka ke dashboard atau halaman sebelumnya
+    //     return redirect('/dashboard');
 
-        // ATAU: Anda juga bisa menonaktifkannya dengan menampilkan halaman 404
-        // abort(404);
-    });
+    //     // ATAU: Anda juga bisa menonaktifkannya dengan menampilkan halaman 404
+    //     // abort(404);
+    // });
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/set-produksi', [DashboardController::class, 'setProduksi'])->name('set.produksi');
