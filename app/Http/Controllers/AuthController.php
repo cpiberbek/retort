@@ -35,27 +35,38 @@ class AuthController extends Controller
         return redirect()->route('dashboard');
     }
 
+    // logoutSSO
+    // public function logout(Request $request)
+    // {
+    //     $user = $request->user();
+
+    //     Auth::logout();
+
+    //     $request->session()->invalidate();
+    //     $request->session()->regenerateToken();
+
+    //     if ($user) {
+    //         try {
+    //             Http::withToken(config('services.employee_api.sso_secret'))
+    //                 ->timeout(5)
+    //                 ->post(config('services.employee_api.url') . '/sso/report-logout', [
+    //                     'user_uuid' => $user->uuid,
+    //                     'project_uuid' => config('services.employee_api.this_project_uuid'),
+    //                 ]);
+    //         } catch (\Throwable $e) {
+    //         }
+    //     }
+
+    //     return redirect(config('services.employee_api.portal_url'));
+    // }
+
     public function logout(Request $request)
     {
-        $user = $request->user();
-
         Auth::logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        if ($user) {
-            try {
-                Http::withToken(config('services.employee_api.sso_secret'))
-                    ->timeout(5)
-                    ->post(config('services.employee_api.url') . '/sso/report-logout', [
-                        'user_uuid' => $user->uuid,
-                        'project_uuid' => config('services.employee_api.this_project_uuid'),
-                    ]);
-            } catch (\Throwable $e) {
-            }
-        }
-
-        return redirect(config('services.employee_api.portal_url'));
+        return redirect()->route('login');
     }
 }
