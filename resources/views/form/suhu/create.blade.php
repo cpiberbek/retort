@@ -215,10 +215,10 @@
                         <div class="col-12 col-md-4">
                             <label class="label-premium">Shift Kerja</label>
                             <select name="shift" id="shiftInput" class="form-select form-select-solid rounded-3" required>
-                                <option value="" disabled {{ !$shift ? 'selected' : '' }}>Pilih Shift...</option>
-                                <option value="1" {{ $shift == '1' ? 'selected' : '' }}>Shift 1 (Pagi)</option>
-                                <option value="2" {{ $shift == '2' ? 'selected' : '' }}>Shift 2 (Sore)</option>
-                                <option value="3" {{ $shift == '3' ? 'selected' : '' }}>Shift 3 (Malam)</option>
+                                <option value="" disabled {{ !($shift ?? null) ? 'selected' : '' }}>Pilih Shift...</option>
+                                <option value="1" {{ ($shift ?? null) == '1' ? 'selected' : '' }}>Shift 1 (Pagi)</option>
+                                <option value="2" {{ ($shift ?? null) == '2' ? 'selected' : '' }}>Shift 2 (Sore)</option>
+                                <option value="3" {{ ($shift ?? null) == '3' ? 'selected' : '' }}>Shift 3 (Malam)</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4">
@@ -335,10 +335,13 @@
                                     </td>
 
                                     <td>
-                                        <input type="text" name="hasil_rh[a{{ $index }}][nilai]"
+                                        <input type="number"
+                                            name="hasil_rh[a{{ $index }}][nilai]"
                                             class="form-control rh-input
                                             {{ $area->rh_min === null || $area->rh_max === null ? 'bg-light text-muted' : '' }}"
-                                            data-min="{{ $area->rh_min }}" data-max="{{ $area->rh_max }}"
+                                            data-min="{{ $area->rh_min }}"
+                                            data-max="{{ $area->rh_max }}"
+                                            step="0.01"
                                             placeholder="{{ $area->rh_min === null ? 'Standar belum diatur' : 'Masukkan RH' }}"
                                             title="{{ $area->rh_min === null ? 'Standar RH belum di setting' : '' }}"
                                             {{ $area->rh_min === null || $area->rh_max === null ? 'disabled' : '' }}>

@@ -348,9 +348,10 @@
                                     </td>
 
                                     <td>
-                                        <input type="text"
+                                        <input type="number"
                                             name="hasil_rh[{{ $index }}][nilai]"
                                             value="{{ $nilai_rh }}"
+                                            step="0.01"
                                             class="form-control rh-input check-old {{ $area->rh_min === null ? 'bg-light text-muted' : '' }}"
                                             data-min="{{ $area->rh_min }}"
                                             data-max="{{ $area->rh_max }}"

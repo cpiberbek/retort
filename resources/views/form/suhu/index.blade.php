@@ -511,7 +511,7 @@
 
                         <div class="row g-3">
 
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="create_date" class="form-label">Tanggal</label>
                                 <input type="date"
                                     name="date"
@@ -521,27 +521,14 @@
                                     required>
                             </div>
 
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="create_pukul" class="form-label">Pukul</label>
                                 <input type="time"
                                     name="pukul"
                                     id="create_pukul"
                                     class="form-control"
+                                    step="3600"
                                     required>
-                            </div>
-
-                            <div class="col-md-4">
-                                <label for="create_shift" class="form-label">Shift</label><br>
-                                <select name="shift"
-                                    id="create_shift"
-                                    class="form-select"
-                                    style="height: 38px; width: 90%;"
-                                    required>
-                                    <option value="">-- Pilih Shift --</option>
-                                    <option value="1">Shift 1</option>
-                                    <option value="2">Shift 2</option>
-                                    <option value="3">Shift 3</option>
-                                </select>
                             </div>
 
                         </div>
@@ -551,6 +538,24 @@
                             Input digunakan untuk menentukan apakah data pemeriksaan sudah tersedia atau perlu dibuat baru.
                         </div>
                     </div>
+
+                    <script>
+                        const pukulInput = document.getElementById('create_pukul');
+
+                        pukulInput.addEventListener('input', function () {
+                            if (this.value) {
+                                const hour = this.value.split(':')[0];
+                                this.value = `${hour}:00`;
+                            }
+                        });
+
+                        pukulInput.addEventListener('change', function () {
+                            if (this.value) {
+                                const hour = this.value.split(':')[0];
+                                this.value = `${hour}:00`;
+                            }
+                        });
+                    </script>
 
                     <div class="modal-footer">
                         <button type="button"
