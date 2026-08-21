@@ -108,6 +108,22 @@
                             </div>
                         </div>
 
+                        {{-- Produksi --}}
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Produksi</label>
+                                <select name="selected_produksi" class="form-control" required>
+                                    <option value="">-- Pilih Produksi --</option>
+                                    @foreach($produksi as $prod)
+                                        <option value="{{ $prod->uuid }}"
+                                            {{ $metal->nama_produksi == $prod->nama_karyawan ? 'selected' : '' }}>
+                                            {{ $prod->nama_karyawan }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 

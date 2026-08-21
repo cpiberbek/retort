@@ -208,28 +208,25 @@
                         <div class="col-12 col-md-4">
                             <label class="label-premium">Tanggal Pemeriksaan</label>
                             <input type="date" name="date" id="dateInput"
-                                class="form-control form-control-solid rounded-3" required>
+                                class="form-control form-control-solid rounded-3"
+                                value="{{ $date }}"
+                                required>
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="label-premium">Shift Kerja</label>
                             <select name="shift" id="shiftInput" class="form-select form-select-solid rounded-3" required>
-                                <option value="" disabled selected>Pilih Shift...</option>
-                                <option value="1">Shift 1 (Pagi)</option>
-                                <option value="2">Shift 2 (Sore)</option>
-                                <option value="3">Shift 3 (Malam)</option>
+                                <option value="" disabled {{ !$shift ? 'selected' : '' }}>Pilih Shift...</option>
+                                <option value="1" {{ $shift == '1' ? 'selected' : '' }}>Shift 1 (Pagi)</option>
+                                <option value="2" {{ $shift == '2' ? 'selected' : '' }}>Shift 2 (Sore)</option>
+                                <option value="3" {{ $shift == '3' ? 'selected' : '' }}>Shift 3 (Malam)</option>
                             </select>
                         </div>
                         <div class="col-12 col-md-4">
                             <label class="label-premium">Waktu (Pukul)</label>
-                            <select name="pukul" id="timeInput"
-                                class="form-select form-select-solid rounded-3" required>
-                                <option value="" disabled selected>Pilih Pukul...</option>
-                                @for ($h = 0; $h < 24; $h++)
-                                    <option value="{{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00">
-                                        {{ str_pad($h, 2, '0', STR_PAD_LEFT) }}:00
-                                    </option>
-                                @endfor
-                            </select>
+                            <input type="time" name="pukul" id="timeInput"
+                                class="form-control form-control-solid rounded-3"
+                                value="{{ $pukul ? \Carbon\Carbon::parse($pukul)->format('H:i') : '' }}"
+                                required>
                         </div>
                     </div>
                 </div>
@@ -402,29 +399,29 @@
         <script>
             document.addEventListener("DOMContentLoaded", function() {
                 // ===== Helper untuk set tanggal & shift =====
-                const pad = (num) => String(num).padStart(2, '0');
+                // const pad = (num) => String(num).padStart(2, '0');
 
-                const dateInput = document.getElementById("dateInput");
-                const shiftInput = document.getElementById("shiftInput");
-                const timeInput = document.getElementById("timeInput");
-                const now = new Date();
+                // const dateInput = document.getElementById("dateInput");
+                // const shiftInput = document.getElementById("shiftInput");
+                // const timeInput = document.getElementById("timeInput");
+                // const now = new Date();
 
-                if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
-                if (timeInput) {
-                    const currentHour = `${pad(now.getHours())}:00`;
-                    // Auto-select current hour in the dropdown
-                    for (let i = 0; i < timeInput.options.length; i++) {
-                        if (timeInput.options[i].value === currentHour) {
-                            timeInput.selectedIndex = i;
-                            break;
-                        }
-                    }
-                }
+                // if (dateInput) dateInput.value = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}`;
+                // if (timeInput) {
+                //     const currentHour = `${pad(now.getHours())}:00`;
+                //     // Auto-select current hour in the dropdown
+                //     for (let i = 0; i < timeInput.options.length; i++) {
+                //         if (timeInput.options[i].value === currentHour) {
+                //             timeInput.selectedIndex = i;
+                //             break;
+                //         }
+                //     }
+                // }
 
-                if (shiftInput) {
-                    const hh = now.getHours();
-                    shiftInput.value = (hh >= 7 && hh < 15) ? "1" : (hh >= 15 && hh < 23) ? "2" : "3";
-                }
+                // if (shiftInput) {
+                //     const hh = now.getHours();
+                //     shiftInput.value = (hh >= 7 && hh < 15) ? "1" : (hh >= 15 && hh < 23) ? "2" : "3";
+                // }
 
                 // ===== Validasi Suhu =====
                 const inputs = document.querySelectorAll('.suhu-input');

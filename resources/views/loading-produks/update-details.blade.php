@@ -4,31 +4,24 @@
 
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-{{-- Select2 CSS --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-
 <style>
     body { background-color: #f8f9fa; }
     .form-label { font-weight: 600; color: #495057; }
     .form-control, .form-select { border-radius: 8px; }
-    
-    /* Styling Field Terkunci */
     .form-control[readonly], .form-select[disabled] {
-        background-color: #e9ecef; /* Abu-abu */
+        background-color: #e9ecef;
         cursor: not-allowed;
         border-color: #dee2e6;
         color: #6c757d;
     }
-
-    /* Select2 Tweaks */
     .select2-container .select2-selection--single {
         height: calc(2.25rem + 2px);
         padding: .375rem .75rem;
         border: 1px solid #ced4da;
     }
     .select2-container--bootstrap-5 .select2-selection { border-radius: 8px !important; }
-    
     .dynamic-item-card {
         background-color: #fdfdfd;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -40,7 +33,6 @@
 <div class="container-fluid py-0">
     <div class="card shadow-sm border-0">
         <div class="card-body p-4 p-md-5">
-
             <h4 class="mb-1"><i class="bi bi-pencil-square"></i> Update Detail Pemeriksaan</h4>
             <p class="text-muted mb-4">Kolom yang sudah terisi otomatis terkunci. Silakan update data yang belum lengkap.</p>
 
@@ -55,19 +47,16 @@
                 </div>
             @endif
 
-            {{-- Form tetap submit ke route UPDATE standar (PUT) --}}
             <form action="{{ route('loading-produks.update', $loadingProduk->uuid) }}" method="POST">
                 @csrf
                 @method('PUT')
 
-                {{-- CARD INFORMASI UTAMA --}}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
                         <strong><i class="bi bi-info-circle-fill"></i> Informasi Utama</strong>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {{-- TANGGAL --}}
                             <div class="col-md-4">
                                 <label class="form-label">Hari/Tanggal <span class="text-danger">*</span></label>
                                 @if($loadingProduk->tanggal)
@@ -78,8 +67,7 @@
                                 @endif
                             </div>
 
-                            {{-- SHIFT --}}
-                           <div class="col-md-4">
+                            <div class="col-md-4">
                                 <label class="form-label">Shift <span class="text-danger">*</span></label>
                                 @if($loadingProduk->shift)
                                     <input type="text" class="form-control" value="{{ $loadingProduk->shift }}" readonly>
@@ -93,7 +81,6 @@
                                 @endif
                             </div>
 
-                            {{-- JENIS AKTIVITAS --}}
                             <div class="col-md-4">
                                 <label class="form-label">Jenis Aktivitas <span class="text-danger">*</span></label>
                                 @if($loadingProduk->jenis_aktivitas)
@@ -107,7 +94,6 @@
                                 @endif
                             </div>
 
-                            {{-- JAM --}}
                             <div class="col-md-6">
                                 <label class="form-label">Jam Mulai <span class="text-danger">*</span></label>
                                 @if($loadingProduk->jam_mulai)
@@ -130,7 +116,6 @@
 
                             <div class="col-12"><hr class="my-2"></div>
 
-                            {{-- KENDARAAN --}}
                             <div class="col-md-4">
                                 <label class="form-label">No. Pol Mobil <span class="text-danger">*</span></label>
                                 @if($loadingProduk->no_pol_mobil)
@@ -160,8 +145,8 @@
                                     <input type="text" class="form-control" name="ekspedisi" value="{{ old('ekspedisi') }}" required>
                                 @endif
                             </div>
-                            
-                             <div class="col-md-4">
+
+                            <div class="col-md-4">
                                 <label class="form-label">Tujuan / Asal <span class="text-danger">*</span></label>
                                 @if($loadingProduk->tujuan_asal)
                                     <input type="text" class="form-control" value="{{ $loadingProduk->tujuan_asal }}" readonly>
@@ -194,30 +179,32 @@
                     </div>
                 </div>
 
-                {{-- CARD KONDISI & KETERANGAN --}}
                 <div class="card mb-4">
                     <div class="card-header">
                         <strong><i class="bi bi-clipboard2-check"></i> Kondisi Mobil & Keterangan</strong>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {{-- Kondisi Mobil --}}
                             <div class="col-md-6">
                                 <label class="form-label mb-2">Kondisi Mobil (Checklist)</label>
                                 <div class="card p-3 @if(!empty($loadingProduk->kondisi_mobil)) bg-light @endif">
                                     <div class="row">
                                         @php
                                             $kondisiList = [
-                                                'bersih' => 'Bersih', 'kering' => 'Kering', 'tidak_bocor' => 'Tidak Bocor',
-                                                'tidak_debu' => 'Tidak Berdebu', 'tidak_basah' => 'Tidak Basah',
-                                                'bebas_hama' => 'Bebas Hama', 'bebas_noda' => 'Bebas Noda',
-                                                'bebas_oli' => 'Bebas Bekas oli', 'tidak_ada_non_halal' => 'Tidak ada produk non halal',
+                                                'bersih' => 'Bersih',
+                                                'kering' => 'Kering',
+                                                'tidak_bocor' => 'Tidak Bocor',
+                                                'tidak_debu' => 'Tidak Berdebu',
+                                                'tidak_basah' => 'Tidak Basah',
+                                                'bebas_hama' => 'Bebas Hama',
+                                                'bebas_noda' => 'Bebas Noda',
+                                                'bebas_oli' => 'Bebas Bekas oli',
+                                                'tidak_ada_non_halal' => 'Tidak ada produk non halal',
                                             ];
                                             $currentKondisi = $loadingProduk->kondisi_mobil ?? [];
                                             $isKondisiFilled = !empty($currentKondisi);
                                         @endphp
 
-                                        {{-- Hidden input agar data checklist lama tidak hilang saat submit --}}
                                         @if($isKondisiFilled)
                                             @foreach($currentKondisi as $val)
                                                 <input type="hidden" name="kondisi_mobil[]" value="{{ $val }}">
@@ -227,10 +214,10 @@
                                         @foreach ($kondisiList as $key => $label)
                                             <div class="col-md-6">
                                                 <div class="form-check mb-2">
-                                                    <input class="form-check-input" type="checkbox" 
+                                                    <input class="form-check-input" type="checkbox"
                                                            name="kondisi_mobil[]" value="{{ $key }}" id="kondisi_{{ $key }}"
                                                            @checked(in_array($key, $currentKondisi))
-                                                           @if($isKondisiFilled) disabled @endif> 
+                                                           @if($isKondisiFilled) disabled @endif>
                                                     <label class="form-check-label" for="kondisi_{{ $key }}">
                                                         {{ $label }}
                                                     </label>
@@ -240,8 +227,7 @@
                                     </div>
                                 </div>
                             </div>
-                            
-                            {{-- Keterangan & PIC --}}
+
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label class="form-label">Keterangan Total</label>
@@ -252,6 +238,7 @@
                                         <textarea class="form-control" name="keterangan_total" rows="2">{{ old('keterangan_total') }}</textarea>
                                     @endif
                                 </div>
+
                                 <div class="mb-3">
                                     <label class="form-label">Keterangan Umum</label>
                                     @if($loadingProduk->keterangan_umum)
@@ -261,6 +248,7 @@
                                         <textarea class="form-control" name="keterangan_umum" rows="2">{{ old('keterangan_umum') }}</textarea>
                                     @endif
                                 </div>
+
                                 <div class="row g-3">
                                     <div class="col-md-4">
                                         <label class="form-label">PIC QC</label>
@@ -271,6 +259,7 @@
                                             <input type="text" class="form-control" name="pic_qc" value="{{ old('pic_qc') }}">
                                         @endif
                                     </div>
+
                                     <div class="col-md-4">
                                         <label class="form-label">PIC Warehouse</label>
                                         @if($loadingProduk->pic_warehouse)
@@ -280,6 +269,7 @@
                                             <input type="text" class="form-control" name="pic_warehouse" value="{{ old('pic_warehouse') }}">
                                         @endif
                                     </div>
+
                                     <div class="col-md-4">
                                         <label class="form-label">PIC QC SPV</label>
                                         @if($loadingProduk->pic_qc_spv)
@@ -295,7 +285,6 @@
                     </div>
                 </div>
 
-                {{-- CARD DETAIL ITEM --}}
                 <div class="card mb-4">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
@@ -305,87 +294,71 @@
                             </button>
                         </div>
                     </div>
-                        
-                    <div id="details-container">
 
-                        {{-- DATA LAMA READONLY --}}
-                        @foreach($loadingProduk->details as $index => $detail)
-                            <input type="hidden" name="details[{{$index}}][uuid]" value="{{ $detail->uuid }}">
-                            <input type="hidden" name="details[{{$index}}][nama_produk]" value="{{ $detail->nama_produk }}">
-                            <input type="hidden" name="details[{{$index}}][kode_produksi]" value="{{ $detail->kode_produksi }}">
-                            <input type="hidden" name="details[{{$index}}][kode_expired]" value="{{ $detail->kode_expired }}">
-                            <input type="hidden" name="details[{{$index}}][jumlah]" value="{{ $detail->jumlah }}">
-                            <input type="hidden" name="details[{{$index}}][satuan]" value="{{ $detail->satuan }}">
-                            <input type="hidden" name="details[{{$index}}][keterangan]" value="{{ $detail->keterangan }}">
+                    <div class="card-body">
+                        <div id="details-container">
+                            @foreach($loadingProduk->details as $index => $detail)
+                                <input type="hidden" name="details[{{ $index }}][uuid]" value="{{ $detail->uuid }}">
+                                <input type="hidden" name="details[{{ $index }}][nama_produk]" value="{{ $detail->nama_produk }}">
+                                <input type="hidden" name="details[{{ $index }}][kode_produksi]" value="{{ $detail->kode_produksi }}">
+                                <input type="hidden" name="details[{{ $index }}][kode_expired]" value="{{ $detail->kode_expired }}">
+                                <input type="hidden" name="details[{{ $index }}][jumlah]" value="{{ $detail->jumlah }}">
+                                <input type="hidden" name="details[{{ $index }}][satuan]" value="{{ $detail->satuan }}">
+                                <input type="hidden" name="details[{{ $index }}][keterangan]" value="{{ $detail->keterangan }}">
 
-                            <div class="dynamic-item-card border p-3 mb-3 rounded bg-light">
-                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                    <h5 class="mb-0 text-muted">Item Produk #{{ $index + 1 }}</h5>
-                                    
-                                </div>
-
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <label class="form-label">Nama Produk</label>
-                                        <input type="text" class="form-control nama-produk-old"
-                                            value="{{ $detail->nama_produk }}" readonly>
+                                <div class="dynamic-item-card border p-3 mb-3 rounded bg-light">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="mb-0 text-muted">Item Produk #{{ $index + 1 }}</h5>
                                     </div>
 
-                                    <div class="col-md-2">
-                                        <label class="form-label">Kode Batch</label>
-                                       <input type="text" 
-                                        class="form-control batch-uuid"
-                                        value="{{ $detail->kode_produksi }}"
-                                        readonly>
-                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <label class="form-label">Nama Produk</label>
+                                            <input type="text" class="form-control nama-produk-old" value="{{ $detail->nama_produk }}" readonly>
+                                        </div>
 
-                                    <div class="col-md-2">
-                                        <label class="form-label">Kode Expired</label>
-                                        <input type="date" class="form-control" 
-                                            value="{{ $detail->kode_expired }}" readonly>
-                                    </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Kode Batch</label>
+                                            <input type="text" class="form-control batch-uuid" data-code="{{ $detail->kode_produksi }}" value="{{ $detail->kode_produksi }}" readonly>
+                                        </div>
 
-                                    <div class="col-md-1">
-                                        <label class="form-label">Jumlah</label>
-                                        <input type="number" class="form-control jumlah-old"
-                                            value="{{ $detail->jumlah }}" readonly>
-                                    </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label">Kode Expired</label>
+                                            <input type="date" class="form-control" value="{{ $detail->kode_expired }}" readonly>
+                                        </div>
 
-                                    <div class="col-md-1">
-                                        <label class="form-label">Satuan</label>
-                                        <input type="text" class="form-control satuan-old"
-                                            value="{{ $detail->satuan }}" readonly>
-                                    </div>
+                                        <div class="col-md-1">
+                                            <label class="form-label">Jumlah</label>
+                                            <input type="number" class="form-control jumlah-old" value="{{ $detail->jumlah }}" readonly>
+                                        </div>
 
-                                    <div class="col-md-3">
-                                        <label class="form-label">Keterangan</label>
-                                        <input type="text" class="form-control" 
-                                            value="{{ $detail->keterangan }}" readonly>
+                                        <div class="col-md-1">
+                                            <label class="form-label">Satuan</label>
+                                            <input type="text" class="form-control satuan-old" value="{{ $detail->satuan }}" readonly>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <label class="form-label">Keterangan</label>
+                                            <input type="text" class="form-control" value="{{ $detail->keterangan }}" readonly>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        @endforeach
+                            @endforeach
 
-                    </div>
-
-                {{-- DATA BARU MASUK SINI --}}
-                <div id="new-details-container"></div>
-                </div>
+                            <div id="new-details-container"></div>
+                        </div>
 
                         <div class="alert alert-secondary mb-3">
                             <strong>Total Item:</strong>
-                            <div id="total-item-display">
-                                Belum ada data
-                            </div>
+                            <div id="total-item-display">Belum ada data</div>
                         </div>
+                    </div>
+                </div>
 
-
-                {{-- BUTTONS --}}
                 <div class="d-flex justify-content-between mt-4">
                     <button type="submit" class="btn btn-warning btn-lg"><i class="bi bi-save"></i> Simpan Update</button>
                     <a href="{{ route('loading-produks.index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-arrow-left"></i> Kembali</a>
                 </div>
-
             </form>
         </div>
     </div>
@@ -399,351 +372,382 @@
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
 <script>
-    $(document).ready(function() {
-        if ($('.select2-static').length > 0) {
-            $('.select2-static').select2({
-                theme: "bootstrap-5",
-                placeholder: "Pilih...",
-                allowClear: false,
-                dropdownAutoWidth: true
-            });
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.batch-uuid').forEach(input => {
-            let uuid = input.value;
-
-            if (!uuid) return;
-
-            fetch("{{ url('/lookup/batch-packing-by-uuid') }}/" + uuid)
-                .then(res => res.json())
-                .then(res => {
-                    input.value = res.text;
-                });
+$(document).ready(function() {
+    if ($('.select2-static').length > 0) {
+        $('.select2-static').select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Pilih...',
+            allowClear: false,
+            dropdownAutoWidth: true
         });
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.batch-uuid').forEach(input => {
+        const code = input.dataset.code;
+        if (!code) return;
+
+        if (!/^[0-9a-f-]{36}$/i.test(code)) {
+            return;
+        }
+
+        fetch("{{ url('/lookup/batch-packing-by-uuid') }}/" + code)
+            .then(res => res.json())
+            .then(res => {
+                input.value = res.text;
+            })
+            .catch(() => {});
     });
+});
 
-    // 4. Script untuk form dinamis
-    document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() {
+    const newDetailsContainer = document.getElementById('new-details-container');
+    const addBtn = document.getElementById('add-detail-btn');
+    const oldDetailCount = {{ $loadingProduk->details->count() }};
+    let detailIndex = oldDetailCount;
 
-        const container = document.getElementById('details-container');
-        const addBtn = document.getElementById('add-detail-btn');
-        let detailIndex = {{ $loadingProduk->details->count() }};
+    function updateTotalItem() {
+        const totals = {};
 
-        function updateTotalItem() {
-            const totals = {};
+        document.querySelectorAll('#details-container .dynamic-item-card').forEach(card => {
+            const produk = card.querySelector('.var-produk-select')?.value || card.querySelector('.nama-produk-old')?.value || '';
+            const jumlah = parseFloat(card.querySelector('input[name$="[jumlah]"]')?.value || card.querySelector('.jumlah-old')?.value) || 0;
+            const satuan = card.querySelector('select[name$="[satuan]"]')?.value || card.querySelector('.satuan-old')?.value || '';
 
-            container.querySelectorAll('.dynamic-item-card').forEach(card => {
+            if (!produk) return;
 
-                const produk =
-                    card.querySelector('select[name$="[nama_produk]"]')?.value ||
-                    card.querySelector('.nama-produk-old')?.value;
+            const key = `${produk}|${satuan}`;
 
-                const jumlah =
-                    parseFloat(
-                        card.querySelector('input[name$="[jumlah]"]')?.value ||
-                        card.querySelector('.jumlah-old')?.value
-                    ) || 0;
-
-                const satuan =
-                    card.querySelector('select[name$="[satuan]"]')?.value ||
-                    card.querySelector('.satuan-old')?.value ||
-                    '';
-
-                if (!produk) return;
-
-                const key = `${produk}|${satuan}`;
-
-                if (!totals[key]) {
-                    totals[key] = {
-                        produk: produk,
-                        jumlah: 0,
-                        satuan: satuan
-                    };
-                }
-
-                totals[key].jumlah += jumlah;
-            });
-
-            const display = document.getElementById('total-item-display');
-
-            if (!display) return;
-
-            if (Object.keys(totals).length === 0) {
-                display.textContent = 'Belum ada data';
-                return;
+            if (!totals[key]) {
+                totals[key] = {
+                    produk: produk,
+                    jumlah: 0,
+                    satuan: satuan
+                };
             }
 
-            display.innerHTML = Object.values(totals)
-                .map(data =>
-                    `<div class="badge bg-secondary text-white d-inline-block mb-2">
-                        • ${data.produk} [ ${data.jumlah} ${data.satuan} ]
-                    </div>`
-                )
-                .join('<br>');
+            totals[key].jumlah += jumlah;
+        });
+
+        const display = document.getElementById('total-item-display');
+
+        if (!display) return;
+
+        if (Object.keys(totals).length === 0) {
+            display.textContent = 'Belum ada data';
+            return;
         }
 
-        function hitungExpired(kode) {
-            kode = kode.toUpperCase();
+        display.innerHTML = Object.values(totals)
+            .map(data => `<div class="badge bg-secondary text-white d-inline-block mb-2">• ${data.produk} [ ${data.jumlah} ${data.satuan} ]</div>`)
+            .join('<br>');
+    }
 
-            const tahunKode = {
-                'O': 2024,'P': 2025,'Q': 2026,'R': 2027,'S': 2028,'T': 2029,
-                'U': 2030,'V': 2031,'W': 2032,'X': 2033,'Y': 2034,'Z': 2035
-            };
+    function hitungExpired(kode) {
+        kode = (kode || '').toUpperCase();
 
-            const bulanKode = {
-                'A': 1,'B': 2,'C': 3,'D': 4,'E': 5,'F': 6,
-                'G': 7,'H': 8,'I': 9,'J': 10,'K': 11,'L': 12
-            };
+        const tahunKode = {
+            O: 2024, P: 2025, Q: 2026, R: 2027, S: 2028,
+            T: 2029, U: 2030, V: 2031, W: 2032, X: 2033,
+            Y: 2034, Z: 2035
+        };
 
-            const format = kode.substring(0,4);
+        const bulanKode = {
+            A: 1, B: 2, C: 3, D: 4, E: 5, F: 6,
+            G: 7, H: 8, I: 9, J: 10, K: 11, L: 12
+        };
 
-            if (!/^[A-Z]{2}\d{2}$/.test(format)) return null;
+        const format = kode.substring(0, 4);
+        if (!/^[A-Z]{2}\d{2}$/.test(format)) return null;
 
-            const tahun = tahunKode[format[0]];
-            const bulan = bulanKode[format[1]];
-            const hari = parseInt(format.substring(2,4));
+        const tahun = tahunKode[format[0]];
+        const bulan = bulanKode[format[1]];
+        const hari = parseInt(format.substring(2, 4));
 
-            if (!tahun || !bulan || !hari) return null;
+        if (!tahun || !bulan || !hari) return null;
 
-            let date = new Date(tahun, bulan - 1, hari);
+        const date = new Date(tahun, bulan - 1, hari);
+        date.setMonth(date.getMonth() + 7);
 
-            date.setMonth(date.getMonth() + 7);
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    }
 
-            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
-        }
+    function reindexNewDetails() {
+        const cards = newDetailsContainer.querySelectorAll('.dynamic-item-card');
 
-        function reindexDetails() {
-            const cards = container.querySelectorAll('.dynamic-item-card');
+        cards.forEach((card, index) => {
+            const realIndex = oldDetailCount + index;
+            const title = card.querySelector('h5');
 
-            cards.forEach((card, index) => {
-                let realIndex = index + {{ $loadingProduk->details->count() }};
+            if (title) {
+                title.textContent = `Item Produk #${realIndex + 1}`;
+            }
 
-                card.querySelector('h5').textContent = `Item Produk #${realIndex + 1}`;
-
-                card.querySelectorAll('[name]').forEach(field => {
-                    field.name = field.name.replace(/details\[\d+\]/, `details[${realIndex}]`);
-                });
+            card.querySelectorAll('[name]').forEach(field => {
+                field.name = field.name.replace(/details\[\d+\]/, `details[${realIndex}]`);
             });
+        });
 
-            detailIndex = cards.length + {{ $loadingProduk->details->count() }};
+        detailIndex = oldDetailCount + cards.length;
+    }
+
+    function setManualMode(newDetail, manual) {
+        const batchSelect = $(newDetail).find('.var-batch-select');
+        const batchManual = $(newDetail).find('.var-batch-manual');
+        const existingMode = $(newDetail).find('.existing-batch-mode');
+        const manualMode = $(newDetail).find('.manual-batch-mode');
+        const toggleButton = $(newDetail).find('.switch-batch-mode');
+
+        if (manual) {
+            batchSelect.val(null).trigger('change');
+            batchSelect.prop('disabled', true).prop('required', false);
+            batchManual.prop('disabled', false).prop('required', true);
+            existingMode.addClass('d-none');
+            manualMode.removeClass('d-none');
+            toggleButton.text('Input Kode Batch Existing');
+        } else {
+            batchManual.val('').prop('disabled', true).prop('required', false);
+            existingMode.removeClass('d-none');
+            manualMode.addClass('d-none');
+            batchSelect.prop('disabled', !$(newDetail).find('.var-produk-select').val()).prop('required', true);
+            toggleButton.text('Input Kode Batch Manual');
         }
+    }
 
-        /**
-         * Fungsi untuk merender form detail, bisa dengan data (untuk old()) atau kosong
-         */
-        function renderDetailForm(data = null) {
-            const i = detailIndex;
-            const uuid = data?.uuid || '';
+    function renderDetailForm(data = null) {
+        const i = detailIndex;
+        const namaProduk = data?.nama_produk || '';
+        const kodeProduksi = data?.kode_produksi || '';
+        const kodeExpired = data?.kode_expired || '';
+        const jumlah = data?.jumlah || '';
+        const keterangan = data?.keterangan || '';
+        const satuan = data?.satuan || '';
+        const uuid = data?.uuid || '';
 
-            // Siapkan nilai default atau dari 'old' data
-            const nama_produk = data?.nama_produk || '';
-            const kode_produksi = data?.kode_produksi || '';
-            const kode_expired = data?.kode_expired || '';
-            const jumlah = data?.jumlah || '';
-            const keterangan = data?.keterangan || '';
-            const satuan = data?.satuan || '';
+        const newDetail = document.createElement('div');
+        newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded');
 
-            const newDetail = document.createElement('div');
-            newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded');
+        newDetail.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">Item Produk #${i + 1}</h5>
+                <button type="button" class="btn btn-danger btn-sm remove-detail-btn">
+                    <i class="bi bi-trash"></i> Hapus
+                </button>
+            </div>
 
-            newDetail.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Item Produk #${i + 1}</h5>
-                    <button type="button" class="btn btn-danger btn-sm remove-detail-btn"><i class="bi bi-trash"></i> Hapus</button>
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label">Nama Produk (Varian) <span class="text-danger">*</span></label>
+                    <select name="details[${i}][nama_produk]" class="form-control var-produk-select" required>
+                        <option value="">-- Pilih Varian --</option>
+                        @foreach($produks as $produk)
+                            <option value="{{ $produk->nama_produk }}" ${namaProduk === @json($produk->nama_produk) ? 'selected' : ''}>
+                                {{ $produk->nama_produk }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label class="form-label">Nama Produk (Varian) <span class="text-danger">*</span></label>
-                        <select name="details[${i}][nama_produk]" class="form-control var-produk-select" required>
-                            <option value="">-- Pilih Varian --</option>
-                            @foreach($produks as $produk)
-                                <option value="{{ $produk->nama_produk }}" ${nama_produk === '{{ $produk->nama_produk }}' ? 'selected' : ''}>
-                                    {{ $produk->nama_produk }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
+                <div class="col-md-2">
+                    <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
+                    <div class="existing-batch-mode">
                         <select name="details[${i}][kode_produksi]" class="form-control var-batch-select" required>
                             <option value="">Pilih Varian Terlebih Dahulu</option>
                         </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">Kode Expired</label>
-                        <input type="date" name="details[${i}][kode_expired]" class="form-control expired-date" value="${kode_expired}" required>
-                        <small class="text-primary exp-warning d-none">Sesuaikan kode produksi manual</small>
-                    </div>
-                    <div class="col-md-1">
-                        <label class="form-label">Jumlah <span class="text-danger">*</span></label>
-                        <input type="number" name="details[${i}][jumlah]" class="form-control" value="${jumlah}" min="1" required>
+                        <button type="button" class="btn btn-primary btn-sm mt-1 switch-batch-mode">
+                            Input Kode Batch Manual
+                        </button>
                     </div>
 
-                    <div class="col-md-1">
-                        <label class="form-label">Satuan <span class="text-danger">*</span></label>
-                        <select name="details[${i}][satuan]" class="form-control" required>
-                            <option value="">--Pilih--</option>
-                            <option value="kg" ${satuan === 'kg' ? 'selected' : ''}>kg</option>
-                            <option value="pcs" ${satuan === 'pcs' ? 'selected' : ''}>pcs</option>
-                            <option value="roll" ${satuan === 'roll' ? 'selected' : ''}>roll</option>
-                            <option value="box" ${satuan === 'box' ? 'selected' : ''}>box</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label class="form-label">Keterangan</label>
-                        <input type="text" name="details[${i}][keterangan]" class="form-control" value="${keterangan}">
+                    <div class="manual-batch-mode d-none">
+                        <input type="text"
+                            name="details[${i}][kode_produksi]"
+                            class="form-control var-batch-manual"
+                            placeholder="Ketik Kode Batch"
+                            disabled
+                            oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+
+                        <button type="button" class="btn btn-info btn-sm mt-1 switch-batch-mode text-white">
+                            Input Kode Batch Existing
+                        </button>
                     </div>
                 </div>
-            `;
 
-            if (uuid) {
-                newDetail.innerHTML += `
-                    <input type="hidden" name="details[${i}][uuid]" value="${uuid}">
-                `;
+                <div class="col-md-2">
+                    <label class="form-label">Kode Expired</label>
+                    <input type="date" name="details[${i}][kode_expired]" class="form-control expired-date" value="${kodeExpired}" required>
+                    <small class="text-primary exp-warning d-none">Sesuaikan kode produksi manual</small>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label">Jumlah <span class="text-danger">*</span></label>
+                    <input type="number" name="details[${i}][jumlah]" class="form-control" value="${jumlah}" min="1" required>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label">Satuan <span class="text-danger">*</span></label>
+                    <select name="details[${i}][satuan]" class="form-control" required>
+                        <option value="">--Pilih--</option>
+                        <option value="kg" ${satuan === 'kg' ? 'selected' : ''}>kg</option>
+                        <option value="pcs" ${satuan === 'pcs' ? 'selected' : ''}>pcs</option>
+                        <option value="roll" ${satuan === 'roll' ? 'selected' : ''}>roll</option>
+                        <option value="box" ${satuan === 'box' ? 'selected' : ''}>box</option>
+                    </select>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label">Keterangan</label>
+                    <input type="text" name="details[${i}][keterangan]" class="form-control" value="${keterangan}">
+                </div>
+            </div>
+        `;
+
+        if (uuid) {
+            newDetail.innerHTML += `<input type="hidden" name="details[${i}][uuid]" value="${uuid}">`;
+        }
+
+        newDetailsContainer.appendChild(newDetail);
+
+        const produkSelect = $(newDetail).find('.var-produk-select');
+        const batchSelect = $(newDetail).find('.var-batch-select');
+        const batchManual = $(newDetail).find('.var-batch-manual');
+        const expiredInput = $(newDetail).find('.expired-date');
+        const warning = $(newDetail).find('.exp-warning');
+
+        produkSelect.select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- Pilih Varian --',
+            allowClear: true
+        });
+
+        batchSelect.select2({
+            theme: 'bootstrap-5',
+            width: '100%',
+            placeholder: '-- Pilih Kode Batch --',
+            allowClear: true,
+            ajax: {
+                url: function() {
+                    const produkValue = produkSelect.val();
+                    if (!produkValue) return '';
+                    return "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue);
+                },
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return { q: params.term };
+                },
+                processResults: function(data) {
+                    return { results: data };
+                },
+                cache: true
             }
+        });
 
-            container.appendChild(newDetail);
+        if (!produkSelect.val()) {
+            batchSelect.prop('disabled', true);
+        }
 
-            let produkSelect = $(newDetail).find('.var-produk-select');
-            let batchSelect = $(newDetail).find('.var-batch-select');
-            let expiredInput = $(newDetail).find('.expired-date');
-            let warning = $(newDetail).find('.exp-warning');
-
-            // Initialize produk as Select2 (with search)
-            produkSelect.select2({
-                theme: "bootstrap-5",
-                width: '100%',
-                placeholder: "-- Pilih Varian --",
-                allowClear: true
-            });
-
-            // Initialize batch as Select2 with dynamic AJAX
-            batchSelect.select2({
-                theme: "bootstrap-5",
-                width: '100%',
-                placeholder: "-- Pilih Kode Batch --",
-                allowClear: true,
-                ajax: {
-                    url: function () {
-                        let produkValue = produkSelect.val();
-                        if (!produkValue) return '';
-                        return "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue);
-                    },
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return { q: params.term };
-                    },
-                    processResults: function (data) {
-                        return { results: data };
-                    },
-                    cache: true
-                }
-            });
-
-            // Set old batch value if exists
-            if (kode_produksi) {
-                const isUuid = /^[0-9a-f-]{36}$/i.test(kode_produksi);
-
-                if (isUuid) {
-                    $.get("{{ url('/lookup/batch-packing-by-uuid') }}/" + kode_produksi, function(res) {
-                        let newOption = new Option(res.text, res.id, true, true);
-                        batchSelect.append(newOption).trigger('change');
-                    });
-                } else {
-                    let newOption = new Option(kode_produksi, kode_produksi, true, true);
+        if (kodeProduksi) {
+            if (/^[0-9a-f-]{36}$/i.test(kodeProduksi)) {
+                $.get("{{ url('/lookup/batch-packing-by-uuid') }}/" + kodeProduksi, function(res) {
+                    const newOption = new Option(res.text, res.id, true, true);
                     batchSelect.append(newOption).trigger('change');
-                }
+                    setManualMode(newDetail, false);
+                }).fail(function() {
+                    batchManual.val(kodeProduksi);
+                    setManualMode(newDetail, true);
+                });
+            } else {
+                batchManual.val(kodeProduksi);
+                setManualMode(newDetail, true);
             }
+        }
 
-            // Set initial disabled state
-            if (!produkSelect.val()) {
-                batchSelect.prop('disabled', true);
-            }
+        newDetail.querySelectorAll('.switch-batch-mode').forEach(button => {
+            button.addEventListener('click', function() {
+                const manualActive = !manualModeIsHidden(newDetail);
+                setManualMode(newDetail, !manualActive);
+            });
+        });
 
-            // When produk changes, clear batch and enable/disable
-            produkSelect.on('change', function() {
-                let currentVal = $(this).val();
+        produkSelect.on('change', function() {
+            const currentVal = $(this).val();
+            const manualModeActive = !$(newDetail).find('.manual-batch-mode').hasClass('d-none');
+
+            if (manualModeActive) {
+                batchManual.val('');
+            } else {
                 batchSelect.val(null).trigger('change');
                 batchSelect.prop('disabled', !currentVal);
+            }
 
-                updateTotalItem();
-            });
+            updateTotalItem();
+        });
 
-            batchSelect.on('select2:select', function() {
-                let kode = $(this).find(':selected').text();
+        batchSelect.on('select2:select', function() {
+            const kode = $(this).find(':selected').text();
+            const expired = hitungExpired(kode);
 
-                let expired = hitungExpired(kode);
+            if (expired) {
+                expiredInput.val(expired);
+                warning.addClass('d-none');
+            } else {
+                expiredInput.val('');
+                warning.removeClass('d-none');
+            }
+        });
 
-                if (expired) {
-                    expiredInput.val(expired);
-                    warning.addClass('d-none');
-                } else {
-                    expiredInput.val('');
-                    warning.removeClass('d-none');
-                }
-            });
+        batchManual.on('input', function() {
+            const expired = hitungExpired($(this).val());
 
-            newDetail.querySelector('input[name$="[jumlah]"]').addEventListener('input', updateTotalItem);
-            newDetail.querySelector('select[name$="[satuan]"]').addEventListener('change', updateTotalItem);
+            if (expired) {
+                expiredInput.val(expired);
+                warning.addClass('d-none');
+            } else {
+                warning.removeClass('d-none');
+            }
+        });
 
-            detailIndex++;
-        }
+        newDetail.querySelector('input[name$="[jumlah]"]').addEventListener('input', updateTotalItem);
+        newDetail.querySelector('select[name$="[satuan]"]').addEventListener('change', updateTotalItem);
 
-        // --- Event Listener untuk Tombol "Tambah Item" + copy first index ---
-        // if (addBtn) {
-        //     addBtn.addEventListener('click', () => {
-        //         let firstProduk = $('.var-produk-select').first().val();
+        detailIndex++;
+    }
 
-        //         renderDetailForm({
-        //             nama_produk: firstProduk || ''
-        //         });
+    function manualModeIsHidden(newDetail) {
+        return $(newDetail).find('.manual-batch-mode').hasClass('d-none');
+    }
 
-        //         reindexDetails();
-        //         updateTotalItem();
-        //     });
-        // }
+    if (addBtn) {
+        addBtn.addEventListener('click', function() {
+            renderDetailForm(null);
+            reindexNewDetails();
+            updateTotalItem();
+        });
+    }
 
-        // --- Event Listener untuk Tombol Hapus ---
-        if (container) {
-            container.addEventListener('click', function(e) {
-                // Logika Tombol Hapus
-                const removeBtn = e.target.closest('.remove-detail-btn');
-                if (removeBtn) {
-                    removeBtn.closest('.dynamic-item-card').remove();
-                    reindexDetails();
-                    updateTotalItem();
-                }
-            });
-        }
+    newDetailsContainer.addEventListener('click', function(e) {
+        const removeBtn = e.target.closest('.remove-detail-btn');
 
-        if (addBtn) {
-            addBtn.addEventListener('click', () => {
-                renderDetailForm(null);
-                reindexDetails();
-                updateTotalItem();
-            });
-        }
+        if (!removeBtn) return;
 
-        // --- Render data 'old' jika ada (setelah validasi gagal) ---
-        // const existingDetails = @json(old('details', $loadingProduk->details ?? []));
-
-        // if (existingDetails.length > 0) {
-        //     existingDetails.forEach(itemData => {
-        //         renderDetailForm(itemData);
-        //     });
-        // } else {
-        //     renderDetailForm(null);
-        // }
-
-        reindexDetails();
+        removeBtn.closest('.dynamic-item-card').remove();
+        reindexNewDetails();
         updateTotalItem();
-
     });
+
+    const oldItems = @json(old('details', []));
+    if (oldItems.length > oldDetailCount) {
+        oldItems.slice(oldDetailCount).forEach(itemData => {
+            renderDetailForm(itemData);
+        });
+    }
+
+    reindexNewDetails();
+    updateTotalItem();
+});
 </script>
 @endpush

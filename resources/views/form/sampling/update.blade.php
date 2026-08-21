@@ -134,12 +134,15 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Jumlah</label>
-                                <input type="number" name="jumlah" class="form-control" step="0.01" min="0"
-                                    value="{{ old('jumlah', $sampling->jumlah) }}"
-                                    {{ $sampling->jumlah ? 'readonly' : '' }} required>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="jumlah">(-)</button>
+                                    <input type="text" name="jumlah" id="jumlah" class="form-control"
+                                        value="{{ old('jumlah', $sampling->jumlah) }}"
+                                        {{ $sampling->jumlah !== null ? 'readonly' : '' }} required>
+                                </div>
 
-                                @if($sampling->jumlah)
-                                <input type="hidden" name="jumlah" value="{{ $sampling->jumlah }}">
+                                @if($sampling->jumlah !== null)
+                                    <input type="hidden" name="jumlah" value="{{ $sampling->jumlah }}">
                                 @endif
                             </div>
                         </div>
@@ -154,20 +157,50 @@
 
                         <div class="row mb-3">
                             @foreach($fields as $field)
-                            <div class="col-md-3 mb-3">
-                                <label class="form-label">{{ ucwords(str_replace('_', ' ', $field)) }}</label>
-                                <input type="number" name="{{ $field }}" class="form-control" step="1"
-                                    value="{{ old($field, $sampling->$field) }}"
-                                    {{ $sampling->$field !== null ? 'readonly' : '' }}>
+                                <div class="col-md-3 mb-3">
+                                    <label class="form-label">{{ ucwords(str_replace('_', ' ', $field)) }}</label>
 
-                                @if($sampling->$field !== null)
-                                <input type="hidden" name="{{ $field }}" value="{{ $sampling->$field }}">
-                                @endif
-                            </div>
+                                    <div class="input-group">
+                                        <button type="button" class="btn btn-outline-secondary toggle-minus"
+                                            data-target="{{ $field }}">(-)</button>
+
+                                        <input type="text" name="{{ $field }}" class="form-control"
+                                            value="{{ old($field, $sampling->$field) }}"
+                                            {{ $sampling->$field !== null ? 'readonly' : '' }}>
+                                    </div>
+
+                                    @if($sampling->$field !== null)
+                                        <input type="hidden" name="{{ $field }}" value="{{ $sampling->$field }}">
+                                    @endif
+                                </div>
                             @endforeach
                         </div>
                     </div>
                 </div>
+
+                <script>
+                document.querySelectorAll('.toggle-minus').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const input = document.querySelector(`[name="${this.dataset.target}"]`);
+
+                        if (!input || input.readOnly) {
+                            return;
+                        }
+
+                        input.value = '-';
+                    });
+                });
+
+                document.querySelectorAll('#jumlah, input[name="jamur"], input[name="lendir"], input[name="klip_tajam"], input[name="pin_hole"], input[name="air_trap_pvdc"], input[name="air_trap_produk"], input[name="keriput"], input[name="bengkok"], input[name="non_kode"], input[name="over_lap"], input[name="kecil"], input[name="terjepit"], input[name="double_klip"], input[name="seal_halus"], input[name="basah"], input[name="dll"]').forEach(input => {
+                    input.addEventListener('input', function () {
+                        if (this.value === '-') {
+                            return;
+                        }
+
+                        this.value = this.value.replace(/[^0-9.]/g, '');
+                    });
+                });
+                </script>
 
                 {{-- ===================== CATATAN ===================== --}}
                 <div class="card mb-4">

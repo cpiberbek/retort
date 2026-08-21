@@ -216,8 +216,19 @@
                                                 </select>
 
                                             </td>
-                                            <td><input type="text" name="premix[0][kode_premix]"
-                                                    class="form-control form-control-sm text-center"></td>
+                                            <td>
+                                                <select name="premix[0][kode_premix]"
+                                                    class="form-control form-select-sm text-center select2">
+                                                    <option value="">-- Pilih Kode Batch --</option>
+                                                    @foreach ($inspections as $insp)
+                                                        @if ($insp->inspection)
+                                                            <option value="{{ $insp->kode_batch }}">
+                                                                {{ $insp->kode_batch }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                            </td>
                                             <td><input type="number" name="premix[0][berat_premix]" step="0.01"
                                                     class="form-control form-control-sm text-center"></td>
                                             <td><input type="checkbox" name="premix[0][sensori_premix]" value="Oke"
@@ -783,6 +794,20 @@
             // PREMIX
             document.getElementById('tambahBarisPremix')?.addEventListener('click', () => {
 
+                            let optionKodePremix = `
+                    <option value="">-- Pilih Kode Batch --</option>
+                `;
+
+                @foreach ($inspections as $insp)
+                    @if ($insp->inspection)
+                        optionKodePremix += `
+                            <option value="{{ $insp->kode_batch }}">
+                                {{ $insp->kode_batch }}
+                            </option>
+                        `;
+                    @endif
+                @endforeach
+
                             let optionPremix = `
                     <option value="">-- Pilih Premix --</option>
                 `;
@@ -814,12 +839,13 @@
                         </td>
 
                         <td>
-
-                            <input
-                                type="text"
+                            <select
                                 name="premix[${indexPremix}][kode_premix]"
-                                class="form-control form-control-sm text-center">
+                                class="form-control form-select-sm text-center select2">
 
+                                ${optionKodePremix}
+
+                            </select>
                         </td>
 
                         <td>
