@@ -47,12 +47,10 @@ class SuhuController extends Controller
 
         $date = $request->input('date', now()->toDateString());
         $pukul = $request->input('pukul');
-        $shift = $request->input('shift');
 
-        if ($pukul && $shift) {
+        if ($pukul) {
             $existing = Suhu::where('date', $date)
                 ->where('pukul', $pukul)
-                ->where('shift', $shift)
                 ->where('plant', $userPlant)
                 ->first();
 
@@ -86,8 +84,7 @@ class SuhuController extends Controller
             'area_suhus',
             'suhuData',
             'date',
-            'pukul',
-            'shift'
+            'pukul'
         ));
     }
 
@@ -113,7 +110,6 @@ class SuhuController extends Controller
         $existing = Suhu::where('plant', $userPlant)
             ->where('date', $request->date)
             ->where('pukul', $request->pukul)
-            ->where('shift', $request->shift)
             ->first();
 
         $hasil_lama = [];
