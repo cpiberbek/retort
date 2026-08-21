@@ -489,12 +489,25 @@
                                                     </td>
 
                                                     <td>
-                                                        <input
-                                                            type="text"
-                                                            name="premix[{{ $i }}][kode_premix]"
-                                                            value="{{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center"
-                                                            {{ $hasKodePremix ? 'readonly' : '' }}>
+                                                        <select name="premix[{{ $i }}][kode_premix]"
+                                                            class="form-control form-select-sm text-center select2"
+                                                            {{ $hasKodePremix ? 'disabled' : '' }}>
+                                                            <option value="">-- Pilih Kode Batch --</option>
+                                                            @foreach ($inspections as $insp)
+                                                                @if ($insp->inspection)
+                                                                    <option value="{{ $insp->kode_batch }}"
+                                                                        {{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') == $insp->kode_batch ? 'selected' : '' }}>
+                                                                        {{ $insp->kode_batch }}
+                                                                    </option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
+
+                                                        @if ($hasKodePremix)
+                                                            <input type="hidden"
+                                                                name="premix[{{ $i }}][kode_premix]"
+                                                                value="{{ $px['kode_premix'] }}">
+                                                        @endif
                                                     </td>
 
                                                     <td>
@@ -528,17 +541,20 @@
                                             @endforeach
                                         @else
                                             <tr>
-                                                <td>
-                                                    <select name="premix[0][nama_premix]"
-                                                        class="form-control form-select-sm text-center select2" >
-                                                        <option value="">-- Pilih Premix --</option>
-                                                        @foreach ($premixes as $premix)
-                                                            <option value="{{ $premix->nama_premix }}">
-                                                                {{ $premix->nama_premix }}
-                                                            </option>
-                                                        @endforeach
-                                                    </select>
-                                                </td>
+                                                    <td>
+                                                        <select name="premix[{{ $i }}][kode_premix]"
+                                                            class="form-control form-select-sm text-center select2">
+                                                            <option value="">-- Pilih Kode Batch --</option>
+                                                            @foreach ($inspections as $insp)
+                                                                @if ($insp->inspection)
+                                                                    <option value="{{ $insp->kode_batch }}"
+                                                                        {{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') == $insp->kode_batch ? 'selected' : '' }}>
+                                                                        {{ $insp->kode_batch }}
+                                                                    </option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
 
                                                 <td>
                                                     <input type="text"
@@ -1103,10 +1119,18 @@
                             </td>
 
                             <td>
-                                <input
-                                    type="text"
+                                <select
                                     name="premix[${indexPremix}][kode_premix]"
-                                    class="form-control form-control-sm text-center">
+                                    class="form-control form-select-sm text-center select2">
+                                    <option value="">-- Pilih Kode Batch --</option>
+                                    @foreach ($inspections as $insp)
+                                        @if ($insp->inspection)
+                                            <option value="{{ $insp->kode_batch }}">
+                                                {{ $insp->kode_batch }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
                             </td>
 
                             <td>

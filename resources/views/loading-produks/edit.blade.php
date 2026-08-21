@@ -3,46 +3,40 @@
 @section('title', 'Edit Pemeriksaan Loading')
 
 @push('styles')
-{{-- Menambahkan link untuk Bootstrap Icons --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-{{-- 1. Include Select2 CSS --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-{{-- 2. Theme for Select2 to match Bootstrap 5 --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
 <style>
-    /* Mengubah font utama untuk tampilan yang lebih modern */
     body {
         background-color: #f8f9fa;
-        /* Opsional: font yang lebih modern jika Anda memilikinya */
-        /* font-family: 'Inter', sans-serif; */
     }
-    /* Kustomisasi label */
+
     .form-label {
         font-weight: 600;
         color: #495057;
     }
-    /* Kustomisasi input, select, dan textarea */
+
     .form-control, .form-select {
         border-radius: 8px;
     }
 
-    /* Memastikan Select2 sesuai dengan tinggi Bootstrap */
     .select2-container .select2-selection--single {
-        height: calc(2.25rem + 2px); /* Sesuaikan dengan tinggi form-control Anda */
+        height: calc(2.25rem + 2px);
         padding: .375rem .75rem;
         border: 1px solid #ced4da;
     }
+
     .select2-container--bootstrap-5 .select2-selection {
         border-radius: 8px !important;
     }
+
     .select2-container--bootstrap-5.select2-container--focus .select2-selection,
     .select2-container--bootstrap-5.select2-container--open .select2-selection {
         border-color: #86b7fe;
         box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
     }
 
-    /* Style untuk item dinamis */
     .dynamic-item-card {
         background-color: #fdfdfd;
         box-shadow: 0 1px 3px rgba(0,0,0,0.05);
@@ -58,7 +52,6 @@
             <h4 class="mb-1"><i class="bi bi-pencil-square"></i> Edit Pemeriksaan Loading</h4>
             <p class="text-muted mb-4">Perbarui detail formulir pemeriksaan loading di bawah ini.</p>
 
-            {{-- Tampilkan error jika ada --}}
             @if ($errors->any())
                 <div class="alert alert-danger">
                     <strong>Whoops! Ada beberapa masalah dengan input Anda:</strong>
@@ -74,36 +67,34 @@
                 @csrf
                 @method('PUT')
 
-                {{-- CARD INFORMASI UTAMA & KENDARAAN --}}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
                         <strong><i class="bi bi-info-circle-fill"></i> Informasi Utama & Kendaraan</strong>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {{-- Informasi Utama --}}
                             <div class="col-md-4">
                                 <label for="tanggal" class="form-label">Hari/Tanggal <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="tanggal" name="tanggal"
                                        value="{{ old('tanggal', $loadingProduk->tanggal) }}" required>
                             </div>
                             <div class="col-md-4">
-                            <label for="shift" class="form-label">Shift <span class="text-danger">*</span></label>
+                                <label for="shift" class="form-label">Shift <span class="text-danger">*</span></label>
 
-                            @php
-                                $shift = old('shift', $loadingProduk->shift);
-                            @endphp
+                                @php
+                                    $shift = old('shift', $loadingProduk->shift);
+                                @endphp
 
-                            <select class="form-select select2-static" id="shift" name="shift" required>
-                                @if(in_array($shift, ['Pagi', 'Malam']))
-                                    <option value="{{ $shift }}" selected>{{ $shift }}</option>
-                                @endif
+                                <select class="form-select select2-static" id="shift" name="shift" required>
+                                    @if(in_array($shift, ['Pagi', 'Malam']))
+                                        <option value="{{ $shift }}" selected>{{ $shift }}</option>
+                                    @endif
 
-                                <option value="Shift 1" @selected($shift == 'Shift 1')>Shift 1</option>
-                                <option value="Shift 2" @selected($shift == 'Shift 2')>Shift 2</option>
-                                <option value="Shift 3" @selected($shift == 'Shift 3')>Shift 3</option>
-                            </select>
-                        </div>
+                                    <option value="Shift 1" @selected($shift == 'Shift 1')>Shift 1</option>
+                                    <option value="Shift 2" @selected($shift == 'Shift 2')>Shift 2</option>
+                                    <option value="Shift 3" @selected($shift == 'Shift 3')>Shift 3</option>
+                                </select>
+                            </div>
                             <div class="col-md-4">
                                 <label for="jenis_aktivitas" class="form-label">Jenis Aktivitas <span class="text-danger">*</span></label>
                                 <select class="form-select select2-static" id="jenis_aktivitas" name="jenis_aktivitas" required>
@@ -122,10 +113,8 @@
                                        value="{{ old('jam_selesai', $loadingProduk->jam_selesai) }}" required>
                             </div>
 
-                            {{-- Garis Pemisah --}}
                             <div class="col-12"><hr class="my-2"></div>
 
-                            {{-- Informasi Kendaraan --}}
                             <div class="col-md-4">
                                 <label for="no_pol_mobil" class="form-label">No. Pol Mobil <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="no_pol_mobil" name="no_pol_mobil"
@@ -160,14 +149,12 @@
                     </div>
                 </div>
 
-                {{-- CARD KONDISI & KETERANGAN --}}
                 <div class="card mb-4">
                     <div class="card-header">
                         <strong><i class="bi bi-clipboard2-check"></i> Kondisi Mobil & Keterangan</strong>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            {{-- Kondisi Mobil --}}
                             <div class="col-md-6">
                                 <label class="form-label mb-2">Kondisi Mobil (Checklist)</label>
                                 <div class="card p-3">
@@ -184,26 +171,25 @@
                                                 'bebas_oli' => 'Bebas Bekas oli di lantai/dinding',
                                                 'tidak_ada_non_halal' => 'Tidak ada produk non halal',
                                             ];
-                                            // **PERUBAHAN DI SINI:** Ambil dari $loadingProduk->kondisi_mobil
                                             $currentKondisi = old('kondisi_mobil', $loadingProduk->kondisi_mobil ?? []);
                                         @endphp
+
                                         @foreach ($kondisiList as $key => $label)
-                                        <div class="col-md-6">
-                                            <div class="form-check mb-2">
-                                                <input class="form-check-input" type="checkbox"
-                                                       name="kondisi_mobil[]" value="{{ $key }}" id="kondisi_{{ $key }}"
-                                                       @checked(in_array($key, $currentKondisi))>
-                                                <label class="form-check-label" for="kondisi_{{ $key }}">
-                                                    {{ $label }}
-                                                </label>
+                                            <div class="col-md-6">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox"
+                                                           name="kondisi_mobil[]" value="{{ $key }}" id="kondisi_{{ $key }}"
+                                                           @checked(in_array($key, $currentKondisi))>
+                                                    <label class="form-check-label" for="kondisi_{{ $key }}">
+                                                        {{ $label }}
+                                                    </label>
+                                                </div>
                                             </div>
-                                        </div>
                                         @endforeach
                                     </div>
                                 </div>
                             </div>
 
-                            {{-- Keterangan & PIC --}}
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="keterangan_total" class="form-label">Keterangan Total (Varian & Jumlah)</label>
@@ -232,7 +218,6 @@
                     </div>
                 </div>
 
-                {{-- CARD DETAIL ITEM (DINAMIS) --}}
                 <div class="card mb-4">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
@@ -241,9 +226,7 @@
                         </div>
                     </div>
                     <div class="card-body">
-                        <div id="details-container">
-                            {{-- Item dinamis akan ditambahkan di sini oleh JS --}}
-                        </div>
+                        <div id="details-container"></div>
                         <div class="card border-secondary mt-3">
                             <div class="card-header bg-success text-white">
                                 <strong>Jumlah Total Item Produk</strong><br>
@@ -256,7 +239,6 @@
                     </div>
                 </div>
 
-                {{-- Tombol Aksi --}}
                 <div class="d-flex justify-content-between mt-4">
                     <button type="submit" class="btn btn-warning btn-lg"><i class="bi bi-check-circle"></i> Update Data</button>
                     <a href="{{ route('loading-produks.index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-arrow-left"></i> Batal</a>
@@ -269,17 +251,14 @@
 @endsection
 
 @push('scripts')
-{{-- 1. Include jQuery (Select2 depends on it) --}}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
-{{-- 2. Include Select2 JS --}}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    // 3. Initialize Select2 untuk dropdown statis
     $(document).ready(function() {
         $('.select2-static').select2({
             theme: "bootstrap-5",
@@ -289,9 +268,7 @@
         });
     });
 
-    // 4. Script untuk form dinamis
     document.addEventListener('DOMContentLoaded', function() {
-
         const container = document.getElementById('details-container');
         const addBtn = document.getElementById('add-detail-btn');
         let detailIndex = 0;
@@ -337,33 +314,33 @@
         }
 
         function hitungExpired(kode) {
-            kode = kode.toUpperCase();
+            kode = (kode || '').toUpperCase();
 
             const tahunKode = {
-                'O': 2024,'P': 2025,'Q': 2026,'R': 2027,'S': 2028,'T': 2029,
-                'U': 2030,'V': 2031,'W': 2032,'X': 2033,'Y': 2034,'Z': 2035
+                'O': 2024, 'P': 2025, 'Q': 2026, 'R': 2027, 'S': 2028,
+                'T': 2029, 'U': 2030, 'V': 2031, 'W': 2032, 'X': 2033,
+                'Y': 2034, 'Z': 2035
             };
 
             const bulanKode = {
-                'A': 1,'B': 2,'C': 3,'D': 4,'E': 5,'F': 6,
-                'G': 7,'H': 8,'I': 9,'J': 10,'K': 11,'L': 12
+                'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6,
+                'G': 7, 'H': 8, 'I': 9, 'J': 10, 'K': 11, 'L': 12
             };
 
-            const format = kode.substring(0,4);
+            const format = kode.substring(0, 4);
 
             if (!/^[A-Z]{2}\d{2}$/.test(format)) return null;
 
             const tahun = tahunKode[format[0]];
             const bulan = bulanKode[format[1]];
-            const hari = parseInt(format.substring(2,4));
+            const hari = parseInt(format.substring(2, 4));
 
             if (!tahun || !bulan || !hari) return null;
 
             let date = new Date(tahun, bulan - 1, hari);
-
             date.setMonth(date.getMonth() + 7);
 
-            return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
         }
 
         function reindexDetails() {
@@ -380,14 +357,21 @@
             detailIndex = cards.length;
         }
 
-        /**
-         * Fungsi untuk merender form detail, bisa dengan data (untuk old()) atau kosong
-         */
+        function setBatchExpired(kode, expiredInput, warning) {
+            const expired = hitungExpired(kode);
+
+            if (expired) {
+                expiredInput.val(expired);
+                warning.addClass('d-none');
+            } else {
+                expiredInput.val('');
+                warning.removeClass('d-none');
+            }
+        }
+
         function renderDetailForm(data = null) {
             const i = detailIndex;
             const uuid = data?.uuid || '';
-
-            // Siapkan nilai default atau dari 'old' data
             const nama_produk = data?.nama_produk || '';
             const kode_produksi = data?.kode_produksi || '';
             const kode_expired = data?.kode_expired || '';
@@ -416,17 +400,40 @@
                             @endforeach
                         </select>
                     </div>
+
                     <div class="col-md-2">
                         <label class="form-label">Kode Batch <span class="text-danger">*</span></label>
-                        <select name="details[${i}][kode_produksi]" class="form-control var-batch-select" required>
-                            <option value="">Pilih Varian Terlebih Dahulu</option>
-                        </select>
+
+                        <div class="existing-batch-mode">
+                            <select name="details[${i}][kode_produksi]" class="form-control var-batch-select" required>
+                                <option value="">Pilih Varian Terlebih Dahulu</option>
+                            </select>
+
+                            <button type="button" class="btn btn-primary btn-sm mt-1 switch-to-manual">
+                                Input Kode Batch Manual
+                            </button>
+                        </div>
+
+                        <div class="manual-batch-mode d-none">
+                            <input type="text"
+                                name="details[${i}][kode_produksi]"
+                                class="form-control var-batch-manual"
+                                placeholder="Ketik Kode Batch"
+                                disabled
+                                oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '')">
+
+                            <button type="button" class="btn btn-info btn-sm mt-1 switch-to-existing text-white">
+                                Input Kode Batch Existing
+                            </button>
+                        </div>
                     </div>
+
                     <div class="col-md-2">
                         <label class="form-label">Kode Expired</label>
                         <input type="date" name="details[${i}][kode_expired]" class="form-control expired-date" value="${kode_expired}" required>
                         <small class="text-primary exp-warning d-none">Sesuaikan kode produksi manual</small>
                     </div>
+
                     <div class="col-md-1">
                         <label class="form-label">Jumlah <span class="text-danger">*</span></label>
                         <input type="number" name="details[${i}][jumlah]" class="form-control" value="${jumlah}" min="1" required>
@@ -442,6 +449,7 @@
                             <option value="box" ${satuan === 'box' ? 'selected' : ''}>Box</option>
                         </select>
                     </div>
+
                     <div class="col-md-3">
                         <label class="form-label">Keterangan</label>
                         <input type="text" name="details[${i}][keterangan]" class="form-control" value="${keterangan}">
@@ -457,12 +465,14 @@
 
             container.appendChild(newDetail);
 
-            let produkSelect = $(newDetail).find('.var-produk-select');
-            let batchSelect = $(newDetail).find('.var-batch-select');
-            let expiredInput = $(newDetail).find('.expired-date');
-            let warning = $(newDetail).find('.exp-warning');
+            const produkSelect = $(newDetail).find('.var-produk-select');
+            const batchSelect = $(newDetail).find('.var-batch-select');
+            const batchManual = $(newDetail).find('.var-batch-manual');
+            const expiredInput = $(newDetail).find('.expired-date');
+            const warning = $(newDetail).find('.exp-warning');
+            const existingMode = $(newDetail).find('.existing-batch-mode');
+            const manualMode = $(newDetail).find('.manual-batch-mode');
 
-            // Initialize produk as Select2 (with search)
             produkSelect.select2({
                 theme: "bootstrap-5",
                 width: '100%',
@@ -470,53 +480,92 @@
                 allowClear: true
             });
 
-            // Initialize batch as Select2 with dynamic AJAX
             batchSelect.select2({
                 theme: "bootstrap-5",
                 width: '100%',
                 placeholder: "-- Pilih Kode Batch --",
                 allowClear: true,
                 ajax: {
-                    url: function () {
-                        let produkValue = produkSelect.val();
+                    url: function() {
+                        const produkValue = produkSelect.val();
+
                         if (!produkValue) return '';
+
                         return "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue);
                     },
                     dataType: 'json',
                     delay: 250,
-                    data: function (params) {
+                    data: function(params) {
                         return { q: params.term };
                     },
-                    processResults: function (data) {
+                    processResults: function(data) {
                         return { results: data };
                     },
                     cache: true
                 }
             });
 
-            // Set old batch value if exists
+            function setExistingMode() {
+                batchManual.val('');
+                batchManual.prop('disabled', true);
+                batchManual.prop('required', false);
+
+                existingMode.removeClass('d-none');
+                manualMode.addClass('d-none');
+
+                batchSelect.prop('disabled', !produkSelect.val());
+                batchSelect.prop('required', true);
+            }
+
+            function setManualMode(value = '') {
+                batchSelect.val(null).trigger('change');
+                batchSelect.prop('disabled', true);
+                batchSelect.prop('required', false);
+
+                batchManual.val(value);
+                batchManual.prop('disabled', false);
+                batchManual.prop('required', true);
+
+                existingMode.addClass('d-none');
+                manualMode.removeClass('d-none');
+            }
+
+            newDetail.querySelector('.switch-to-manual').addEventListener('click', function() {
+                setManualMode();
+                updateTotalItem();
+            });
+
+            newDetail.querySelector('.switch-to-existing').addEventListener('click', function() {
+                setExistingMode();
+                updateTotalItem();
+            });
+
+            setExistingMode();
+
             if (kode_produksi) {
                 const isUuid = /^[0-9a-f-]{36}$/i.test(kode_produksi);
 
                 if (isUuid) {
                     $.get("{{ url('/lookup/batch-packing-by-uuid') }}/" + kode_produksi, function(res) {
-                        let newOption = new Option(res.text, res.id, true, true);
+                        const newOption = new Option(res.text, res.id, true, true);
                         batchSelect.append(newOption).trigger('change');
+                    }).fail(function() {
+                        setManualMode(kode_produksi);
                     });
                 } else {
-                    let newOption = new Option(kode_produksi, kode_produksi, true, true);
-                    batchSelect.append(newOption).trigger('change');
+                    setManualMode(kode_produksi);
                 }
             }
 
-            // Set initial disabled state
-            if (!produkSelect.val()) {
-                batchSelect.prop('disabled', true);
-            }
-
-            // When produk changes, clear batch and enable/disable
             produkSelect.on('change', function() {
-                let currentVal = $(this).val();
+                const currentVal = $(this).val();
+
+                if (!manualMode.hasClass('d-none')) {
+                    batchManual.val('');
+                    updateTotalItem();
+                    return;
+                }
+
                 batchSelect.val(null).trigger('change');
                 batchSelect.prop('disabled', !currentVal);
 
@@ -524,17 +573,12 @@
             });
 
             batchSelect.on('select2:select', function() {
-                let kode = $(this).find(':selected').text();
+                const kode = $(this).find(':selected').text();
+                setBatchExpired(kode, expiredInput, warning);
+            });
 
-                let expired = hitungExpired(kode);
-
-                if (expired) {
-                    expiredInput.val(expired);
-                    warning.addClass('d-none');
-                } else {
-                    expiredInput.val('');
-                    warning.removeClass('d-none');
-                }
+            batchManual.on('input', function() {
+                setBatchExpired($(this).val(), expiredInput, warning);
             });
 
             newDetail.querySelector('input[name$="[jumlah]"]').addEventListener('input', updateTotalItem);
@@ -543,10 +587,9 @@
             detailIndex++;
         }
 
-        // --- Event Listener untuk Tombol "Tambah Item" + copy first index ---
         if (addBtn) {
             addBtn.addEventListener('click', () => {
-                let firstProduk = $('.var-produk-select').first().val();
+                const firstProduk = $('.var-produk-select').first().val();
 
                 renderDetailForm({
                     nama_produk: firstProduk || ''
@@ -557,11 +600,10 @@
             });
         }
 
-        // --- Event Listener untuk Tombol Hapus ---
         if (container) {
             container.addEventListener('click', function(e) {
-                // Logika Tombol Hapus
                 const removeBtn = e.target.closest('.remove-detail-btn');
+
                 if (removeBtn) {
                     removeBtn.closest('.dynamic-item-card').remove();
                     reindexDetails();
@@ -570,7 +612,6 @@
             });
         }
 
-        // --- Render data 'old' jika ada (setelah validasi gagal) ---
         const existingDetails = @json(old('details', $loadingProduk->details ?? []));
 
         if (existingDetails.length > 0) {
@@ -583,7 +624,6 @@
 
         reindexDetails();
         updateTotalItem();
-
     });
 </script>
 @endpush

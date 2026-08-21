@@ -94,45 +94,170 @@
                     </div>
 
                     {{-- ===================== ITEM SORTIR ===================== --}}
-                    <div class="card mb-4">
-                        <div class="card-header bg-info text-white">
-                            <strong>Item Sortir</strong>
-                        </div>
-                        <div class="card-body">
-                            <div class="row mb-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Jumlah</label>
-                                    <input type="number" name="jumlah" id="jumlah" class="form-control" required
-                                        step="0.01" min="0">
-                                </div>
-                            </div>
+                  <div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <strong>Item Sortir</strong>
+    </div>
+    <div class="card-body">
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <label class="form-label">Jumlah</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="jumlah">(-)</button>
+                    <input type="text" name="jumlah" id="jumlah" class="form-control" required>
+                </div>
+            </div>
+        </div>
 
-                            <div class="row mb-3">
-                                <div class="col-md-3"><label class="form-label">Jamur</label><input type="number" name="jamur" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Lendir</label><input type="number" name="lendir" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Klip Tajam</label><input type="number" name="klip_tajam" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Pin Hole</label><input type="number" name="pin_hole" class="form-control" step="0.01" min="0"></div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-md-3"><label class="form-label">Air Trap PVDC</label><input type="number" name="air_trap_pvdc" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Air Trap Produk</label><input type="number" name="air_trap_produk" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Keriput</label><input type="number" name="keriput" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Bengkok</label><input type="number" name="bengkok" class="form-control" step="0.01" min="0"></div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-md-3"><label class="form-label">Non Kode</label><input type="number" name="non_kode" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Over Lap</label><input type="number" name="over_lap" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Kecil</label><input type="number" name="kecil" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Terjepit</label><input type="number" name="terjepit" class="form-control" step="0.01" min="0"></div>
-                            </div>
-                            <div class="row mb-3">
-                                <div class="col-md-3"><label class="form-label">Double Klip</label><input type="number" name="double_klip" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Seal Halus/Lepas</label><input type="number" name="seal_halus" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Basah</label><input type="number" name="basah" class="form-control" step="0.01" min="0"></div>
-                                <div class="col-md-3"><label class="form-label">Dll</label><input type="number" name="dll" class="form-control" step="0.01" min="0"></div>
-                            </div>
-                        </div>
-                    </div>
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Jamur</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="jamur">(-)</button>
+                    <input type="text" name="jamur" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Lendir</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="lendir">(-)</button>
+                    <input type="text" name="lendir" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Klip Tajam</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="klip_tajam">(-)</button>
+                    <input type="text" name="klip_tajam" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Pin Hole</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="pin_hole">(-)</button>
+                    <input type="text" name="pin_hole" class="form-control sortir-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Air Trap PVDC</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="air_trap_pvdc">(-)</button>
+                    <input type="text" name="air_trap_pvdc" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Air Trap Produk</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="air_trap_produk">(-)</button>
+                    <input type="text" name="air_trap_produk" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Keriput</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="keriput">(-)</button>
+                    <input type="text" name="keriput" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Bengkok</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="bengkok">(-)</button>
+                    <input type="text" name="bengkok" class="form-control sortir-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Non Kode</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="non_kode">(-)</button>
+                    <input type="text" name="non_kode" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Over Lap</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="over_lap">(-)</button>
+                    <input type="text" name="over_lap" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Kecil</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="kecil">(-)</button>
+                    <input type="text" name="kecil" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Terjepit</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="terjepit">(-)</button>
+                    <input type="text" name="terjepit" class="form-control sortir-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-3">
+            <div class="col-md-3">
+                <label class="form-label">Double Klip</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="double_klip">(-)</button>
+                    <input type="text" name="double_klip" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Seal Halus/Lepas</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="seal_halus">(-)</button>
+                    <input type="text" name="seal_halus" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Basah</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="basah">(-)</button>
+                    <input type="text" name="basah" class="form-control sortir-input">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Dll</label>
+                <div class="input-group">
+                    <button type="button" class="btn btn-outline-secondary toggle-minus" data-target="dll">(-)</button>
+                    <input type="text" name="dll" class="form-control sortir-input">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.querySelectorAll('.sortir-input, #jumlah').forEach(input => {
+    input.addEventListener('input', function () {
+        if (this.value === '-') {
+            return;
+        }
+
+        this.value = this.value.replace(/[^0-9.]/g, '');
+    });
+});
+
+document.querySelectorAll('.toggle-minus').forEach(button => {
+    button.addEventListener('click', function () {
+        const input = document.querySelector(`[name="${this.dataset.target}"]`);
+
+        if (input.value === '-') {
+            input.value = '';
+        } else {
+            input.value = '-';
+        }
+    });
+});
+</script>
 
                     {{-- ===================== CATATAN ===================== --}}
                     <div class="card mb-4">

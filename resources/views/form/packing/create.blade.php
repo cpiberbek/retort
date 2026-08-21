@@ -134,7 +134,7 @@
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-bold">Jumlah Produk</label>
+                                <label class="form-label fw-bold">Jumlah Produk per Pack/Toples</label>
                                 <input type="number" name="jumlah_produk" class="form-control" value="{{ old('jumlah_produk') }}" min="0">
                             </div>
                         </div>

@@ -418,10 +418,18 @@
                                                     </td>
 
                                                     <td>
-                                                        <input type="text"
-                                                            name="premix[{{ $i }}][kode_premix]"
-                                                            value="{{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') }}"
-                                                            class="form-control form-control-sm text-center">
+                                                        <select name="premix[{{ $i }}][kode_premix]"
+                                                            class="form-control form-select-sm text-center select2">
+                                                            <option value="">-- Pilih Kode Batch --</option>
+                                                            @foreach ($inspections as $insp)
+                                                                @if ($insp->inspection)
+                                                                    <option value="{{ $insp->kode_batch }}"
+                                                                        {{ old("premix.$i.kode_premix", $px['kode_premix'] ?? '') == $insp->kode_batch ? 'selected' : '' }}>
+                                                                        {{ $insp->kode_batch }}
+                                                                    </option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
                                                     </td>
 
                                                     <td>
@@ -462,9 +470,17 @@
                                                 </td>
 
                                                 <td>
-                                                    <input type="text"
-                                                        name="premix[0][kode_premix]"
-                                                        class="form-control form-control-sm text-center">
+                                                    <select name="premix[0][kode_premix]"
+                                                        class="form-control form-select-sm text-center select2">
+                                                        <option value="">-- Pilih Kode Batch --</option>
+                                                        @foreach ($inspections as $insp)
+                                                            @if ($insp->inspection)
+                                                                <option value="{{ $insp->kode_batch }}">
+                                                                    {{ $insp->kode_batch }}
+                                                                </option>
+                                                            @endif
+                                                        @endforeach
+                                                    </select>
                                                 </td>
 
                                                 <td>
@@ -1083,10 +1099,18 @@
                             </td>
 
                             <td>
-                                <input
-                                    type="text"
+                                <select
                                     name="premix[${indexPremix}][kode_premix]"
-                                    class="form-control form-control-sm text-center">
+                                    class="form-control form-select-sm text-center select2">
+                                    <option value="">-- Pilih Kode Batch --</option>
+                                    @foreach ($inspections as $insp)
+                                        @if ($insp->inspection)
+                                            <option value="{{ $insp->kode_batch }}">
+                                                {{ $insp->kode_batch }}
+                                            </option>
+                                        @endif
+                                    @endforeach
+                                </select>
                             </td>
 
                             <td>
