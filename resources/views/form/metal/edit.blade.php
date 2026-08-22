@@ -75,20 +75,34 @@
                    </div>
                    <br>
                    <hr>
-                   <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label class="form-label">Nama Engineer</label>
-                        <select name="nama_engineer" class="form-control" required>
-                            <option value="">-- Pilih Engineer --</option>
-                            @foreach($engineers as $eng)
-                            <option value="{{ $eng->nama_karyawan }}"
-                                {{ $metal->nama_engineer == $eng->nama_karyawan ? 'selected' : '' }}>
-                                {{ $eng->nama_karyawan }}
-                            </option>
-                            @endforeach
-                        </select>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Nama Engineer</label>
+                            <select name="nama_engineer" class="form-control" required>
+                                <option value="">-- Pilih Engineer --</option>
+                                @foreach($engineers as $eng)
+                                <option value="{{ $eng->nama_karyawan }}"
+                                    {{ $metal->nama_engineer == $eng->nama_karyawan ? 'selected' : '' }}>
+                                    {{ $eng->nama_karyawan }}
+                                </option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                </div>
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <label class="form-label">Produksi</label>
+                            <select name="selected_produksi" class="form-control" required>
+                                <option value="">-- Pilih Produksi --</option>
+                                @foreach($produksi as $prod)
+                                    <option value="{{ $prod->uuid }}"
+                                        {{ $metal->nama_produksi == $prod->nama_karyawan ? 'selected' : '' }}>
+                                        {{ $prod->nama_karyawan }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
             </div>
         </div>
 

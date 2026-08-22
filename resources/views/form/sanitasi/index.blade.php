@@ -208,7 +208,14 @@
                                                 <tr>
                                                     <td>{{ $bagian }}</td>
                                                     <td>{{ $item['waktu'] ?? '-' }}</td>
-                                                    <td>{{ $kondisiMapping[$item['kondisi'] ?? ''] ?? '-' }}</td>
+                                                    <td>
+                                                        @php
+                                                            $kondisi = $item['kondisi'] ?? [];
+                                                            $kondisi = is_array($kondisi) ? $kondisi : [$kondisi];
+                                                        @endphp
+
+                                                        {{ collect($kondisi)->map(fn($value) => $kondisiMapping[$value] ?? $value)->join(', ') ?: '-' }}
+                                                    </td>
                                                     <td>{{ $item['keterangan'] ?? '-' }}</td>
                                                     <td>{{ $item['tindakan'] ?? '-' }}</td>
                                                     <td>{{ $item['waktu_koreksi'] ?? '-' }}</td>

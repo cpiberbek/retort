@@ -6,6 +6,7 @@ use App\Models\Metal;
 use App\Models\Operator;
 use App\Models\List_form;
 use App\Models\Plant;
+use App\Models\Produksi;
 use Carbon\Carbon;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -45,11 +46,15 @@ class MetalController extends Controller
         $userPlant = Auth::user()->plant;
 
         $engineers = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Engineer')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Engineer')
+            ->orderBy('nama_karyawan')
+            ->get();
 
-        return view('form.metal.create', compact('engineers'));
+        $produksi = Produksi::where('plant', $userPlant)
+            ->orderBy('nama_karyawan')
+            ->get();
+
+        return view('form.metal.create', compact('engineers', 'produksi'));
     }
 
     public function store(Request $request)
@@ -63,9 +68,10 @@ class MetalController extends Controller
 
         $username  = Auth::user()->username ?? 'None';
         $userPlant = Auth::user()->plant;
-        $nama_produksi = session()->has('selected_produksi')
-        ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
-        : 'Produksi RTT';
+        $nama_produksi = \App\Models\Produksi::where(
+            'uuid',
+            $request->selected_produksi
+        )->value('nama_karyawan') ?? 'Produksi RTT';
 
         $data = [
             'date'  => $request->date,
@@ -96,11 +102,15 @@ class MetalController extends Controller
         $userPlant = Auth::user()->plant;
 
         $engineers = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Engineer')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Engineer')
+            ->orderBy('nama_karyawan')
+            ->get();
 
-        return view('form.metal.update', compact('metal', 'engineers'));
+        $produksi = Produksi::where('plant', $userPlant)
+            ->orderBy('nama_karyawan')
+            ->get();
+
+        return view('form.metal.update', compact('metal', 'engineers', 'produksi'));
     }
 
     public function update_qc(Request $request, string $uuid)
@@ -119,9 +129,10 @@ class MetalController extends Controller
         ]);
 
         $username_updated = Auth::user()->username ?? 'None';
-        $nama_produksi = session()->has('selected_produksi')
-        ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
-        : 'Produksi RTT';
+        $nama_produksi = Produksi::where(
+            'uuid',
+            $request->selected_produksi
+        )->value('nama_karyawan') ?? 'Produksi RTT';
 
         $updateData = [
             'date'  => $request->date,
@@ -134,6 +145,7 @@ class MetalController extends Controller
             'nama_engineer'       => $request->nama_engineer,
             'nama_produksi'    => $nama_produksi,
             'tgl_update_produksi' => now()->addHour(),
+            'nama_produksi' => $nama_produksi,
         ];
 
         $metal->update($updateData);
@@ -148,11 +160,15 @@ class MetalController extends Controller
         $userPlant = Auth::user()->plant;
 
         $engineers = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Engineer')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Engineer')
+            ->orderBy('nama_karyawan')
+            ->get();
 
-        return view('form.metal.edit', compact('metal', 'engineers'));
+        $produksi = Produksi::where('plant', $userPlant)
+            ->orderBy('nama_karyawan')
+            ->get();
+
+        return view('form.metal.edit', compact('metal', 'engineers', 'produksi'));
     }
 
     public function edit_spv(Request $request, string $uuid)
@@ -170,6 +186,12 @@ class MetalController extends Controller
             'nama_engineer' => 'required|string',
         ]);
 
+        $nama_produksi = Produksi::where(
+            'uuid',
+            $request->selected_produksi
+        )->value('nama_karyawan') ?? 'Produksi RTT';
+
+
         $updateData = [
             'date'  => $request->date,
             'pukul' => $request->pukul,
@@ -178,6 +200,7 @@ class MetalController extends Controller
             'sus'   => $request->sus,
             'catatan'          => $request->catatan,
             'nama_engineer'       => $request->nama_engineer,
+            'nama_produksi' => $nama_produksi,
         ];
 
         $metal->update($updateData);

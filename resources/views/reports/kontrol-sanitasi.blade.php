@@ -100,7 +100,7 @@
                 '5' => 'Karat',
                 '6' => 'Sampah',
                 '7' => 'Retak/Pecah',
-                '8' => 'Sisa Varian',
+                '8' => 'Sisa Produk',
                 '9' => 'Sisa Adonan',
                 '10' => 'Berjamur',
                 '11' => 'Lain-lain'
@@ -109,7 +109,7 @@
 
         {{-- AREA HEADER --}}
         <tr class="section">
-            <td colspan="9">{{ $index + 1 }}. AREA: {{ $sanitasi->area }} </td>
+            <td colspan="9">{{ $index + 1 }}. AREA: {{ ($areaData = \App\Models\Area_sanitasi::where('uuid', $sanitasi->area)->first()) ? $areaData->area . ' - ' . $areaData->sub_area : $sanitasi->area }} </td>
         </tr>
 
         {{-- AREA ITEMS --}}
@@ -117,7 +117,9 @@
         <tr>
             <td>• {{ $bagian }}</td>
             <td class="center">{{ $item['waktu'] ?? '-' }}</td>
-            <td class="center">{{ $kondisiMapping[$item['kondisi']] ?? '-' }}</td>
+            <td class="center">
+                {{ collect($item['kondisi'] ?? [])->map(fn($value) => $kondisiMapping[$value] ?? $value)->join(', ') ?: '-' }}
+            </td>
             <td class="center">{{ $item['keterangan'] ?? '-' }}</td>
             <td class="center">{{ $item['tindakan'] ?? '-' }}</td>
             <td class="center">{{ $item['waktu_koreksi'] ?? '-' }}</td>
@@ -155,7 +157,7 @@
         <td width="50%">
             6 : Sampah<br>
             7 : Retak / Pecah<br>
-            8 : Sisa Varian<br>
+            8 : Sisa Produk<br>
             9 : Sisa Adonan<br>
             10 : Berjamur<br>
             11 : Lain-lain

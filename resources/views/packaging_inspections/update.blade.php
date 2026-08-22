@@ -224,7 +224,7 @@
             // Tombol Hapus: Hanya muncul jika item ini BARU (belum punya ID di database)
             const showDeleteBtn = !data?.id ? 
                 `<button type="button" class="btn btn-danger btn-sm remove-detail-btn"><i class="bi bi-trash"></i> Hapus</button>` : 
-                `<span class="badge bg-secondary">Tersimpan</span>`;
+                `<span class="badge bg-white text-dark border">Tersimpan</span>`;
 
             newDetail.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
@@ -239,7 +239,16 @@
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Supplier</label>
-                        <input type="text" name="items[${i}][supplier]" class="form-control" value="${supplier}" ${getReadonlyAttr(supplier)} required>
+                        <select name="items[${i}][supplier]" class="form-control select2" ${isLocked(supplier) ? 'disabled' : ''} required>
+                            <option value="">-- Pilih Supplier --</option>
+                            @foreach ($suppliers as $supplierItem)
+                                <option value="{{ $supplierItem->nama_supplier }}"
+                                    ${supplier === @json($supplierItem->nama_supplier) ? 'selected' : ''}>
+                                    {{ $supplierItem->nama_supplier }}
+                                </option>
+                            @endforeach
+                        </select>
+                        ${isLocked(supplier) ? `<input type="hidden" name="items[${i}][supplier]" value="${supplier}">` : ''}
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Lot Batch</label>
@@ -291,8 +300,11 @@
                                 const isChecked = vehicle_cond?.split(',').includes(c);
                                 return `
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" value="${c}" id="vehicle_${i}_${index}" ${isChecked ? 'checked' : ''} disabled>
-                                    ${isChecked ? `<input type="hidden" name="items[${i}][vehicle_condition][]" value="${c}">` : ''}
+                                    <input class="form-check-input" type="checkbox"
+                                        name="items[${i}][vehicle_condition][]"
+                                        value="${c}"
+                                        id="vehicle_${i}_${index}"
+                                        ${isChecked ? 'checked' : ''}>
                                     <label class="form-check-label" for="vehicle_${i}_${index}">${c}</label>
                                 </div>`;
                             }).join('')}

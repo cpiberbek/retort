@@ -21,9 +21,9 @@
             <h2 class="h4">Pemeriksaan Suhu dan RH</h2>
             <div class="btn-group" role="group">
                 @can('can access add button')
-                    <a href="{{ route('suhu.create') }}" class="btn btn-success">
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createSuhuModal">
                         <i class="bi bi-plus-circle"></i> Tambah
-                    </a>
+                    </button>
                 @endcan
                 @can('can access export')
                     <a href="{{ route('suhu.exportPdf', ['date' => request('date')]) }}"
@@ -495,6 +495,87 @@
     </div>
     </div>
 
+    {{-- option modal --}}
+    <div class="modal fade" id="createSuhuModal" tabindex="-1" aria-labelledby="createSuhuModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+
+                <form action="{{ route('suhu.create') }}" method="GET">
+
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createSuhuModalLabel">Buat Data Suhu & RH</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+
+                    <div class="modal-body">
+
+                        <div class="row g-3">
+
+                            <div class="col-md-6">
+                                <label for="create_date" class="form-label">Tanggal</label>
+                                <input type="date"
+                                    name="date"
+                                    id="create_date"
+                                    class="form-control"
+                                    value="{{ now()->toDateString() }}"
+                                    required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="create_pukul" class="form-label">Pukul</label>
+                                <input type="time"
+                                    name="pukul"
+                                    id="create_pukul"
+                                    class="form-control"
+                                    step="3600"
+                                    required>
+                            </div>
+
+                        </div>
+
+                        <div class="text-muted small mt-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Input digunakan untuk menentukan apakah data pemeriksaan sudah tersedia atau perlu dibuat baru.
+                        </div>
+                    </div>
+
+                    <script>
+                        const pukulInput = document.getElementById('create_pukul');
+
+                        pukulInput.addEventListener('input', function () {
+                            if (this.value) {
+                                const hour = this.value.split(':')[0];
+                                this.value = `${hour}:00`;
+                            }
+                        });
+
+                        pukulInput.addEventListener('change', function () {
+                            if (this.value) {
+                                const hour = this.value.split(':')[0];
+                                this.value = `${hour}:00`;
+                            }
+                        });
+                    </script>
+
+                    <div class="modal-footer">
+                        <button type="button"
+                            class="btn btn-secondary"
+                            data-bs-dismiss="modal">
+                            Batal
+                        </button>
+
+                        <button type="submit"
+                            class="btn btn-primary">
+                            Buat Data
+                        </button>
+                    </div>
+
+                </form>
+
+            </div>
+        </div>
+    </div>
+
     {{-- warning modal --}}
     <div class="modal fade" id="warningModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
@@ -514,6 +595,7 @@
         </div>
     </div>
 
+    {{-- js convert --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const exportPdfBtn = document.getElementById('exportPdfBtn');
@@ -534,6 +616,8 @@
             exportExcelBtn?.addEventListener('click', checkExport);
         });
     </script>
+
+
 
     <script>
         // Auto-hide alert setelah 3 detik

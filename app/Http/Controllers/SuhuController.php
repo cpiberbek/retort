@@ -41,15 +41,29 @@ class SuhuController extends Controller
         return view('form.suhu.index', compact('data', 'search', 'date', 'shift', 'area_suhus'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         $userPlant = Auth::user()->plant;
+
+        $date = $request->input('date', now()->toDateString());
+        $pukul = $request->input('pukul');
+
+        if ($pukul) {
+            $existing = Suhu::where('date', $date)
+                ->where('pukul', $pukul)
+                ->where('plant', $userPlant)
+                ->first();
+
+            if ($existing) {
+                return redirect()->route('suhu.update.form', $existing->uuid);
+            }
+        }
+
         $area_suhus = Area_suhu::where('plant', $userPlant)
             ->orderBy('area')
-            ->get(['area', 'standar_min', 'standar_max','rh_min', 'rh_max']);
+            ->get(['area', 'standar_min', 'standar_max', 'rh_min', 'rh_max']);
 
-        $today = now()->toDateString();
-        $existing = Suhu::where('date', $today)
+        $existing = Suhu::where('date', $date)
             ->where('plant', $userPlant)
             ->get();
 
@@ -61,88 +75,146 @@ class SuhuController extends Controller
             foreach ($raw as $item) {
                 $suhuData[$item['area']] = [
                     'suhu' => $item['suhu'] ?? $item['nilai'] ?? null,
-                    'rh'   => $item['rh'] ?? null,
+                    'rh' => $item['rh'] ?? null,
                 ];
             }
         }
 
-        return view('form.suhu.create', compact('area_suhus', 'suhuData'));
+        return view('form.suhu.create', compact(
+            'area_suhus',
+            'suhuData',
+            'date',
+            'pukul'
+        ));
     }
 
     public function store(Request $request)
     {
-        $username   = Auth::user()->username ?? 'User RTM';
-        $userPlant  = Auth::user()->plant;
+        $username = Auth::user()->username ?? 'User RTM';
+        $userPlant = Auth::user()->plant;
 
         $nama_produksi = session()->has('selected_produksi')
             ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
             : 'Produksi RTT';
 
         $request->validate([
-            'date'        => 'required|date',
-            'shift'       => 'required',
-            'pukul'       => 'required',
-            'keterangan'  => 'nullable|string',
-            'catatan'     => 'nullable|string',
-            'hasil_suhu'  => 'nullable|array',
-            'hasil_rh'    => 'nullable|array',
+            'date' => 'required|date',
+            'shift' => 'required',
+            'pukul' => 'required',
+            'keterangan' => 'nullable|string',
+            'catatan' => 'nullable|string',
+            'hasil_suhu' => 'nullable|array',
+            'hasil_rh' => 'nullable|array',
         ]);
 
-        $hasil_suhu = $request->input('hasil_suhu', []);
-        $hasil_rh   = $request->input('hasil_rh', []);
+        $existing = Suhu::where('plant', $userPlant)
+            ->where('date', $request->date)
+            ->where('pukul', $request->pukul)
+            ->first();
 
-        $rhByArea = collect($hasil_rh)
+        $hasil_lama = [];
+
+        if ($existing) {
+            $hasil_lama = is_string($existing->hasil_suhu)
+                ? json_decode($existing->hasil_suhu, true) ?? []
+                : ($existing->hasil_suhu ?? []);
+        }
+
+        $hasil_lama = collect($hasil_lama)
             ->keyBy('area')
             ->toArray();
 
-        $hasil_terstruktur = [];
-
-        foreach ($hasil_suhu as $item) {
-
+        foreach ($request->input('hasil_suhu', []) as $item) {
             $area = $item['area'] ?? '';
 
-            $nilai_suhu_raw = $item['nilai'] ?? '';
-            $nilai_rh_raw   = $rhByArea[$area]['nilai'] ?? '';
+            if ($area === '') {
+                continue;
+            }
 
-            $nilai_suhu = $nilai_suhu_raw === ''
-                ? null
-                : ($nilai_suhu_raw === '-'
+            if (!isset($hasil_lama[$area])) {
+                $hasil_lama[$area] = [
+                    'area' => $area,
+                    'suhu' => null,
+                    'rh' => null,
+                ];
+            }
+
+            if (isset($item['nilai']) && $item['nilai'] !== '') {
+                $nilai = trim((string) $item['nilai']);
+
+                $hasil_lama[$area]['suhu'] = $nilai === '-'
                     ? null
-                    : (float) str_replace(',', '.', $nilai_suhu_raw));
-
-            $nilai_rh = $nilai_rh_raw === ''
-                ? null
-                : ($nilai_rh_raw === '-'
-                    ? null
-                    : (float) str_replace(',', '.', $nilai_rh_raw));
-
-            $hasil_terstruktur[] = [
-                'area' => $area,
-                'suhu' => $nilai_suhu,
-                'rh'   => $nilai_rh,
-            ];
+                    : (float) str_replace(',', '.', $nilai);
+            }
         }
-        // SORT AREA
+
+        foreach ($request->input('hasil_rh', []) as $item) {
+            $area = $item['area'] ?? '';
+
+            if ($area === '') {
+                continue;
+            }
+
+            if (!isset($hasil_lama[$area])) {
+                $hasil_lama[$area] = [
+                    'area' => $area,
+                    'suhu' => null,
+                    'rh' => null,
+                ];
+            }
+
+            if (isset($item['nilai']) && $item['nilai'] !== '') {
+                $nilai = trim((string) $item['nilai']);
+
+                $hasil_lama[$area]['rh'] = $nilai === '-'
+                    ? null
+                    : (float) str_replace(',', '.', $nilai);
+            }
+        }
+
         $area_order = Area_suhu::where('plant', $userPlant)
             ->orderBy('area')
             ->pluck('area')
             ->toArray();
 
-        $hasil_terstruktur = collect($hasil_terstruktur)
-            ->sortBy(fn($item) => array_search($item['area'], $area_order))
+        $hasil_terstruktur = collect($hasil_lama)
+            ->sortBy(function ($item) use ($area_order) {
+                $index = array_search($item['area'], $area_order);
+
+                return $index === false ? PHP_INT_MAX : $index;
+            })
             ->values()
             ->toArray();
 
-        $data = $request->only(['date', 'shift', 'pukul', 'keterangan', 'catatan']);
-        $data['username']            = $username;
-        $data['plant']               = $userPlant;
-        $data['nama_produksi']       = $nama_produksi;
-        $data['status_produksi']     = "1";
-        $data['tgl_update_produksi'] = now()->addHour();
-        $data['status_spv']          = "0";
-        $data['hasil_suhu']          = json_encode($hasil_terstruktur, JSON_UNESCAPED_UNICODE);
+        $data = [
+            'date' => $request->date,
+            'shift' => $request->shift,
+            'pukul' => $request->pukul,
+            'plant' => $userPlant,
+            'hasil_suhu' => json_encode($hasil_terstruktur, JSON_UNESCAPED_UNICODE),
+            'username' => $username,
+            'nama_produksi' => $nama_produksi,
+            'status_produksi' => '1',
+            'tgl_update_produksi' => now()->addHour(),
+            'status_spv' => '0',
+        ];
 
-        Suhu::create($data);
+        if ($existing) {
+            if ($request->input('keterangan') !== null) {
+                $data['keterangan'] = $request->input('keterangan');
+            }
+
+            if ($request->input('catatan') !== null) {
+                $data['catatan'] = $request->input('catatan');
+            }
+
+            $existing->update($data);
+        } else {
+            $data['keterangan'] = $request->input('keterangan');
+            $data['catatan'] = $request->input('catatan');
+
+            Suhu::create($data);
+        }
 
         return redirect()->route('suhu.index')
             ->with('success', 'Pemeriksaan Suhu dan RH berhasil disimpan');
@@ -183,31 +255,52 @@ class SuhuController extends Controller
             'hasil_rh' => 'nullable|array',
         ]);
 
-        $hasil_suhu = collect($request->input('hasil_suhu', []));
-        $hasil_rh = collect($request->input('hasil_rh', []))->keyBy('area');
+        $hasil_suhu_request = collect($request->input('hasil_suhu', []));
+        $hasil_rh_request = collect($request->input('hasil_rh', []))->keyBy('area');
+
+        $hasil_lama = is_string($suhu->hasil_suhu)
+            ? json_decode($suhu->hasil_suhu, true) ?? []
+            : ($suhu->hasil_suhu ?? []);
+
+        $hasil_lama = collect($hasil_lama)->keyBy('area');
 
         $hasil_terstruktur = [];
 
-        foreach ($hasil_suhu as $item) {
-
+        foreach ($hasil_suhu_request as $item) {
             $area = $item['area'] ?? '';
 
-            $nilai_suhu_raw = $item['nilai'] ?? '';
-            $nilai_rh_raw = $hasil_rh[$area]['nilai'] ?? '';
+            $nilai_suhu_raw = $item['nilai'] ?? null;
+            $nilai_rh_raw = $hasil_rh_request[$area]['nilai'] ?? null;
 
-            $nilai_suhu = $nilai_suhu_raw === ''
+            $nilai_suhu = ($nilai_suhu_raw === null || $nilai_suhu_raw === '' || $nilai_suhu_raw === '-')
                 ? null
-                : ($nilai_suhu_raw === '-' ? null : (float) str_replace(',', '.', $nilai_suhu_raw));
+                : (float) str_replace(',', '.', $nilai_suhu_raw);
 
-            $nilai_rh = $nilai_rh_raw === ''
+            $nilai_rh = ($nilai_rh_raw === null || $nilai_rh_raw === '' || $nilai_rh_raw === '-')
                 ? null
-                : ($nilai_rh_raw === '-' ? null : (float) str_replace(',', '.', $nilai_rh_raw));
+                : (float) str_replace(',', '.', $nilai_rh_raw);
+
+            $lama = $hasil_lama->get($area, []);
+
+            if ($nilai_suhu === null) {
+                $nilai_suhu = $lama['suhu'] ?? null;
+            }
+
+            if ($nilai_rh === null) {
+                $nilai_rh = $lama['rh'] ?? null;
+            }
 
             $hasil_terstruktur[] = [
                 'area' => $area,
                 'suhu' => $nilai_suhu,
                 'rh' => $nilai_rh,
             ];
+        }
+
+        foreach ($hasil_lama as $area => $item) {
+            if (!collect($hasil_terstruktur)->contains('area', $area)) {
+                $hasil_terstruktur[] = $item;
+            }
         }
 
         $area_order = Area_suhu::where('plant', $suhu->plant)
@@ -220,14 +313,22 @@ class SuhuController extends Controller
             ->values()
             ->toArray();
 
-        $suhu->update([
+        $data = [
             'date' => $request->date,
             'shift' => $request->shift,
             'pukul' => $request->pukul,
-            'keterangan' => $request->keterangan,
-            'catatan' => $request->catatan,
             'hasil_suhu' => json_encode($hasil_terstruktur, JSON_UNESCAPED_UNICODE),
-        ]);
+        ];
+
+        if ($request->filled('keterangan')) {
+            $data['keterangan'] = $request->keterangan;
+        }
+
+        if ($request->filled('catatan')) {
+            $data['catatan'] = $request->catatan;
+        }
+
+        $suhu->update($data);
 
         return redirect()->route('suhu.index')
             ->with('success', 'Data Pemeriksaan Suhu dan RH berhasil diperbarui');
