@@ -149,13 +149,13 @@
                         <tr>
                             <th>NO.</th>
                             <th>Tanggal</th>
+                            <th>Dibuat Oleh</th>
                             <th>Shift</th>
                             <th>Aktivitas</th>
                             <th>No. Pol Mobil</th>
                             <th>Nama Supir</th>
                             <th>Ekspedisi</th>
                             <th>Status SPV</th> {{-- Kolom Status Baru --}}
-                            <th>Dibuat Oleh</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -169,6 +169,8 @@
                             <td class="text-center align-middle">
                                 {{ \Carbon\Carbon::parse($produk->tanggal)->format('d-m-Y') }}
                             </td>
+                            {{-- Creator --}}
+                            <td class="text-center align-middle">{{ $produk->creator->name ?? 'N/A' }}</td>
 
                             {{-- Data Columns --}}
                             <td class="text-center align-middle">{{ $produk->shift }}</td>
@@ -191,9 +193,6 @@
                                 <span class="badge-status status-pending">-</span>
                                 @endif
                             </td>
-                            
-                            {{-- Creator --}}
-                            <td class="text-center align-middle">{{ $produk->creator->name ?? 'N/A' }}</td>
                             
                             {{-- Aksi --}}
                             <td class="text-center align-middle">

@@ -36,6 +36,10 @@
     .select2-container--bootstrap-5 .select2-selection {
         border-radius: 8px !important;
     }
+
+    .select2-static + .select2-container {
+        width: 100% !important;
+    }
     .select2-container--bootstrap-5.select2-container--focus .select2-selection,
     .select2-container--bootstrap-5.select2-container--open .select2-selection {
         border-color: #86b7fe;
@@ -81,12 +85,17 @@
                     <div class="card-body">
                         <div class="row g-3">
                             {{-- Informasi Utama --}}
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="tanggal" class="form-label">Hari/Tanggal <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="tanggal" name="tanggal"
                                        value="{{ old('tanggal', date('Y-m-d')) }}" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label for="dibuat_oleh" class="form-label">Dibuat Oleh</label>
+                                <input type="text" class="form-control" id="dibuat_oleh"
+                                    value="{{ auth()->user()->name }}" readonly>
+                            </div>
+                            <div class="col-md-3">
                                 <label for="shift" class="form-label">Shift <span class="text-danger">*</span></label>
                                 <select class="form-select select2-static" id="shift" name="shift" required>
                                     <option value="Shift 1" @selected(old('shift') == 'Shift 1')>Shift 1</option>
@@ -94,7 +103,7 @@
                                     <option value="Shift 3" @selected(old('shift') == 'Shift 3')>Shift 3</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="jenis_aktivitas" class="form-label">Jenis Aktivitas <span class="text-danger">*</span></label>
                                 <select class="form-select select2-static" id="jenis_aktivitas" name="jenis_aktivitas" required>
                                     <option value="Loading" @selected(old('jenis_aktivitas') == 'Loading')>Loading</option>

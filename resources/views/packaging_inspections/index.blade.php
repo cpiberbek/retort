@@ -139,6 +139,7 @@
                         <tr>
                             <th width="5%">NO.</th>
                             <th>Tanggal Inspeksi</th>
+                            <th>Dibuat Oleh</th>
                             <th>Jenis Packaging</th>
                             <th>Shift</th>
                             <th>Status SPV</th> {{-- Tambahan Kolom Status --}}
@@ -156,6 +157,11 @@
                             </td>
 
                             {{-- Tanggal --}}
+                            <td class="text-center align-middle">
+                                {{ \App\Models\User::where('uuid', $inspection->created_by)->value('name') ?? '-' }}
+                            </td>
+
+                            {{-- Tipe Pack --}}
                             <td class="text-center align-middle">
                                 {{ $inspection->items->pluck('packaging_type')->filter()->unique()->implode(', ') ?: '-' }}
                             </td>

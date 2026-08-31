@@ -99,11 +99,12 @@
                         <tr>
                             <th>NO.</th>
                             <th>Tanggal Pengambilan</th>
+                            <th>Dibuat Oleh</th>
                             <th>Jenis Sampel</th>
                             <th>Nama Varian</th>
                             <th>Kode Batch</th>
                             <th>Keterangan</th>
-                            <th>QC</th>
+                            {{-- <th>QC</th> --}}
                             <th>SPV</th>
                             <th>Verification</th> {{-- Changed from Action to Verification --}}
                         </tr>
@@ -116,11 +117,12 @@
                         <tr>
                             <td class="text-center">{{ $no++ }}</td>
                             <td>{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }}</td>
+                            <td>{{ $dep->username_updated ?? $dep->username }}</td>
                             <td>{{ $dep->jenis_sampel }}</td>
                             <td>{{ $dep->nama_produk }}</td>
                             <td>{{ $dep->kode_produksi }}</td>
                             <td>{{ $dep->keterangan }}</td>
-                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            {{-- <td class="text-center align-middle">{{ $dep->username }}</td> --}}
 
                             <td class="text-center align-middle">
                                 @if ($dep->status_spv == 0)

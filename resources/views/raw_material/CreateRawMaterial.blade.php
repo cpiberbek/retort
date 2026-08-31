@@ -117,63 +117,69 @@
                             <strong><i class="bi bi-info-circle-fill"></i> Informasi Umum</strong>
                         </div>
                         <div class="card-body">
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label for="setup_kedatangan" class="form-label">Waktu Kedatangan</label>
-                                    <input type="datetime-local"
-                                        class="form-control @error('setup_kedatangan') is-invalid @enderror"
-                                        id="setup_kedatangan" name="setup_kedatangan" value="{{ old('setup_kedatangan') }}"
-                                        required>
-                                    @error('setup_kedatangan')
-                                        <span class="invalid-feedback"
-                                            role="alert"><strong>{{ $message }}</strong></span>
-                                    @enderror
-                                </div>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="dibuat_oleh" class="form-label">Dibuat Oleh</label>
+            <input type="text"
+                class="form-control"
+                id="dibuat_oleh"
+                value="{{ auth()->user()->name }}"
+                readonly>
 
-                                <div class="col-12">
-                                    <label for="bahan_baku" class="form-label">Bahan Baku</label>
-                                    <select class="form-select select2 @error('bahan_baku') is-invalid @enderror"
-                                        id="bahan_baku" name="bahan_baku" required>
-                                        <option></option> {{-- Biarkan kosong untuk placeholder Select2 --}}
+            <label for="setup_kedatangan" class="form-label mt-3">Waktu Kedatangan</label>
+            <input type="datetime-local"
+                class="form-control @error('setup_kedatangan') is-invalid @enderror"
+                id="setup_kedatangan"
+                name="setup_kedatangan"
+                value="{{ old('setup_kedatangan') }}"
+                required>
+            @error('setup_kedatangan')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
 
-                                        {{-- Looping data dari controller --}}
-                                        @foreach ($masterBahanBaku as $bahan)
-                                            <option value="{{ $bahan->nama_bahan_baku }}" data-satuan="{{ $bahan->satuan }}"
-                                                {{ old('bahan_baku') == $bahan->nama_bahan_baku ? 'selected' : '' }}>
+            <label for="bahan_baku" class="form-label mt-3">Bahan Baku</label>
+            <select class="form-select select2 @error('bahan_baku') is-invalid @enderror"
+                id="bahan_baku"
+                name="bahan_baku"
+                required>
+                <option></option>
+                @foreach ($masterBahanBaku as $bahan)
+                    <option value="{{ $bahan->nama_bahan_baku }}"
+                        data-satuan="{{ $bahan->satuan }}"
+                        {{ old('bahan_baku') == $bahan->nama_bahan_baku ? 'selected' : '' }}>
+                        {{ $bahan->nama_bahan_baku }}
+                    </option>
+                @endforeach
+            </select>
+            @error('bahan_baku')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
 
-                                                {{ $bahan->nama_bahan_baku }}
-                                            </option>
-                                        @endforeach
-
-                                    </select>
-                                    @error('bahan_baku')
-                                        <span class="invalid-feedback"
-                                            role="alert"><strong>{{ $message }}</strong></span>
-                                    @enderror
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="supplier" class="form-label">Supplier</label>
-                                    <select class="form-select select2 @error('supplier') is-invalid @enderror"
-                                        id="supplier" name="supplier" required>
-                                        <option></option> {{-- Placeholder Select2 --}}
-
-                                        {{-- Looping data supplier dari controller --}}
-                                        @foreach ($suppliers as $sup)
-                                            {{-- Gunakan old('supplier', $inspection->supplier ?? '') agar support Create & Edit --}}
-                                            <option value="{{ $sup->nama_supplier }}"
-                                                {{ old('supplier', $inspection->supplier ?? '') == $sup->nama_supplier ? 'selected' : '' }}>
-                                                {{ $sup->nama_supplier }}
-                                            </option>
-                                        @endforeach
-
-                                    </select>
-                                    @error('supplier')
-                                        <span class="invalid-feedback"
-                                            role="alert"><strong>{{ $message }}</strong></span>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
+            <label for="supplier" class="form-label mt-3">Supplier</label>
+            <select class="form-select select2 @error('supplier') is-invalid @enderror"
+                id="supplier"
+                name="supplier"
+                required>
+                <option></option>
+                @foreach ($suppliers as $sup)
+                    <option value="{{ $sup->nama_supplier }}"
+                        {{ old('supplier', $inspection->supplier ?? '') == $sup->nama_supplier ? 'selected' : '' }}>
+                        {{ $sup->nama_supplier }}
+                    </option>
+                @endforeach
+            </select>
+            @error('supplier')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+    </div>
+</div>
                     </div>
 
                     {{-- CARD DETAIL PRODUK --}}

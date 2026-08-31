@@ -56,13 +56,33 @@
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label for="inspection_date" class="form-label">Hari/Tanggal</label>
-                                <input type="date" class="form-control" id="inspection_date" name="inspection_date" value="{{ old('inspection_date', date('Y-m-d')) }}" required>
+                                <input type="date"
+                                    class="form-control"
+                                    id="inspection_date"
+                                    name="inspection_date"
+                                    value="{{ old('inspection_date', date('Y-m-d')) }}"
+                                    required>
                             </div>
-                            <div class="col-md-6">
+
+                            <div class="col-md-4">
+                                <label for="qc_inspector" class="form-label">QC Inspector</label>
+                                <input type="text"
+                                    class="form-control"
+                                    id="qc_inspector"
+                                    value="{{ auth()->user()->name }}"
+                                    readonly>
+                            </div>
+
+                            <div class="col-md-4">
                                 <label for="shift" class="form-label">Shift</label>
-                                <input type="text" class="form-control" id="shift" name="shift" value="{{ old('shift') }}" required>
+                                <input type="text"
+                                    class="form-control"
+                                    id="shift"
+                                    name="shift"
+                                    value="{{ old('shift') }}"
+                                    required>
                             </div>
                         </div>
                     </div>

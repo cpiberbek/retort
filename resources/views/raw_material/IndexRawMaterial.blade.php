@@ -145,6 +145,7 @@
                         <tr>
                             <th>NO.</th>
                             <th>Tgl Datang</th>
+                            <th>Dibuat Oleh</th>
                             <th>Bahan Baku</th>
                             <th>Supplier</th>
                             <th>No. DO / PO</th>
@@ -165,7 +166,9 @@
                                     {{ $item->setup_kedatangan ? \Carbon\Carbon::parse($item->setup_kedatangan)->format('H:i') : '' }}
                                 </span>
                             </td>
-
+                            <td class="align-middle fw-bold">
+                                {{ \App\Models\User::where('uuid', $item->created_by_uuid)->value('name') ?? '-' }}
+                            </td>
                             <td class="align-middle fw-bold">{{ $item->bahan_baku }}</td>
                             <td class="align-middle">{{ Str::limit($item->supplier, 25) }}</td>
                             <td class="text-center align-middle">{{ $item->do_po }}</td>
