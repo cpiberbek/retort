@@ -522,14 +522,11 @@
 
 
 <style>
-    /* --- Kustomisasi Sidebar Menjadi Merah Cerah & Elegan --- */
     #accordionSidebar {
-        /* Menggunakan !important untuk menimpa warna bawaan template tanpa mengubah HTML */
         background: linear-gradient(180deg, #d32f2f 0%, #9e0202 100%) !important;
         box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2) !important;
     }
 
-    /* Efek Hover bergeser pada menu utama */
     #accordionSidebar .nav-item .nav-link {
         transition: all 0.3s ease;
     }
@@ -539,39 +536,66 @@
         transform: translateX(5px);
     }
 
-    /* Penanda menu utama sedang aktif */
     #accordionSidebar .nav-item.active .nav-link {
         font-weight: bold;
         background-color: rgba(255, 255, 255, 0.2) !important;
         border-left: 4px solid #fff;
     }
 
-    /* Styling Box Dropdown Submenu */
     #accordionSidebar .collapse-inner {
-        background-color: #ffffff !important;
-        border-radius: 8px !important;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15) !important;
-        padding: 0.5rem !important;
+        background: #fff !important;
+        border-radius: 14px !important;
+        box-shadow: 4px 6px 16px rgba(0, 0, 0, 0.18) !important;
+        padding: 8px !important;
     }
 
-    /* Styling text Submenu */
+    #accordionSidebar.minimized .nav-item {
+        position: relative;
+    }
+
+    #accordionSidebar.minimized .collapse {
+        position: absolute;
+        left: calc(100% - 8px);
+        top: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        z-index: 9999;
+    }
+
+    #accordionSidebar.minimized .collapse-inner {
+        min-width: 220px;
+        margin: 0 !important;
+        background: #fff !important;
+        border-radius: 14px !important;
+        box-shadow: 4px 6px 16px rgba(0, 0, 0, 0.18) !important;
+        padding: 8px !important;
+    }
+
+    #accordionSidebar.minimized .collapse-inner::before {
+        content: "";
+        position: absolute;
+        left: -1px;
+        top: 12px;
+        width: 3px;
+        height: calc(100% - 24px);
+        background: #d32f2f;
+        border-radius: 3px;
+    }
+
     #accordionSidebar .collapse-inner .collapse-item {
         white-space: unset !important;
         transition: all 0.2s ease;
-        border-radius: 4px;
+        border-radius: 7px;
         margin-bottom: 2px;
         color: #444 !important;
-        /* Warna text abu gelap agar jelas */
     }
 
-    /* Hover submenu (Warna merah muda) */
     #accordionSidebar .collapse-inner .collapse-item:hover {
         background-color: #f8d7da !important;
         color: #9e0202 !important;
         transform: translateX(3px);
     }
 
-    /* Submenu aktif (Warna merah tegas) */
     #accordionSidebar .collapse-inner .collapse-item.active {
         background-color: #ffe6e6 !important;
         color: #d32f2f !important;
