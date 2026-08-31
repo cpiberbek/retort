@@ -233,19 +233,30 @@
                 {{-- CARD DETAIL ITEM (DINAMIS) --}}
                 <div class="card mb-4">
                     <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong><i class="bi bi-list-nested"></i> Detail Item Produk <span class="text-danger">*</span></strong>
-                            <button type="button" id="add-detail-btn" class="btn btn-secondary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Item (Varian selanjutnya mengikuti Produk pertama yang dipilih.)</button>
-                        </div>
+                        <strong>
+                            <i class="bi bi-list-nested"></i>
+                            Detail Item Produk <span class="text-danger">*</span>
+                        </strong>
                     </div>
+
                     <div class="card-body">
                         <div id="details-container">
                             {{-- Item dinamis akan ditambahkan di sini oleh JS --}}
                         </div>
+
+                        <div class="mt-3">
+                            <button type="button" id="add-detail-btn" class="btn btn-info btn-sm">
+                                <i class="bi bi-plus-lg"></i>
+                                Tambah Item (Varian mengikuti Produk terakhir)
+                            </button>
+                        </div>
+
                         <div class="card border-secondary mt-3">
                             <div class="card-header bg-success text-white">
                                 <strong>Jumlah Total Item Produk</strong><br>
-                                <small><strong>*Total akan dihitung berdasarkan Varian dan Satuan</strong></small>
+                                <small>
+                                    <strong>*Total akan dihitung berdasarkan Varian dan Satuan</strong>
+                                </small>
                             </div>
                             <div class="card-body">
                                 <h5 class="mb-0 text-start" id="total-item-display">Belum ada data</h5>
@@ -593,10 +604,10 @@
         // --- Event Listener untuk Tombol "Tambah Item" + copy first index ---
         if (addBtn) {
             addBtn.addEventListener('click', () => {
-                let firstProduk = $('.var-produk-select').first().val();
+                let lastProduk = $('.var-produk-select').last().val();
 
                 renderDetailForm({
-                    nama_produk: firstProduk || ''
+                    nama_produk: lastProduk || ''
                 });
 
                 reindexDetails();
@@ -607,16 +618,21 @@
         // --- Event Listener untuk Tombol Hapus ---
         if (container) {
             container.addEventListener('click', function(e) {
-                // Logika Tombol Hapus
                 const removeBtn = e.target.closest('.remove-detail-btn');
+
                 if (removeBtn) {
+                    const items = container.querySelectorAll('.dynamic-item-card');
+
+                    if (items.length <= 1) {
+                        return;
+                    }
+
                     removeBtn.closest('.dynamic-item-card').remove();
                     reindexDetails();
                     updateTotalItem();
                 }
             });
         }
-
         // --- Render data 'old' jika ada (setelah validasi gagal) ---
         const oldItems = @json(old('details', []));
 
