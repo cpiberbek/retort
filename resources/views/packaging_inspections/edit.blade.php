@@ -9,26 +9,32 @@
     body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
     .form-label { font-weight: 600; color: #495057; }
     .form-control, .form-select { border-radius: 8px; }
-    
-    /* Memastikan Select2 Full Width dan Rapi */
-    .select2-container { width: 100% !important; } 
+
+    .select2-container { width: 100% !important; }
+
     .select2-container .select2-selection--single {
         height: calc(2.25rem + 2px);
         padding: .375rem .75rem;
         border: 1px solid #ced4da;
     }
-    .select2-container--bootstrap-5 .select2-selection { border-radius: 8px !important; }
-    
-    /* Style Tombol Check Group (Sesuai dengan Create) */
-    .btn-check-group .btn { 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        gap: 0.5rem; 
+
+    .select2-container--bootstrap-5 .select2-selection {
+        border-radius: 8px !important;
+    }
+
+    .btn-check-group .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
         font-weight: 500;
         transition: all 0.2s;
     }
-    .dynamic-item-card { background-color: #fdfdfd; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+
+    .dynamic-item-card {
+        background-color: #fdfdfd;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
 </style>
 @endpush
 
@@ -37,61 +43,109 @@
     <div class="card shadow-sm border-0">
         <div class="card-body p-4 p-md-5">
 
-            <h4 class="mb-1"><i class="bi bi-pencil-square"></i> Edit Pemeriksaan Packaging #{{ $packagingInspection->id }}</h4>
-            <p class="text-muted mb-4">Perbarui detail formulir pemeriksaan packaging di bawah ini.</p>
+            <h4 class="mb-1">
+                <i class="bi bi-pencil-square"></i>
+                Edit Pemeriksaan Packaging #{{ $packagingInspection->id }}
+            </h4>
+
+            <p class="text-muted mb-4">
+                Perbarui detail formulir pemeriksaan packaging di bawah ini.
+            </p>
 
             @if ($errors->any())
                 <div class="alert alert-danger">
-                    <ul>@foreach ($errors->all() as $error) <li>{{ $error }}</li> @endforeach</ul>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
                 </div>
             @endif
-            
+
             <form action="{{ route('packaging-inspections.update', $packagingInspection->uuid) }}" method="POST">
                 @csrf
                 @method('PUT')
 
-                {{-- CARD INFORMASI UMUM --}}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
-                        <strong><i class="bi bi-info-circle-fill"></i> Informasi Inspeksi</strong>
+                        <strong>
+                            <i class="bi bi-info-circle-fill"></i>
+                            Informasi Inspeksi
+                        </strong>
                     </div>
+
                     <div class="card-body">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label for="inspection_date" class="form-label">Hari/Tanggal</label>
-                                <input type="date" 
-                                    class="form-control" 
-                                    id="inspection_date" 
-                                    name="inspection_date" 
-                                    value="{{ old('inspection_date', date('Y-m-d', strtotime($packagingInspection->inspection_date))) }}" 
-                                    required>
+                                <label for="inspection_date" class="form-label">
+                                    Hari/Tanggal
+                                </label>
+
+                                <input
+                                    type="date"
+                                    class="form-control"
+                                    id="inspection_date"
+                                    name="inspection_date"
+                                    value="{{ old('inspection_date', date('Y-m-d', strtotime($packagingInspection->inspection_date))) }}"
+                                    required
+                                >
                             </div>
+
                             <div class="col-md-6">
-                                <label for="shift" class="form-label">Shift</label>
-                                <input type="text" class="form-control" id="shift" name="shift" value="{{ old('shift', $packagingInspection->shift) }}" required>
+                                <label for="shift" class="form-label">
+                                    Shift
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="shift"
+                                    name="shift"
+                                    value="{{ old('shift', $packagingInspection->shift) }}"
+                                    required
+                                >
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- CARD DETAIL ITEM (DINAMIS) --}}
                 <div class="card mb-4">
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
-                            <strong><i class="bi bi-list-nested"></i> Detail Item Packaging</strong>
-                            <button type="button" id="add-detail-btn" class="btn btn-secondary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Item</button>
+                            <strong>
+                                <i class="bi bi-list-nested"></i>
+                                Detail Item Packaging
+                            </strong>
+
+                            <button
+                                type="button"
+                                id="add-detail-btn"
+                                class="btn btn-secondary btn-sm"
+                            >
+                                <i class="bi bi-plus-lg"></i>
+                                Tambah Item
+                            </button>
                         </div>
                     </div>
+
                     <div class="card-body">
-                        <div id="details-container">
-                            {{-- Item dinamis akan ditambahkan di sini oleh JS --}}
-                        </div>
+                        <div id="details-container"></div>
                     </div>
                 </div>
-                
+
                 <div class="d-flex justify-content-between mt-4">
-                    <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save"></i> Update Inspeksi</button>
-                    <a href="{{ route('packaging-inspections.index') }}" class="btn btn-secondary btn-lg"><i class="bi bi-arrow-left"></i> Kembali</a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="bi bi-save"></i>
+                        Update Inspeksi
+                    </button>
+
+                    <a
+                        href="{{ route('packaging-inspections.index') }}"
+                        class="btn btn-secondary btn-lg"
+                    >
+                        <i class="bi bi-arrow-left"></i>
+                        Kembali
+                    </a>
                 </div>
 
             </form>
@@ -105,64 +159,136 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    // --- 1. Logic Button OK/Not OK (Event Delegation) ---
     $(document).ready(function() {
-        
-        // Handle Klik Tombol (Termasuk elemen yang baru ditambah via JS)
+
         $(document).on('click', '.btn-check-group .btn', function(e) {
-            e.preventDefault(); 
-            
+            e.preventDefault();
+
             const button = $(this);
-            const value = button.data('value'); // 'OK' or 'Not OK'
+            const value = button.data('value');
             const targetInputId = button.data('target-input');
-            
-            // 1. Update Input Hidden
+
             if (targetInputId) {
                 $(targetInputId).val(value);
             }
 
-            // 2. Logic Visual (Toggle Class)
             const group = button.closest('.btn-check-group');
-            
-            // Reset semua tombol dalam grup ini jadi abu-abu (outline-secondary)
+
             group.find('.btn').each(function() {
-                $(this).removeClass('btn-success btn-danger').addClass('btn-outline-secondary');
+                $(this)
+                    .removeClass('btn-success btn-danger')
+                    .addClass('btn-outline-secondary');
             });
 
-            // Set warna tombol yang diklik (Solid Color)
             if (value === 'OK') {
-                button.removeClass('btn-outline-secondary').addClass('btn-success');
+                button
+                    .removeClass('btn-outline-secondary')
+                    .addClass('btn-success');
             } else {
-                button.removeClass('btn-outline-secondary').addClass('btn-danger');
+                button
+                    .removeClass('btn-outline-secondary')
+                    .addClass('btn-danger');
             }
         });
 
-        // Hapus Baris Item
         $(document).on('click', '.remove-detail-btn', function() {
             $(this).closest('.dynamic-item-card').remove();
+            reindexDetails();
         });
+
     });
 
-    // --- 2. Logic Render Form Dinamis ---
+    function reindexDetails() {
+        $('#details-container .dynamic-item-card').each(function(index) {
+            const card = $(this);
+
+            card.find('h5').first().text(`Item #${index + 1}`);
+
+            card.find('[name]').each(function() {
+                const element = $(this);
+                const name = element.attr('name');
+
+                if (!name) {
+                    return;
+                }
+
+                element.attr(
+                    'name',
+                    name.replace(/items\[\d+\]/, `items[${index}]`)
+                );
+            });
+
+            card.find('[id]').each(function() {
+                const element = $(this);
+                const id = element.attr('id');
+
+                if (!id) {
+                    return;
+                }
+
+                element.attr(
+                    'id',
+                    id.replace(/_\d+$/, `_${index}`)
+                );
+            });
+
+            card.find('[data-target-input]').each(function() {
+                const element = $(this);
+                const target = element.attr('data-target-input');
+
+                if (!target) {
+                    return;
+                }
+
+                element.attr(
+                    'data-target-input',
+                    target.replace(/_\d+$/, `_${index}`)
+                );
+            });
+
+            card.find('label[for]').each(function() {
+                const element = $(this);
+                const value = element.attr('for');
+
+                if (!value) {
+                    return;
+                }
+
+                element.attr(
+                    'for',
+                    value.replace(/_\d+_\d+$/, `_${index}_${value.split('_').pop()}`)
+                );
+            });
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+
         const container = document.getElementById('details-container');
         const addBtn = document.getElementById('add-detail-btn');
+
         let detailIndex = 0;
-        
-        // Ambil list kondisi kendaraan dari Controller/PHP
-        const vehicleConditions = @json($vehicleConditions ?? []); 
+
+        const vehicleConditions = @json($vehicleConditions ?? []);
 
         function renderDetailForm(data = null) {
             const i = detailIndex;
-            
-            // Definisi Field Checkbox yang akan di-loop
+
             const checkList = [
-                { key: 'condition_design', label: 'Kondisi Design' },
-                { key: 'condition_sealing', label: 'Kondisi Sealing' },
-                { key: 'condition_color', label: 'Kondisi Warna' }
+                {
+                    key: 'condition_design',
+                    label: 'Kondisi Design'
+                },
+                {
+                    key: 'condition_sealing',
+                    label: 'Kondisi Sealing'
+                },
+                {
+                    key: 'condition_color',
+                    label: 'Kondisi Warna'
+                }
             ];
 
-            // Setup Values (Ambil dari DB jika ada, atau kosong jika item baru)
             const no_pol = data?.no_pol || '';
             const vehicle_cond = data?.vehicle_condition || '';
             const pbb_op = data?.pbb_op || '';
@@ -176,141 +302,325 @@
             const notes = data?.notes || '';
             const accept_val = data?.acceptance_status || 'OK';
 
-            // Generate HTML untuk bagian tombol Check (Looping)
             let checksHtml = '';
+
             checkList.forEach(item => {
-                // Ambil value dari DB (misal: 'OK', 'Not OK'). Jika tidak ada (item baru), default kosong ''
-                const val = data?.[item.key] || ''; 
-                
+                const val = data?.[item.key] || '';
+
                 checksHtml += `
-                <div class="col-lg-3 col-md-6">
-                    <label class="form-label d-block">${item.label}</label>
-                    <input type="hidden" name="items[${i}][${item.key}]" id="${item.key}_${i}" value="${val}" required>
-                    
-                    <div class="btn-group btn-check-group w-100" role="group">
-                        {{-- Logic Class: 
-                             Jika val === 'OK' -> btn-success
-                             Jika val === 'Not OK' -> btn-outline-secondary (karena bukan ini yang aktif)
-                             Jika val kosong -> btn-outline-secondary 
-                        --}}
-                        <button type="button" class="btn ${val === 'OK' ? 'btn-success' : 'btn-outline-secondary'} w-50" 
-                            data-value="OK" 
-                            data-target-input="#${item.key}_${i}">
-                            <i class="bi bi-check-lg"></i> OK
-                        </button>
-                        
-                        <button type="button" class="btn ${val === 'Not OK' ? 'btn-danger' : 'btn-outline-secondary'} w-50" 
-                            data-value="Not OK" 
-                            data-target-input="#${item.key}_${i}">
-                            <i class="bi bi-x-lg"></i> Not OK
-                        </button>
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label d-block">
+                            ${item.label}
+                        </label>
+
+                        <input
+                            type="hidden"
+                            name="items[${i}][${item.key}]"
+                            id="${item.key}_${i}"
+                            value="${val}"
+                            required
+                        >
+
+                        <div class="btn-group btn-check-group w-100" role="group">
+                            <button
+                                type="button"
+                                class="btn ${val === 'OK' ? 'btn-success' : 'btn-outline-secondary'} w-50"
+                                data-value="OK"
+                                data-target-input="#${item.key}_${i}"
+                            >
+                                <i class="bi bi-check-lg"></i>
+                                OK
+                            </button>
+
+                            <button
+                                type="button"
+                                class="btn ${val === 'Not OK' ? 'btn-danger' : 'btn-outline-secondary'} w-50"
+                                data-value="Not OK"
+                                data-target-input="#${item.key}_${i}"
+                            >
+                                <i class="bi bi-x-lg"></i>
+                                Not OK
+                            </button>
+                        </div>
                     </div>
-                </div>
                 `;
             });
 
             const newDetail = document.createElement('div');
-            newDetail.classList.add('dynamic-item-card', 'border', 'p-3', 'mb-3', 'rounded', 'shadow-sm'); 
-            
+
+            newDetail.classList.add(
+                'dynamic-item-card',
+                'border',
+                'p-3',
+                'mb-3',
+                'rounded',
+                'shadow-sm'
+            );
+
             newDetail.innerHTML = `
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">Item #${i + 1}</h5>
-                    <button type="button" class="btn btn-danger btn-sm remove-detail-btn"><i class="bi bi-trash"></i> Hapus</button>
+                    <h5 class="mb-0">
+                        Item #${i + 1}
+                    </h5>
+
+                    <button
+                        type="button"
+                        class="btn btn-danger btn-sm remove-detail-btn"
+                    >
+                        <i class="bi bi-trash"></i>
+                        Hapus
+                    </button>
                 </div>
-                
+
                 <div class="row g-3">
+
                     <div class="col-md-4">
-                        <label class="form-label">Jenis Packaging</label>
-                        <input type="text" name="items[${i}][packaging_type]" class="form-control" value="${packaging_type}" required>
+                        <label class="form-label">
+                            Jenis Packaging
+                        </label>
+
+                        <input
+                            type="text"
+                            name="items[${i}][packaging_type]"
+                            class="form-control"
+                            value="${packaging_type}"
+                            required
+                        >
                     </div>
+
                     <div class="col-md-4">
-                        <label class="form-label">Supplier</label>
-                        <select name="items[${i}][supplier]" class="form-control select2" required>
+                        <label class="form-label">
+                            Supplier
+                        </label>
+
+                        <select
+                            name="items[${i}][supplier]"
+                            class="form-control supplier-select"
+                            required
+                        >
                             <option value="">-- Pilih Supplier --</option>
+
                             @foreach ($suppliers as $supplierItem)
-                                <option value="{{ $supplierItem->nama_supplier }}"
-                                    ${supplier === @json($supplierItem->nama_supplier) ? 'selected' : ''}>
+                                <option
+                                    value="{{ $supplierItem->nama_supplier }}"
+                                    ${supplier === @json($supplierItem->nama_supplier) ? 'selected' : ''}
+                                >
                                     {{ $supplierItem->nama_supplier }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
+
                     <div class="col-md-4">
-                        <label class="form-label">Lot Batch</label>
-                        <input type="text" name="items[${i}][lot_batch]" class="form-control" value="${lot_batch}" required>
+                        <label class="form-label">
+                            Lot Batch
+                        </label>
+
+                        <input
+                            type="text"
+                            name="items[${i}][lot_batch]"
+                            class="form-control"
+                            value="${lot_batch}"
+                            required
+                        >
                     </div>
 
-                    ${checksHtml} {{-- Render Tombol Loop Disini --}}
+                    ${checksHtml}
 
                     <div class="col-lg-1 col-md-6">
-                        <label class="form-label">Dimensi</label>
-                        <input type="text" name="items[${i}][condition_dimension]" class="form-control" value="${dimension}">
+                        <label class="form-label">
+                            Dimensi
+                        </label>
+
+                        <input
+                            type="text"
+                            name="items[${i}][condition_dimension]"
+                            class="form-control"
+                            value="${dimension}"
+                        >
                     </div>
 
                     <div class="col-lg-1 col-md-6">
-                        <label class="form-label">Berat</label>
-                        <input type="number" name="items[${i}][condition_weight]" class="form-control" value="${data?.condition_weight || ''}" min="0" step="0.01">
+                        <label class="form-label">
+                            Berat
+                        </label>
+
+                        <input
+                            type="number"
+                            name="items[${i}][condition_weight]"
+                            class="form-control"
+                            value="${data?.condition_weight || ''}"
+                            min="0"
+                            step="0.01"
+                        >
                     </div>
 
                     <div class="col-md-2">
-                        <label class="form-label">Qty Barang</label>
-                        <input type="number" name="items[${i}][quantity_goods]" class="form-control" value="${qty_goods}" min="0" required>
+                        <label class="form-label">
+                            Qty Barang
+                        </label>
+
+                        <input
+                            type="number"
+                            name="items[${i}][quantity_goods]"
+                            class="form-control"
+                            value="${qty_goods}"
+                            min="0"
+                            required
+                        >
                     </div>
+
                     <div class="col-md-2">
-                        <label class="form-label">Qty Sampel</label>
-                        <input type="number" name="items[${i}][quantity_sample]" class="form-control" value="${qty_sample}" min="0" required>
+                        <label class="form-label">
+                            Qty Sampel
+                        </label>
+
+                        <input
+                            type="number"
+                            name="items[${i}][quantity_sample]"
+                            class="form-control"
+                            value="${qty_sample}"
+                            min="0"
+                            required
+                        >
                     </div>
+
                     <div class="col-md-2">
-                        <label class="form-label">Qty Reject</label>
-                        <input type="number" name="items[${i}][quantity_reject]" class="form-control" value="${qty_reject}" min="0" required>
+                        <label class="form-label">
+                            Qty Reject
+                        </label>
+
+                        <input
+                            type="number"
+                            name="items[${i}][quantity_reject]"
+                            class="form-control"
+                            value="${qty_reject}"
+                            min="0"
+                            required
+                        >
                     </div>
-                    
+
                     <div class="col-md-6">
-                        <label class="form-label">Penerimaan</label>
-                        <select name="items[${i}][acceptance_status]" class="form-select select2-dynamic" required>
-                            <option value="OK" ${accept_val === 'OK' ? 'selected' : ''}>OK</option>
-                            <option value="Tolak" ${accept_val === 'Tolak' ? 'selected' : ''}>Tolak</option>
+                        <label class="form-label">
+                            Penerimaan
+                        </label>
+
+                        <select
+                            name="items[${i}][acceptance_status]"
+                            class="form-select acceptance-select"
+                            required
+                        >
+                            <option value="OK" ${accept_val === 'OK' ? 'selected' : ''}>
+                                OK
+                            </option>
+
+                            <option value="Tolak" ${accept_val === 'Tolak' ? 'selected' : ''}>
+                                Tolak
+                            </option>
                         </select>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label">No. Polisi</label>
-                        <input type="text" name="items[${i}][no_pol]" class="form-control" value="${no_pol}" required>
+                        <label class="form-label">
+                            No. Polisi
+                        </label>
+
+                        <input
+                            type="text"
+                            name="items[${i}][no_pol]"
+                            class="form-control"
+                            value="${no_pol}"
+                            required
+                        >
                     </div>
+
                     <div class="col-md-5">
-                        <label class="form-label d-block">Kondisi Kendaraan</label>
+                        <label class="form-label d-block">
+                            Kondisi Kendaraan
+                        </label>
+
                         <div class="form-check">
-                            ${vehicleConditions.map(c => {
-                                const isChecked = vehicle_cond?.split(',').includes(c) ? 'checked' : '';
+                            ${vehicleConditions.map((c, index) => {
+                                const isChecked = vehicle_cond?.split(',').includes(c)
+                                    ? 'checked'
+                                    : '';
+
                                 return `
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" name="items[${i}][vehicle_condition][]" value="${c}" id="vehicle_${i}_${c}" ${isChecked}>
-                                    <label class="form-check-label" for="vehicle_${i}_${c}">${c}</label>
-                                </div>`;
+                                    <div class="form-check form-check-inline">
+                                        <input
+                                            class="form-check-input"
+                                            type="checkbox"
+                                            name="items[${i}][vehicle_condition][]"
+                                            value="${c}"
+                                            id="vehicle_${i}_${index}"
+                                            ${isChecked}
+                                        >
+
+                                        <label
+                                            class="form-check-label"
+                                            for="vehicle_${i}_${index}"
+                                        >
+                                            ${c}
+                                        </label>
+                                    </div>
+                                `;
                             }).join('')}
                         </div>
                     </div>
+
                     <div class="col-md-4">
-                        <label class="form-label">PBB / OP</label>
-                        <input type="text" name="items[${i}][pbb_op]" class="form-control" value="${pbb_op}">
-                    </div>
-                    
-                    <div class="col-12">
-                        <label class="form-label">Keterangan (Optional)</label>
-                        <textarea name="items[${i}][notes]" class="form-control" rows="2">${notes}</textarea>
+                        <label class="form-label">
+                            PBB / OP
+                        </label>
+
+                        <input
+                            type="text"
+                            name="items[${i}][pbb_op]"
+                            class="form-control"
+                            value="${pbb_op}"
+                        >
                     </div>
 
-                    {{-- ID Item Penting untuk Update --}}
-                    <input type="hidden" name="items[${i}][id]" value="${data?.id || ''}">
-                    <input type="hidden" name="items[${i}][condition_weight_pcs]" value="${data?.condition_weight_pcs || ''}">
+                    <div class="col-12">
+                        <label class="form-label">
+                            Keterangan (Optional)
+                        </label>
+
+                        <textarea
+                            name="items[${i}][notes]"
+                            class="form-control"
+                            rows="2"
+                        >${notes}</textarea>
+                    </div>
+
+                    <input
+                        type="hidden"
+                        name="items[${i}][id]"
+                        value="${data?.id || ''}"
+                    >
+
+                    <input
+                        type="hidden"
+                        name="items[${i}][condition_weight_pcs]"
+                        value="${data?.condition_weight_pcs || ''}"
+                    >
+
                 </div>
             `;
 
             container.appendChild(newDetail);
-            
-            $(newDetail).find('.select2-dynamic').select2({
-                theme: "bootstrap-5",
-                placeholder: "Pilih...",
+
+            $(newDetail).find('.supplier-select').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Pilih Supplier --',
+                allowClear: true,
+                width: '100%',
+                dropdownAutoWidth: false
+            });
+
+            $(newDetail).find('.acceptance-select').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Pilih...',
                 allowClear: true,
                 width: '100%',
                 dropdownAutoWidth: false
@@ -319,17 +629,19 @@
             detailIndex++;
         }
 
-        if (addBtn) addBtn.addEventListener('click', () => renderDetailForm(null));
+        if (addBtn) {
+            addBtn.addEventListener('click', function() {
+                renderDetailForm(null);
+            });
+        }
 
-        // Render Data Lama (Database atau Old Input jika validasi gagal)
         const existingDetails = @json(old('items', $packagingInspection->items ?? []));
-        
+
         if (existingDetails.length > 0) {
             existingDetails.forEach(itemData => {
                 renderDetailForm(itemData);
             });
         } else {
-            // Render 1 form kosong jika (sangat jarang) tidak ada data
             renderDetailForm(null);
         }
     });
