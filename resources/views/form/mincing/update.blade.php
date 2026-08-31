@@ -1,6 +1,46 @@
 @extends('layouts.app')
 
 @section('content')
+     <style>
+        html,
+        body {
+            min-width: 1200px;
+            overflow-x: auto;
+        }
+
+        .mincing-page {
+            width: 1200px;
+            min-width: 1200px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .mincing-page .card {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .mincing-page .table-responsive {
+            overflow: visible;
+        }
+
+        .mincing-page table {
+            width: 100%;
+            min-width: 0;
+        }
+
+        .mincing-page input,
+        .mincing-page textarea,
+        .mincing-page .form-control,
+        .mincing-page .form-select {
+            max-width: none;
+        }
+
+        .mincing-page .select2-container {
+            width: 100% !important;
+        }
+    </style>
     <div class="container-fluid py-4">
 
         <div class="card shadow-lg border-0">
