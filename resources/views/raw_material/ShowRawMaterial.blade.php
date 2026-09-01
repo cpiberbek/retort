@@ -91,8 +91,11 @@
                     <div>
                         <a href="{{ route('inspections.index') }}" class="btn btn-secondary me-2"><i
                                 class="bi bi-arrow-left"></i> Kembali</a>
-                        <a href="{{ route('inspections.edit', $inspection->uuid) }}" class="btn btn-warning"><i
-                                class="bi bi-pencil-square"></i> Edit</a>
+                        @can('can access edit button')
+                            <a href="{{ route('inspections.edit', $inspection->uuid) }}" class="btn btn-warning">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </a>
+                        @endcan
                     </div>
                 </div>
 

@@ -188,27 +188,34 @@
                             <td class="text-center align-middle">
                                 <div class="d-flex justify-content-center align-items-center">
 
-                                    {{-- 1. Tombol Verifikasi (Memicu Modal) --}}
+                                    {{-- 1. Tombol Verifikasi --}}
+                                    @can('can access verification button')
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $inspection->uuid }}">
                                         <i class="bi bi-shield-check me-1"></i> Verifikasi
                                     </button>
+                                    @endcan
 
                                     {{-- 2. Detail --}}
                                     <a href="{{ route('packaging-inspections.show', $inspection) }}" class="btn btn-outline-primary btn-sm mx-1" title="Lihat Detail">
                                         <i class="bi bi-eye"></i>
                                     </a>
 
-                                    {{-- 3. Edit (Warning) --}}
+                                    {{-- 3. Edit --}}
+                                    @can('can access edit button')
                                     <a href="{{ route('packaging-inspections.edit', $inspection) }}" class="btn btn-warning btn-sm mx-1" title="Edit Data">
                                         <i class="bi bi-pencil-square"></i> Edit Data
                                     </a>
+                                    @endcan
 
-                                    {{-- 4. Update/Lengkapi (Info) --}}
+                                    {{-- 4. Update --}}
+                                    @can('can access update button')
                                     <a href="{{ route('packaging-inspections.edit-for-update', $inspection) }}" class="btn btn-info btn-sm mx-1 text-white" title="Lengkapi Data">
                                         <i class="bi bi-pencil"></i> Update
                                     </a>
+                                    @endcan
 
                                     {{-- 5. Hapus --}}
+                                    @can('can access delete button')
                                     <form action="{{ route('packaging-inspections.destroy', $inspection) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?')">
                                         @csrf
                                         @method('DELETE')
@@ -216,7 +223,8 @@
                                             <i class="bi bi-trash"></i> Hapus
                                         </button>
                                     </form>
-                                    
+                                    @endcan
+
                                 </div>
                             </td>
                         </tr>
