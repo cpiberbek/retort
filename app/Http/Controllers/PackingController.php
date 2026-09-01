@@ -78,7 +78,8 @@ class PackingController extends Controller
             'qrcode'        => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'kode_printing' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'kode_toples'   => 'required|string',
-            'suhu'          => 'nullable|numeric',
+            'suhu'          => 'nullable|array',
+            'suhu.*'        => 'nullable|numeric',
             'speed'         => 'nullable|numeric',
             'kondisi_segel' => 'nullable|string',
             'jumlah_produk' => 'nullable|integer', 
@@ -106,7 +107,7 @@ class PackingController extends Controller
             'qrcode'              => $qrcodeFinal,
             'kode_printing'       => $kodePrintingFinal,
             'kode_toples'         => $request->kode_toples,
-            'suhu'                => $request->suhu,
+            'suhu'                => $request->suhu ? array_values(array_filter($request->suhu, fn ($value) => $value !== null && $value !== '')) : null,
             'speed'               => $request->speed,
             'kondisi_segel'       => $request->kondisi_segel,
             'jumlah_produk'       => $request->jumlah_produk,
@@ -211,6 +212,8 @@ class PackingController extends Controller
             'kode_toples'   => 'required|string',
             'data_kemasan'  => 'nullable|array',
             'keterangan'    => 'nullable|string',
+            'suhu'          => 'nullable|array',
+            'suhu.*'        => 'nullable|numeric',
         ]);
 
         $qrcodeFinal = $request->hasFile('qrcode')
@@ -228,7 +231,9 @@ class PackingController extends Controller
             'waktu'               => $request->waktu,
             'kalibrasi'           => $request->has('kalibrasi') ? 'Ok' : 'Tidak Ok',
             'kode_toples'         => $request->kode_toples,
-            'suhu'                => $request->suhu,
+            'suhu' => $request->suhu
+            ? array_values(array_filter($request->suhu, fn ($value) => $value !== null && $value !== ''))
+            : null,
             'speed'               => $request->speed,
             'kondisi_segel'       => $request->kondisi_segel,
             'jumlah_produk'       => $request->jumlah_produk,
