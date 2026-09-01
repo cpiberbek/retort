@@ -103,14 +103,86 @@
                 const min = String(now.getMinutes()).padStart(2, '0');
 
                 dateInput.value = `${yyyy}-${mm}-${dd}`;
-                timeInput.value = `${hh}:${min}`;
+
+                if (timeInput) {
+                    timeInput.value = `${hh}:${min}`;
+                }
             });
 
             const produkSelect = $('select[name="nama_produk"]');
             const batchSelect = $('#kode_produksi');
+            const expiredInput = $('#expired_date');
 
             produkSelect.on('change', function() {
                 loadBatch();
+            });
+
+            function hitungExpired(kode) {
+                kode = kode.toUpperCase();
+
+                const tahunKode = {
+                    'O': 2024,
+                    'P': 2025,
+                    'Q': 2026,
+                    'R': 2027,
+                    'S': 2028,
+                    'T': 2029,
+                    'U': 2030,
+                    'V': 2031,
+                    'W': 2032,
+                    'X': 2033,
+                    'Y': 2034,
+                    'Z': 2035
+                };
+
+                const bulanKode = {
+                    'A': 1,
+                    'B': 2,
+                    'C': 3,
+                    'D': 4,
+                    'E': 5,
+                    'F': 6,
+                    'G': 7,
+                    'H': 8,
+                    'I': 9,
+                    'J': 10,
+                    'K': 11,
+                    'L': 12
+                };
+
+                const format = kode.substring(0, 4);
+
+                if (!/^[A-Z]{2}\d{2}$/.test(format)) {
+                    return null;
+                }
+
+                const tahun = tahunKode[format[0]];
+                const bulan = bulanKode[format[1]];
+                const hari = parseInt(format.substring(2, 4));
+
+                if (!tahun || !bulan || !hari) {
+                    return null;
+                }
+
+                let date = new Date(tahun, bulan - 1, hari);
+
+                date.setMonth(date.getMonth() + 7);
+
+                return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            }
+
+            batchSelect.on('change', function() {
+                const selected = $(this).find(':selected');
+                const kode = selected.data('kode');
+
+                if (!kode) {
+                    expiredInput.val('');
+                    return;
+                }
+
+                const expired = hitungExpired(kode);
+
+                expiredInput.val(expired || '');
             });
 
             function loadBatch() {
@@ -118,6 +190,7 @@
 
                 batchSelect.html('');
                 batchSelect.prop('disabled', true);
+                expiredInput.val('');
 
                 if (!produk) {
                     batchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
@@ -139,10 +212,10 @@
 
                         data.forEach(batch => {
                             batchSelect.append(`
-                    <option value="${batch.uuid}" data-kode="${batch.kode_produksi}">
-                        ${batch.kode_produksi}
-                    </option>
-                `);
+                                <option value="${batch.uuid}" data-kode="${batch.kode_produksi}">
+                                    ${batch.kode_produksi}
+                                </option>
+                            `);
                         });
                     });
             }

@@ -144,8 +144,8 @@
 
 
             $rteRoutes = [];
-            $kebersihanRoutes = [ 'suhu.*', 'sanitasi.*'];
-            $umumRoutes = ['klorin.*', 'timbangan.*', 'thermometer.*', 'berita-acara.*','dispositions.*', 'gmp.*','traceability.*', 'withdrawl.*', 'recall.*', 'penyimpangan-kualitas.*', 'pemusnahan.*', 'retain_rte.*', 'release_packing_rte.*', 'pemasakan_rte.*'];
+            $kebersihanRoutes = [ 'suhu.*'];
+            $umumRoutes = ['klorin.*', 'timbangan.*', 'sanitasi.*','thermometer.*', 'berita-acara.*','dispositions.*', 'gmp.*','traceability.*', 'withdrawl.*', 'recall.*', 'penyimpangan-kualitas.*', 'pemusnahan.*', 'retain_rte.*', 'release_packing_rte.*', 'pemasakan_rte.*'];
             $chamberRoutes = ['washing.*','pemasakan.*','chamber.*'];
 
             // Aktivasi dropdown
