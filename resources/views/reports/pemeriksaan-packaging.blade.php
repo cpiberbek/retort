@@ -79,7 +79,7 @@ $shift = $firstInspection ? $firstInspection->shift : '';
         <th colspan="2" class="center">Penerimaan</th>
         <th rowspan="2" class="center">No. Pol</th>
         <th rowspan="2" class="center">Kondisi Kendaraan**</th>
-        <th rowspan="2" class="center">PBB / OP</th>
+        <th rowspan="2" class="center">DO/PO/OP</th>
         <th rowspan="2" class="center">Keterangan***</th>
     </tr>
 

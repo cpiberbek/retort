@@ -474,7 +474,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label">PBB / OP</label>
+                        <label class="form-label">DO/PO/OP</label>
 
                         <input
                             type="text"

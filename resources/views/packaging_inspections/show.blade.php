@@ -159,7 +159,7 @@
                         <th>Penerimaan</th>
                         <th>No. Polisi</th>
                         <th>Kondisi Kendaraan</th>
-                        <th>PBB / OP</th>
+                        <th>DO/PO/OP</th>
                         <th>Keterangan</th>
                     </tr>
                 </thead>
