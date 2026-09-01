@@ -124,7 +124,7 @@
                                 </div>
 
                                 <button type="button" id="btn-add-suhu" class="btn btn-success btn-sm">
-                                    <i class="bi bi-plus-circle"></i> Tambah Suhu (Apabila Mesin &lt; 1)
+                                    <i class="bi bi-plus-circle"></i> Add Suhu Sealer
                                 </button>
                             </div>
                         </div>
@@ -357,7 +357,7 @@
 
     function updateSuhuPlaceholder() {
         $('#suhu-wrapper .suhu-item').each(function(index) {
-            $(this).find('input').attr('placeholder', 'Suhu ' + (index + 1));
+            $(this).find('input').attr('placeholder', 'Suhu Sealer ' + (index + 1));
         });
     }
 

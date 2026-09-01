@@ -159,7 +159,7 @@
                                         @if($suhu !== null && $suhu !== '')
                                             <div class="input-group mb-2 suhu-item">
                                                 <input type="number" name="suhu[]" class="form-control" step="0.01" min="0"
-                                                    value="{{ $suhu }}" placeholder="Suhu {{ $index + 1 }}">
+                                                    value="{{ $suhu }}" placeholder="Suhu Sealer {{ $index + 1 }}">
                                                 <button type="button" class="btn btn-danger btn-remove-suhu">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
@@ -167,13 +167,13 @@
                                         @endif
                                     @empty
                                         <div class="input-group mb-2 suhu-item">
-                                            <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu 1">
+                                            <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu Sealer 1">
                                         </div>
                                     @endforelse
                                 </div>
 
                                 <button type="button" id="btn-add-suhu" class="btn btn-success btn-sm">
-                                    <i class="bi bi-plus-circle"></i> Tambah Suhu (Apabila Mesin &lt; 1)
+                                    <i class="bi bi-plus-circle"></i> Add Suhu Sealer
                                 </button>
                             </div>
                         </div>
@@ -473,7 +473,7 @@
 
             $('#suhu-wrapper').append(`
                 <div class="input-group mb-2 suhu-item">
-                    <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu ${suhuCount}">
+                    <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu Sealer ${suhuCount}">
                     <button type="button" class="btn btn-danger btn-remove-suhu">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -485,13 +485,13 @@
             $(this).closest('.suhu-item').remove();
 
             $('#suhu-wrapper .suhu-item').each(function (index) {
-                $(this).find('input').attr('placeholder', 'Suhu ' + (index + 1));
+                $(this).find('input').attr('placeholder', 'Suhu Sealer ' + (index + 1));
             });
 
             suhuCount = $('#suhu-wrapper .suhu-item').length;
         });
     });
-    
+
     async function compressImage(file) {
         if (!file.type.startsWith('image/')) return file;
         if (file.size <= 5 * 1024 * 1024) return file;
