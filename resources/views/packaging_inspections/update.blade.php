@@ -269,7 +269,7 @@
                 const isItemLocked = isLocked(data?.[item.key]);
 
                 checksHtml += `
-                    <div class="col-lg-3 col-md-6">
+                    <div class="col-lg-2 col-md-6">
                         <label class="form-label d-block">
                             ${item.label}
                         </label>
@@ -408,7 +408,7 @@
 
                     ${checksHtml}
 
-                    <div class="col-lg-1 col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <label class="form-label">
                             Dimensi
                         </label>
@@ -422,7 +422,7 @@
                         >
                     </div>
 
-                    <div class="col-lg-1 col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <label class="form-label">
                             Berat
                         </label>
