@@ -173,7 +173,9 @@ class PackingController extends Controller
             'qrcode'              => $qrcodeFinal,
             'kode_printing'       => $kodePrintingFinal,
             'kode_toples'         => $request->kode_toples,
-            'suhu'                => $request->suhu,
+            'suhu' => $request->suhu
+            ? array_values(array_filter($request->suhu, fn ($value) => $value !== null && $value !== ''))
+            : null,
             'speed'               => $request->speed,
             'kondisi_segel'       => $request->kondisi_segel,
             'jumlah_produk'       => $request->jumlah_produk,
