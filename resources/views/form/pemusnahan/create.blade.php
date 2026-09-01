@@ -45,6 +45,10 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Exp. Date</label>
                                     <input type="date" name="expired_date" id="expired_date" class="form-control">
+                                    
+                                <small class="text-muted">
+                                    Tanggal ini dihitung otomatis 7 bulan dari kode batch
+                                </small>
                                 </div>
                             </div>
                         </div>
