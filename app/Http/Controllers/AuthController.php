@@ -31,6 +31,11 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
+    public function showLocalLoginForm()
+    {
+        return view('auth.login');
+    }
+
     public function login(Request $request)
     {
         $request->validate([
