@@ -12,6 +12,22 @@ class AuthController extends Controller
 {
     public function showLoginForm()
     {
+        if (Auth::check()) {
+            return redirect('/dashboard');
+        }
+
+        $portalLoginUrl = config('services.employee_api.portal_login_url');
+
+        if (!empty($portalLoginUrl)) {
+            return redirect($portalLoginUrl);
+        }
+
+        $portalUrl = config('services.employee_api.portal_url');
+
+        if (!empty($portalUrl)) {
+            return redirect(rtrim($portalUrl, '/') . '/login');
+        }
+
         return view('auth.login');
     }
 
