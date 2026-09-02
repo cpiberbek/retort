@@ -27,7 +27,7 @@
                     <i class="bi bi-plus-circle"></i> Tambah
                 </a>
             @endcan
-            
+
             @can('can access export')
                 <button type="button" class="btn btn-danger" id="exportPdfBtn">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF
@@ -36,7 +36,7 @@
                     <i class="bi bi-file-earmark-excel"></i> Export Excel
                 </button>
             @endcan
-            
+
             @can('can access recycle')
                 <a href="{{ route('mincing.recyclebin') }}" class="btn btn-secondary">
                     <i class="bi bi-trash"></i> Recycle Bin
@@ -108,7 +108,7 @@
             </div>
         </div>
     </form>
-    
+
     <div class="modal fade" id="warningModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -229,7 +229,7 @@
                                 </td>
                                 <td class="text-center">{{ $dep->nama_produk }}</td>
                                 <td class="text-center">{{ $dep->kode_produksi ?? '-' }}</td>
-                                
+
                                 {{-- Kolom Hasil Pemeriksaan (Modal Detail) --}}
                                 <td class="text-center">
                                     @if ($dep)
@@ -404,7 +404,7 @@
                                                                         {{ $dep->suhu_akhir_emulsi !== null ? rtrim(rtrim($dep->suhu_akhir_emulsi, '0'), '.') : '-' }}
                                                                     </td>
                                                                 </tr>
-                                                                
+
                                                                 {{-- CATATAN --}}
                                                                 <tr>
                                                                     <td class="text-start fw-bold">Catatan</td>
@@ -425,7 +425,7 @@
                                 </td>
 
                                 <td class="text-center">{{ $dep->username }}</td>
-                                
+
                                 {{-- Kolom Status Produksi --}}
                                 <td class="text-center">
                                     @if ($dep->status_produksi == 0)
@@ -498,19 +498,19 @@
                                                 <i class="bi bi-shield-check me-1"></i> Verifikasi
                                             </button>
                                         @endcan
-                                        
+
                                         @can('can access edit button')
                                             <a href="{{ route('mincing.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm">
                                                 <i class="bi bi-pencil-square"></i> Edit Data
                                             </a>
                                         @endcan
-                                        
+
                                         @can('can access update button')
                                             <a href="{{ route('mincing.update.form', $dep->uuid) }}" class="btn btn-info btn-sm">
                                                 <i class="bi bi-pencil"></i> Update
                                             </a>
                                         @endcan
-                                        
+
                                         @can('can access delete button')
                                             <form action="{{ route('mincing.destroy', $dep->uuid) }}" method="POST" class="d-inline">
                                                 @csrf
@@ -530,7 +530,7 @@
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" style="background: linear-gradient(145deg, #7a1f12, #9E3419); box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
-                                                    
+
                                                     <div class="modal-header border-bottom border-light-subtle p-4" style="border-bottom-width: 3px !important;">
                                                         <h5 class="modal-title fw-bolder fs-3 text-uppercase" id="verifyModalLabel{{ $dep->uuid }}" style="color: #00ffc4;">
                                                             <i class="bi bi-gear-fill me-2"></i> VERIFICATION
@@ -547,7 +547,7 @@
                                                                 <label for="status_spv_{{ $dep->uuid }}" class="form-label fw-bold mb-2 text-center d-block" style="color: #FFE5DE; font-size: 0.95rem;">
                                                                     Pilih Status Verifikasi
                                                                 </label>
-                                                                <select name="status_spv" id="status_spv_{{ $dep->uuid }}" class="form-select form-select-lg fw-bold text-center mx-auto" 
+                                                                <select name="status_spv" id="status_spv_{{ $dep->uuid }}" class="form-select form-select-lg fw-bold text-center mx-auto"
                                                                     style="background: linear-gradient(135deg, #fff1f0, #ffe5de); border: 2px solid #dc3545; border-radius: 12px; color: #dc3545; height: 55px; font-size: 1.1rem; box-shadow: 0 6px 12px rgba(0,0,0,0.1); width: 85%; transition: all 0.3s ease;" required>
                                                                     <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
                                                                     <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
@@ -571,7 +571,7 @@
                                                             <i class="bi bi-save-fill me-1"></i> SUBMIT
                                                         </button>
                                                     </div>
-                                                    
+
                                                 </div>
                                             </form>
                                         </div>
@@ -587,7 +587,7 @@
                     </tbody>
                 </table>
             </div>
-            
+
             {{-- Pagination Component (Opsional: Jika ada fitur paginasi di controller) --}}
             @if(method_exists($data, 'links'))
                 <div class="mt-3 d-flex justify-content-end">

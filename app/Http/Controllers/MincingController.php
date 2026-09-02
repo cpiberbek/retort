@@ -733,9 +733,9 @@ class MincingController extends Controller
         }
 
         $sheet->getStyle('B8:F43')
-        ->getAlignment()
-        ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
-        ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            ->getAlignment()
+            ->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER)
+            ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
 
         $richText = new \PhpOffice\PhpSpreadsheet\RichText\RichText();
         $richText->createText('Hari/Tanggal: ');
@@ -769,17 +769,22 @@ class MincingController extends Controller
             $kodeBatch = '-';
 
             if (!empty($item['inspection_uuid'])) {
-                $kodeBatch = \App\Models\InspectionProductDetail::where('uuid', $item['inspection_uuid'])
-                    ->value('kode_batch') ?? '-';
+                $kodeBatch = \App\Models\InspectionProductDetail::where(
+                    'uuid',
+                    $item['inspection_uuid']
+                )->value('kode_batch') ?? '-';
             }
 
-            $sheet->setCellValue("A{$excelRow}", ($i + 1) . '. ' . ($item['nama_bahan'] ?? '-'));
+            $sheet->setCellValue(
+                "A{$excelRow}",
+                $item['nama_bahan'] ?? '-'
+            );
+
             $sheet->setCellValue("B{$excelRow}", $kodeBatch);
             $sheet->setCellValue("C{$excelRow}", $item['suhu_bahan'] ?? '-');
             $sheet->setCellValue("D{$excelRow}", $item['ph_bahan'] ?? '-');
             $sheet->setCellValue("E{$excelRow}", $item['berat_bahan'] ?? '-');
             $sheet->setCellValue("F{$excelRow}", $item['sensori'] ?? '-');
-
         }
 
         $premix = json_decode($row->premix, true) ?? [];
@@ -789,11 +794,14 @@ class MincingController extends Controller
         foreach ($premix as $i => $item) {
             $excelRow = $startRow + $i;
 
-            $sheet->setCellValue("A{$excelRow}", ($i + 1) . '. ' . ($item['nama_premix'] ?? '-'));
+            $sheet->setCellValue(
+                "A{$excelRow}",
+                $item['nama_premix'] ?? '-'
+            );
+
             $sheet->setCellValue("B{$excelRow}", $item['kode_premix'] ?? '-');
             $sheet->setCellValue("E{$excelRow}", $item['berat_premix'] ?? '-');
             $sheet->setCellValue("F{$excelRow}", $item['sensori_premix'] ?? '-');
-       
         }
         $daging = json_decode($row->suhu_sebelum_grinding, true) ?? [];
 
@@ -805,20 +813,101 @@ class MincingController extends Controller
 
         $sheet->setCellValue('B33', implode(', ', $text));
 
+        // =====================================================
+        // WAKTU MIXING PREMIX
+        // =====================================================
+        $mixingPremixStart = $row->waktu_mixing_premix_start
+            ? \Carbon\Carbon::parse($row->waktu_mixing_premix_start)->format('H:i')
+            : '-';
+
+        $mixingPremixEnd = $row->waktu_mixing_premix_end
+            ? \Carbon\Carbon::parse($row->waktu_mixing_premix_end)->format('H:i')
+            : '-';
+
+        $mixingPremixMenit = $row->waktu_mixing_premix ?? 0;
+
+        $sheet->setCellValue(
+            'B35',
+            $mixingPremixStart . ' - ' . $mixingPremixEnd .
+                ' (' . $mixingPremixMenit . ' menit)'
+        );
+
+
+        // =====================================================
+        // WAKTU BOWL CUTTER
+        // =====================================================
+        $bowlStart = $row->waktu_bowl_cutter_start
+            ? \Carbon\Carbon::parse($row->waktu_bowl_cutter_start)->format('H:i')
+            : '-';
+
+        $bowlEnd = $row->waktu_bowl_cutter_end
+            ? \Carbon\Carbon::parse($row->waktu_bowl_cutter_end)->format('H:i')
+            : '-';
+
+        $bowlMenit = $row->waktu_bowl_cutter ?? 0;
+
+        $sheet->setCellValue(
+            'B36',
+            $bowlStart . ' - ' . $bowlEnd .
+                ' (' . $bowlMenit . ' menit)'
+        );
+
+
+        // =====================================================
+        // WAKTU AGING EMULSI
+        // =====================================================
         $awalAging = $row->waktu_aging_emulsi_awal;
         $akhirAging = $row->waktu_aging_emulsi_akhir;
 
-        $agingMenit = '-';
+        $agingMenit = 0;
 
         if ($awalAging && $akhirAging) {
-            $agingMenit = \Carbon\Carbon::parse($awalAging)->diffInMinutes(\Carbon\Carbon::parse($akhirAging));
+            $agingMenit = \Carbon\Carbon::parse($awalAging)
+                ->diffInMinutes(\Carbon\Carbon::parse($akhirAging));
         }
 
-        $sheet->setCellValue('B35', ($row->waktu_mixing_premix ?? '-') . ' Menit');
-        $sheet->setCellValue('B36', ($row->waktu_bowl_cutter ?? '-') . ' Menit');
-        $sheet->setCellValue('B37', $agingMenit . ' Menit');
-        $sheet->setCellValue('B38', ($row->suhu_akhir_emulsi_gel ?? '-') . ' °C');
-        $sheet->setCellValue('B39', ($row->waktu_mixing ?? '-') . ' Menit');
+        $agingStart = $awalAging
+            ? \Carbon\Carbon::parse($awalAging)->format('H:i')
+            : '-';
+
+        $agingEnd = $akhirAging
+            ? \Carbon\Carbon::parse($akhirAging)->format('H:i')
+            : '-';
+
+        $sheet->setCellValue(
+            'B37',
+            $agingStart . ' - ' . $agingEnd .
+                ' (' . $agingMenit . ' menit)'
+        );
+
+
+        // =====================================================
+        // SUHU AKHIR EMULSI GEL
+        // =====================================================
+        $sheet->setCellValue(
+            'B38',
+            ($row->suhu_akhir_emulsi_gel ?? '-') . ' °C'
+        );
+
+
+        // =====================================================
+        // WAKTU MIXING
+        // =====================================================
+        $mixingStart = $row->waktu_mixing_start
+            ? \Carbon\Carbon::parse($row->waktu_mixing_start)->format('H:i')
+            : '-';
+
+        $mixingEnd = $row->waktu_mixing_end
+            ? \Carbon\Carbon::parse($row->waktu_mixing_end)->format('H:i')
+            : '-';
+
+        $mixingMenit = $row->waktu_mixing ?? 0;
+
+        $sheet->setCellValue(
+            'B39',
+            $mixingStart . ' - ' . $mixingEnd .
+                ' (' . $mixingMenit . ' menit)'
+        );
         $sheet->setCellValue('B40', ($row->suhu_akhir_mixing ?? '-') . ' °C');
         $sheet->setCellValue('B41', ($row->suhu_akhir_emulsi ?? '-') . ' °C');
         $sheet->setCellValue('B42', $row->username_updated ?? $row->username ?? '-');
@@ -860,6 +949,9 @@ class MincingController extends Controller
 
         $writer = new Xlsx($spreadsheet);
 
-        return response()->streamDownload(function () use ($writer) { ob_clean(); $writer->save('php://output'); }, $filename);
+        return response()->streamDownload(function () use ($writer) {
+            ob_clean();
+            $writer->save('php://output');
+        }, $filename);
     }
 }

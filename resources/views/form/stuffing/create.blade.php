@@ -506,33 +506,100 @@
         let stuffingIndex = {{ count($oldStuffing) }};
 
         document.getElementById('btnTambahStuffing').addEventListener('click', function() {
-            const firstItem = document.querySelector('.stuffing-item');
-            const clone = firstItem.cloneNode(true);
 
-            clone.querySelector('.accordion-button').innerHTML =
-                `<i class="bi bi-clipboard-check me-2 text-warning"></i> Stuffing ${stuffingIndex + 1}`;
-            clone.querySelector('.accordion-header').id = `heading${stuffingIndex}`;
-            clone.querySelector('.accordion-button').setAttribute('data-bs-target', `#collapse${stuffingIndex}`);
-            clone.querySelector('.accordion-collapse').id = `collapse${stuffingIndex}`;
+            const accordion = document.getElementById('accordionStuffing');
+            const items = accordion.querySelectorAll('.stuffing-item');
 
-            let timeInputClone = clone.querySelector('#jamMulaiInput');
-            if (timeInputClone) timeInputClone.removeAttribute('id');
+            if (items.length === 0) {
+                return;
+            }
+
+            // Ambil item terakhir sebagai template
+            const template = items[items.length - 1];
+
+            const clone = template.cloneNode(true);
+
+            // ==========================
+            // ID ACCORDION BARU
+            // ==========================
+
+            const newHeadingId = `heading${stuffingIndex}`;
+            const newCollapseId = `collapse${stuffingIndex}`;
+
+            const button = clone.querySelector('.accordion-button');
+            const header = clone.querySelector('.accordion-header');
+            const collapse = clone.querySelector('.accordion-collapse');
+
+            header.id = newHeadingId;
+
+            button.setAttribute(
+                'data-bs-target',
+                `#${newCollapseId}`
+            );
+
+            button.setAttribute(
+                'aria-controls',
+                newCollapseId
+            );
+
+            button.classList.add('collapsed');
+
+            button.innerHTML = `
+        <i class="bi bi-clipboard-check me-2 text-warning"></i>
+        Stuffing ${stuffingIndex + 1}
+    `;
+
+            collapse.id = newCollapseId;
+            collapse.classList.remove('show');
+
+            // Hapus atribut yang mengarah ke accordion lama
+            collapse.removeAttribute('aria-labelledby');
+
+            // ==========================
+            // BERSIHKAN INPUT
+            // ==========================
 
             clone.querySelectorAll('input, select, textarea').forEach(el => {
-                if (el.tagName === 'SELECT') el.selectedIndex = 0;
-                else el.value = '';
 
-                // Hilangkan class is-invalid bawaan jika ada dari elemen aslinya
+                // Hapus status validasi
                 el.classList.remove('is-invalid');
+                el.classList.remove('is-valid');
 
-                let name = el.getAttribute('name');
-                if (name) el.setAttribute('name', name.replace(/\[\d+\]/, `[${stuffingIndex}]`));
+                // Bersihkan value
+                if (el.tagName === 'SELECT') {
+                    el.selectedIndex = 0;
+                } else {
+                    el.value = '';
+                }
+
+                // ==========================
+                // UPDATE NAME INDEX
+                // ==========================
+
+                const name = el.getAttribute('name');
+
+                if (name) {
+                    el.setAttribute(
+                        'name',
+                        name.replace(
+                            /stuffing\[\d+\]/,
+                            `stuffing[${stuffingIndex}]`
+                        )
+                    );
+                }
+
+                // Hanya Stuffing pertama yang punya ID jamMulaiInput
+                if (el.id === 'jamMulaiInput') {
+                    el.removeAttribute('id');
+                }
             });
 
-            clone.querySelector('.accordion-collapse').classList.remove('show');
-            clone.querySelector('.accordion-button').classList.add('collapsed');
+            // ==========================
+            // TAMBAHKAN KE DOM
+            // ==========================
 
-            document.getElementById('accordionStuffing').appendChild(clone);
+            accordion.appendChild(clone);
+
             stuffingIndex++;
         });
 

@@ -46,16 +46,16 @@
         border: 1px solid #6c757d;
     }
     .btn-custom.btn-secondary:hover { background-color: rgba(0,0,0, 0.05); }
-    .detail-card { 
-        border: 1px solid var(--color-gray); 
-        padding: 1.5rem; 
-        margin-bottom: 1.5rem; 
-        border-radius: var(--border-radius); 
+    .detail-card {
+        border: 1px solid var(--color-gray);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: var(--border-radius);
         background-color: #fff;
         box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
-    .detail-card h2 { 
-        margin-top: 0; 
+    .detail-card h2 {
+        margin-top: 0;
         margin-bottom: 1rem;
         padding-bottom: 0.75rem;
         border-bottom: 1px solid var(--color-gray);
@@ -64,10 +64,10 @@
         align-items: center;
         gap: 0.5rem;
     }
-    .detail-grid { 
-        display: grid; 
+    .detail-grid {
+        display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1rem 2rem; 
+        gap: 1rem 2rem;
     }
     .detail-grid-item {
         display: grid;
@@ -76,17 +76,17 @@
         padding: 5px 0;
         border-bottom: 1px solid #f0f0f0;
     }
-    .detail-grid-item strong { 
-        font-weight: 600; 
+    .detail-grid-item strong {
+        font-weight: 600;
         color: #333;
     }
     .detail-grid-item span { color: #555; }
     .text-block-item { margin-bottom: 1.5rem; }
-    .text-block-item h4 { 
-        font-size: 1.1rem; 
-        font-weight: 600; 
-        color: #333; 
-        margin-bottom: 0.5rem; 
+    .text-block-item h4 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.5rem;
     }
     .text-block-item-content {
         background-color: var(--color-light-gray, #f8f9fa);
@@ -133,11 +133,11 @@
             </div>
         </div>
     </div>
-    
+
     {{-- CARD 2: Hasil Pengecekan --}}
     <div class="detail-card">
         <h2><i class="bi bi-check2-circle"></i> Hasil Pengecekan</h2>
-        
+
         <h4 style="font-size: 1.1rem; font-weight: 600;">Kekuatan Medan Magnet (Gauss)</h4>
         <div class="detail-grid mb-3">
              <div class="detail-grid-item">
@@ -164,14 +164,14 @@
             @endif
         </div>
     </div>
-    
+
     {{-- CARD 3: Status Verifikasi --}}
     <div class="detail-card">
         <h2><i class="bi bi-check-all"></i> Status Verifikasi (SPV QC)</h2>
         <div class="row">
             <div class="col-md-12">
                 <div class="detail-grid-item">
-                    <strong>Status:</strong> 
+                    <strong>Status:</strong>
                     <span>
                         {{-- Variabel diubah --}}
                         @if($pemeriksaanKekuatanMagnetTrap->status_spv == 0) <span class="badge bg-warning text-dark">Pending</span>
@@ -196,11 +196,11 @@
             </div>
         </div>
     </div>
-    
+
     {{-- CARD 4: Keterangan & Audit Trail --}}
     <div class="detail-card">
-        <h2><i class="bi bi-paperclip"></i> Keterangan & Catatan Audit</h2>
-        
+        <h2><i class="bi bi-paperclip"></i> Catatan Audit</h2>
+
         <div class="text-block-item mb-0">
             <h4>Keterangan</h4>
             {{-- Variabel diubah --}}
