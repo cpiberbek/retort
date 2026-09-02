@@ -341,6 +341,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('loading-produks', LoadingProdukController::class)
         ->names('loading-produks');
 
+    Route::get('/loading-produks/{loadingProduk}/kode-produksi', [LoadingProdukController::class, 'kodeProduksi'])
+        ->name('loading-produks.kode-produksi');
+
     // Route::resource('loading-produks', LoadingProdukController::class);
 
     Route::get('/dispositions/{disposition}/update-form', [DispositionController::class, 'showUpdateForm'])

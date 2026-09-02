@@ -34,12 +34,24 @@ class LoadingProdukController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function ($q) use ($search) {
+
+            $mincingUuids = \App\Models\Mincing::where('kode_produksi', 'like', "%{$search}%")
+                ->pluck('uuid');
+
+            $query->where(function ($q) use ($search, $mincingUuids) {
                 $q->where('no_pol_mobil', 'like', "%{$search}%")
                     ->orWhere('nama_supir', 'like', "%{$search}%")
-                    ->orWhere('ekspedisi', 'like', "%{$search}%");
+                    ->orWhere('ekspedisi', 'like', "%{$search}%")
+                    ->orWhereHas('details', function ($detailQuery) use ($search, $mincingUuids) {
+                        $detailQuery->where('kode_produksi', 'like', "%{$search}%");
+
+                        if ($mincingUuids->isNotEmpty()) {
+                            $detailQuery->orWhereIn('kode_produksi', $mincingUuids);
+                        }
+                    });
             });
         }
+
 
         // 4. Eksekusi query dengan urutan terbaru dan paginasi
         $produks = $query->latest()->paginate(10);
@@ -351,6 +363,26 @@ class LoadingProdukController extends Controller
         $loadingProduk->load('details');
         $produks = \App\Models\Produk::where('plant', $user->plant)->get();
         return view('loading-produks.update-details', compact('loadingProduk', 'produks'));
+    }
+
+    public function kodeProduksi(LoadingProduk $loadingProduk)
+    {
+        $loadingProduk->load('details');
+
+        $kodeProduksi = $loadingProduk->details
+            ->map(function ($detail) {
+                if (\Illuminate\Support\Str::isUuid($detail->kode_produksi)) {
+                    return \App\Models\Mincing::where('uuid', $detail->kode_produksi)
+                        ->value('kode_produksi') ?? $detail->kode_produksi;
+                }
+
+                return $detail->kode_produksi;
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+        return response()->json($kodeProduksi);
     }
 
     public function exportPdf(Request $request)

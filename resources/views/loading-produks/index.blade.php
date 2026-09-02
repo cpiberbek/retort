@@ -129,7 +129,7 @@
                         <i class="bi bi-search text-muted"></i>
                     </span>
                     <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari No. Pol / Supir / Ekspedisi...">
+                    value="{{ request('search') }}" placeholder="Cari No. Pol / Supir / Batch / Ekspedisi...">
                 </div>
             </div>
             <div class="col-md-3 mt-4">
@@ -155,6 +155,7 @@
                             <th>No. Pol Mobil</th>
                             <th>Nama Supir</th>
                             <th>Ekspedisi</th>
+                            <th>Kode Batch</th>
                             <th>Status SPV</th> {{-- Kolom Status Baru --}}
                             <th>Aksi</th>
                         </tr>
@@ -178,6 +179,15 @@
                             <td class="text-center align-middle fw-bold">{{ $produk->no_pol_mobil }}</td>
                             <td class="align-middle">{{ $produk->nama_supir }}</td>
                             <td class="align-middle">{{ $produk->ekspedisi }}</td>
+                            <td class="align-middle">
+                                <button type="button"
+                                        class="btn btn-primary btn-sm btn-kode-produksi"
+                                        data-url="{{ route('loading-produks.kode-produksi', $produk->uuid) }}"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEkspedisi">
+                                    Lihat Kode Produksi
+                                </button>
+                            </td>
 
                             {{-- Kolom Status SPV --}}
                             <td class="text-center align-middle">
@@ -258,6 +268,25 @@
         {{ $produks->withQueryString()->links('pagination::bootstrap-5') }}
     </div>
     @endif
+</div>
+
+<div class="modal fade" id="modalEkspedisi" tabindex="-1" aria-labelledby="modalEkspedisiLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalEkspedisiLabel">Kode Produksi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <div id="kodeProduksiContent">
+                    <div class="text-center">
+                        <div class="spinner-border"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="warningModal" tabindex="-1" aria-hidden="true">
@@ -357,6 +386,65 @@ MODAL VERIFIKASI (LOOPING)
 
             date.addEventListener('change', () => form.submit());
             shift.addEventListener('change', () => form.submit());
+        });
+    </script>
+
+    <script>
+        document.addEventListener('click', function (e) {
+            const button = e.target.closest('.btn-kode-produksi');
+
+            if (!button) return;
+
+            const url = button.dataset.url;
+            const content = document.getElementById('kodeProduksiContent');
+
+            content.innerHTML = `
+                <div class="text-center">
+                    <div class="spinner-border"></div>
+                </div>
+            `;
+
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.length) {
+                        content.innerHTML = `
+                            <div class="alert alert-warning mb-0">
+                                Tidak ada kode produksi.
+                            </div>
+                        `;
+                        return;
+                    }
+
+                    let html = '<div class="list-group">';
+
+                    data.forEach(function (kode, index) {
+                        html += `
+                            <div class="list-group-item">
+                                ${index + 1}. ${kode}
+                            </div>
+                        `;
+                    });
+
+                    html += '</div>';
+
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error(error);
+
+                    content.innerHTML = `
+                        <div class="alert alert-danger mb-0">
+                            Gagal mengambil kode produksi.
+                        </div>
+                    `;
+                });
         });
     </script>
 
