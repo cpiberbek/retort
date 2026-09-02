@@ -126,14 +126,22 @@
                                     <tbody>
                                         <tr>
                                             <td class="text-start fw-semibold">Waktu Mulai</td>
+<<<<<<< Updated upstream
                                             <td>
                                                 <input type="time" name="waktu_mulai"
+=======
+                                            <td><input type="time" name="waktu_mulai" id="waktu_mulai"
+>>>>>>> Stashed changes
                                                     class="form-control form-control-sm text-center"
                                                     value="{{ old('waktu_mulai', $mincing->waktu_mulai) }}">
                                             </td>
                                             <td class="fw-bold">s/d</td>
+<<<<<<< Updated upstream
                                             <td>
                                                 <input type="time" name="waktu_selesai"
+=======
+                                            <td><input type="time" name="waktu_selesai" id="waktu_selesai"
+>>>>>>> Stashed changes
                                                     class="form-control form-control-sm text-center"
                                                     value="{{ old('waktu_selesai', $mincing->waktu_selesai) }}">
                                             </td>
@@ -193,25 +201,29 @@
                                                 }
 
                                                 if (array_key_exists('inspection_uuid', $np)) {
-                                                    $groupedNonPremix[$key]['inspection_uuid'][] = $np['inspection_uuid'];
+                                                    $groupedNonPremix[$key]['inspection_uuid'][] =
+                                                        $np['inspection_uuid'];
                                                 }
                                             }
                                         @endphp
 
                                         @if (!empty($groupedNonPremix))
-
                                             @foreach ($groupedNonPremix as $i => $np)
-
                                                 <tr>
                                                     <td>
+<<<<<<< Updated upstream
                                                         <select
                                                             name="non_premix[{{ $loop->index }}][nama_bahan]"
                                                             class="form-control form-select-sm text-center nama-bahan-select select2">
+=======
+                                                        <select name="non_premix[{{ $loop->index }}][nama_bahan]"
+                                                            class="form-control form-select-sm text-center nama-bahan-select select2">
+
+>>>>>>> Stashed changes
                                                             <option value="" selected>-- Pilih Bahan --</option>
 
                                                             @foreach ($rawMaterials as $rm)
-                                                                <option
-                                                                    value="{{ $rm->nama_bahan_baku }}"
+                                                                <option value="{{ $rm->nama_bahan_baku }}"
                                                                     {{ $np['nama_bahan'] == $rm->nama_bahan_baku ? 'selected' : '' }}>
                                                                     {{ $rm->nama_bahan_baku }}
                                                                 </option>
@@ -220,8 +232,7 @@
                                                     </td>
 
                                                     <td>
-                                                        <select
-                                                            name="non_premix[{{ $loop->index }}][inspection_uuid][]"
+                                                        <select name="non_premix[{{ $loop->index }}][inspection_uuid][]"
                                                             class="form-control form-select-sm text-center kode-batch-select select2"
                                                             multiple>
 
@@ -229,8 +240,7 @@
 
                                                             @foreach ($inspections as $insp)
                                                                 @if ($insp->inspection && $insp->inspection->bahan_baku === $np['nama_bahan'])
-                                                                    <option
-                                                                        value="{{ $insp->uuid }}"
+                                                                    <option value="{{ $insp->uuid }}"
                                                                         data-bahan="{{ $insp->inspection->bahan_baku }}"
                                                                         {{ !empty($np['inspection_uuid']) && in_array($insp->uuid, $np['inspection_uuid']) ? 'selected' : '' }}>
                                                                         {{ $insp->kode_batch }}
@@ -241,8 +251,7 @@
                                                         </select>
 
                                                         @foreach ($np['inspection_uuid'] as $uuid)
-                                                            <input
-                                                                type="hidden"
+                                                            <input type="hidden"
                                                                 name="non_premix[{{ $loop->parent->index }}][inspection_uuid][]"
                                                                 value="{{ $uuid }}">
                                                         @endforeach
@@ -250,14 +259,11 @@
 
                                                     <td>
                                                         <div class="input-group input-group-sm">
-                                                            <button
-                                                                type="button"
+                                                            <button type="button"
                                                                 class="btn btn-outline-secondary btn-toggle-minus"
                                                                 tabindex="-1">±</button>
 
-                                                            <input
-                                                                type="text"
-                                                                inputmode="decimal"
+                                                            <input type="text" inputmode="decimal"
                                                                 name="non_premix[{{ $loop->index }}][suhu_bahan]"
                                                                 value="{{ $np['suhu_bahan'] }}"
                                                                 class="form-control form-control-sm text-center suhu-number-input">
@@ -266,14 +272,11 @@
 
                                                     <td>
                                                         <div class="input-group input-group-sm">
-                                                            <button
-                                                                type="button"
+                                                            <button type="button"
                                                                 class="btn btn-outline-secondary btn-toggle-minus"
                                                                 tabindex="-1">±</button>
 
-                                                            <input
-                                                                type="text"
-                                                                inputmode="decimal"
+                                                            <input type="text" inputmode="decimal"
                                                                 name="non_premix[{{ $loop->index }}][ph_bahan]"
                                                                 value="{{ $np['ph_bahan'] }}"
                                                                 class="form-control form-control-sm text-center suhu-number-input">
@@ -281,42 +284,39 @@
                                                     </td>
 
                                                     <td>
-                                                        <input
-                                                            type="number"
+                                                        <input type="number"
                                                             name="non_premix[{{ $loop->index }}][berat_bahan]"
-                                                            value="{{ $np['berat_bahan'] }}"
-                                                            step="0.01"
+                                                            value="{{ $np['berat_bahan'] }}" step="0.01"
                                                             class="form-control form-control-sm text-center">
                                                     </td>
 
                                                     <td>
-                                                        <input
-                                                            type="checkbox"
+                                                        <input type="checkbox"
                                                             name="non_premix[{{ $loop->index }}][sensori]"
-                                                            value="Oke"
-                                                            {{ $np['sensori'] === 'Oke' ? 'checked' : '' }}
+                                                            value="Oke" {{ $np['sensori'] === 'Oke' ? 'checked' : '' }}
                                                             class="form-check-input">
                                                     </td>
 
                                                     <td>
-                                                        <button
-                                                            type="button"
-                                                            class="btn btn-sm btn-danger hapusBaris"
+                                                        <button type="button" class="btn btn-sm btn-danger hapusBaris"
                                                             title="Hapus">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
                                                     </td>
                                                 </tr>
-
                                             @endforeach
-
                                         @else
-
                                             <tr>
                                                 <td>
+<<<<<<< Updated upstream
                                                     <select
                                                         name="non_premix[0][nama_bahan]"
                                                         class="form-control form-select-sm text-center nama-bahan-select select2">
+=======
+                                                    <select name="non_premix[0][nama_bahan]"
+                                                        class="form-control form-select-sm text-center nama-bahan-select select2">
+
+>>>>>>> Stashed changes
                                                         <option value="" selected disabled>
                                                             -- Pilih Bahan --
                                                         </option>
@@ -330,11 +330,9 @@
                                                 </td>
 
                                                 <td>
-                                                    <select
-                                                        name="non_premix[0][inspection_uuid][]"
+                                                    <select name="non_premix[0][inspection_uuid][]"
                                                         class="form-control form-select-sm text-center kode-batch-select select2"
-                                                        multiple
-                                                        disabled>
+                                                        multiple disabled>
 
                                                         <option value="" disabled>
                                                             Pilih Bahan dahulu
@@ -342,8 +340,7 @@
 
                                                         @foreach ($inspections as $insp)
                                                             @if ($insp->inspection)
-                                                                <option
-                                                                    value="{{ $insp->uuid }}"
+                                                                <option value="{{ $insp->uuid }}"
                                                                     data-bahan="{{ $insp->inspection->bahan_baku }}">
                                                                     {{ $insp->kode_batch }}
                                                                 </option>
@@ -355,63 +352,44 @@
 
                                                 <td>
                                                     <div class="input-group input-group-sm">
-                                                        <button
-                                                            type="button"
+                                                        <button type="button"
                                                             class="btn btn-outline-secondary btn-toggle-minus"
                                                             tabindex="-1">±</button>
 
-                                                        <input
-                                                            type="text"
-                                                            inputmode="decimal"
+                                                        <input type="text" inputmode="decimal"
                                                             name="non_premix[0][suhu_bahan]"
                                                             class="form-control form-control-sm text-center suhu-number-input">
                                                     </div>
                                                 </td>
 
                                                 <td>
-                                                    <input
-                                                        type="number"
-                                                        name="non_premix[0][ph_bahan]"
-                                                        step="0.01"
-                                                        min="0"
-                                                        class="form-control form-control-sm text-center">
+                                                    <input type="number" name="non_premix[0][ph_bahan]" step="0.01"
+                                                        min="0" class="form-control form-control-sm text-center">
                                                 </td>
 
                                                 <td>
-                                                    <input
-                                                        type="number"
-                                                        name="non_premix[0][berat_bahan]"
-                                                        step="0.01"
-                                                        class="form-control form-control-sm text-center">
+                                                    <input type="number" name="non_premix[0][berat_bahan]"
+                                                        step="0.01" class="form-control form-control-sm text-center">
                                                 </td>
 
                                                 <td>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="non_premix[0][sensori]"
-                                                        value="Oke"
+                                                    <input type="checkbox" name="non_premix[0][sensori]" value="Oke"
                                                         class="form-check-input">
                                                 </td>
 
                                                 <td>
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-sm btn-danger hapusBaris"
+                                                    <button type="button" class="btn btn-sm btn-danger hapusBaris"
                                                         title="Hapus">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </td>
                                             </tr>
-
                                         @endif
 
                                     </tbody>
                                 </table>
 
-                                <button
-                                    type="button"
-                                    class="btn btn-success btn-sm"
-                                    id="tambahBarisNonPremix">
+                                <button type="button" class="btn btn-success btn-sm" id="tambahBarisNonPremix">
                                     <i class="bi bi-plus-circle"></i> Tambah Bahan
                                 </button>
                             </div>
@@ -444,8 +422,12 @@
 
                                                 <tr>
                                                     <td>
+<<<<<<< Updated upstream
                                                         <select
                                                             name="premix[{{ $i }}][nama_premix]"
+=======
+                                                        <select name="premix[{{ $i }}][nama_premix]"
+>>>>>>> Stashed changes
                                                             class="form-control form-select-sm text-center select2">
                                                             <option value="">-- Pilih Premix --</option>
 
@@ -496,8 +478,12 @@
                                                     </td>
 
                                                     <td>
+<<<<<<< Updated upstream
                                                         <button
                                                             type="button"
+=======
+                                                        <button type="button"
+>>>>>>> Stashed changes
                                                             class="btn btn-danger btn-sm hapusBarisPremix">
                                                             <i class="bi bi-trash"></i>
                                                         </button>
@@ -510,8 +496,12 @@
 
                                             <tr>
                                                 <td>
+<<<<<<< Updated upstream
                                                     <select
                                                         name="premix[0][nama_premix]"
+=======
+                                                    <select name="premix[0][nama_premix]"
+>>>>>>> Stashed changes
                                                         class="form-control form-select-sm text-center select2">
                                                         <option value="">-- Pilih Premix --</option>
 
@@ -540,19 +530,28 @@
                                                 </td>
 
                                                 <td>
+<<<<<<< Updated upstream
                                                     <input
                                                         type="number"
                                                         name="premix[0][berat_premix]"
                                                         step="0.01"
+=======
+                                                    <input type="number" name="premix[0][berat_premix]" step="0.01"
+>>>>>>> Stashed changes
                                                         class="form-control form-control-sm text-center">
                                                 </td>
 
                                                 <td class="text-center">
+<<<<<<< Updated upstream
                                                     <input
                                                         type="checkbox"
                                                         name="premix[0][sensori_premix]"
                                                         value="Oke"
                                                         class="form-check-input">
+=======
+                                                    <input type="checkbox" name="premix[0][sensori_premix]"
+                                                        value="Oke" class="form-check-input">
+>>>>>>> Stashed changes
                                                 </td>
 
                                                 <td>
@@ -645,6 +644,7 @@
 
                                                                 <td style="width: 45%;">
                                                                     <div class="input-group input-group-sm">
+<<<<<<< Updated upstream
                                                                         <button
                                                                             type="button"
                                                                             class="btn btn-outline-secondary btn-toggle-minus"
@@ -653,6 +653,12 @@
                                                                         <input
                                                                             type="text"
                                                                             inputmode="decimal"
+=======
+                                                                        <button type="button"
+                                                                            class="btn btn-outline-secondary btn-toggle-minus"
+                                                                            tabindex="-1">±</button>
+                                                                        <input type="text" inputmode="decimal"
+>>>>>>> Stashed changes
                                                                             name="suhu_grinding_input[{{ $key }}][suhu]"
                                                                             value="{{ $item['suhu'] ?? '' }}"
                                                                             class="form-control form-control-sm text-center suhu-number-input">
@@ -689,6 +695,7 @@
 
                                                                 <td style="width: 45%;">
                                                                     <div class="input-group input-group-sm">
+<<<<<<< Updated upstream
                                                                         <button
                                                                             type="button"
                                                                             class="btn btn-outline-secondary btn-toggle-minus"
@@ -697,6 +704,12 @@
                                                                         <input
                                                                             type="text"
                                                                             inputmode="decimal"
+=======
+                                                                        <button type="button"
+                                                                            class="btn btn-outline-secondary btn-toggle-minus"
+                                                                            tabindex="-1">±</button>
+                                                                        <input type="text" inputmode="decimal"
+>>>>>>> Stashed changes
                                                                             name="suhu_grinding_input[0][suhu]"
                                                                             class="form-control form-control-sm text-center suhu-number-input">
                                                                     </div>
@@ -728,6 +741,7 @@
                                         </tr>
 
                                         <tr>
+<<<<<<< Updated upstream
                                             <td class="text-start fw-semibold bg-light" style="width: 25%;">
                                                 Waktu Mixing Premix
                                             </td>
@@ -738,14 +752,26 @@
                                                     <input
                                                         type="time"
                                                         id="premix_start"
+=======
+                                            <td class="text-start fw-semibold bg-light" style="width: 25%;">Waktu Mixing
+                                                Premix</td>
+                                            <td colspan="3">
+                                                <div class="d-flex align-items-center gap-2">
+
+                                                    <input type="time" id="premix_start"
+>>>>>>> Stashed changes
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_mixing_premix_start', $mincing->waktu_mixing_premix_start) }}">
 
                                                     <span>-</span>
 
+<<<<<<< Updated upstream
                                                     <input
                                                         type="time"
                                                         id="premix_end"
+=======
+                                                    <input type="time" id="premix_end"
+>>>>>>> Stashed changes
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_mixing_premix_end', $mincing->waktu_mixing_premix_end) }}">
 
@@ -756,6 +782,7 @@
 
                                                 </div>
 
+<<<<<<< Updated upstream
                                                 <input
                                                     type="hidden"
                                                     name="waktu_mixing_premix"
@@ -771,6 +798,16 @@
                                                 <input
                                                     type="hidden"
                                                     name="waktu_mixing_premix_end"
+=======
+                                                <input type="hidden" name="waktu_mixing_premix" id="premix_menit"
+                                                    value="{{ old('waktu_mixing_premix', $mincing->waktu_mixing_premix) }}">
+
+                                                <input type="hidden" name="waktu_mixing_premix_start"
+                                                    id="premix_start_hidden"
+                                                    value="{{ old('waktu_mixing_premix_start', $mincing->waktu_mixing_premix_start) }}">
+
+                                                <input type="hidden" name="waktu_mixing_premix_end"
+>>>>>>> Stashed changes
                                                     id="premix_end_hidden"
                                                     value="{{ old('waktu_mixing_premix_end', $mincing->waktu_mixing_premix_end) }}">
                                             </td>
@@ -794,17 +831,25 @@
                                             <td colspan="3">
                                                 <div class="d-flex align-items-center gap-2">
 
+<<<<<<< Updated upstream
                                                     <input
                                                         type="time"
                                                         id="bowl_start"
+=======
+                                                    <input type="time" id="bowl_start"
+>>>>>>> Stashed changes
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_bowl_cutter_start', $mincing->waktu_bowl_cutter_start) }}">
 
                                                     <span>-</span>
 
+<<<<<<< Updated upstream
                                                     <input
                                                         type="time"
                                                         id="bowl_end"
+=======
+                                                    <input type="time" id="bowl_end"
+>>>>>>> Stashed changes
                                                         class="form-control form-control-sm"
                                                         value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}">
 
@@ -815,6 +860,7 @@
 
                                                 </div>
 
+<<<<<<< Updated upstream
                                                 <input
                                                     type="hidden"
                                                     name="waktu_bowl_cutter"
@@ -831,6 +877,16 @@
                                                     type="hidden"
                                                     name="waktu_bowl_cutter_end"
                                                     id="bowl_end_hidden"
+=======
+                                                <input type="hidden" name="waktu_bowl_cutter" id="bowl_menit"
+                                                    value="{{ old('waktu_bowl_cutter', $mincing->waktu_bowl_cutter) }}">
+
+                                                <input type="hidden" name="waktu_bowl_cutter_start"
+                                                    id="bowl_start_hidden"
+                                                    value="{{ old('waktu_bowl_cutter_start', $mincing->waktu_bowl_cutter_start) }}">
+
+                                                <input type="hidden" name="waktu_bowl_cutter_end" id="bowl_end_hidden"
+>>>>>>> Stashed changes
                                                     value="{{ old('waktu_bowl_cutter_end', $mincing->waktu_bowl_cutter_end) }}">
                                             </td>
                                         </tr>
@@ -868,6 +924,7 @@
 
                                             <td colspan="3">
                                                 <div class="input-group input-group-sm">
+<<<<<<< Updated upstream
                                                     <button
                                                         type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
@@ -876,6 +933,12 @@
                                                     <input
                                                         type="text"
                                                         inputmode="decimal"
+=======
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal"
+>>>>>>> Stashed changes
                                                         name="suhu_akhir_emulsi_gel"
                                                         class="form-control form-control-sm text-center suhu-number-input"
                                                         value="{{ rtrim(rtrim(old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel), '0'), '.') }}">
@@ -943,6 +1006,7 @@
 
                                             <td>
                                                 <div class="input-group input-group-sm">
+<<<<<<< Updated upstream
                                                     <button
                                                         type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
@@ -952,6 +1016,12 @@
                                                         type="text"
                                                         inputmode="decimal"
                                                         name="suhu_akhir_mixing"
+=======
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="suhu_akhir_mixing"
+>>>>>>> Stashed changes
                                                         class="form-control form-control-sm text-center suhu-number-input"
                                                         value="{{ rtrim(rtrim(old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing), '0'), '.') }}">
                                                 </div>
@@ -965,6 +1035,7 @@
 
                                             <td>
                                                 <div class="input-group input-group-sm">
+<<<<<<< Updated upstream
                                                     <button
                                                         type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
@@ -974,6 +1045,12 @@
                                                         type="text"
                                                         inputmode="decimal"
                                                         name="suhu_akhir_emulsi"
+=======
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="suhu_akhir_emulsi"
+>>>>>>> Stashed changes
                                                         class="form-control form-control-sm text-center suhu-number-input"
                                                         value="{{ rtrim(rtrim(old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi), '0'), '.') }}">
                                                 </div>
@@ -1435,7 +1512,10 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
             const start = document.getElementById("premix_start");
             const end = document.getElementById("premix_end");
             const result = document.getElementById("premix_result");
@@ -1483,7 +1563,10 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
             const start = document.getElementById("bowl_start");
             const end = document.getElementById("bowl_end");
             const result = document.getElementById("bowl_result");
@@ -1531,7 +1614,10 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
             const start = document.getElementById('mixing_start');
             const end = document.getElementById('mixing_end');
 
@@ -1606,6 +1692,7 @@
             }
 
             const input = btn.closest('.input-group').querySelector('input');
+<<<<<<< Updated upstream
 
             if (!input) {
                 return;
@@ -1615,8 +1702,64 @@
                 ? input.value.slice(1)
                 : '-' + input.value;
 
+=======
+            if (!input) return;
+            input.value = input.value.startsWith('-') ?
+                input.value.slice(1) :
+                '-' + input.value;
+>>>>>>> Stashed changes
             input.dispatchEvent(new Event('input'));
             input.focus();
         });
+
+        // ==========================================
+        // RELASI WAKTU PREPARATION -> BOWL CUTTER
+        // ==========================================
+
+        const waktuMulaiPreparation = document.getElementById('waktu_mulai');
+        const waktuSelesaiPreparation = document.getElementById('waktu_selesai');
+
+        const bowlStart = document.getElementById('bowl_start');
+        const mixingStart = document.getElementById('mixing_start');
+
+
+        // ==========================================
+        // WAKTU MULAI PREPARATION
+        // -> WAKTU AWAL BOWL CUTTER
+        // ==========================================
+
+        if (waktuMulaiPreparation && bowlStart) {
+            waktuMulaiPreparation.addEventListener('change', function() {
+
+                if (this.value) {
+                    bowlStart.value = this.value;
+
+                    // Jalankan event change jika ada
+                    // perhitungan waktu Bowl Cutter
+                    bowlStart.dispatchEvent(new Event('change'));
+                }
+
+            });
+        }
+
+
+        // ==========================================
+        // WAKTU AKHIR PREPARATION
+        // -> WAKTU AWAL MIXING
+        // ==========================================
+
+        if (waktuSelesaiPreparation && mixingStart) {
+            waktuSelesaiPreparation.addEventListener('change', function() {
+
+                if (this.value) {
+                    mixingStart.value = this.value;
+
+                    // Jalankan event change jika ada
+                    // perhitungan waktu Mixing
+                    mixingStart.dispatchEvent(new Event('change'));
+                }
+
+            });
+        }
     </script>
 @endsection

@@ -79,8 +79,7 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nama Varian <span
                                             class="text-danger">*</span></label>
-                                    <select name="nama_produk" class="form-control select2"
-                                        required>
+                                    <select name="nama_produk" class="form-control select2" required>
                                         <option value="">-- Pilih Produk --</option>
                                         @foreach ($produks as $produk)
                                             <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
@@ -119,12 +118,12 @@
                                                 Waktu Mulai
                                             </td>
                                             <td>
-                                                <input type="time" name="waktu_mulai"
+                                                <input type="time" name="waktu_mulai" id="waktu_mulai"
                                                     class="form-control form-control-sm text-center">
                                             </td>
                                             <td class="fw-bold">s/d</td>
                                             <td>
-                                                <input type="time" name="waktu_selesai"
+                                                <input type="time" name="waktu_selesai" id="waktu_selesai"
                                                     class="form-control form-control-sm text-center">
                                             </td>
                                         </tr>
@@ -137,7 +136,8 @@
                                 <table class="table table-bordered text-center align-middle" id="tabelNonPremix">
                                     <thead class="table-primary">
                                         <tr>
-                                            <th colspan="7" class="text-left">Bahan Baku dan Bahan Tambahan (Non-Premix)</th>
+                                            <th colspan="7" class="text-left">Bahan Baku dan Bahan Tambahan (Non-Premix)
+                                            </th>
                                         </tr>
                                         <tr>
                                             <th style="width: 30%;">Bahan</th>
@@ -168,11 +168,10 @@
                                                 </select>
                                             </td>
 
-                                           <td>
+                                            <td>
                                                 <select name="non_premix[0][inspection_uuid][]"
                                                     class="form-control form-select-sm text-center kode-batch-select select2"
-                                                    multiple
-                                                    disabled>
+                                                    multiple disabled>
 
                                                     <option value="" disabled selected>Pilih Bahan dahulu</option>
 
@@ -190,16 +189,20 @@
 
                                             <td>
                                                 <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                    <input type="text" inputmode="decimal" name="non_premix[0][suhu_bahan]"
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal"
+                                                        name="non_premix[0][suhu_bahan]"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                    <input type="text"
-                                                        inputmode="decimal"
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal"
                                                         name="non_premix[0][ph_bahan]"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
@@ -209,7 +212,8 @@
                                             <td><input type="checkbox" name="non_premix[0][sensori]" value="Oke"
                                                     class="form-check-input"></td>
                                             <td>
-                                                <button type="button" class="btn btn-sm btn-danger hapusBaris" title="Hapus">
+                                                <button type="button" class="btn btn-sm btn-danger hapusBaris"
+                                                    title="Hapus">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
                                             </td>
@@ -313,11 +317,12 @@
                                                             </td>
                                                             <td style="width: 45%;">
                                                                 <div class="input-group input-group-sm">
-                                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                                    <input type="text" inputmode="decimal" name="suhu_grinding_input[0][suhu]"
-                                                                        step="0.01"
-                                                                        class="form-control form-control-sm text-center suhu-number-input"
-                                                                       >
+                                                                    <button type="button"
+                                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                                        tabindex="-1">±</button>
+                                                                    <input type="text" inputmode="decimal"
+                                                                        name="suhu_grinding_input[0][suhu]" step="0.01"
+                                                                        class="form-control form-control-sm text-center suhu-number-input">
                                                                 </div>
                                                             </td>
                                                             <td style="width: 10%;">
@@ -409,12 +414,15 @@
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsi Gel (Std &lt;5°C)</td>
                                             <td colspan="3">
-                                            <div class="input-group input-group-sm">
-                                                <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                <input type="text" inputmode="decimal" name="suhu_akhir_emulsi_gel"
-                                                    class="form-control form-control-sm text-center suhu-number-input">
-                                            </div>
-                                         </td>
+                                                <div class="input-group input-group-sm">
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal"
+                                                        name="suhu_akhir_emulsi_gel"
+                                                        class="form-control form-control-sm text-center suhu-number-input">
+                                                </div>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -446,23 +454,27 @@
                                         </tr>
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Mixing (Std 2–5°C)</td>
-                                             <td>
+                                            <td>
                                                 <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                    <input type="text" inputmode="decimal" name="suhu_akhir_mixing" 
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="suhu_akhir_mixing"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
-                                             </td>
+                                            </td>
                                         </tr>
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsifying (Std 14±2°C)</td>
-                                             <td>
+                                            <td>
                                                 <div class="input-group input-group-sm">
-                                                    <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                                    <input type="text" inputmode="decimal" name="suhu_akhir_emulsi" 
+                                                    <button type="button"
+                                                        class="btn btn-outline-secondary btn-toggle-minus"
+                                                        tabindex="-1">±</button>
+                                                    <input type="text" inputmode="decimal" name="suhu_akhir_emulsi"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
-                                             </td>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -834,7 +846,7 @@
             // PREMIX
             document.getElementById('tambahBarisPremix')?.addEventListener('click', () => {
 
-                            let optionKodePremix = `
+                let optionKodePremix = `
                     <option value="">-- Pilih Kode Batch --</option>
                 `;
 
@@ -848,20 +860,20 @@
                     @endif
                 @endforeach
 
-                            let optionPremix = `
+                let optionPremix = `
                     <option value="">-- Pilih Premix --</option>
                 `;
 
-                            @foreach ($premixes as $premix)
+                @foreach ($premixes as $premix)
 
-                                optionPremix += `
+                    optionPremix += `
                         <option value="{{ $premix->nama_premix }}">
                             {{ $premix->nama_premix }}
                         </option>
                     `;
-                            @endforeach
+                @endforeach
 
-                            const row = `
+                const row = `
 
                     <tr>
 
@@ -996,11 +1008,55 @@
             if (!btn) return;
             const input = btn.closest('.input-group').querySelector('input');
             if (!input) return;
-            input.value = input.value.startsWith('-')
-                ? input.value.slice(1)
-                : '-' + input.value;
+            input.value = input.value.startsWith('-') ?
+                input.value.slice(1) :
+                '-' + input.value;
             input.dispatchEvent(new Event('input'));
             input.focus();
         });
+
+        // ==========================================
+        // RELASI WAKTU PROSES
+        // ==========================================
+
+        const waktuMulaiPreparation = document.getElementById('waktu_mulai');
+        const waktuSelesaiPreparation = document.getElementById('waktu_selesai');
+
+        const bowlStart = document.getElementById('bowl_start');
+        const mixingStart = document.getElementById('mixing_start');
+
+
+        // Waktu Mulai Preparation
+        // → otomatis menjadi Waktu Awal Bowl Cutter
+        if (waktuMulaiPreparation && bowlStart) {
+
+            waktuMulaiPreparation.addEventListener('change', function() {
+
+                if (this.value) {
+                    bowlStart.value = this.value;
+
+                    // Trigger change jika ada proses lain
+                    bowlStart.dispatchEvent(new Event('change'));
+                }
+
+            });
+        }
+
+
+        // Waktu Akhir Preparation
+        // → otomatis menjadi Waktu Awal Mixing
+        if (waktuSelesaiPreparation && mixingStart) {
+
+            waktuSelesaiPreparation.addEventListener('change', function() {
+
+                if (this.value) {
+                    mixingStart.value = this.value;
+
+                    // Trigger change jika ada proses lain
+                    mixingStart.dispatchEvent(new Event('change'));
+                }
+
+            });
+        }
     </script>
 @endsection

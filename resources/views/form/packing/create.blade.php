@@ -295,20 +295,20 @@
 
         function initBatchSelect() {
             let produkValue = namaProdukSelect.val();
-            
+
             if (kodeToplesSelect.data('select2')) {
                 kodeToplesSelect.select2('destroy');
             }
-            
+
             if (!produkValue) {
                 kodeToplesSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
                 kodeToplesSelect.prop("disabled", true);
                 return;
             }
-            
+
             kodeToplesSelect.html('<option value="">-- Pilih Kode Toples (Batch) --</option>');
             kodeToplesSelect.prop("disabled", false);
-            
+
             kodeToplesSelect.select2({
                 theme: "bootstrap-5",
                 width: '100%',
