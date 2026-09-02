@@ -143,15 +143,59 @@
 
                         </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Suhu</label>
-                                <input type="number" step="0.01" name="suhu" class="form-control" value="{{ old('suhu', $packing->suhu) }}" min="0">
-                            </div>
+                        @php
+                            $suhuData = old('suhu', $packing->suhu ?? []);
+                            if (is_string($suhuData)) {
+                                $suhuData = json_decode($suhuData, true) ?? [];
+                            }
+                        @endphp
 
-                            <div class="col-md-6">
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <label class="form-label fw-bold">Suhu</label>
+
+                                <div id="suhu-wrapper">
+                                    @forelse($suhuData as $index => $suhu)
+                                        @if($suhu !== null && $suhu !== '')
+                                            <div class="input-group mb-2 suhu-item">
+                                                <input type="number" name="suhu[]" class="form-control" step="0.01" min="0"
+                                                    value="{{ $suhu }}" placeholder="Suhu Sealer {{ $index + 1 }}">
+                                                <button type="button" class="btn btn-danger btn-remove-suhu">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </div>
+                                        @endif
+                                    @empty
+                                        <div class="input-group mb-2 suhu-item">
+                                            <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu Sealer 1">
+                                        </div>
+                                    @endforelse
+                                </div>
+
+                                <button type="button" id="btn-add-suhu" class="btn btn-success btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Add Suhu Sealer
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Speed Conveyor</label>
                                 <input type="number" step="0.01" name="speed" class="form-control" value="{{ old('speed', $packing->speed) }}" min="0">
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Kondisi Segel</label>
+                                <select name="kondisi_segel" class="form-control">
+                                    <option value="">-- Pilih --</option>
+                                    <option value="OK" {{ old('kondisi_segel', $packing->kondisi_segel) == 'OK' ? 'selected' : '' }}>OK</option>
+                                    <option value="Tidak OK" {{ old('kondisi_segel', $packing->kondisi_segel) == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Jumlah Produk per Pack/Toples</label>
+                                <input type="number" name="jumlah_produk" class="form-control" value="{{ old('jumlah_produk', $packing->jumlah_produk) }}" min="0">
                             </div>
                         </div>
 
@@ -419,6 +463,33 @@
                 kodeToplesSelect.append(newOption).trigger('change');
             }
         }
+    });
+
+    $(document).ready(function () {
+        let suhuCount = $('#suhu-wrapper .suhu-item').length;
+
+        $('#btn-add-suhu').on('click', function () {
+            suhuCount++;
+
+            $('#suhu-wrapper').append(`
+                <div class="input-group mb-2 suhu-item">
+                    <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu Sealer ${suhuCount}">
+                    <button type="button" class="btn btn-danger btn-remove-suhu">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `);
+        });
+
+        $(document).on('click', '.btn-remove-suhu', function () {
+            $(this).closest('.suhu-item').remove();
+
+            $('#suhu-wrapper .suhu-item').each(function (index) {
+                $(this).find('input').attr('placeholder', 'Suhu Sealer ' + (index + 1));
+            });
+
+            suhuCount = $('#suhu-wrapper .suhu-item').length;
+        });
     });
 
     async function compressImage(file) {

@@ -28,6 +28,7 @@ class Packing extends Model
     protected $dates = ['deleted_at'];
 
     protected $casts = [
+    'suhu' => 'array',
     'data_kemasan' => 'array',
 ];
     

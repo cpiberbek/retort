@@ -113,19 +113,29 @@
                             </div>
                         </div>
 
-                        <div class="row mb-3">
-                            <div class="col-md-6">
+                       <div class="row mb-3">
+                            <div class="col-md-12">
                                 <label class="form-label fw-bold">Suhu</label>
-                                <input type="number" name="suhu" class="form-control" step="0.01" value="{{ old('suhu') }}" min="0">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Speed Conveyor</label>
-                                <input type="number" step="0.01" name="speed" class="form-control" value="{{ old('speed') }}" min="0">
+
+                                <div id="suhu-wrapper">
+                                    <div class="input-group mb-2 suhu-item">
+                                        <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu 1">
+                                    </div>
+                                </div>
+
+                                <button type="button" id="btn-add-suhu" class="btn btn-success btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Add Suhu Sealer
+                                </button>
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Speed Conveyor</label>
+                                <input type="number" step="0.01" name="speed" class="form-control" value="{{ old('speed') }}" min="0">
+                            </div>
+
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Kondisi Segel</label>
                                 <select name="kondisi_segel" class="form-control">
                                     <option value="">--Pilih--</option>
@@ -133,7 +143,8 @@
                                     <option value="Tidak OK" {{ old('kondisi_segel') == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
+
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Jumlah Produk per Pack/Toples</label>
                                 <input type="number" name="jumlah_produk" class="form-control" value="{{ old('jumlah_produk') }}" min="0">
                             </div>
@@ -343,6 +354,32 @@
             }
         }
     });
+
+    function updateSuhuPlaceholder() {
+        $('#suhu-wrapper .suhu-item').each(function(index) {
+            $(this).find('input').attr('placeholder', 'Suhu Sealer ' + (index + 1));
+        });
+    }
+
+    $('#btn-add-suhu').on('click', function () {
+        $('#suhu-wrapper').append(`
+            <div class="input-group mb-2 suhu-item">
+                <input type="number" name="suhu[]" class="form-control" step="0.01" min="0">
+                <button type="button" class="btn btn-danger btn-remove-suhu">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        `);
+
+        updateSuhuPlaceholder();
+    });
+
+    $(document).on('click', '.btn-remove-suhu', function () {
+        $(this).closest('.suhu-item').remove();
+        updateSuhuPlaceholder();
+    });
+
+    updateSuhuPlaceholder();
 
     async function compressImage(file) {
         if (!file.type.startsWith('image/')) return file;

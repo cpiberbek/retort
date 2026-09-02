@@ -205,7 +205,18 @@
                                                                     {{ \App\Models\Mincing::where('uuid', $dep->kode_toples)->value('kode_produksi') ?? $dep->kode_toples ?? '-' }}
                                                                 </td>
                                                             </tr>
-                                                            <tr><th>Suhu</th><td>{{ $dep->suhu ?? '-' }} °C</td></tr>
+                                                            <tr>
+                                                                <th>Suhu</th>
+                                                                <td>
+                                                                    @if(is_array($dep->suhu) && count($dep->suhu))
+                                                                        @foreach($dep->suhu as $index => $suhu)
+                                                                            {{ $suhu }} °C{{ !$loop->last ? ', ' : '' }}
+                                                                        @endforeach
+                                                                    @else
+                                                                        -
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
                                                             <tr><th>Jml Produk</th><td>{{ $dep->jumlah_produk ?? '-' }}</td></tr>
                                                             <tr>
                                                                 <th>QR Code</th>
