@@ -500,7 +500,7 @@
                                                     <td>
                                                         <input type="number"
                                                             name="premix[{{ $i }}][berat_premix]"
-                                                            step="0.01"
+                                                            step="0.0001" min="0"
                                                             value="{{ old("premix.$i.berat_premix", $px['berat_premix'] ?? '') }}"
                                                             class="form-control form-control-sm text-center"
                                                             {{ $hasBeratPremix ? 'readonly' : '' }}>
@@ -546,7 +546,7 @@
                                                 </td>
 
                                                 <td>
-                                                    <input type="number" name="premix[0][berat_premix]" step="0.01"
+                                                    <input type="number" name="premix[0][berat_premix]" step="0.0001" min="0"
                                                         class="form-control form-control-sm text-center">
                                                 </td>
 
@@ -1132,7 +1132,7 @@
                                 <input
                                     type="number"
                                     name="premix[${indexPremix}][berat_premix]"
-                                    step="0.01"
+                                    step="0.0001" min="0"
                                     class="form-control form-control-sm text-center">
                             </td>
 

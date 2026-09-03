@@ -79,10 +79,14 @@
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Nama Varian <span
                                             class="text-danger">*</span></label>
-                                    <select name="nama_produk" class="form-control select2" required>
+                                    <select name="nama_produk" id="namaProdukSelect" class="form-control select2" required>
                                         <option value="">-- Pilih Produk --</option>
+
                                         @foreach ($produks as $produk)
-                                            <option value="{{ $produk->nama_produk }}">{{ $produk->nama_produk }}</option>
+                                            <option value="{{ $produk->nama_produk }}"
+                                                data-bahan-baku='@json($produk->bahan_baku ?? [])'>
+                                                {{ $produk->nama_produk }}
+                                            </option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -273,8 +277,8 @@
                                                     @endforeach
                                                 </select>
                                             </td>
-                                            <td><input type="number" name="premix[0][berat_premix]" step="0.01"
-                                                    class="form-control form-control-sm text-center"></td>
+                                            <td><input type="number" name="premix[0][berat_premix]" step="0.0001"
+                                                    min="0" class="form-control form-control-sm text-center"></td>
                                             <td><input type="checkbox" name="premix[0][sensori_premix]" value="Oke"
                                                     class="form-check-input"></td>
                                             <td><button type="button" class="btn btn-sm btn-danger hapusBarisPremix"><i
@@ -459,7 +463,8 @@
                                                     <button type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
                                                         tabindex="-1">±</button>
-                                                    <input type="number" name="suhu_akhir_mixing" step="0.01" inputmode="decimal"
+                                                    <input type="number" name="suhu_akhir_mixing" step="0.01"
+                                                        inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
                                             </td>
@@ -471,7 +476,8 @@
                                                     <button type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
                                                         tabindex="-1">±</button>
-                                                    <input type="number" name="suhu_akhir_emulsi" step="0.01" inputmode="decimal"
+                                                    <input type="number" name="suhu_akhir_emulsi" step="0.01"
+                                                        inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
                                             </td>
@@ -509,7 +515,32 @@
 
 
     <script>
-        document.addEventListener("DOMContentLoaded", function() {
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // =========================================================
+            // DATA DARI LARAVEL
+            // =========================================================
+
+            const rawMaterials = @json($rawMaterials->pluck('nama_bahan_baku')->values());
+
+            const inspections = [
+                @foreach ($inspections as $insp)
+                    @if ($insp->inspection)
+                        {
+                            uuid: @json($insp->uuid),
+                            kode_batch: @json($insp->kode_batch),
+                            bahan_baku: @json($insp->inspection->bahan_baku)
+                        },
+                    @endif
+                @endforeach
+            ];
+
+            const premixes = @json($premixes->pluck('nama_premix')->values());
+
+
+            // =========================================================
+            // SELECT2
+            // =========================================================
 
             $('.select2').select2({
                 width: '100%',
@@ -517,469 +548,1468 @@
                 allowClear: true
             });
 
-            $('.kode-batch-select').each(function() {
-                $(this).data('all-options', $(this).find('option').clone());
-            });
 
-            //JS BAHAN NON PREMIX
-            $(document).on('change', '.nama-bahan-select', function() {
-                const row = $(this).closest('tr');
-                const selectedBahan = $(this).val();
-                const batchSelect = row.find('.kode-batch-select');
+            // =========================================================
+            // ELEMENT
+            // =========================================================
 
-                batchSelect.select2('destroy');
-
-                const options = batchSelect.data('all-options');
-
-                batchSelect.empty();
-
-                if (!selectedBahan) {
-                    batchSelect.append('<option value="" disabled selected>Pilih Bahan dahulu</option>');
-                    batchSelect.prop('disabled', true);
-                } else {
-                    options.each(function() {
-                        const option = $(this).clone();
-
-                        if (option.attr('data-bahan') === selectedBahan) {
-                            batchSelect.append(option);
-                        }
-                    });
-
-                    batchSelect.prop('disabled', false);
-                }
-
-                batchSelect.val(null);
-
-                batchSelect.select2({
-                    width: '100%',
-                    placeholder: selectedBahan ? '-- Pilih Batch --' : 'Pilih Bahan dahulu',
-                    allowClear: true
-                });
-            });
-
-            // =========================
-            // AUTO DATE & SHIFT
-            // =========================
-            const dateInput = document.getElementById("dateInput");
-            const shiftInput = document.getElementById("shiftInput");
-
-            if (dateInput && shiftInput) {
-                let now = new Date();
-                let yyyy = now.getFullYear();
-                let mm = String(now.getMonth() + 1).padStart(2, '0');
-                let dd = String(now.getDate()).padStart(2, '0');
-                let hh = now.getHours();
-
-                dateInput.value = `${yyyy}-${mm}-${dd}`;
-
-                if (hh >= 7 && hh < 15) shiftInput.value = "1";
-                else if (hh >= 15 && hh < 23) shiftInput.value = "2";
-                else shiftInput.value = "3";
-            }
-
-            // =========================
-            // HITUNG WAKTU
-            // =========================
-            function hitungWaktu(startId, endId, resultId, menitId, startHidden, endHidden) {
-
-                const startEl = document.getElementById(startId);
-                const endEl = document.getElementById(endId);
-
-                if (!startEl || !endEl) return;
-
-                const start = startEl.value;
-                const end = endEl.value;
-
-                if (start && end) {
-                    let startTime = new Date("1970-01-01T" + start + ":00");
-                    let endTime = new Date("1970-01-01T" + end + ":00");
-
-                    let diff = (endTime - startTime) / 60000;
-                    if (diff < 0) diff += 1440;
-
-                    document.getElementById(resultId).innerText =
-                        `${start} - ${end} (${diff}) Menit`;
-
-                    document.getElementById(menitId).value = diff;
-                    document.getElementById(startHidden).value = start;
-                    document.getElementById(endHidden).value = end;
-                }
-            }
-
-            // =========================
-            // EVENT LISTENER AMAN (NO ERROR)
-            // =========================
-            [
-                ['premix_start', 'premix_end', 'premix_result', 'premix_menit', 'premix_start_hidden',
-                    'premix_end_hidden'
-                ],
-                ['bowl_start', 'bowl_end', 'bowl_result', 'bowl_menit', 'bowl_start_hidden', 'bowl_end_hidden'],
-                ['mixing_start', 'mixing_end', 'mixing_result', 'mixing_menit', 'mixing_start_hidden',
-                    'mixing_end_hidden'
-                ]
-            ].forEach(ids => {
-
-                const startEl = document.getElementById(ids[0]);
-                const endEl = document.getElementById(ids[1]);
-
-                if (startEl && endEl) {
-                    startEl.addEventListener('change', () => hitungWaktu(...ids));
-                    endEl.addEventListener('change', () => hitungWaktu(...ids));
-                }
-
-            });
-
-            // =========================
-            // DINAMIS TABLE
-            // =========================
             const tbodyNon = document.getElementById('tbodyNonPremix');
             const tbodyPremix = document.getElementById('tbodyPremix');
             const tbodySuhu = document.getElementById('tbodySuhuGrinding');
 
-            let indexNonPremix = tbodyNon ? tbodyNon.querySelectorAll('tr').length : 0;
-            let indexPremix = tbodyPremix ? tbodyPremix.querySelectorAll('tr').length : 0;
-            let indexSuhu = tbodySuhu ? tbodySuhu.querySelectorAll('tr').length : 0;
+            let indexNonPremix = tbodyNon ?
+                tbodyNon.querySelectorAll('tr').length :
+                0;
 
-            // NON PREMIX
-            document.getElementById('tambahBarisNonPremix')?.addEventListener('click', () => {
+            let indexPremix = tbodyPremix ?
+                tbodyPremix.querySelectorAll('tr').length :
+                0;
 
-                let optionBahan = `<option value="" disabled selected>-- Pilih Bahan --</option>`;
+            let indexSuhu = tbodySuhu ?
+                tbodySuhu.querySelectorAll('tr').length :
+                0;
 
-                @foreach ($rawMaterials as $rm)
-                    optionBahan += `
-                        <option value="{{ $rm->nama_bahan_baku }}">
-                            {{ $rm->nama_bahan_baku }}
-                        </option>
-                    `;
-                @endforeach
 
-                let optionBatch = '';
+            // =========================================================
+            // OPTION BAHAN
+            // =========================================================
 
-                @foreach ($inspections as $insp)
-                    @if ($insp->inspection)
-                        optionBatch += `
-                            <option
-                                value="{{ $insp->uuid }}"
-                                data-bahan="{{ $insp->inspection->bahan_baku }}">
-                                {{ $insp->kode_batch }}
-                            </option>
-                        `;
-                    @endif
-                @endforeach
+            function getOptionBahan(selected = '') {
 
-                const row = `
-                    <tr>
+                let html = `
+            <option value="">
+                -- Pilih Bahan --
+            </option>
+        `;
 
-                        <td>
-                            <select
-                                name="non_premix[${indexNonPremix}][nama_bahan]"
-                                class="form-control form-select-sm nama-bahan-select select2">
-                                ${optionBahan}
-                            </select>
-                        </td>
+                rawMaterials.forEach(function(nama) {
 
-                        <td>
-                            <select
-                                name="non_premix[${indexNonPremix}][inspection_uuid][]"
-                                class="form-control form-select-sm kode-batch-select select2"
-                                multiple
-                                disabled>
-                                ${optionBatch}
-                            </select>
-                        </td>
+                    const selectedAttr =
+                        nama === selected ? 'selected' : '';
 
-                        <td>
-                            <div class="input-group input-group-sm">
-                                <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                <input
-                                    type="text"
-                                    inputmode="decimal"
-                                    name="non_premix[${indexNonPremix}][suhu_bahan]"
-                                    class="form-control form-control-sm suhu-number-input">
-                            </div>
-                        </td>
+                    html += `
+                <option value="${escapeHtml(nama)}" ${selectedAttr}>
+                    ${escapeHtml(nama)}
+                </option>
+            `;
+                });
 
-                        <td>
-                            <div class="input-group input-group-sm">
-                                <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                                <input
-                                    type="text"
-                                    inputmode="decimal"
-                                    name="non_premix[${indexNonPremix}][ph_bahan]"
-                                    class="form-control form-control-sm text-center suhu-number-input">
-                            </div>
-                        </td>
+                return html;
+            }
 
-                        <td>
-                            <input
-                                type="number"
-                                name="non_premix[${indexNonPremix}][berat_bahan]"
-                                step="0.01"
-                                class="form-control form-control-sm">
-                        </td>
 
-                        <td>
-                            <input
-                                type="checkbox"
-                                name="non_premix[${indexNonPremix}][sensori]"
-                                value="Oke">
-                        </td>
+            // =========================================================
+            // OPTION BATCH
+            // =========================================================
 
-                        <td>
-                            <button
-                                type="button"
-                                class="btn btn-danger btn-sm hapusBaris"
-                                title="Hapus">
-                                <i class="bi bi-trash"></i>
-                            </button>
-                        </td>
+            function getOptionBatch() {
 
-                    </tr>
-                `;
+                let html = '';
 
-                tbodyNon.insertAdjacentHTML('beforeend', row);
+                inspections.forEach(function(item) {
 
-                const newRow = tbodyNon.lastElementChild;
-                const batchSelect = $(newRow).find('.kode-batch-select');
+                    html += `
+                <option
+                    value="${escapeHtml(item.uuid)}"
+                    data-bahan="${escapeHtml(item.bahan_baku ?? '')}">
+                    ${escapeHtml(item.kode_batch ?? '')}
+                </option>
+            `;
+
+                });
+
+                return html;
+            }
+
+
+            // =========================================================
+            // ESCAPE HTML
+            // =========================================================
+
+            function escapeHtml(value) {
+
+                if (value === null || value === undefined) {
+                    return '';
+                }
+
+                return String(value)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+
+            }
+
+
+            // =========================================================
+            // BUAT ROW NON PREMIX
+            // =========================================================
+
+            function createNonPremixRow(index, namaBahan = '') {
+
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+
+            <td>
+                <select
+                    name="non_premix[${index}][nama_bahan]"
+                    class="form-control form-select-sm text-center nama-bahan-select select2">
+
+                    ${getOptionBahan(namaBahan)}
+
+                </select>
+            </td>
+
+            <td>
+                <select
+                    name="non_premix[${index}][inspection_uuid][]"
+                    class="form-control form-select-sm text-center kode-batch-select select2"
+                    multiple
+                    disabled>
+
+                    <option value="" disabled>
+                        Pilih Bahan dahulu
+                    </option>
+
+                    ${getOptionBatch()}
+
+                </select>
+            </td>
+
+            <td>
+                <div class="input-group input-group-sm">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-toggle-minus"
+                        tabindex="-1">
+                        ±
+                    </button>
+
+                    <input
+                        type="text"
+                        inputmode="decimal"
+                        name="non_premix[${index}][suhu_bahan]"
+                        class="form-control form-control-sm text-center suhu-number-input">
+
+                </div>
+            </td>
+
+            <td>
+                <div class="input-group input-group-sm">
+
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary btn-toggle-minus"
+                        tabindex="-1">
+                        ±
+                    </button>
+
+                    <input
+                        type="text"
+                        inputmode="decimal"
+                        name="non_premix[${index}][ph_bahan]"
+                        class="form-control form-control-sm text-center suhu-number-input">
+
+                </div>
+            </td>
+
+            <td>
+                <input
+                    type="number"
+                    name="non_premix[${index}][berat_bahan]"
+                    step="0.01"
+                    class="form-control form-control-sm text-center">
+            </td>
+
+            <td>
+                <input
+                    type="checkbox"
+                    name="non_premix[${index}][sensori]"
+                    value="Oke"
+                    class="form-check-input">
+            </td>
+
+            <td>
+                <button
+                    type="button"
+                    class="btn btn-sm btn-danger hapusBaris"
+                    title="Hapus">
+
+                    <i class="bi bi-trash"></i>
+
+                </button>
+            </td>
+
+        `;
+
+                tbodyNon.appendChild(row);
+
+
+                // =====================================================
+                // INIT SELECT2
+                // =====================================================
+
+                $(row).find('.select2').select2({
+                    width: '100%',
+                    placeholder: '-- Pilih --',
+                    allowClear: true
+                });
+
+
+                // =====================================================
+                // SIMPAN SEMUA OPTION BATCH
+                // =====================================================
+
+                const batchSelect =
+                    $(row).find('.kode-batch-select');
 
                 batchSelect.data(
                     'all-options',
                     batchSelect.find('option').clone()
                 );
 
-                $(newRow).find('.select2').select2({
-                    width: '100%',
-                    placeholder: '-- Pilih --',
-                    allowClear: true
-                });
 
-                indexNonPremix++;
-            });
+                // =====================================================
+                // FILTER BATCH OTOMATIS
+                // =====================================================
 
-            //validasi Main Kode Batch
-            $(function() {
-                const kodeInput = $('#kode_produksi');
-                const kodeError = $('#kodeError');
-                const form = $('#mincingForm');
+                if (namaBahan) {
 
-                function validateKode() {
-                    let value = kodeInput.val().toUpperCase().replace(/\s+/g, '');
-                    kodeInput.val(value);
-                    kodeError.text('').addClass('d-none');
+                    filterBatchByBahan(
+                        row.querySelector('.nama-bahan-select')
+                    );
 
-                    if (value.length !== 10) {
-                        kodeError.text('Kode Batch harus 10 karakter').removeClass('d-none');
-                        return false;
-                    }
-                    if (!/^[A-Z0-9]+$/.test(value)) {
-                        kodeError.text('Hanya huruf besar & angka').removeClass('d-none');
-                        return false;
-                    }
-                    if (!/^[A-L]$/.test(value.charAt(1))) {
-                        kodeError.text('Karakter ke-2 harus huruf bulan (A-L)').removeClass('d-none');
-                        return false;
-                    }
-                    let hari = parseInt(value.substr(2, 2), 10);
-                    if (isNaN(hari) || hari < 1 || hari > 31) {
-                        kodeError.text('Karakter ke-3 & ke-4 harus tanggal valid (01-31)').removeClass(
-                            'd-none');
-                        return false;
-                    }
-                    return true;
                 }
 
-                kodeInput.on('input', validateKode);
-                form.on('submit', function(e) {
-                    if (!validateKode()) {
-                        e.preventDefault();
-                        alert('Kode Batch tidak valid! Periksa kembali.');
-                        kodeInput.focus();
-                        return;
+                return row;
+            }
+
+
+            // =========================================================
+            // FILTER BATCH
+            // =========================================================
+
+            function filterBatchByBahan(selectElement) {
+
+                const row =
+                    $(selectElement).closest('tr');
+
+                const selectedBahan =
+                    $(selectElement).val();
+
+                const batchSelect =
+                    row.find('.kode-batch-select');
+
+
+                let allOptions =
+                    batchSelect.data('all-options');
+
+
+                if (!allOptions) {
+
+                    allOptions =
+                        batchSelect.find('option').clone();
+
+                    batchSelect.data(
+                        'all-options',
+                        allOptions
+                    );
+
+                }
+
+
+                // Hancurkan Select2
+                if (
+                    batchSelect.hasClass(
+                        'select2-hidden-accessible'
+                    )
+                ) {
+                    batchSelect.select2('destroy');
+                }
+
+
+                // Kosongkan
+                batchSelect.empty();
+
+
+                // =====================================================
+                // BELUM PILIH BAHAN
+                // =====================================================
+
+                if (!selectedBahan) {
+
+                    batchSelect.append(`
+                <option value="" disabled selected>
+                    Pilih Bahan dahulu
+                </option>
+            `);
+
+                    batchSelect.prop(
+                        'disabled',
+                        true
+                    );
+
+                }
+
+                // =====================================================
+                // SUDAH PILIH BAHAN
+                // =====================================================
+                else {
+
+                    let ditemukan = false;
+
+                    allOptions.each(function() {
+
+                        const option =
+                            $(this).clone();
+
+                        const bahanBatch =
+                            option.attr('data-bahan');
+
+
+                        if (
+                            bahanBatch &&
+                            bahanBatch.trim() ===
+                            selectedBahan.trim()
+                        ) {
+
+                            batchSelect.append(option);
+
+                            ditemukan = true;
+
+                        }
+
+                    });
+
+
+                    if (!ditemukan) {
+
+                        batchSelect.append(`
+                    <option value="" disabled>
+                        Tidak ada kode batch untuk bahan ini
+                    </option>
+                `);
+
                     }
 
-                    $('.kode-batch-select').each(function() {
-                        if ($(this).val() === null || $(this).val().length === 0) {
-                            $(this).prop('disabled', false);
-                            $(this).append(new Option('', '', true, true));
-                        }
-                    });
-                });
-            });
 
+                    batchSelect.prop(
+                        'disabled',
+                        false
+                    );
+
+                }
+
+
+                batchSelect.val(null);
+
+
+                // Init Select2 kembali
+                batchSelect.select2({
+
+                    width: '100%',
+
+                    placeholder: selectedBahan ?
+                        '-- Pilih Batch --' : 'Pilih Bahan dahulu',
+
+                    allowClear: true
+
+                });
+
+            }
+
+
+            // =========================================================
+            // CHANGE BAHAN MANUAL
+            // =========================================================
+
+            $(document).on(
+                'change',
+                '.nama-bahan-select',
+                function() {
+
+                    filterBatchByBahan(this);
+
+                }
+            );
+
+
+            // =========================================================
+            // PILIH PRODUK
+            // =========================================================
+
+            $('#namaProdukSelect').on(
+                'change',
+                function() {
+
+                    const selectedOption =
+                        $(this).find('option:selected');
+
+
+                    let bahanBaku =
+                        selectedOption.attr(
+                            'data-bahan-baku'
+                        );
+
+
+                    // =================================================
+                    // PARSE JSON BAHAN BAKU
+                    // =================================================
+
+                    if (bahanBaku) {
+
+                        try {
+
+                            bahanBaku =
+                                JSON.parse(bahanBaku);
+
+                        } catch (error) {
+
+                            console.error(
+                                'JSON bahan baku tidak valid:',
+                                error
+                            );
+
+                            bahanBaku = [];
+
+                        }
+
+                    } else {
+
+                        bahanBaku = [];
+
+                    }
+
+
+                    console.log(
+                        'Produk:',
+                        selectedOption.val()
+                    );
+
+                    console.log(
+                        'Bahan baku:',
+                        bahanBaku
+                    );
+
+
+                    // =================================================
+                    // KOSONGKAN TABEL
+                    // =================================================
+
+                    tbodyNon.innerHTML = '';
+
+                    indexNonPremix = 0;
+
+
+                    // =================================================
+                    // JIKA TIDAK ADA BAHAN
+                    // =================================================
+
+                    if (
+                        !Array.isArray(bahanBaku) ||
+                        bahanBaku.length === 0
+                    ) {
+
+                        createNonPremixRow(
+                            indexNonPremix
+                        );
+
+                        indexNonPremix++;
+
+                        return;
+
+                    }
+
+
+                    // =================================================
+                    // BUAT ROW SESUAI BAHAN PRODUK
+                    // =================================================
+
+                    bahanBaku.forEach(
+                        function(namaBahan) {
+
+                            createNonPremixRow(
+                                indexNonPremix,
+                                namaBahan
+                            );
+
+                            indexNonPremix++;
+
+                        }
+                    );
+
+                }
+            );
+
+
+            // =========================================================
+            // TAMBAH BAHAN MANUAL
+            // =========================================================
+
+            $('#tambahBarisNonPremix').on(
+                'click',
+                function() {
+
+                    createNonPremixRow(
+                        indexNonPremix
+                    );
+
+                    indexNonPremix++;
+
+                }
+            );
+
+
+            // =========================================================
             // TAMBAH SUHU / DAGING
-            document.getElementById('tambahBarisSuhu')?.addEventListener('click', () => {
-                const row = `
+            // =========================================================
+
+            $('#tambahBarisSuhu').on(
+                'click',
+                function() {
+
+                    const row = `
+
                 <tr>
+
                     <td style="width: 45%;">
-                        <select name="suhu_grinding_input[${indexSuhu}][daging]" class="form-control form-select-sm select2">
-                            <option value="" selected disabled>Pilih Daging</option>
+
+                        <select
+                            name="suhu_grinding_input[${indexSuhu}][daging]"
+                            class="form-control form-select-sm select2">
+
+                            <option
+                                value=""
+                                selected
+                                disabled>
+                                Pilih Daging
+                            </option>
+
                             <option value="BEEF">BEEF</option>
                             <option value="SBB">SBB</option>
                             <option value="SBL">SBL</option>
                             <option value="MDM">MDM</option>
                             <option value="CCM">CCM</option>
                             <option value="SURIMI">SURIMI</option>
+
                         </select>
+
                     </td>
+
                     <td style="width: 45%;">
+
                         <div class="input-group input-group-sm">
-                            <button type="button" class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1">±</button>
-                            <input type="text" inputmode="decimal" name="suhu_grinding_input[${indexSuhu}][suhu]" class="form-control form-control-sm text-center suhu-number-input">
-                        </div>
-                    </td>
-                    <td style="width: 10%;">
-                        <button type="button" class="btn btn-sm btn-danger hapusBarisSuhu"><i class="bi bi-trash"></i></button>
-                    </td>
-                </tr>`;
-                tbodySuhu.insertAdjacentHTML('beforeend', row);
-
-                const newRow = tbodySuhu.lastElementChild;
-
-                $(newRow).find('.select2').select2({
-                    width: '100%',
-                    placeholder: '-- Pilih --',
-                    allowClear: true
-                });
-                indexSuhu++;
-            });
-
-            // PREMIX
-            document.getElementById('tambahBarisPremix')?.addEventListener('click', () => {
-
-                let optionKodePremix = `
-                    <option value="">-- Pilih Kode Batch --</option>
-                `;
-
-                @foreach ($inspections as $insp)
-                    @if ($insp->inspection)
-                        optionKodePremix += `
-                            <option value="{{ $insp->kode_batch }}">
-                                {{ $insp->kode_batch }}
-                            </option>
-                        `;
-                    @endif
-                @endforeach
-
-                let optionPremix = `
-                    <option value="">-- Pilih Premix --</option>
-                `;
-
-                @foreach ($premixes as $premix)
-
-                    optionPremix += `
-                        <option value="{{ $premix->nama_premix }}">
-                            {{ $premix->nama_premix }}
-                        </option>
-                    `;
-                @endforeach
-
-                const row = `
-
-                    <tr>
-
-                        <td>
-
-                            <select
-                                name="premix[${indexPremix}][nama_premix]"
-                                class="form-control form-select-sm text-center select2"
-                                >
-
-                                ${optionPremix}
-
-                            </select>
-
-                        </td>
-
-                        <td>
-                            <select
-                                name="premix[${indexPremix}][kode_premix]"
-                                class="form-control form-select-sm text-center select2">
-
-                                ${optionKodePremix}
-
-                            </select>
-                        </td>
-
-                        <td>
-
-                            <input
-                                type="number"
-                                name="premix[${indexPremix}][berat_premix]"
-                                step="0.01"
-                                class="form-control form-control-sm text-center">
-
-                        </td>
-
-                        <td>
-
-                            <input
-                                type="checkbox"
-                                name="premix[${indexPremix}][sensori_premix]"
-                                value="Oke">
-
-                        </td>
-
-                        <td>
 
                             <button
                                 type="button"
-                                class="btn btn-danger btn-sm hapusBarisPremix">
-
-                                Hapus
-
+                                class="btn btn-outline-secondary btn-toggle-minus"
+                                tabindex="-1">
+                                ±
                             </button>
 
-                        </td>
+                            <input
+                                type="text"
+                                inputmode="decimal"
+                                name="suhu_grinding_input[${indexSuhu}][suhu]"
+                                class="form-control form-control-sm text-center suhu-number-input">
 
-                    </tr>
+                        </div>
+
+                    </td>
+
+                    <td style="width: 10%;">
+
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-danger hapusBarisSuhu">
+
+                            <i class="bi bi-trash"></i>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+            `;
+
+
+                    tbodySuhu.insertAdjacentHTML(
+                        'beforeend',
+                        row
+                    );
+
+
+                    const newRow =
+                        tbodySuhu.lastElementChild;
+
+
+                    $(newRow)
+                        .find('.select2')
+                        .select2({
+
+                            width: '100%',
+
+                            placeholder: '-- Pilih --',
+
+                            allowClear: true
+
+                        });
+
+
+                    indexSuhu++;
+
+                }
+            );
+
+
+            // =========================================================
+            // TAMBAH PREMIX
+            // =========================================================
+
+            $('#tambahBarisPremix').on(
+                'click',
+                function() {
+
+                    let optionPremix = `
+                <option value="">
+                    -- Pilih Premix --
+                </option>
+            `;
+
+                    premixes.forEach(function(nama) {
+
+                        optionPremix += `
+                    <option value="${escapeHtml(nama)}">
+                        ${escapeHtml(nama)}
+                    </option>
                 `;
 
-                tbodyPremix.insertAdjacentHTML('beforeend', row);
+                    });
 
-                const newRow = tbodyPremix.lastElementChild;
 
-                $(newRow).find('.select2').select2({
-                    width: '100%',
-                    placeholder: '-- Pilih --',
-                    allowClear: true
-                });
+                    let optionKodePremix = `
+                <option value="">
+                    -- Pilih Kode Batch --
+                </option>
+            `;
 
-                indexPremix++;
+                    inspections.forEach(function(item) {
 
-            });
+                        optionKodePremix += `
+                    <option value="${escapeHtml(item.kode_batch)}">
+                        ${escapeHtml(item.kode_batch)}
+                    </option>
+                `;
 
+                    });
+
+
+                    const row = `
+
+                <tr>
+
+                    <td>
+
+                        <select
+                            name="premix[${indexPremix}][nama_premix]"
+                            class="form-control form-select-sm text-center select2">
+
+                            ${optionPremix}
+
+                        </select>
+
+                    </td>
+
+                    <td>
+
+                        <select
+                            name="premix[${indexPremix}][kode_premix]"
+                            class="form-control form-select-sm text-center select2">
+
+                            ${optionKodePremix}
+
+                        </select>
+
+                    </td>
+
+                    <td>
+
+                        <input
+                            type="number"
+                            name="premix[${indexPremix}][berat_premix]"
+                            step="0.0001"
+                            min="0"
+                            class="form-control form-control-sm text-center">
+
+                    </td>
+
+                    <td>
+
+                        <input
+                            type="checkbox"
+                            name="premix[${indexPremix}][sensori_premix]"
+                            value="Oke"
+                            class="form-check-input">
+
+                    </td>
+
+                    <td>
+
+                        <button
+                            type="button"
+                            class="btn btn-danger btn-sm hapusBarisPremix">
+
+                            <i class="bi bi-trash"></i>
+
+                        </button>
+
+                    </td>
+
+                </tr>
+
+            `;
+
+
+                    tbodyPremix.insertAdjacentHTML(
+                        'beforeend',
+                        row
+                    );
+
+
+                    const newRow =
+                        tbodyPremix.lastElementChild;
+
+
+                    $(newRow)
+                        .find('.select2')
+                        .select2({
+
+                            width: '100%',
+
+                            placeholder: '-- Pilih --',
+
+                            allowClear: true
+
+                        });
+
+
+                    indexPremix++;
+
+                }
+            );
+
+
+            // =========================================================
             // HAPUS ROW
-            document.addEventListener('click', function(e) {
-                const hapusNonPremix = e.target.closest('.hapusBaris');
+            // =========================================================
 
-                if (hapusNonPremix) {
-                    if (tbodyNon.querySelectorAll('tr').length > 1) {
-                        hapusNonPremix.closest('tr').remove();
-                    } else {
-                        alert("Minimal satu baris Non-Premix wajib ada");
+            document.addEventListener(
+                'click',
+                function(e) {
+
+
+                    // NON PREMIX
+                    const hapusNon =
+                        e.target.closest(
+                            '.hapusBaris'
+                        );
+
+                    if (hapusNon) {
+
+                        if (
+                            tbodyNon.querySelectorAll('tr').length > 1
+                        ) {
+
+                            const row =
+                                hapusNon.closest('tr');
+
+                            $(row)
+                                .find('.select2')
+                                .each(function() {
+
+                                    if (
+                                        $(this).hasClass(
+                                            'select2-hidden-accessible'
+                                        )
+                                    ) {
+
+                                        $(this)
+                                            .select2('destroy');
+
+                                    }
+
+                                });
+
+                            row.remove();
+
+                        } else {
+
+                            alert(
+                                'Minimal satu baris Non-Premix wajib ada'
+                            );
+
+                        }
+
                     }
+
+
+                    // PREMIX
+                    const hapusPremix =
+                        e.target.closest(
+                            '.hapusBarisPremix'
+                        );
+
+                    if (hapusPremix) {
+
+                        if (
+                            tbodyPremix.querySelectorAll('tr').length > 1
+                        ) {
+
+                            const row =
+                                hapusPremix.closest('tr');
+
+                            $(row)
+                                .find('.select2')
+                                .each(function() {
+
+                                    if (
+                                        $(this).hasClass(
+                                            'select2-hidden-accessible'
+                                        )
+                                    ) {
+
+                                        $(this)
+                                            .select2('destroy');
+
+                                    }
+
+                                });
+
+                            row.remove();
+
+                        } else {
+
+                            alert(
+                                'Minimal satu baris Premix wajib ada'
+                            );
+
+                        }
+
+                    }
+
+
+                    // SUHU
+                    const hapusSuhu =
+                        e.target.closest(
+                            '.hapusBarisSuhu'
+                        );
+
+                    if (hapusSuhu) {
+
+                        if (
+                            tbodySuhu.querySelectorAll('tr').length > 1
+                        ) {
+
+                            const row =
+                                hapusSuhu.closest('tr');
+
+                            $(row)
+                                .find('.select2')
+                                .each(function() {
+
+                                    if (
+                                        $(this).hasClass(
+                                            'select2-hidden-accessible'
+                                        )
+                                    ) {
+
+                                        $(this)
+                                            .select2('destroy');
+
+                                    }
+
+                                });
+
+                            row.remove();
+
+                        } else {
+
+                            alert(
+                                'Minimal satu baris suhu wajib ada'
+                            );
+
+                        }
+
+                    }
+
+                }
+            );
+
+
+            // =========================================================
+            // INPUT SUHU / PH
+            // =========================================================
+
+            document.addEventListener(
+                'input',
+                function(e) {
+
+                    if (
+                        !e.target.classList.contains(
+                            'suhu-number-input'
+                        )
+                    ) {
+                        return;
+                    }
+
+
+                    let val =
+                        e.target.value;
+
+
+                    val =
+                        val.replace(
+                            /[^0-9.,-]/g,
+                            ''
+                        );
+
+
+                    val =
+                        val.replace(
+                            ',',
+                            '.'
+                        );
+
+
+                    if (
+                        val.indexOf('-') > 0
+                    ) {
+
+                        val =
+                            val.replace(
+                                /-/g,
+                                ''
+                            );
+
+                        val =
+                            '-' + val;
+
+                    }
+
+
+                    const parts =
+                        val.split('.');
+
+
+                    if (
+                        parts.length > 2
+                    ) {
+
+                        val =
+                            parts[0] +
+                            '.' +
+                            parts.slice(1).join('');
+
+                    }
+
+
+                    e.target.value =
+                        val;
+
+                }
+            );
+
+
+            // =========================================================
+            // TOMBOL MINUS
+            // =========================================================
+
+            document.addEventListener(
+                'click',
+                function(e) {
+
+                    const btn =
+                        e.target.closest(
+                            '.btn-toggle-minus'
+                        );
+
+                    if (!btn) {
+                        return;
+                    }
+
+
+                    const input =
+                        btn
+                        .closest('.input-group')
+                        ?.querySelector('input');
+
+
+                    if (!input) {
+                        return;
+                    }
+
+
+                    input.value =
+                        input.value.startsWith('-') ?
+                        input.value.slice(1) :
+                        '-' + input.value;
+
+
+                    input.dispatchEvent(
+                        new Event('input')
+                    );
+
+                    input.focus();
+
+                }
+            );
+
+
+            // =========================================================
+            // AUTO DATE & SHIFT
+            // =========================================================
+
+            const dateInput =
+                document.getElementById(
+                    'dateInput'
+                );
+
+            const shiftInput =
+                document.getElementById(
+                    'shiftInput'
+                );
+
+
+            if (
+                dateInput &&
+                shiftInput
+            ) {
+
+                const now =
+                    new Date();
+
+
+                const yyyy =
+                    now.getFullYear();
+
+                const mm =
+                    String(
+                        now.getMonth() + 1
+                    ).padStart(2, '0');
+
+                const dd =
+                    String(
+                        now.getDate()
+                    ).padStart(2, '0');
+
+                const hh =
+                    now.getHours();
+
+
+                dateInput.value =
+                    `${yyyy}-${mm}-${dd}`;
+
+
+                if (
+                    hh >= 7 &&
+                    hh < 15
+                ) {
+
+                    shiftInput.value = '1';
+
+                } else if (
+                    hh >= 15 &&
+                    hh < 23
+                ) {
+
+                    shiftInput.value = '2';
+
+                } else {
+
+                    shiftInput.value = '3';
+
                 }
 
-                const hapusPremix = e.target.closest('.hapusBarisPremix');
+            }
 
-                if (hapusPremix) {
-                    if (tbodyPremix.querySelectorAll('tr').length > 1) {
-                        hapusPremix.closest('tr').remove();
-                    } else {
-                        alert("Minimal satu baris Premix wajib ada");
-                    }
+
+            // =========================================================
+            // HITUNG WAKTU
+            // =========================================================
+
+            function hitungWaktu(
+                startId,
+                endId,
+                resultId,
+                menitId,
+                startHidden,
+                endHidden
+            ) {
+
+                const startEl =
+                    document.getElementById(startId);
+
+                const endEl =
+                    document.getElementById(endId);
+
+
+                if (
+                    !startEl ||
+                    !endEl
+                ) {
+                    return;
                 }
 
-                const hapusSuhu = e.target.closest('.hapusBarisSuhu');
 
-                if (hapusSuhu) {
-                    if (tbodySuhu.querySelectorAll('tr').length > 1) {
-                        hapusSuhu.closest('tr').remove();
-                    } else {
-                        alert("Minimal satu baris suhu wajib ada");
+                const start =
+                    startEl.value;
+
+                const end =
+                    endEl.value;
+
+
+                if (
+                    start &&
+                    end
+                ) {
+
+                    let startTime =
+                        new Date(
+                            '1970-01-01T' +
+                            start +
+                            ':00'
+                        );
+
+                    let endTime =
+                        new Date(
+                            '1970-01-01T' +
+                            end +
+                            ':00'
+                        );
+
+
+                    let diff =
+                        (endTime - startTime) /
+                        60000;
+
+
+                    if (diff < 0) {
+                        diff += 1440;
                     }
+
+
+                    document.getElementById(
+                            resultId
+                        ).innerText =
+                        `${start} - ${end} (${diff}) Menit`;
+
+
+                    document.getElementById(
+                        menitId
+                    ).value = diff;
+
+
+                    document.getElementById(
+                        startHidden
+                    ).value = start;
+
+
+                    document.getElementById(
+                        endHidden
+                    ).value = end;
+
                 }
+
+            }
+
+
+            [
+                [
+                    'premix_start',
+                    'premix_end',
+                    'premix_result',
+                    'premix_menit',
+                    'premix_start_hidden',
+                    'premix_end_hidden'
+                ],
+
+                [
+                    'bowl_start',
+                    'bowl_end',
+                    'bowl_result',
+                    'bowl_menit',
+                    'bowl_start_hidden',
+                    'bowl_end_hidden'
+                ],
+
+                [
+                    'mixing_start',
+                    'mixing_end',
+                    'mixing_result',
+                    'mixing_menit',
+                    'mixing_start_hidden',
+                    'mixing_end_hidden'
+                ]
+
+            ].forEach(function(ids) {
+
+                const startEl =
+                    document.getElementById(ids[0]);
+
+                const endEl =
+                    document.getElementById(ids[1]);
+
+
+                if (
+                    startEl &&
+                    endEl
+                ) {
+
+                    startEl.addEventListener(
+                        'change',
+                        function() {
+                            hitungWaktu(...ids);
+                        }
+                    );
+
+                    endEl.addEventListener(
+                        'change',
+                        function() {
+                            hitungWaktu(...ids);
+                        }
+                    );
+
+                }
+
             });
+
+
+            // =========================================================
+            // RELASI WAKTU PREPARATION
+            // =========================================================
+
+            const waktuMulaiPreparation =
+                document.getElementById(
+                    'waktu_mulai'
+                );
+
+            const waktuSelesaiPreparation =
+                document.getElementById(
+                    'waktu_selesai'
+                );
+
+            const bowlStart =
+                document.getElementById(
+                    'bowl_start'
+                );
+
+            const mixingStart =
+                document.getElementById(
+                    'mixing_start'
+                );
+
+
+            if (
+                waktuMulaiPreparation &&
+                bowlStart
+            ) {
+
+                waktuMulaiPreparation.addEventListener(
+                    'change',
+                    function() {
+
+                        if (this.value) {
+
+                            bowlStart.value =
+                                this.value;
+
+                            bowlStart.dispatchEvent(
+                                new Event('change')
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            if (
+                waktuSelesaiPreparation &&
+                mixingStart
+            ) {
+
+                waktuSelesaiPreparation.addEventListener(
+                    'change',
+                    function() {
+
+                        if (this.value) {
+
+                            mixingStart.value =
+                                this.value;
+
+                            mixingStart.dispatchEvent(
+                                new Event('change')
+                            );
+
+                        }
+
+                    }
+                );
+
+            }
+
+
+            // =========================================================
+            // VALIDASI KODE PRODUKSI
+            // =========================================================
+
+            const kodeInput =
+                $('#kode_produksi');
+
+            const kodeError =
+                $('#kodeError');
+
+            const form =
+                $('#mincingForm');
+
+
+            function validateKode() {
+
+                let value =
+                    kodeInput
+                    .val()
+                    .toUpperCase()
+                    .replace(/\s+/g, '');
+
+
+                kodeInput.val(value);
+
+                kodeError
+                    .text('')
+                    .addClass('d-none');
+
+
+                if (
+                    value.length !== 10
+                ) {
+
+                    kodeError
+                        .text(
+                            'Kode Batch harus 10 karakter'
+                        )
+                        .removeClass('d-none');
+
+                    return false;
+
+                }
+
+
+                if (
+                    !/^[A-Z0-9]+$/.test(value)
+                ) {
+
+                    kodeError
+                        .text(
+                            'Hanya huruf besar & angka'
+                        )
+                        .removeClass('d-none');
+
+                    return false;
+
+                }
+
+
+                if (
+                    !/^[A-L]$/.test(
+                        value.charAt(1)
+                    )
+                ) {
+
+                    kodeError
+                        .text(
+                            'Karakter ke-2 harus huruf bulan (A-L)'
+                        )
+                        .removeClass('d-none');
+
+                    return false;
+
+                }
+
+
+                const hari =
+                    parseInt(
+                        value.substr(2, 2),
+                        10
+                    );
+
+
+                if (
+                    isNaN(hari) ||
+                    hari < 1 ||
+                    hari > 31
+                ) {
+
+                    kodeError
+                        .text(
+                            'Karakter ke-3 & ke-4 harus tanggal valid (01-31)'
+                        )
+                        .removeClass('d-none');
+
+                    return false;
+
+                }
+
+
+                return true;
+
+            }
+
+
+            kodeInput.on(
+                'input',
+                validateKode
+            );
+
+
+            form.on(
+                'submit',
+                function(e) {
+
+                    if (!validateKode()) {
+
+                        e.preventDefault();
+
+                        alert(
+                            'Kode Batch tidak valid! Periksa kembali.'
+                        );
+
+                        kodeInput.focus();
+
+                        return;
+
+                    }
+
+
+                    // Aktifkan select batch agar
+                    // nilainya tetap terkirim
+                    $('.kode-batch-select').each(
+                        function() {
+
+                            $(this).prop(
+                                'disabled',
+                                false
+                            );
+
+                        }
+                    );
+
+                }
+            );
 
         });
     </script>

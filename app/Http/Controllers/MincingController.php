@@ -763,28 +763,83 @@ class MincingController extends Controller
 
         $startRow = 12;
 
-        foreach ($nonPremix as $i => $item) {
-            $excelRow = $startRow + $i;
+        $nonPremixGrouped = collect($nonPremix)->groupBy(function ($item) {
+            return $item['nama_bahan'] ?? '-';
+        });
 
-            $kodeBatch = '-';
+        $currentRow = $startRow;
 
-            if (!empty($item['inspection_uuid'])) {
-                $kodeBatch = \App\Models\InspectionProductDetail::where(
-                    'uuid',
-                    $item['inspection_uuid']
-                )->value('kode_batch') ?? '-';
+        foreach ($nonPremixGrouped as $namaBahan => $items) {
+
+            $groupStartRow = $currentRow;
+            $groupEndRow = $currentRow + count($items) - 1;
+
+            foreach ($items as $item) {
+
+                $excelRow = $currentRow;
+
+                $kodeBatch = '-';
+
+                if (!empty($item['inspection_uuid'])) {
+                    $kodeBatch = \App\Models\InspectionProductDetail::where(
+                        'uuid',
+                        $item['inspection_uuid']
+                    )->value('kode_batch') ?? '-';
+                }
+
+                // Nama bahan
+                $sheet->setCellValue(
+                    "A{$excelRow}",
+                    $namaBahan
+                );
+
+                // Kode
+                $sheet->setCellValue(
+                    "B{$excelRow}",
+                    $kodeBatch
+                );
+
+                // Suhu
+                $sheet->setCellValue(
+                    "C{$excelRow}",
+                    $item['suhu_bahan'] ?? '-'
+                );
+
+                // pH
+                $sheet->setCellValue(
+                    "D{$excelRow}",
+                    $item['ph_bahan'] ?? '-'
+                );
+
+                // Berat
+                $sheet->setCellValue(
+                    "E{$excelRow}",
+                    $item['berat_bahan'] ?? '-'
+                );
+
+                // Sens
+                $sheet->setCellValue(
+                    "F{$excelRow}",
+                    $item['sensori'] ?? '-'
+                );
+
+                $currentRow++;
             }
 
-            $sheet->setCellValue(
-                "A{$excelRow}",
-                $item['nama_bahan'] ?? '-'
-            );
+            // Gabungkan cell Nama Bahan jika lebih dari 1 baris
+            if (count($items) > 1) {
+                $sheet->mergeCells("A{$groupStartRow}:A{$groupEndRow}");
+            }
 
-            $sheet->setCellValue("B{$excelRow}", $kodeBatch);
-            $sheet->setCellValue("C{$excelRow}", $item['suhu_bahan'] ?? '-');
-            $sheet->setCellValue("D{$excelRow}", $item['ph_bahan'] ?? '-');
-            $sheet->setCellValue("E{$excelRow}", $item['berat_bahan'] ?? '-');
-            $sheet->setCellValue("F{$excelRow}", $item['sensori'] ?? '-');
+            // Posisi Nama Bahan tengah horizontal & vertikal
+            $sheet->getStyle("A{$groupStartRow}:A{$groupEndRow}")
+                ->getAlignment()
+                ->setHorizontal(
+                    \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER
+                )
+                ->setVertical(
+                    \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER
+                );
         }
 
         $premix = json_decode($row->premix, true) ?? [];

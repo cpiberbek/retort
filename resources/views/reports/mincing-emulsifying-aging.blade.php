@@ -143,10 +143,33 @@
             </tr>
 
             @foreach ($nonPremix as $i => $item)
+                @php
+                    $namaBahan = $item['nama_bahan'] ?? '-';
+                    // Cek apakah ini kemunculan pertama nama bahan
+                    $isFirst = true;
+                    for ($j = 0; $j < $i; $j++) {
+                        if (($nonPremix[$j]['nama_bahan'] ?? '-') === $namaBahan) {
+                            $isFirst = false;
+                            break;
+                        }
+                    }
+                    // Hitung jumlah baris dengan nama bahan yang sama
+                    $rowspan = 0;
+
+                    foreach ($nonPremix as $bahan) {
+                        if (($bahan['nama_bahan'] ?? '-') === $namaBahan) {
+                            $rowspan++;
+                        }
+                    }
+                @endphp
                 <tr>
-                    <td class="center">
-                        {{ $item['nama_bahan'] ?? '-' }}
-                    </td>
+                    {{-- NAMA BAHAN DIGABUNG --}}
+                    @if ($isFirst)
+                        <td class="center" rowspan="{{ $rowspan }}">
+                            {{ $namaBahan }}
+                        </td>
+                    @endif
+                    {{-- KODE --}}
                     <td class="center">
                         @if (!empty($item['inspection_uuid']))
                             {{ \App\Models\InspectionProductDetail::where('uuid', $item['inspection_uuid'])->value('kode_batch') ?? '-' }}
@@ -154,13 +177,21 @@
                             -
                         @endif
                     </td>
-                    <td class="center">{{ $item['suhu_bahan'] ?? '-' }}</td>
-                    <td class="center">{{ $item['ph_bahan'] ?? '-' }}</td>
-                    <td class="center">{{ $item['berat_bahan'] ?? '-' }}</td>
+                    {{-- SUHU --}}
+                    <td class="center">
+                        {{ $item['suhu_bahan'] ?? '-' }}
+                    </td>
+                    {{-- PH --}}
+                    <td class="center">
+                        {{ $item['ph_bahan'] ?? '-' }}
+                    </td>
+                    {{-- BERAT --}}
+                    <td class="center">
+                        {{ $item['berat_bahan'] ?? '-' }}
+                    </td>
                     <td class="center">{{ $item['sensori'] ?? '-' }}</td>
                 </tr>
             @endforeach
-
 
             <tr>
                 <th colspan="6" class="left">Premix</th>
