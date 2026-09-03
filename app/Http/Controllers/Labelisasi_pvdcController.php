@@ -436,8 +436,12 @@ class Labelisasi_pvdcController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('labelisasi_pvdc.index')
-        ->with('success', 'Status Verifikasi Labelisasi PVDC berhasil diperbarui.');
+        return redirect()->route('labelisasi_pvdc.index', [
+            'page' => $request->input('page', 1),
+            'date' => $request->input('date'),
+            'shift' => $request->input('shift'),
+            'search' => $request->input('search'),
+        ])->with('success', 'Status Verifikasi Labelisasi PVDC berhasil diperbarui.');
     }
 
     public function destroy($uuid)

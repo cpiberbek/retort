@@ -407,6 +407,11 @@
                                 <form action="{{ route('stuffing.verification.update', $dep->uuid) }}"
                                     method="POST">
                                     @csrf @method('PUT')
+                                    <input type="hidden" name="page" value="{{ request()->query('page', 1) }}">
+                                    <input type="hidden" name="date" value="{{ request()->query('date', '') }}">
+                                    <input type="hidden" name="shift" value="{{ request()->query('shift', '') }}">
+                                    <input type="hidden" name="kode_batch" value="{{ request()->query('kode_batch', '') }}">
+                                    <input type="hidden" name="search" value="{{ request()->query('search', '') }}">
                                     <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                     style="background: linear-gradient(145deg, #7a1f12, #9E3419);">
                                     <div class="modal-header border-bottom border-light-subtle p-4">
