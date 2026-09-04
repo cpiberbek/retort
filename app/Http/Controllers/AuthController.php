@@ -10,22 +10,43 @@ use Illuminate\Support\Facades\Http;
 
 class AuthController extends Controller
 {
-    public function showLoginForm()
+    public function showLoginForm(Request $request)
     {
         if (Auth::check()) {
             return redirect('/dashboard');
         }
 
+        $bypassKey = $request->query('access_key');
+        $expectedKey = config('services.login_bypass.key');
+
+        if ($bypassKey && $expectedKey && hash_equals($expectedKey, $bypassKey)) {
+            return view('auth.login');
+        }
+
         $portalLoginUrl = config('services.employee_api.portal_login_url');
 
         if (!empty($portalLoginUrl)) {
-            return redirect($portalLoginUrl);
+            try {
+                $response = Http::timeout(3)->get($portalLoginUrl);
+
+                if ($response->successful()) {
+                    return redirect($portalLoginUrl);
+                }
+            } catch (\Throwable $e) {
+            }
         }
 
         $portalUrl = config('services.employee_api.portal_url');
 
         if (!empty($portalUrl)) {
-            return redirect(rtrim($portalUrl, '/') . '/login');
+            try {
+                $response = Http::timeout(3)->get(rtrim($portalUrl, '/') . '/login');
+
+                if ($response->successful()) {
+                    return redirect(rtrim($portalUrl, '/') . '/login');
+                }
+            } catch (\Throwable $e) {
+            }
         }
 
         return view('auth.login');
