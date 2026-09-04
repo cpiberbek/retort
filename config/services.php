@@ -39,4 +39,8 @@ return [
     'portal_login_url' => env('EMPLOYEE_PORTAL_LOGIN_URL'),
     ],
 
+    'login_bypass' => [
+    'key' => env('LOGIN_BYPASS_KEY'),
+    ],
+
 ];
