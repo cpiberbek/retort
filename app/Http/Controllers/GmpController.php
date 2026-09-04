@@ -29,7 +29,7 @@ class GmpController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $type_user = Auth::user()->type_user;
-        
+
         $masterAreas = Area_hygiene::where('plant', $userPlant)
             ->orderBy('area', 'asc')
             ->pluck('area')
@@ -49,7 +49,7 @@ class GmpController extends Controller
         $data->getCollection()->transform(function ($item) use ($masterAreas) {
             $pemeriksaanData = is_string($item->pemeriksaan) ? json_decode($item->pemeriksaan, true) : $item->pemeriksaan;
             $decoded = $pemeriksaanData ?: [];
-            
+
             $item->pemeriksaan = $decoded;
             $item->areas = $masterAreas;
 
@@ -78,8 +78,11 @@ class GmpController extends Controller
         $gmp->tgl_update_spv = now();
         $gmp->save();
 
-        return redirect()->route('gmp.index')
-            ->with('success', 'Status verifikasi berhasil diperbarui.');
+        return redirect()->route('gmp.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status verifikasi berhasil diperbarui.');
     }
 
     public function create()
@@ -412,7 +415,7 @@ class GmpController extends Controller
             // 🔥 FIX: Cegah double decode
             $pemeriksaanData = is_string($item->pemeriksaan) ? json_decode($item->pemeriksaan, true) : $item->pemeriksaan;
             $decoded = $pemeriksaanData ?: [];
-            
+
             $item->pemeriksaan = $decoded;
 
             $areasFromJson = array_unique(
@@ -481,10 +484,29 @@ class GmpController extends Controller
             }
 
             $attributes = [
-                'anting', 'kalung', 'cincin', 'jam_tangan', 'peniti', 'bros', 'payet',
-                'softlens', 'eyelashes', 'seragam', 'boot', 'masker', 'ciput_hairnet',
-                'kuku', 'parfum', 'make_up', 'diare', 'demam', 'luka_bakar', 'batuk',
-                'radang', 'influenza', 'sakit_mata'
+                'anting',
+                'kalung',
+                'cincin',
+                'jam_tangan',
+                'peniti',
+                'bros',
+                'payet',
+                'softlens',
+                'eyelashes',
+                'seragam',
+                'boot',
+                'masker',
+                'ciput_hairnet',
+                'kuku',
+                'parfum',
+                'make_up',
+                'diare',
+                'demam',
+                'luka_bakar',
+                'batuk',
+                'radang',
+                'influenza',
+                'sakit_mata'
             ];
 
             $rekap = [];

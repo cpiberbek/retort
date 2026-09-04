@@ -36,7 +36,7 @@ class ChamberController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
-                    ->orWhere('nama_operator', 'like', "%{$search}%");
+                        ->orWhere('nama_operator', 'like', "%{$search}%");
                 });
             })
             ->when($month, function ($query) use ($month) {
@@ -69,34 +69,34 @@ class ChamberController extends Controller
 
         // Ambil data tanpa pagination untuk PDF
         $items = Chamber::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_operator', 'like', "%{$search}%");
-            });
-        })
-        // ->when($date, function ($query) use ($date) {
-        //     $query->whereDate('date', $date);
-        // })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->when($month, function ($query) use ($month) {
-            [$year, $month] = explode('-', $month);
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_operator', 'like', "%{$search}%");
+                });
+            })
+            // ->when($date, function ($query) use ($date) {
+            //     $query->whereDate('date', $date);
+            // })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($month, function ($query) use ($month) {
+                [$year, $month] = explode('-', $month);
 
-            $query->whereYear('date', $year)
-                ->whereMonth('date', $month);
-        })
-                ->orderBy('date', 'asc')
-        ->orderBy('shift', 'asc')
-        ->get();
+                $query->whereYear('date', $year)
+                    ->whereMonth('date', $month);
+            })
+            ->orderBy('date', 'asc')
+            ->orderBy('shift', 'asc')
+            ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-         $noDokumen = List_form::where('plant', $userPlant)
+        $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Verifikasi Timer Chamber')
             ->value('no_dokumen');
 
@@ -104,10 +104,10 @@ class ChamberController extends Controller
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Verifikasi Timer Chamber');
-        
+
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
-        
+
         $pdf->SetMargins(5, 5, 5);
         $pdf->SetAutoPageBreak(TRUE, 5);
         $pdf->SetFont('helvetica', '', 7);
@@ -127,14 +127,14 @@ class ChamberController extends Controller
 
         $produks = Produk::where('plant', $userPlant)->get();
         $list_chambers = Mesin::where('plant', $userPlant)
-        ->where('jenis_mesin', 'Chamber')
-        ->orderBy('nama_mesin')
-        ->get(['uuid', 'nama_mesin']);
-        
+            ->where('jenis_mesin', 'Chamber')
+            ->orderBy('nama_mesin')
+            ->get(['uuid', 'nama_mesin']);
+
         $operators = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Operator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Operator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         return view('form.chamber.create', compact('produks', 'list_chambers', 'operators'));
     }
@@ -144,8 +144,8 @@ class ChamberController extends Controller
         $username   = Auth::user()->username ?? 'User RTM';
         $userPlant  = Auth::user()->plant;
         $nama_produksi = session()->has('selected_produksi')
-        ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
-        : 'Produksi RTT';
+            ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
+            : 'Produksi RTT';
 
         $request->validate([
             'date'        => 'required|date',
@@ -169,7 +169,7 @@ class ChamberController extends Controller
         Chamber::create($data);
 
         return redirect()->route('chamber.index')
-        ->with('success', 'Verifikasi Timer Chamber berhasil disimpan');
+            ->with('success', 'Verifikasi Timer Chamber berhasil disimpan');
     }
 
     public function update(string $uuid)
@@ -179,13 +179,13 @@ class ChamberController extends Controller
 
         $produks = Produk::where('plant', $userPlant)->get();
         $list_chambers = Mesin::where('plant', $userPlant)
-        ->where('jenis_mesin', 'Chamber')
-        ->orderBy('nama_mesin')
-        ->get(['uuid', 'nama_mesin']);
+            ->where('jenis_mesin', 'Chamber')
+            ->orderBy('nama_mesin')
+            ->get(['uuid', 'nama_mesin']);
         $operators = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Operator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Operator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         $chamberData = !empty($chamber->verifikasi) ? json_decode($chamber->verifikasi, true) : [];
 
@@ -231,13 +231,13 @@ class ChamberController extends Controller
 
         $produks = Produk::where('plant', $userPlant)->get();
         $list_chambers = Mesin::where('plant', $userPlant)
-        ->where('jenis_mesin', 'Chamber')
-        ->orderBy('nama_mesin')
-        ->get(['uuid', 'nama_mesin']);
+            ->where('jenis_mesin', 'Chamber')
+            ->orderBy('nama_mesin')
+            ->get(['uuid', 'nama_mesin']);
         $operators = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Operator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Operator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         $chamberData = !empty($chamber->verifikasi) ? json_decode($chamber->verifikasi, true) : [];
 
@@ -278,78 +278,81 @@ class ChamberController extends Controller
 
     public function verification(Request $request)
     {
-     $search     = $request->input('search');
-     $date = $request->input('date');
-     $userPlant  = Auth::user()->plant;
+        $search     = $request->input('search');
+        $date = $request->input('date');
+        $userPlant  = Auth::user()->plant;
 
-     $data = Chamber::query()
-     ->where('plant', $userPlant) 
-     ->when($search, function ($query) use ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('username', 'like', "%{$search}%")
-            ->orWhere('no_chamber', 'like', "%{$search}%");
-        });
-    })
-     ->when($date, function ($query) use ($date) {
-        $query->whereDate('date', $date);
-    })
-     ->orderBy('date', 'desc')
-     ->orderBy('created_at', 'desc')
-     ->paginate(10)
-     ->appends($request->all());
+        $data = Chamber::query()
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('no_chamber', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
-     return view('form.chamber.verification', compact('data', 'search', 'date'));
- }
+        return view('form.chamber.verification', compact('data', 'search', 'date'));
+    }
 
- public function updateVerification(Request $request, $uuid)
- {
-    $request->validate([
-        'status_spv' => 'required|in:1,2',
-        'catatan_spv' => 'nullable|string|max:255',
-    ]);
+    public function updateVerification(Request $request, $uuid)
+    {
+        $request->validate([
+            'status_spv' => 'required|in:1,2',
+            'catatan_spv' => 'nullable|string|max:255',
+        ]);
 
-    $chamber = Chamber::where('uuid', $uuid)->firstOrFail();
+        $chamber = Chamber::where('uuid', $uuid)->firstOrFail();
 
-    $chamber->update([
-        'status_spv' => $request->status_spv,
-        'catatan_spv' => $request->catatan_spv,
-        'nama_spv' => Auth::user()->username,
-        'tgl_update_spv' => now(),
-    ]);
+        $chamber->update([
+            'status_spv' => $request->status_spv,
+            'catatan_spv' => $request->catatan_spv,
+            'nama_spv' => Auth::user()->username,
+            'tgl_update_spv' => now(),
+        ]);
 
-    return redirect()->route('chamber.index')
-    ->with('success', 'Status Verifikasi Timer Chamber berhasil diperbarui.');
-}
+        return redirect()->route('chamber.index', [
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date' => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Timer Chamber berhasil diperbarui.');
+    }
 
-public function destroy($uuid)
-{
-    $chamber = Chamber::where('uuid', $uuid)->firstOrFail();
-    $chamber->delete();
-    return redirect()->route('chamber.index')->with('success', 'Chamber berhasil dihapus');
-}
+    public function destroy($uuid)
+    {
+        $chamber = Chamber::where('uuid', $uuid)->firstOrFail();
+        $chamber->delete();
+        return redirect()->route('chamber.index')->with('success', 'Chamber berhasil dihapus');
+    }
 
-public function recyclebin()
-{
-    $chamber = Chamber::onlyTrashed()
-    ->orderBy('deleted_at', 'desc')
-    ->paginate(10);
+    public function recyclebin()
+    {
+        $chamber = Chamber::onlyTrashed()
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
-    return view('form.chamber.recyclebin', compact('chamber'));
-}
-public function restore($uuid)
-{
-    $chamber = Chamber::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $chamber->restore();
+        return view('form.chamber.recyclebin', compact('chamber'));
+    }
+    public function restore($uuid)
+    {
+        $chamber = Chamber::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $chamber->restore();
 
-    return redirect()->route('chamber.recyclebin')
-    ->with('success', 'Data berhasil direstore.');
-}
-public function deletePermanent($uuid)
-{
-    $chamber = Chamber::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $chamber->forceDelete();
+        return redirect()->route('chamber.recyclebin')
+            ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $chamber = Chamber::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $chamber->forceDelete();
 
-    return redirect()->route('chamber.recyclebin')
-    ->with('success', 'Data berhasil dihapus permanen.');
-}
+        return redirect()->route('chamber.recyclebin')
+            ->with('success', 'Data berhasil dihapus permanen.');
+    }
 }

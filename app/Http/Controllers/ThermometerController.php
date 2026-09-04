@@ -17,23 +17,23 @@ class ThermometerController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Thermometer::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('peneraan', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('peneraan', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.thermometer.index', compact('data', 'search', 'date', 'shift'));
     }
@@ -65,17 +65,17 @@ class ThermometerController extends Controller
         ]);
 
         return redirect()->route('thermometer.index')
-        ->with('success', 'Peneraan Thermometer berhasil disimpan');
+            ->with('success', 'Peneraan Thermometer berhasil disimpan');
     }
 
     public function update(string $uuid)
     {
         $thermometer = Thermometer::where('uuid', $uuid)->firstOrFail();
 
-    // Ambil data peneraan (sudah otomatis array dari cast)
+        // Ambil data peneraan (sudah otomatis array dari cast)
         $peneraan = $thermometer->peneraan ?? [];
 
-    // Jika kosong, isi dengan template default
+        // Jika kosong, isi dengan template default
         if (empty($peneraan)) {
             $peneraan = [
                 (object)[
@@ -111,17 +111,17 @@ class ThermometerController extends Controller
         ]);
 
         return redirect()->route('thermometer.index')
-        ->with('success', 'Peneraan Thermometer berhasil diperbarui');
+            ->with('success', 'Peneraan Thermometer berhasil diperbarui');
     }
 
     public function edit(string $uuid)
     {
         $thermometer = Thermometer::where('uuid', $uuid)->firstOrFail();
 
-    // Ambil data peneraan (sudah otomatis array dari cast)
+        // Ambil data peneraan (sudah otomatis array dari cast)
         $peneraan = $thermometer->peneraan ?? [];
 
-    // Jika kosong, isi dengan template default
+        // Jika kosong, isi dengan template default
         if (empty($peneraan)) {
             $peneraan = [
                 (object)[
@@ -157,7 +157,7 @@ class ThermometerController extends Controller
         ]);
 
         return redirect()->route('thermometer.index')
-        ->with('success', 'Peneraan Thermometer berhasil diperbarui');
+            ->with('success', 'Peneraan Thermometer berhasil diperbarui');
     }
 
     public function verification(Request $request)
@@ -165,22 +165,22 @@ class ThermometerController extends Controller
         $search     = $request->input('search');
         $date = $request->input('date');
         $userPlant  = Auth::user()->plant;
-        
+
         $data = Thermometer::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('peneraan', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('peneraan', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.thermometer.index', compact('data', 'search', 'date'));
     }
@@ -201,8 +201,11 @@ class ThermometerController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('thermometer.index')
-        ->with('success', 'Status verifikasi Peneraan Thermometer berhasil diperbarui.');
+        return redirect()->route('thermometer.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status verifikasi Peneraan Thermometer berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -211,14 +214,14 @@ class ThermometerController extends Controller
         $thermometer->delete();
 
         return redirect()->route('thermometer.index')
-        ->with('success', '🗑️ Peneraan Thermometer berhasil dihapus.');
+            ->with('success', '🗑️ Peneraan Thermometer berhasil dihapus.');
     }
 
     public function recyclebin()
     {
         $thermometer = Thermometer::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.thermometer.recyclebin', compact('thermometer'));
     }
@@ -228,7 +231,7 @@ class ThermometerController extends Controller
         $thermometer->restore();
 
         return redirect()->route('thermometer.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -236,9 +239,9 @@ class ThermometerController extends Controller
         $thermometer->forceDelete();
 
         return redirect()->route('thermometer.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
-    
+
     public function exportPdf(Request $request)
     {
         // 1. Ambil Data
@@ -247,16 +250,16 @@ class ThermometerController extends Controller
         $userPlant = Auth::user()->plant;
 
         $items = Thermometer::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('shift', 'asc')
-        ->get();
+            ->where('plant', $userPlant)
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'asc')
+            ->orderBy('shift', 'asc')
+            ->get();
 
         if (ob_get_length()) {
             ob_end_clean();

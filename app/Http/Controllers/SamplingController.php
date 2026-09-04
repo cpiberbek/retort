@@ -341,8 +341,11 @@ class SamplingController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('sampling.index')
-            ->with('success', 'Status Verifikasi Data Sampling Produk berhasil diperbarui.');
+        return redirect()->route('sampling.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Data Sampling Produk berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -579,7 +582,7 @@ class SamplingController extends Controller
                         ($sampling->kode_produksi ?? '-') . ': ' . $sampling->catatan
                     );
 
-                
+
 
                     $sheet->getStyle('A' . $catatanRow)
                         ->getAlignment()
@@ -624,5 +627,4 @@ class SamplingController extends Controller
             return back()->with('error', 'Gagal export: ' . $e->getMessage());
         }
     }
-
 }

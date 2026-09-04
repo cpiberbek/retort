@@ -25,7 +25,7 @@ class RecallController extends Controller
         $type_user = Auth::user()->type_user;
 
         $data = Recall::query()
-        ->where('plant', $userPlant) 
+        ->where('plant', $userPlant)
         ->when($search, function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
@@ -175,7 +175,7 @@ class RecallController extends Controller
             'simulasi'                => 'nullable|array',
             'total_waktu'             => 'nullable|string',
             'evaluasi'                => 'nullable|array',
-        ]); 
+        ]);
 
         $data = [
             'date'             => $request->date,
@@ -218,7 +218,7 @@ class RecallController extends Controller
         $recall->delete();
 
         return redirect()->route('recall.index')
-        ->with('success', 'Data Laporan Recall berhasil dihapus'); 
+        ->with('success', 'Data Laporan Recall berhasil dihapus');
     }
 
     public function recyclebin()
@@ -245,6 +245,7 @@ class RecallController extends Controller
         return redirect()->route('recall.recyclebin')
         ->with('success', 'Data berhasil dihapus permanen.');
     }
+
     // public function updateVerification(Request $request, $uuid)
     // {
     //     $request->validate([
@@ -258,14 +259,18 @@ class RecallController extends Controller
     //     ->where('plant', $userPlant)
     //     ->firstOrFail();
 
-    //     $recall->status_spv = $request->status_spv; 
+    //     $recall->status_spv = $request->status_spv;
     //     $recall->catatan_spv = $request->catatan_spv;
     //     $recall->nama_spv = Auth::user()->username;
     //     $recall->tgl_update_spv = now();
     //     $recall->save();
 
-    //     return redirect()->route('recall.index')
-    //     ->with('success', 'Status Verifikasi Laporan recall Berhasil diperbarui.');
+    //     return redirect()->route('recall.index', [
+    //     'page'       => $request->input('page', 1),
+    //     'search'     => $request->input('search'),
+    //     'start_date' => $request->input('start_date'),
+    //     'end_date'   => $request->input('end_date'),
+    // ])->with('success', 'Status Verifikasi Laporan recall Berhasil diperbarui.');
     // }
 
     // public function updateApproval(Request $request, $uuid)
@@ -280,15 +285,19 @@ class RecallController extends Controller
     //     ->where('plant', $userPlant)
     //     ->firstOrFail();
 
-    //     $recall->persetujuan_trace = "Setuju"; 
-    //     $recall->status_manager = $request->status_manager; 
+    //     $recall->persetujuan_trace = "Setuju";
+    //     $recall->status_manager = $request->status_manager;
     //     $recall->catatan_manager = $request->catatan_manager;
     //     $recall->nama_manager = Auth::user()->username;
     //     $recall->tgl_update_manager = now();
     //     $recall->save();
 
-    //     return redirect()->route('recall.index')
-    //     ->with('success', 'Status Persetujuan Laporan recall Berhasil diperbarui.');
+    //     return redirect()->route('recall.index', [
+    //     'page'       => $request->input('page', 1),
+    //     'search'     => $request->input('search'),
+    //     'start_date' => $request->input('start_date'),
+    //     'end_date'   => $request->input('end_date'),
+    // ])->with('success', 'Status Persetujuan Laporan recall Berhasil diperbarui.');
     // }
 
 }

@@ -1,353 +1,394 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container-fluid py-0">
-    {{-- Alert sukses --}}
-    @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        {{ session('success') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
-    @if(session('error'))
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        {{ session('error') }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-    @endif
-
-    <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Data Pemasakan RTE</h2>
-
-        <div class="btn-group" role="group">
-            @can('can access add button')
-            <a href="{{ route('pemasakan_rte.create') }}" class="btn btn-success">
-                <i class="bi bi-plus-circle"></i> Tambah
-            </a>
-            @endcan
-            @can('can access export')
-            <button type="button" class="btn btn-danger" id="exportPdfBtn">
-                <i class="bi bi-file-earmark-pdf"></i> Export PDF
-            </button>
-            @endcan
-            @can('can access recycle')
-            <a href="{{ route('pemasakan_rte.recyclebin') }}" class="btn btn-secondary">
-                <i class="bi bi-trash"></i> Recycle Bin
-            </a>
-            @endcan
-        </div>
-    </div>
-
-    {{-- Filter dan Live Search --}}
-    <form id="filterForm" method="GET" action="{{ route('pemasakan_rte.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-        <div class="row">
-            <div class="col-md-4">
-                <div class="mb-1">Pilih Tanggal</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-calendar-date text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="date" name="date" id="filter_date" class="form-control border-start-0"
-                    value="{{ request('date') }}" placeholder="Tanggal Produksi">
-                </div>
+    <div class="container-fluid py-0">
+        {{-- Alert sukses --}}
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="col-md-4">
-                <div class="mb-1">Cari Data</div>
-                <div class="input-group mb-2">
-                    <div class="input-group-prepend">
-                        <span class="input-group-text bg-white border-end-0">
-                            <i class="bi bi-search text-muted"></i>
-                        </span>
-                    </div>
-                    <input type="text" name="search" id="search" class="form-control border-start-0"
-                    value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
-                </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <div class="col-md-4 align-self-end">
-                <a href="{{ route('pemasakan_rte.index') }}" class="btn btn-primary mb-2">
-                    <i class="bi bi-arrow-counterclockwise"></i> Reset
-                </a>
+        @endif
+
+        <div class="d-sm-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4">Data Pemasakan RTE</h2>
+
+            <div class="btn-group" role="group">
+                @can('can access add button')
+                    <a href="{{ route('pemasakan_rte.create') }}" class="btn btn-success">
+                        <i class="bi bi-plus-circle"></i> Tambah
+                    </a>
+                @endcan
+                @can('can access export')
+                    <button type="button" class="btn btn-danger" id="exportPdfBtn">
+                        <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                    </button>
+                @endcan
+                @can('can access recycle')
+                    <a href="{{ route('pemasakan_rte.recyclebin') }}" class="btn btn-secondary">
+                        <i class="bi bi-trash"></i> Recycle Bin
+                    </a>
+                @endcan
             </div>
         </div>
-    </form>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const search = document.getElementById('search');
-            const date = document.getElementById('filter_date');
-            const form = document.getElementById('filterForm');
-            const exportBtn = document.getElementById('exportPdfBtn');
-            let timer;
+        {{-- Filter dan Live Search --}}
+        <form id="filterForm" method="GET" action="{{ route('pemasakan_rte.index') }}"
+            class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="mb-1">Pilih Tanggal</div>
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-calendar-date text-muted"></i>
+                            </span>
+                        </div>
+                        <input type="date" name="date" id="filter_date" class="form-control border-start-0"
+                            value="{{ request('date') }}" placeholder="Tanggal Produksi">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="mb-1">Cari Data</div>
+                    <div class="input-group mb-2">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text bg-white border-end-0">
+                                <i class="bi bi-search text-muted"></i>
+                            </span>
+                        </div>
+                        <input type="text" name="search" id="search" class="form-control border-start-0"
+                            value="{{ request('search') }}" placeholder="Cari Nama Varian / Kode Batch...">
+                    </div>
+                </div>
+                <div class="col-md-4 align-self-end">
+                    <a href="{{ route('pemasakan_rte.index') }}" class="btn btn-primary mb-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
 
-            search.addEventListener('input', () => {
-                clearTimeout(timer);
-                timer = setTimeout(() => form.submit(), 500);
-            });
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const search = document.getElementById('search');
+                const date = document.getElementById('filter_date');
+                const form = document.getElementById('filterForm');
+                const exportBtn = document.getElementById('exportPdfBtn');
+                let timer;
 
-            date.addEventListener('change', () => form.submit());
-
-            if(exportBtn){
-                exportBtn.addEventListener('click', () => {
-                    const formData = new FormData(form);
-                    const exportUrl = "{{ route('pemasakan_rte.exportPdf') }}?" + new URLSearchParams(formData).toString();
-                    window.open(exportUrl, '_blank');
+                search.addEventListener('input', () => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => form.submit(), 500);
                 });
-            }
-        });
-    </script>
 
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            {{-- Tambahkan table-responsive agar tabel tidak keluar border --}}
-            <div class="table-responsive">
-                <table class="table">
-                    <thead class="table-secondary text-center">
-                        <tr>
-                            <th>NO.</th>
-                            <th>Date | Shift</th>
-                            <th>Nama Varian</th>
-                            <th>Kode Batch</th>
-                            <th>No. Chamber</th>
-                            <th>Berat Varian (Gram)</th>
-                            <th>Suhu Varian (°C)</th>
-                            <th>Jumlah Tray</th>
-                            <th>Total Reject (Kg)</th>
-                            <th>Pengecekan</th>
-                            <th>QC</th>
-                            <th>Produksi</th>
-                            <th>SPV</th>
-                            <th>Verification</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php 
-                        $no = ($data->currentPage() - 1) * $data->perPage() + 1; 
-                        @endphp
-                        @forelse ($data as $dep)
-                        <tr>
-                            <td class="text-center align-middle">{{ $no++ }}</td>
-                            <td class="text-center align-middle">{{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift: {{ $dep->shift }}</td>
-                            <td class="text-center align-middle">{{ $dep->nama_produk }}</td>
-                            <td class="text-center align-middle">{{ $dep->kode_produksi }}</td>
-                            <td class="text-center align-middle">{{ $dep->no_chamber }}</td>
-                            <td class="text-center align-middle">{{ $dep->berat_produk }}</td>
-                            <td class="text-center align-middle">{{ $dep->suhu_produk }}</td>
-                            <td class="text-center align-middle">{{ $dep->jumlah_tray }}</td>
-                            <td class="text-center align-middle">{{ $dep->total_reject }}</td>
-                            <td class="text-center align-middle">
-                                @php
-                                $cooking = $dep->cooking ?? null;
-                                if (is_string($cooking)) {
-                                    $cooking = json_decode($cooking, true);
-                                }
+                date.addEventListener('change', () => form.submit());
 
-                                if (!function_exists('showValue')) {
-                                    function showValue($val) {
-                                        if (is_array($val)) {
-                                            return collect($val)
-                                            ->map(fn($v) => "<span class='badge bg-light text-dark border border-secondary me-1 mb-1'>$v</span>")
-                                            ->implode('');
-                                        }
-                                        return e($val ?? '-');
-                                    }
-                                }
+                if (exportBtn) {
+                    exportBtn.addEventListener('click', () => {
+                        const formData = new FormData(form);
+                        const exportUrl = "{{ route('pemasakan_rte.exportPdf') }}?" + new URLSearchParams(
+                            formData).toString();
+                        window.open(exportUrl, '_blank');
+                    });
+                }
+            });
+        </script>
 
-                                $sections = [
-                                '1. Persiapan' => [
-                                'Tekanan Angin (Kg/cm²)' => 'tekanan_angin',
-                                'Tekanan Steam (Kg/cm²)' => 'tekanan_steam',
-                                'Tekanan Air (Kg/cm²)' => 'tekanan_air',
-                                ],
-                                '2. Pemanasan Awal' => [
-                                'Suhu Air Awal (°C)' => 'suhu_air_awal',
-                                'Tekanan Awal (Mpa)' => 'tekanan_awal',
-                                'Waktu Mulai' => 'waktu_mulai_awal',
-                                'Waktu Selesai' => 'waktu_selesai_awal',
-                                ],
-                                '3. Proses Pemanasan' => [
-                                'Suhu Air Proses (°C)' => 'suhu_air_proses',
-                                'Tekanan Proses (Mpa)' => 'tekanan_proses',
-                                'Waktu Mulai' => 'waktu_mulai_proses',
-                                'Waktu Selesai' => 'waktu_selesai_proses',
-                                ],
-                                '4. Sterilisasi' => [
-                                'Suhu Air Sterilisasi (°C)' => 'suhu_air_sterilisasi',
-                                'Thermometer Retort (°C)' => 'thermometer_retort',
-                                'Tekanan Sterilisasi (Mpa)' => 'tekanan_sterilisasi',
-                                'Waktu Mulai' => 'waktu_mulai_sterilisasi',
-                                'Waktu Pengecekan' => 'waktu_pengecekan_sterilisasi',
-                                'Waktu Selesai' => 'waktu_selesai_sterilisasi',
-                                ],
-                                '5. Pendinginan Awal' => [
-                                'Suhu Air (°C)' => 'suhu_air_pendinginan_awal',
-                                'Tekanan (Mpa)' => 'tekanan_pendinginan_awal',
-                                'Waktu Mulai' => 'waktu_mulai_pendinginan_awal',
-                                'Waktu Selesai' => 'waktu_selesai_pendinginan_awal',
-                                ],
-                                '6. Pendinginan' => [
-                                'Suhu Air (°C)' => 'suhu_air_pendinginan',
-                                'Tekanan (Mpa)' => 'tekanan_pendinginan',
-                                'Waktu Mulai' => 'waktu_mulai_pendinginan',
-                                'Waktu Selesai' => 'waktu_selesai_pendinginan',
-                                ],
-                                '7. Proses Akhir' => [
-                                'Suhu Air (°C)' => 'suhu_air_akhir',
-                                'Tekanan (Mpa)' => 'tekanan_akhir',
-                                'Waktu Mulai' => 'waktu_mulai_akhir',
-                                'Waktu Selesai' => 'waktu_selesai_akhir',
-                                ],
-                                '8. Total Waktu Proses' => [
-                                'Waktu Mulai Total (WIB)' => 'waktu_mulai_total',
-                                'Waktu Selesai Total (WIB)' => 'waktu_selesai_total',
-                                ],
-                                '9. Sensori' => [
-                                'Suhu Varian Akhir (°C)' => 'suhu_produk_akhir',
-                                'Sobek Seal' => 'sobek_seal',
-                                ],
-                                ];
-                                @endphp
+        <div class="card shadow-sm mb-4">
+            <div class="card-body">
+                {{-- Tambahkan table-responsive agar tabel tidak keluar border --}}
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead class="table-secondary text-center">
+                            <tr>
+                                <th>NO.</th>
+                                <th>Date | Shift</th>
+                                <th>Nama Varian</th>
+                                <th>Kode Batch</th>
+                                <th>No. Chamber</th>
+                                <th>Berat Varian (Gram)</th>
+                                <th>Suhu Varian (°C)</th>
+                                <th>Jumlah Tray</th>
+                                <th>Total Reject (Kg)</th>
+                                <th>Pengecekan</th>
+                                <th>QC</th>
+                                <th>Produksi</th>
+                                <th>SPV</th>
+                                <th>Verification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @php
+                                $no = ($data->currentPage() - 1) * $data->perPage() + 1;
+                            @endphp
+                            @forelse ($data as $dep)
+                                <tr>
+                                    <td class="text-center align-middle">{{ $no++ }}</td>
+                                    <td class="text-center align-middle">
+                                        {{ \Carbon\Carbon::parse($dep->date)->format('d-m-Y') }} | Shift:
+                                        {{ $dep->shift }}</td>
+                                    <td class="text-center align-middle">{{ $dep->nama_produk }}</td>
+                                    <td class="text-center align-middle">{{ $dep->kode_produksi }}</td>
+                                    <td class="text-center align-middle">{{ $dep->no_chamber }}</td>
+                                    <td class="text-center align-middle">{{ $dep->berat_produk }}</td>
+                                    <td class="text-center align-middle">{{ $dep->suhu_produk }}</td>
+                                    <td class="text-center align-middle">{{ $dep->jumlah_tray }}</td>
+                                    <td class="text-center align-middle">{{ $dep->total_reject }}</td>
+                                    <td class="text-center align-middle">
+                                        @php
+                                            $cooking = $dep->cooking ?? null;
+                                            if (is_string($cooking)) {
+                                                $cooking = json_decode($cooking, true);
+                                            }
 
-                                @if(!empty($cooking))
-                                <a href="#" class="fw-bold text-decoration-underline text-primary"
-                                data-bs-toggle="modal" data-bs-target="#cookingModal{{ $dep->uuid }}">
-                                Result
-                            </a>
+                                            if (!function_exists('showValue')) {
+                                                function showValue($val)
+                                                {
+                                                    if (is_array($val)) {
+                                                        return collect($val)
+                                                            ->map(
+                                                                fn(
+                                                                    $v,
+                                                                ) => "<span class='badge bg-light text-dark border border-secondary me-1 mb-1'>$v</span>",
+                                                            )
+                                                            ->implode('');
+                                                    }
+                                                    return e($val ?? '-');
+                                                }
+                                            }
 
-                            <!-- Modal Detail Cooking -->
-                            <div class="modal fade" id="cookingModal{{ $dep->uuid }}" tabindex="-1">
-                                <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                    <div class="modal-content">
+                                            $sections = [
+                                                '1. Persiapan' => [
+                                                    'Tekanan Angin (Kg/cm²)' => 'tekanan_angin',
+                                                    'Tekanan Steam (Kg/cm²)' => 'tekanan_steam',
+                                                    'Tekanan Air (Kg/cm²)' => 'tekanan_air',
+                                                ],
+                                                '2. Pemanasan Awal' => [
+                                                    'Suhu Air Awal (°C)' => 'suhu_air_awal',
+                                                    'Tekanan Awal (Mpa)' => 'tekanan_awal',
+                                                    'Waktu Mulai' => 'waktu_mulai_awal',
+                                                    'Waktu Selesai' => 'waktu_selesai_awal',
+                                                ],
+                                                '3. Proses Pemanasan' => [
+                                                    'Suhu Air Proses (°C)' => 'suhu_air_proses',
+                                                    'Tekanan Proses (Mpa)' => 'tekanan_proses',
+                                                    'Waktu Mulai' => 'waktu_mulai_proses',
+                                                    'Waktu Selesai' => 'waktu_selesai_proses',
+                                                ],
+                                                '4. Sterilisasi' => [
+                                                    'Suhu Air Sterilisasi (°C)' => 'suhu_air_sterilisasi',
+                                                    'Thermometer Retort (°C)' => 'thermometer_retort',
+                                                    'Tekanan Sterilisasi (Mpa)' => 'tekanan_sterilisasi',
+                                                    'Waktu Mulai' => 'waktu_mulai_sterilisasi',
+                                                    'Waktu Pengecekan' => 'waktu_pengecekan_sterilisasi',
+                                                    'Waktu Selesai' => 'waktu_selesai_sterilisasi',
+                                                ],
+                                                '5. Pendinginan Awal' => [
+                                                    'Suhu Air (°C)' => 'suhu_air_pendinginan_awal',
+                                                    'Tekanan (Mpa)' => 'tekanan_pendinginan_awal',
+                                                    'Waktu Mulai' => 'waktu_mulai_pendinginan_awal',
+                                                    'Waktu Selesai' => 'waktu_selesai_pendinginan_awal',
+                                                ],
+                                                '6. Pendinginan' => [
+                                                    'Suhu Air (°C)' => 'suhu_air_pendinginan',
+                                                    'Tekanan (Mpa)' => 'tekanan_pendinginan',
+                                                    'Waktu Mulai' => 'waktu_mulai_pendinginan',
+                                                    'Waktu Selesai' => 'waktu_selesai_pendinginan',
+                                                ],
+                                                '7. Proses Akhir' => [
+                                                    'Suhu Air (°C)' => 'suhu_air_akhir',
+                                                    'Tekanan (Mpa)' => 'tekanan_akhir',
+                                                    'Waktu Mulai' => 'waktu_mulai_akhir',
+                                                    'Waktu Selesai' => 'waktu_selesai_akhir',
+                                                ],
+                                                '8. Total Waktu Proses' => [
+                                                    'Waktu Mulai Total (WIB)' => 'waktu_mulai_total',
+                                                    'Waktu Selesai Total (WIB)' => 'waktu_selesai_total',
+                                                ],
+                                                '9. Sensori' => [
+                                                    'Suhu Varian Akhir (°C)' => 'suhu_produk_akhir',
+                                                    'Sobek Seal' => 'sobek_seal',
+                                                ],
+                                            ];
+                                        @endphp
 
-                                        <!-- Header -->
-                                        <div class="modal-header bg-primary text-white">
-                                            <h5 class="modal-title">Detail Proses Pemasakan</h5>
-                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                        </div>
+                                        @if (!empty($cooking))
+                                            <a href="#" class="fw-bold text-decoration-underline text-primary"
+                                                data-bs-toggle="modal" data-bs-target="#cookingModal{{ $dep->uuid }}">
+                                                Result
+                                            </a>
 
-                                        <!-- Body -->
-                                        <div class="modal-body">
-                                            @foreach($sections as $title => $rows)
-                                            <h6 class="fw-bold text-primary mt-3">{{ $title }}</h6>
-                                            <div class="table-responsive">
-                                                <table class="table table-sm table-bordered mb-3 align-middle text-start">
-                                                    <tbody>
-                                                        @foreach($rows as $label => $key)
-                                                        <tr>
-                                                            <td class="fw-semibold w-50">{{ $label }}</td>
-                                                            <td>{!! showValue($cooking[$key] ?? '-') !!}</td>
-                                                        </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
+                                            <!-- Modal Detail Cooking -->
+                                            <div class="modal fade" id="cookingModal{{ $dep->uuid }}" tabindex="-1">
+                                                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                                                    <div class="modal-content">
+
+                                                        <!-- Header -->
+                                                        <div class="modal-header bg-primary text-white">
+                                                            <h5 class="modal-title">Detail Proses Pemasakan</h5>
+                                                            <button type="button" class="btn-close btn-close-white"
+                                                                data-bs-dismiss="modal"></button>
+                                                        </div>
+
+                                                        <!-- Body -->
+                                                        <div class="modal-body">
+                                                            @foreach ($sections as $title => $rows)
+                                                                <h6 class="fw-bold text-primary mt-3">{{ $title }}
+                                                                </h6>
+                                                                <div class="table-responsive">
+                                                                    <table
+                                                                        class="table table-sm table-bordered mb-3 align-middle text-start">
+                                                                        <tbody>
+                                                                            @foreach ($rows as $label => $key)
+                                                                                <tr>
+                                                                                    <td class="fw-semibold w-50">
+                                                                                        {{ $label }}</td>
+                                                                                    <td>{!! showValue($cooking[$key] ?? '-') !!}</td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+
+                                                        <!-- Footer -->
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm"
+                                                                data-bs-dismiss="modal">Tutup</button>
+                                                        </div>
+
+                                                    </div>
+                                                </div>
                                             </div>
-                                            @endforeach
-                                        </div>
-
-                                        <!-- Footer -->
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-                            @else
-                            <span>-</span>
-                            @endif
-                        </td>
-                        <td class="text-center align-middle">{{ $dep->username }}</td>
-                        <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
-                        <td class="text-center align-middle">
-                            @if ($dep->status_spv == 0)
-                            <span class="fw-bold text-secondary">Created</span>
-                            @elseif ($dep->status_spv == 1)
-                            <span class="fw-bold text-success">Verified</span>
-                            @elseif ($dep->status_spv == 2)
-                            <!-- Link buka modal -->
-                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#revisionModal{{ $dep->uuid }}" 
-                                class="text-danger fw-bold text-decoration-none" style="cursor: pointer;">Revision</a>
-                                <!-- Modal -->
-                                <div class="modal fade" id="revisionModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="revisionModalLabel{{ $dep->uuid }}" aria-hidden="true">
-                                    <div class="modal-dialog modal-dialog-centered">
-                                        <div class="modal-content">
-                                            <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title" id="revisionModalLabel{{ $dep->uuid }}">Detail Revisi</h5>
-                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        @else
+                                            <span>-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
+                                    <td class="text-center align-middle">
+                                        @if ($dep->status_spv == 0)
+                                            <span class="fw-bold text-secondary">Created</span>
+                                        @elseif ($dep->status_spv == 1)
+                                            <span class="fw-bold text-success">Verified</span>
+                                        @elseif ($dep->status_spv == 2)
+                                            <!-- Link buka modal -->
+                                            <a href="javascript:void(0);" data-bs-toggle="modal"
+                                                data-bs-target="#revisionModal{{ $dep->uuid }}"
+                                                class="text-danger fw-bold text-decoration-none"
+                                                style="cursor: pointer;">Revision</a>
+                                            <!-- Modal -->
+                                            <div class="modal fade" id="revisionModal{{ $dep->uuid }}" tabindex="-1"
+                                                aria-labelledby="revisionModalLabel{{ $dep->uuid }}"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog modal-dialog-centered">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-danger text-white">
+                                                            <h5 class="modal-title"
+                                                                id="revisionModalLabel{{ $dep->uuid }}">Detail Revisi
+                                                            </h5>
+                                                            <button type="button" class="btn-close btn-close-white"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <ul class="list-unstyled mb-0">
+                                                                <li><strong>Status:</strong> Revision</li>
+                                                                <li><strong>Catatan:</strong>
+                                                                    {{ $dep->catatan_spv ?? '-' }}</li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm"
+                                                                data-bs-dismiss="modal">Tutup</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div class="modal-body">
-                                                <ul class="list-unstyled mb-0">
-                                                    <li><strong>Status:</strong> Revision</li>
-                                                    <li><strong>Catatan:</strong> {{ $dep->catatan_spv ?? '-' }}</li>
-                                                </ul>
-                                            </div>
-                                            <div class="modal-footer">
-                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                @endif
-                            </td>
-                            <td class="text-center align-middle">
-                                @can('can access verification button')
-                                <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
-                                    <i class="bi bi-shield-check me-1"></i> Verifikasi
-                                </button>
-                                @endcan
-                                @can('can access edit button')
-                                <a href="{{ route('pemasakan_rte.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm me-1">
-                                    <i class="bi bi-pencil-square"></i> Edit
-                                </a>
-                                @endcan
-                                @can('can access update button')
-                                <a href="{{ route('pemasakan_rte.update.form', $dep->uuid) }}" class="btn btn-info btn-sm me-1">
-                                    <i class="bi bi-pencil"></i> Update
-                                </a>
-                                @endcan
-                                @can('can access delete button')
-                                <form action="{{ route('pemasakan_rte.destroy', $dep->uuid) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-danger btn-sm"
-                                    onclick="return confirm('Yakin ingin menghapus?')">
-                                    <i class="bi bi-trash"></i> Hapus
-                                </button>
-                            </form>
-                            @endcan
-                            <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered modal-md">
-                                    <form action="{{ route('pemasakan_rte.verification.update', $dep->uuid) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" 
-                                        style="background: linear-gradient(145deg, #7a1f12, #9E3419); 
+                                        @endif
+                                    </td>
+                                    <td class="text-center align-middle">
+                                        @can('can access verification button')
+                                            <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"
+                                                data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
+                                                <i class="bi bi-shield-check me-1"></i> Verifikasi
+                                            </button>
+                                        @endcan
+                                        @can('can access edit button')
+                                            <a href="{{ route('pemasakan_rte.edit.form', $dep->uuid) }}"
+                                                class="btn btn-warning btn-sm me-1">
+                                                <i class="bi bi-pencil-square"></i> Edit
+                                            </a>
+                                        @endcan
+                                        @can('can access update button')
+                                            <a href="{{ route('pemasakan_rte.update.form', $dep->uuid) }}"
+                                                class="btn btn-info btn-sm me-1">
+                                                <i class="bi bi-pencil"></i> Update
+                                            </a>
+                                        @endcan
+                                        @can('can access delete button')
+                                            <form action="{{ route('pemasakan_rte.destroy', $dep->uuid) }}" method="POST"
+                                                class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('Yakin ingin menghapus?')">
+                                                    <i class="bi bi-trash"></i> Hapus
+                                                </button>
+                                            </form>
+                                        @endcan
+                                        <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1"
+                                            aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-dialog-centered modal-md">
+                                                <form
+                                                    action="{{ route('pemasakan_rte.verification.update', $dep->uuid) }}"
+                                                    method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="page"
+                                                        value="{{ request('page', 1) }}">
+                                                    <input type="hidden" name="search"
+                                                        value="{{ request('search') }}">
+                                                    <input type="hidden" name="date" value="{{ request('date') }}">
+                                                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
+                                                        style="background: linear-gradient(145deg, #7a1f12, #9E3419);
                                         box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
-                                        <div class="modal-header border-bottom border-light-subtle p-4" style="border-bottom-width: 3px !important;">
-                                            <h5 class="modal-title fw-bolder fs-3 text-uppercase" id="verifyModalLabel{{ $dep->uuid }}" style="color: #00ffc4;">
-                                                <i class="bi bi-gear-fill me-2"></i> VERIFICATION
-                                            </h5>
-                                            <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
+                                                        <div class="modal-header border-bottom border-light-subtle p-4"
+                                                            style="border-bottom-width: 3px !important;">
+                                                            <h5 class="modal-title fw-bolder fs-3 text-uppercase"
+                                                                id="verifyModalLabel{{ $dep->uuid }}"
+                                                                style="color: #00ffc4;">
+                                                                <i class="bi bi-gear-fill me-2"></i> VERIFICATION
+                                                            </h5>
+                                                            <button type="button"
+                                                                class="btn-close btn-close-white shadow-none"
+                                                                data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
 
-                                        <div class="modal-body p-5">
-                                            <p class="text-light mb-4 fs-6">
-                                                Pastikan data yang akan diverifikasi di check dengan teliti terlebih dahulu.
-                                            </p>
-                                            <div class="row g-4">
-                                                <div class="col-md-12">
-                                                    <label for="status_spv_{{ $dep->uuid }}" class="form-label fw-bold mb-2 text-center d-block" 
-                                                        style="color: #FFE5DE; font-size: 0.95rem;">
-                                                        Pilih Status Verifikasi
-                                                    </label>
+                                                        <div class="modal-body p-5">
+                                                            <p class="text-light mb-4 fs-6">
+                                                                Pastikan data yang akan diverifikasi di check dengan teliti
+                                                                terlebih dahulu.
+                                                            </p>
+                                                            <div class="row g-4">
+                                                                <div class="col-md-12">
+                                                                    <label for="status_spv_{{ $dep->uuid }}"
+                                                                        class="form-label fw-bold mb-2 text-center d-block"
+                                                                        style="color: #FFE5DE; font-size: 0.95rem;">
+                                                                        Pilih Status Verifikasi
+                                                                    </label>
 
-                                                    <select 
-                                                    name="status_spv" 
-                                                    id="status_spv_{{ $dep->uuid }}" 
-                                                    class="form-select form-select-lg fw-bold text-center mx-auto"
-                                                    style="
+                                                                    <select name="status_spv"
+                                                                        id="status_spv_{{ $dep->uuid }}"
+                                                                        class="form-select form-select-lg fw-bold text-center mx-auto"
+                                                                        style="
                                                     background: linear-gradient(135deg, #fff1f0, #ffe5de);
                                                     border: 2px solid #dc3545;
                                                     border-radius: 12px;
@@ -358,87 +399,98 @@
                                                     width: 85%;
                                                     transition: all 0.3s ease;
                                                     "
-                                                    required
-                                                    >
-                                                    <option value="1" {{ $dep->status_spv == 1 ? 'selected' : '' }} 
-                                                        style="color: #198754; font-weight: 600;">✅ Verified (Disetujui)</option>
-                                                        <option value="2" {{ $dep->status_spv == 2 ? 'selected' : '' }} 
-                                                            style="color: #dc3545; font-weight: 600;">❌ Revision (Perlu Perbaikan)</option>
-                                                        </select>
-                                                    </div>
+                                                                        required>
+                                                                        <option value="1"
+                                                                            {{ $dep->status_spv == 1 ? 'selected' : '' }}
+                                                                            style="color: #198754; font-weight: 600;">✅
+                                                                            Verified (Disetujui)</option>
+                                                                        <option value="2"
+                                                                            {{ $dep->status_spv == 2 ? 'selected' : '' }}
+                                                                            style="color: #dc3545; font-weight: 600;">❌
+                                                                            Revision (Perlu Perbaikan)</option>
+                                                                    </select>
+                                                                </div>
 
-                                                    <div class="col-md-12 mt-3">
-                                                        <label for="catatan_spv_{{ $dep->uuid }}" class="form-label fw-bold text-light mb-2">
-                                                            Catatan Tambahan (Opsional)
-                                                        </label>
-                                                        <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4" 
-                                                            class="form-control text-dark border-0 shadow-none" 
-                                                            placeholder="Masukkan catatan, misalnya alasan revisi..." 
-                                                            style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
+                                                                <div class="col-md-12 mt-3">
+                                                                    <label for="catatan_spv_{{ $dep->uuid }}"
+                                                                        class="form-label fw-bold text-light mb-2">
+                                                                        Catatan Tambahan (Opsional)
+                                                                    </label>
+                                                                    <textarea name="catatan_spv" id="catatan_spv_{{ $dep->uuid }}" rows="4"
+                                                                        class="form-control text-dark border-0 shadow-none" placeholder="Masukkan catatan, misalnya alasan revisi..."
+                                                                        style="background-color: #FFE5DE; height: 120px;">{{ $dep->catatan_spv }}</textarea>
 
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="modal-footer justify-content-end p-4 border-top"
+                                                            style="background-color: #9E3419; border-color: #00ffc4 !important;">
+                                                            <button type="button"
+                                                                class="btn btn-outline-light fw-bold rounded-pill px-4 me-2"
+                                                                data-bs-dismiss="modal">
+                                                                Batal
+                                                            </button>
+                                                            <button type="submit" class="btn fw-bolder rounded-pill px-5"
+                                                                style="background-color: #E39581; color: #2c3e50;">
+                                                                <i class="bi bi-save-fill me-1"></i> SUBMIT
+                                                            </button>
                                                         </div>
                                                     </div>
-                                                </div>
-
-                                                <div class="modal-footer justify-content-end p-4 border-top" style="background-color: #9E3419; border-color: #00ffc4 !important;">
-                                                    <button type="button" class="btn btn-outline-light fw-bold rounded-pill px-4 me-2" data-bs-dismiss="modal">
-                                                        Batal
-                                                    </button>
-                                                    <button type="submit" class="btn fw-bolder rounded-pill px-5" style="background-color: #E39581; color: #2c3e50;">
-                                                        <i class="bi bi-save-fill me-1"></i> SUBMIT
-                                                    </button>
-                                                </div>
                                             </div>
+                                            </form>
                                         </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="14" class="text-center">Belum ada data pengecekan pemasakan rte.</td>
-                    </tr>
-                    @endforelse
+                </div>
+                </td>
+                </tr>
+            @empty
+                <tr>
+                    <td colspan="14" class="text-center">Belum ada data pengecekan pemasakan rte.</td>
+                </tr>
+                @endforelse
                 </tbody>
-            </table>
-        </div>
+                </table>
+            </div>
 
-        {{-- Pagination --}}
-        <div class="mt-3">
-            {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
+            {{-- Pagination --}}
+            <div class="mt-3">
+                {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
+            </div>
         </div>
     </div>
-</div>
-</div>
+    </div>
 
-{{-- Auto-hide alert setelah 3 detik --}}
-<script>
-    setTimeout(() => {
-        const alert = document.querySelector('.alert');
-        if(alert){
-            alert.classList.remove('show');
-            alert.classList.add('fade');
+    {{-- Auto-hide alert setelah 3 detik --}}
+    <script>
+        setTimeout(() => {
+            const alert = document.querySelector('.alert');
+            if (alert) {
+                alert.classList.remove('show');
+                alert.classList.add('fade');
+            }
+        }, 3000);
+    </script>
+
+    {{-- CSS tambahan agar tabel lebih rapi --}}
+    <style>
+        .table td,
+        .table th {
+            font-size: 0.85rem;
+            white-space: nowrap;
         }
-    }, 3000);
-</script>
 
-{{-- CSS tambahan agar tabel lebih rapi --}}
-<style>
-    .table td, .table th {
-        font-size: 0.85rem;
-        white-space: nowrap; 
-    }
-    .text-danger {
-        font-weight: bold;
-    }
-    .text-muted.fst-italic {
-        color: #6c757d !important;
-        font-style: italic !important;
-    }
-    .container {
-        padding-left: 2px !important;
-        padding-right: 2px !important;
-    }
-</style>
+        .text-danger {
+            font-weight: bold;
+        }
+
+        .text-muted.fst-italic {
+            color: #6c757d !important;
+            font-style: italic !important;
+        }
+
+        .container {
+            padding-left: 2px !important;
+            padding-right: 2px !important;
+        }
+    </style>
 @endsection

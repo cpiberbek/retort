@@ -12,7 +12,7 @@ use Carbon\Carbon;
 
 class WithdrawlController extends Controller
 {
-    public function __construct() 
+    public function __construct()
     {
         $this->middleware('auth');
     }
@@ -26,23 +26,23 @@ class WithdrawlController extends Controller
         // $type_user = Auth::user()->type_user;
 
         $data = Withdrawl::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%")
-                ->orWhere('no_withdrawl', 'like', "%{$search}%")
-                ->orWhere('rincian', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhere('no_withdrawl', 'like', "%{$search}%")
+                        ->orWhere('rincian', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.withdrawl.index', compact('data', 'search', 'date'));
     }
@@ -57,17 +57,21 @@ class WithdrawlController extends Controller
         $userPlant = Auth::user()->plant;
 
         $withdrawl = Withdrawl::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-        $withdrawl->status_spv = $request->status_spv; 
+        $withdrawl->status_spv = $request->status_spv;
         $withdrawl->catatan_spv = $request->catatan_spv;
         $withdrawl->nama_spv = Auth::user()->username;
         $withdrawl->tgl_update_spv = now();
         $withdrawl->save();
 
-        return redirect()->route('withdrawl.index')
-        ->with('success', 'Status Verifikasi Laporan Withdrawl Berhasil diperbarui.');
+        return redirect()->route('withdrawl.index', [
+            'page'       => $request->input('page', 1),
+            'search'     => $request->input('search'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ])->with('success', 'Status Verifikasi Laporan Withdrawl Berhasil diperbarui.');
     }
 
     public function updateApproval(Request $request, $uuid)
@@ -80,17 +84,21 @@ class WithdrawlController extends Controller
         $userPlant = Auth::user()->plant;
 
         $withdrawl = Withdrawl::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-        $withdrawl->status_manager = $request->status_manager; 
+        $withdrawl->status_manager = $request->status_manager;
         $withdrawl->catatan_manager = $request->catatan_manager;
         $withdrawl->nama_manager = Auth::user()->username;
         $withdrawl->tgl_update_manager = now();
         $withdrawl->save();
 
-        return redirect()->route('withdrawl.index')
-        ->with('success', 'Status Persetujuan Laporan Withdrawl Berhasil diperbarui.');
+        return redirect()->route('withdrawl.index', [
+            'page'       => $request->input('page', 1),
+            'search'     => $request->input('search'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ])->with('success', 'Status Persetujuan Laporan Withdrawl Berhasil diperbarui.');
     }
 
     public function create()
@@ -99,9 +107,9 @@ class WithdrawlController extends Controller
         $produks = Produk::where('plant', $userPlant)->get();
 
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Distributor')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Distributor')
+            ->orderBy('nama_supplier')
+            ->get();
 
         return view('form.withdrawl.create', compact('produks', 'suppliers'));
     }
@@ -111,7 +119,7 @@ class WithdrawlController extends Controller
         $username   = Auth::user()->username ?? 'User RTT';
         $userPlant  = Auth::user()->plant;
 
-    // Validasi utama + rincian nested
+        // Validasi utama + rincian nested
         $request->validate([
             'date'             => 'required|date',
             'no_withdrawl'     => 'required|string',
@@ -130,8 +138,16 @@ class WithdrawlController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'no_withdrawl', 'nama_produk', 'kode_produksi',
-            'exp_date', 'jumlah_produksi', 'jumlah_edar', 'jumlah_tarik', 'tanggal_edar', 'tanggal_tarik'
+            'date',
+            'no_withdrawl',
+            'nama_produk',
+            'kode_produksi',
+            'exp_date',
+            'jumlah_produksi',
+            'jumlah_edar',
+            'jumlah_tarik',
+            'tanggal_edar',
+            'tanggal_tarik'
         ]);
 
         $data['username']            = $username;
@@ -149,19 +165,19 @@ class WithdrawlController extends Controller
     public function edit(string $uuid)
     {
         $withdrawl = withdrawl::where('uuid', $uuid)
-        ->where('plant', Auth::user()->plant)
-        ->firstOrFail();
+            ->where('plant', Auth::user()->plant)
+            ->firstOrFail();
 
         $userPlant = Auth::user()->plant;
         $produks = Produk::where('plant', $userPlant)->get();
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Distributor')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Distributor')
+            ->orderBy('nama_supplier')
+            ->get();
 
         $withdrawlData = !empty($withdrawl->rincian)
-        ? json_decode($withdrawl->rincian, true)
-        : [];
+            ? json_decode($withdrawl->rincian, true)
+            : [];
         return view('form.withdrawl.edit', compact('withdrawl', 'produks', 'suppliers', 'withdrawlData'));
     }
 
@@ -171,10 +187,10 @@ class WithdrawlController extends Controller
         $userType  = Auth::user()->type_user ?? null;
 
         $withdrawl = Withdrawl::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-    // Validasi utama + rincian nested
+        // Validasi utama + rincian nested
         $request->validate([
             'date'             => 'required|date',
             'no_withdrawl'     => 'required|string',
@@ -192,10 +208,10 @@ class WithdrawlController extends Controller
             'rincian.*.jumlah'        => 'required|numeric|min:0',
         ]);
 
-    // Hanya update username_updated untuk type_user 4 & 8
-        $usernameUpdated = in_array($userType, [4,8])
-        ? Auth::user()->username
-        : $withdrawl->username_updated;
+        // Hanya update username_updated untuk type_user 4 & 8
+        $usernameUpdated = in_array($userType, [4, 8])
+            ? Auth::user()->username
+            : $withdrawl->username_updated;
 
         $data = [
             'date'             => $request->date,
@@ -222,20 +238,20 @@ class WithdrawlController extends Controller
         $userPlant = Auth::user()->plant;
 
         $withdrawl = Withdrawl::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
         $withdrawl->delete();
 
         return redirect()->route('withdrawl.index')
-        ->with('success', 'Data Laporan Withdrawl berhasil dihapus'); 
+            ->with('success', 'Data Laporan Withdrawl berhasil dihapus');
     }
 
     public function recyclebin()
     {
         $withdrawl = Withdrawl::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.withdrawl.recyclebin', compact('withdrawl'));
     }
@@ -245,7 +261,7 @@ class WithdrawlController extends Controller
         $withdrawl->restore();
 
         return redirect()->route('withdrawl.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -253,7 +269,6 @@ class WithdrawlController extends Controller
         $withdrawl->forceDelete();
 
         return redirect()->route('withdrawl.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
-
 }

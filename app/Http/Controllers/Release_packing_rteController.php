@@ -272,8 +272,11 @@ class Release_packing_rteController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('release_packing_rte.index')
-            ->with('success', 'Status Verifikasi Data Release Packing RTE diperbarui.');
+        return redirect()->route('release_packing_rte.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Data Release Packing RTE diperbarui.');
     }
 
     public function destroy($uuid)

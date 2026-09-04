@@ -295,7 +295,8 @@
                                                                     <tr
                                                                         class="section-header bg-light fw-bold text-center">
                                                                         <td class="text-start">Bahan Baku & Tambahan
-                                                                            (Non-Premix)</td>
+                                                                            (Non-Premix)
+                                                                        </td>
                                                                         <td>Kode</td>
                                                                         <td>(°C)</td>
                                                                         <td>*pH</td>
@@ -338,7 +339,8 @@
                                                                                 {{-- NAMA BAHAN DIGABUNG --}}
                                                                                 @if ($isFirst)
                                                                                     <td class="text-start"
-                                                                                        rowspan="{{ $rowspan }}" style="text-align: center; vertical-align: middle;">
+                                                                                        rowspan="{{ $rowspan }}"
+                                                                                        style="text-align: center; vertical-align: middle;">
                                                                                         {{ $namaBahan }}
                                                                                     </td>
                                                                                 @endif
@@ -648,6 +650,14 @@
                                                         method="POST" class="w-100">
                                                         @csrf
                                                         @method('PUT')
+                                                        <input type="hidden" name="page"
+                                                            value="{{ request('page', 1) }}">
+                                                        <input type="hidden" name="search"
+                                                            value="{{ request('search') }}">
+                                                        <input type="hidden" name="date" value="{{ request('date') }}">
+                                                        <input type="hidden" name="shift" value="{{ request('shift') }}">
+                                                        <input type="hidden" name="kode_batch"
+                                                            value="{{ request('kode_batch') }}">
                                                         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                                             style="background: linear-gradient(145deg, #7a1f12, #9E3419); box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
 

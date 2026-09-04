@@ -14,7 +14,7 @@ use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use TCPDF;
 
-class PackingController extends Controller 
+class PackingController extends Controller
 {
     public function index(Request $request)
     {
@@ -25,26 +25,26 @@ class PackingController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Packing::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($nama_produk, function ($query) use ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.packing.index', compact('data', 'search', 'date', 'shift', 'nama_produk'));
     }
@@ -54,9 +54,9 @@ class PackingController extends Controller
         $userPlant = Auth::user()->plant;
         $produks = Produk::where('plant', $userPlant)->get();
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         return view('form.packing.create', compact('produks', 'suppliers'));
     }
@@ -66,8 +66,8 @@ class PackingController extends Controller
         $username   = Auth::user()->username ?? 'User RTM';
         $userPlant  = Auth::user()->plant;
         $nama_produksi = session()->has('selected_produksi')
-        ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
-        : 'Produksi RTT';
+            ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
+            : 'Produksi RTT';
 
         $request->validate([
             'date'          => 'required|date',
@@ -82,10 +82,10 @@ class PackingController extends Controller
             'suhu.*'        => 'nullable|numeric',
             'speed'         => 'nullable|numeric',
             'kondisi_segel' => 'nullable|string',
-            'jumlah_produk' => 'nullable|integer', 
-            'berat_pcs'     => 'nullable|numeric', 
-            'berat_pack'    => 'nullable|numeric', 
-            
+            'jumlah_produk' => 'nullable|integer',
+            'berat_pcs'     => 'nullable|numeric',
+            'berat_pack'    => 'nullable|numeric',
+
             // Validasi Input Dinamis Array Kemasan
             'data_kemasan'                  => 'nullable|array',
             'data_kemasan.*.jenis_kemasan'  => 'required|string',
@@ -107,13 +107,13 @@ class PackingController extends Controller
             'qrcode'              => $qrcodeFinal,
             'kode_printing'       => $kodePrintingFinal,
             'kode_toples'         => $request->kode_toples,
-            'suhu'                => $request->suhu ? array_values(array_filter($request->suhu, fn ($value) => $value !== null && $value !== '')) : null,
+            'suhu'                => $request->suhu ? array_values(array_filter($request->suhu, fn($value) => $value !== null && $value !== '')) : null,
             'speed'               => $request->speed,
             'kondisi_segel'       => $request->kondisi_segel,
             'jumlah_produk'       => $request->jumlah_produk,
             'berat_pcs'           => $request->berat_pcs,
             'berat_pack'          => $request->berat_pack,
-            
+
             // Encode menjadi JSON string sebelum masuk DB
             'data_kemasan'        => $request->has('data_kemasan') ? json_encode($request->data_kemasan) : null,
             'keterangan'          => $request->keterangan,
@@ -135,9 +135,9 @@ class PackingController extends Controller
         $userPlant = Auth::user()->plant;
         $produks = Produk::where('plant', $userPlant)->get();
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         return view('form.packing.update', compact('packing', 'produks', 'suppliers'));
     }
@@ -174,8 +174,8 @@ class PackingController extends Controller
             'kode_printing'       => $kodePrintingFinal,
             'kode_toples'         => $request->kode_toples,
             'suhu' => $request->suhu
-            ? array_values(array_filter($request->suhu, fn ($value) => $value !== null && $value !== ''))
-            : null,
+                ? array_values(array_filter($request->suhu, fn($value) => $value !== null && $value !== ''))
+                : null,
             'speed'               => $request->speed,
             'kondisi_segel'       => $request->kondisi_segel,
             'jumlah_produk'       => $request->jumlah_produk,
@@ -195,9 +195,9 @@ class PackingController extends Controller
         $userPlant = Auth::user()->plant;
         $produks = Produk::where('plant', $userPlant)->get();
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         return view('form.packing.edit', compact('packing', 'produks', 'suppliers'));
     }
@@ -234,8 +234,8 @@ class PackingController extends Controller
             'kalibrasi'           => $request->has('kalibrasi') ? 'Ok' : 'Tidak Ok',
             'kode_toples'         => $request->kode_toples,
             'suhu' => $request->suhu
-            ? array_values(array_filter($request->suhu, fn ($value) => $value !== null && $value !== ''))
-            : null,
+                ? array_values(array_filter($request->suhu, fn($value) => $value !== null && $value !== ''))
+                : null,
             'speed'               => $request->speed,
             'kondisi_segel'       => $request->kondisi_segel,
             'jumlah_produk'       => $request->jumlah_produk,
@@ -257,20 +257,20 @@ class PackingController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Packing::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.packing.index', compact('data', 'search', 'date'));
     }
@@ -291,7 +291,11 @@ class PackingController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('packing.index')->with('success', 'Status Verifikasi Pemeriksaan Proses Packing berhasil diperbarui.');
+        return redirect()->route('packing.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pemeriksaan Proses Packing berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -300,12 +304,16 @@ class PackingController extends Controller
 
         if (!empty($packing->kode_printing)) {
             $path = str_replace('storage/', 'public/', $packing->kode_printing);
-            if (Storage::exists($path)) { Storage::delete($path); }
+            if (Storage::exists($path)) {
+                Storage::delete($path);
+            }
         }
 
         if (!empty($packing->qrcode)) {
             $pathQr = str_replace('storage/', 'public/', $packing->qrcode);
-            if (Storage::exists($pathQr)) { Storage::delete($pathQr); }
+            if (Storage::exists($pathQr)) {
+                Storage::delete($pathQr);
+            }
         }
 
         $packing->delete();
@@ -332,7 +340,7 @@ class PackingController extends Controller
         return redirect()->route('packing.recyclebin')->with('success', 'Data berhasil dihapus permanen.');
     }
 
-        public function exportPdf(Request $request)
+    public function exportPdf(Request $request)
     {
         $date = $request->input('date');
         $shift = $request->input('shift');
@@ -344,19 +352,19 @@ class PackingController extends Controller
 
 
         $packings = Packing::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('shift', 'asc')
-        ->get();
+            ->where('plant', $userPlant)
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($nama_produk, function ($query) use ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            })
+            ->orderBy('date', 'asc')
+            ->orderBy('shift', 'asc')
+            ->get();
 
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {
@@ -390,8 +398,8 @@ class PackingController extends Controller
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
         // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
+        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
+            require_once(dirname(__FILE__) . '/lang/eng.php');
             $pdf->setLanguageArray($l);
         }
 
@@ -412,14 +420,16 @@ class PackingController extends Controller
 
         exit();
     }
-    
+
     private function compressAndStore($file, $prefix)
     {
         $manager = new ImageManager(new Driver());
         $path = 'public/uploads/packing';
         $filename = $prefix . '_' . Str::uuid() . '.jpg';
 
-        if (!Storage::exists($path)) { Storage::makeDirectory($path, 0755, true); }
+        if (!Storage::exists($path)) {
+            Storage::makeDirectory($path, 0755, true);
+        }
 
         $image = $manager->read($file)->scale(width: 1280)->toJpeg(quality: 90);
         Storage::put("$path/$filename", (string) $image);

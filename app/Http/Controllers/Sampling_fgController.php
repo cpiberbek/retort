@@ -377,8 +377,11 @@ class Sampling_fgController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('sampling_fg.index')
-            ->with('success', 'Status Verifikasi Pemeriksaan Proses sampling_fg Finish Good berhasil diperbarui.');
+        return redirect()->route('sampling_fg.index', [
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date' => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pemeriksaan Proses sampling_fg Finish Good berhasil diperbarui.');
     }
 
     public function destroy($uuid)

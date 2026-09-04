@@ -250,8 +250,11 @@ class PrepackingController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('prepacking.index')
-            ->with('success', 'Status Verifikasi Pengecekan Pre Packing berhasil diperbarui.');
+        return redirect()->route('prepacking.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pengecekan Pre Packing berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -401,9 +404,7 @@ class PrepackingController extends Controller
                         if (!empty($uuidMincing)) {
                             $q->orWhereIn('kode_produksi', $uuidMincing);
                         }
-
                     });
-
                 })
                 ->orderBy('date', 'asc')
                 ->orderBy('created_at', 'asc')
@@ -591,14 +592,12 @@ class PrepackingController extends Controller
 
                 $writer = new Xlsx($spreadsheet);
                 $writer->save('php://output');
-
             }, $filename);
-
         } catch (\Exception $e) {
             return back()->with('error', $e->getMessage());
         }
     }
-    
+
     public function getBatch($nama_produk)
     {
         $data = DB::table('mincings')

@@ -224,8 +224,11 @@ class SampelController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('sampel.index')
-            ->with('success', 'Status Verifikasi Pengambilan Sampel berhasil diperbarui.');
+        return redirect()->route('sampel.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pengambilan Sampel berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -299,8 +302,8 @@ class SampelController extends Controller
         $pdf->AddPage();
 
         $noDokumen = List_form::where('plant', $userPlant)
-        ->where('laporan', 'Pengambilan Sampel')
-        ->value('no_dokumen');
+            ->where('laporan', 'Pengambilan Sampel')
+            ->value('no_dokumen');
 
         // 3. Render
         $html = view('reports.pengambilan-sampel', compact('items', 'request', 'noDokumen'))->render();

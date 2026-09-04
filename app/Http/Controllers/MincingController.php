@@ -621,8 +621,13 @@ class MincingController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('mincing.index')
-            ->with('success', 'Status Verifikasi Pengecekan mincing berhasil diperbarui.');
+        return redirect()->route('mincing.index', [
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date' => $request->input('date'),
+            'shift' => $request->input('shift'),
+            'kode_batch' => $request->input('kode_batch'),
+        ])->with('success', 'Status Verifikasi Pengecekan mincing berhasil diperbarui.');
     }
 
     public function destroy($uuid)

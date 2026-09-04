@@ -82,7 +82,7 @@ class PackagingInspectionController extends Controller
             'items.*.condition_color'     => 'required|string|max:10',
             'items.*.condition_dimension' => 'nullable|string|max:255',
             'items.*.condition_weight'    => 'nullable|numeric|min:0',
-            'items.*.condition_weight_pcs'=> 'nullable|string|max:255',
+            'items.*.condition_weight_pcs' => 'nullable|string|max:255',
             'items.*.quantity_goods'      => 'required|integer|min:0',
             'items.*.quantity_sample'     => 'required|integer|min:0',
             'items.*.quantity_reject'     => 'required|integer|min:0',
@@ -124,8 +124,7 @@ class PackagingInspectionController extends Controller
             DB::commit();
 
             return redirect()->route('packaging-inspections.index')
-            ->with('success', 'Inspeksi packaging berhasil disimpan.');
-
+                ->with('success', 'Inspeksi packaging berhasil disimpan.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error storing packaging inspection: ' . $e->getMessage());
@@ -218,8 +217,7 @@ class PackagingInspectionController extends Controller
             DB::commit();
 
             return redirect()->route('packaging-inspections.index')
-            ->with('success', 'Inspeksi packaging berhasil diperbarui.');
-
+                ->with('success', 'Inspeksi packaging berhasil diperbarui.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Error updating packaging inspection: ' . $e->getMessage());
@@ -239,7 +237,7 @@ class PackagingInspectionController extends Controller
             $packagingInspection->delete(); // Soft delete induk
 
             return redirect()->route('packaging-inspections.index')
-            ->with('success', 'Inspeksi packaging berhasil dihapus.');
+                ->with('success', 'Inspeksi packaging berhasil dihapus.');
         } catch (\Exception $e) {
             Log::error('Error deleting packaging inspection: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
@@ -249,8 +247,8 @@ class PackagingInspectionController extends Controller
     public function recyclebin()
     {
         $packagingInspection = PackagingInspection::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('packaging_inspections.recyclebin', compact('packagingInspection'));
     }
@@ -260,7 +258,7 @@ class PackagingInspectionController extends Controller
         $packagingInspection->restore();
 
         return redirect()->route('packaging_inspections.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -268,7 +266,7 @@ class PackagingInspectionController extends Controller
         $packagingInspection->forceDelete();
 
         return redirect()->route('packaging_inspections.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function showVerificationList(Request $request): View
@@ -286,12 +284,12 @@ class PackagingInspectionController extends Controller
             $query->where(function ($q) use ($search) {
                 // Mencari di tabel header (packaging_inspections)
                 $q->where('shift', 'like', "%{$search}%")
-                  // Mencari di tabel relasi (packaging_inspection_items)
-                ->orWhereHas('items', function ($itemQuery) use ($search) {
-                  $itemQuery->where('no_pol', 'like', "%{$search}%")
-                  ->orWhere('supplier', 'like', "%{$search}%")
-                  ->orWhere('packaging_type', 'like', "%{$search}%");
-              });
+                    // Mencari di tabel relasi (packaging_inspection_items)
+                    ->orWhereHas('items', function ($itemQuery) use ($search) {
+                        $itemQuery->where('no_pol', 'like', "%{$search}%")
+                            ->orWhere('supplier', 'like', "%{$search}%")
+                            ->orWhere('packaging_type', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -328,12 +326,16 @@ class PackagingInspectionController extends Controller
             $inspection->update([
                 'status_spv'    => $validated['status_spv'],
                 'catatan_spv'   => $validated['catatan_spv'] ?? null,
-                'verified_by'   => Auth::id(),
+                'verified_by' => Auth::user()->id,
                 'verified_at'   => now(),
             ]);
 
-            return back()->with('success', 'Verifikasi packaging berhasil disimpan.');
-
+            return redirect()->route('packaging-inspections.index', [
+                'page'       => $request->input('page', 1),
+                'search'     => $request->input('search'),
+                'start_date' => $request->input('start_date'),
+                'end_date'   => $request->input('end_date'),
+            ])->with('success', 'Verifikasi packaging berhasil disimpan.');
         } catch (\Exception $e) {
             Log::error('Gagal menyimpan verifikasi packaging: ' . $e->getMessage());
             // Tampilkan pesan error yang sebenarnya ke user

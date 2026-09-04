@@ -438,7 +438,12 @@ class RawMaterialInspectionController extends Controller
 
         $inspection->save();
 
-        return redirect()->back()->with('success', 'Data berhasil diverifikasi.');
+        return redirect()->route('inspections.index', [
+            'page'       => $request->input('page', 1),
+            'search'     => $request->input('search'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ])->with('success', 'Data berhasil diverifikasi.');
     }
 
     public function showUpdateForm(RawMaterialInspection $inspection)
@@ -472,8 +477,8 @@ class RawMaterialInspectionController extends Controller
         }
 
         $noDokumen = List_form::where('plant', $userPlant)
-                ->where('laporan', 'Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia')
-                ->value('no_dokumen');
+            ->where('laporan', 'Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia')
+            ->value('no_dokumen');
 
         // Filter tanggal (menggunakan setup_kedatangan)
         $query->when($date, function ($q) use ($date) {

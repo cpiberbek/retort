@@ -21,7 +21,7 @@ class LoadingProdukController extends Controller
     {
         // 2. Mulai query builder
         $query = LoadingProduk::with('creator')
-        ->where('plant_uuid', auth()->user()->plant);
+            ->where('plant_uuid', auth()->user()->plant);
 
         // 3. Terapkan filter jika ada input
         if ($request->filled('date')) {
@@ -104,19 +104,19 @@ class LoadingProdukController extends Controller
 
         // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
         //$mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
-      //  $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
+        //  $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
 
         // Jika shift malam dan jam selesai < jam mulai → berarti lewat tengah malam
-      //  if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
-      //      $selesai->addDay();
-      //  }
+        //  if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
+        //      $selesai->addDay();
+        //  }
 
         // Validasi final
-      //  if ($selesai->lte($mulai)) {
-      //      return back()->withErrors([
-     //           'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
-     //       ])->withInput();
-      //  }
+        //  if ($selesai->lte($mulai)) {
+        //      return back()->withErrors([
+        //           'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
+        //       ])->withInput();
+        //  }
 
         DB::beginTransaction();
 
@@ -199,20 +199,20 @@ class LoadingProdukController extends Controller
         ]);
 
         // ✅ VALIDASI JAM (HANDLE LEWAT TENGAH MALAM)
-       // $mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
-       // $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
+        // $mulai = Carbon::createFromFormat('H:i', $request->jam_mulai);
+        // $selesai = Carbon::createFromFormat('H:i', $request->jam_selesai);
 
         // Jika shift malam dan jam selesai < jam mulai → berarti lewat tengah malam
-       // if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
-       //     $selesai->addDay();
-       // }
+        // if ($request->shift === 'Malam' && $selesai->lt($mulai)) {
+        //     $selesai->addDay();
+        // }
 
         // Validasi final
-       // if ($selesai->lte($mulai)) {
-       //     return back()->withErrors([
-       //         'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
-       //     ])->withInput();
-       // }
+        // if ($selesai->lte($mulai)) {
+        //     return back()->withErrors([
+        //         'jam_selesai' => 'Jam selesai harus setelah jam mulai.'
+        //     ])->withInput();
+        // }
 
         DB::beginTransaction();
         try {
@@ -349,7 +349,12 @@ class LoadingProdukController extends Controller
             // 5. Simpan ke database
             $loadingProduk->save();
 
-            return redirect()->back()->with('success', "Data (Nopol: {$loadingProduk->no_pol_mobil}) berhasil diverifikasi.");
+            return redirect()->route('loading-produks.index', [
+                'page'       => $request->input('page', 1),
+                'search'     => $request->input('search'),
+                'start_date' => $request->input('start_date'),
+                'end_date'   => $request->input('end_date'),
+            ])->with('success', "Data (Nopol: {$loadingProduk->no_pol_mobil}) berhasil diverifikasi.");
         } catch (\Exception $e) {
             Log::error('Gagal verifikasi Loading Produk: ' . $e->getMessage());
             return back()->with('error', 'Gagal memverifikasi data. Error: ' . $e->getMessage());
@@ -394,7 +399,7 @@ class LoadingProdukController extends Controller
         $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Pemeriksaan Loading-Unloading Produk')
             ->value('no_dokumen');
-        
+
 
         $query = LoadingProduk::with(['details', 'creator']);
         if (Auth::check() && !empty($userPlant)) {

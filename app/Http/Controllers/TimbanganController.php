@@ -17,23 +17,23 @@ class TimbanganController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Timbangan::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('peneraan', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('peneraan', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.timbangan.index', compact('data', 'search', 'date', 'shift'));
     }
@@ -65,14 +65,14 @@ class TimbanganController extends Controller
         ]);
 
         return redirect()->route('timbangan.index')
-        ->with('success', 'Peneraan Timbangan berhasil disimpan');
+            ->with('success', 'Peneraan Timbangan berhasil disimpan');
     }
 
     public function update(string $uuid)
     {
         $timbangan = Timbangan::where('uuid', $uuid)->firstOrFail();
 
-    // Decode JSON peneraan => array of objects (stdClass)
+        // Decode JSON peneraan => array of objects (stdClass)
         $peneraan = [];
         if (!empty($timbangan->peneraan)) {
             $decoded = json_decode($timbangan->peneraan);
@@ -115,7 +115,7 @@ class TimbanganController extends Controller
         ]);
 
         return redirect()->route('timbangan.index')
-        ->with('success', 'Peneraan Timbangan berhasil diperbarui');
+            ->with('success', 'Peneraan Timbangan berhasil diperbarui');
     }
 
 
@@ -123,7 +123,7 @@ class TimbanganController extends Controller
     {
         $timbangan = Timbangan::where('uuid', $uuid)->firstOrFail();
 
-    // Decode JSON peneraan => array of objects (stdClass)
+        // Decode JSON peneraan => array of objects (stdClass)
         $peneraan = [];
         if (!empty($timbangan->peneraan)) {
             $decoded = json_decode($timbangan->peneraan);
@@ -166,7 +166,7 @@ class TimbanganController extends Controller
         ]);
 
         return redirect()->route('timbangan.index')
-        ->with('success', 'Peneraan Timbangan berhasil diperbarui');
+            ->with('success', 'Peneraan Timbangan berhasil diperbarui');
     }
 
     public function verification(Request $request)
@@ -174,22 +174,22 @@ class TimbanganController extends Controller
         $search     = $request->input('search');
         $date       = $request->input('date');
         $userPlant  = Auth::user()->plant;
-        
+
         $data = Timbangan::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('peneraan', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('peneraan', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.timbangan.index', compact('data', 'search', 'date'));
     }
@@ -210,8 +210,11 @@ class TimbanganController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('timbangan.index')
-        ->with('success', 'Status verifikasi peneraan timbangan berhasil diperbarui.');
+        return redirect()->route('timbangan.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status verifikasi peneraan timbangan berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -220,14 +223,14 @@ class TimbanganController extends Controller
         $timbangan->delete();
 
         return redirect()->route('timbangan.index')
-        ->with('success', '🗑️ Peneraan Timbangan berhasil dihapus.');
+            ->with('success', '🗑️ Peneraan Timbangan berhasil dihapus.');
     }
 
     public function recyclebin()
     {
         $timbangan = Timbangan::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.timbangan.recyclebin', compact('timbangan'));
     }
@@ -237,7 +240,7 @@ class TimbanganController extends Controller
         $timbangan->restore();
 
         return redirect()->route('timbangan.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -245,7 +248,7 @@ class TimbanganController extends Controller
         $timbangan->forceDelete();
 
         return redirect()->route('timbangan.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function exportPdf(Request $request)
@@ -256,16 +259,16 @@ class TimbanganController extends Controller
         $userPlant = Auth::user()->plant;
 
         $items = Timbangan::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('shift', 'asc')
-        ->get();
+            ->where('plant', $userPlant)
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'asc')
+            ->orderBy('shift', 'asc')
+            ->get();
 
         if (ob_get_length()) {
             ob_end_clean();
