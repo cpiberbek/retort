@@ -20,37 +20,33 @@ class AuthController extends Controller
         $expectedKey = config('services.login_bypass.key');
 
         if ($bypassKey && $expectedKey && hash_equals($expectedKey, $bypassKey)) {
-            return view('auth.login');
+            return view('login');
         }
 
         $portalLoginUrl = config('services.employee_api.portal_login_url');
 
-        if (!empty($portalLoginUrl)) {
-            try {
-                $response = Http::timeout(3)->get($portalLoginUrl);
+        if (empty($portalLoginUrl)) {
+            $portalUrl = config('services.employee_api.portal_url');
 
-                if ($response->successful()) {
-                    return redirect($portalLoginUrl);
-                }
-            } catch (\Throwable $e) {
+            if (empty($portalUrl)) {
+                return view('login');
             }
+
+            $portalLoginUrl = rtrim($portalUrl, '/') . '/login';
         }
 
-        $portalUrl = config('services.employee_api.portal_url');
+        try {
+            $response = Http::timeout(3)->get($portalLoginUrl);
 
-        if (!empty($portalUrl)) {
-            try {
-                $response = Http::timeout(3)->get(rtrim($portalUrl, '/') . '/login');
-
-                if ($response->successful()) {
-                    return redirect(rtrim($portalUrl, '/') . '/login');
-                }
-            } catch (\Throwable $e) {
+            if ($response->successful()) {
+                return redirect($portalLoginUrl);
             }
+        } catch (\Throwable $e) {
         }
 
-        return view('auth.login');
+        return view('login');
     }
+
 
     public function showLocalLoginForm()
     {
