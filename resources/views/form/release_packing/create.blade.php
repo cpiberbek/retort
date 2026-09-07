@@ -204,78 +204,124 @@
 
                 const expDateInput = document.getElementById('expired_date');
                 // Exp date update ketika batch dipilih
-                batchSelect.on('change', function() {
-
-                    let selectedText = this.options[this.selectedIndex]?.text;
-                    let kodeProduksi = selectedText?.split(" - ")[0]?.trim();
+                // ===================== HITUNG EXP DATE DARI KODE BATCH =====================
+                function calculateExpDate(kodeProduksi) {
 
                     if (!kodeProduksi) {
-                        expDateInput.value = '';
-                        return;
+                        return '';
                     }
 
-                    // ==============================
-                    // AMBIL BULAN DAN TANGGAL BATCH
-                    // ==============================
-                    const bulanChar = kodeProduksi.charAt(1);
-                    const hari = parseInt(kodeProduksi.substr(2, 2), 10);
+                    kodeProduksi = kodeProduksi.trim().toUpperCase();
 
-                    const bulanMap = {
-                        A: 0,
-                        B: 1,
-                        C: 2,
-                        D: 3,
-                        E: 4,
-                        F: 5,
-                        G: 6,
-                        H: 7,
-                        I: 8,
-                        J: 9,
-                        K: 10,
-                        L: 11
+                    // ==============================
+                    // KODE TAHUN
+                    // ==============================
+                    const tahunMap = {
+                        Q: 2026,
+                        R: 2027,
+                        S: 2028,
+                        T: 2029,
+                        U: 2030
                     };
 
-                    const kodeBulan = bulanMap[bulanChar];
+                    // ==============================
+                    // KODE BULAN
+                    // ==============================
+                    const bulanMap = {
+                        A: 1,
+                        B: 2,
+                        C: 3,
+                        D: 4,
+                        E: 5,
+                        F: 6,
+                        G: 7,
+                        H: 8,
+                        I: 9,
+                        J: 10,
+                        K: 11,
+                        L: 12
+                    };
 
-                    if (kodeBulan === undefined || isNaN(hari)) {
-                        expDateInput.value = '';
-                        return;
+                    // ==============================
+                    // AMBIL KOMPONEN BATCH
+                    // ==============================
+                    const kodeTahun = kodeProduksi.charAt(0);
+                    const kodeBulan = kodeProduksi.charAt(1);
+                    const kodeTanggal = kodeProduksi.substring(2, 4);
+
+                    const tahunProduksi = tahunMap[kodeTahun];
+                    const bulanProduksi = bulanMap[kodeBulan];
+                    const tanggalProduksi = parseInt(kodeTanggal, 10);
+
+                    // ==============================
+                    // VALIDASI
+                    // ==============================
+                    if (
+                        !tahunProduksi ||
+                        !bulanProduksi ||
+                        !tanggalProduksi ||
+                        tanggalProduksi < 1 ||
+                        tanggalProduksi > 31
+                    ) {
+                        return '';
                     }
 
                     // ==============================
-                    // TAHUN PRODUKSI
+                    // EXP + 7 BULAN
                     // ==============================
-                    let now = new Date();
-                    let tahun = now.getFullYear();
+                    let bulanExp = bulanProduksi + 7;
+                    let tahunExp = tahunProduksi;
 
-                    if (kodeBulan < now.getMonth()) {
-                        tahun++;
+                    if (bulanExp > 12) {
+                        bulanExp -= 12;
+                        tahunExp++;
                     }
 
                     // ==============================
-                    // TANGGAL PRODUKSI
+                    // BATAS HARI PADA BULAN EXP
                     // ==============================
-                    let expDate = new Date(
-                        tahun,
-                        kodeBulan,
-                        hari
+                    const jumlahHariDalamBulan = new Date(
+                        tahunExp,
+                        bulanExp,
+                        0
+                    ).getDate();
+
+                    const tanggalExp = Math.min(
+                        tanggalProduksi,
+                        jumlahHariDalamBulan
                     );
 
                     // ==============================
-                    // EXP = +7 BULAN
-                    // ==============================
-                    expDate.setMonth(expDate.getMonth() + 7);
-
-                    // ==============================
                     // FORMAT MANUAL
-                    // JANGAN PAKAI toISOString()
                     // ==============================
-                    const expYear = expDate.getFullYear();
-                    const expMonth = String(expDate.getMonth() + 1).padStart(2, '0');
-                    const expDay = String(expDate.getDate()).padStart(2, '0');
+                    return (
+                        tahunExp +
+                        '-' +
+                        String(bulanExp).padStart(2, '0') +
+                        '-' +
+                        String(tanggalExp).padStart(2, '0')
+                    );
+                }
 
-                    expDateInput.value = `${expYear}-${expMonth}-${expDay}`;
 
+                // ===================== EVENT PILIH BATCH =====================
+                batchSelect.on('change', function() {
+
+                    let selectedText = this.options[this.selectedIndex]?.text || '';
+
+                    // Ambil kode batch sebelum " - "
+                    let kodeProduksi = selectedText
+                        .split(" - ")[0]
+                        .trim();
+
+                    if (!kodeProduksi || kodeProduksi.includes('-- Pilih Batch')) {
+                        expDateInput.value = '';
+                        return;
+                    }
+
+                    const hasilExp = calculateExpDate(kodeProduksi);
+
+                    expDateInput.value = hasilExp;
                 });
             });
         </script>
