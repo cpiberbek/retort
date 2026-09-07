@@ -328,7 +328,11 @@ class MagnetTrapController extends Controller
 
         $magnetTrap->save();
 
-        return redirect()->back()->with('success', 'Data berhasil diverifikasi.');
+        return redirect()->route('checklistmagnettrap.index', [
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date' => $request->input('date'),
+        ])->with('success', 'Data berhasil diverifikasi.');
     }
 
     /**

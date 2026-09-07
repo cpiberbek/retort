@@ -222,11 +222,16 @@
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <strong><i class="bi bi-list-nested"></i> Detail Item Produk <span class="text-danger">*</span></strong>
-                            <button type="button" id="add-detail-btn" class="btn btn-secondary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Item</button>
                         </div>
                     </div>
                     <div class="card-body">
                         <div id="details-container"></div>
+
+                        <div class="text-left mt-3">
+                            <button type="button" id="add-detail-btn" class="btn btn-info">
+                                <i class="bi bi-plus-lg"></i> Tambah Item (Varian mengikuti Produk terakhir)
+                            </button>
+                        </div>
                         <div class="card border-secondary mt-3">
                             <div class="card-header bg-success text-white">
                                 <strong>Jumlah Total Item Produk</strong><br>
@@ -587,24 +592,45 @@
             detailIndex++;
         }
 
-        if (addBtn) {
-            addBtn.addEventListener('click', () => {
-                const firstProduk = $('.var-produk-select').first().val();
+        addBtn.addEventListener('click', () => {
+            const cards = container.querySelectorAll('.dynamic-item-card');
+            const lastCard = cards[cards.length - 1];
+
+            if (!lastCard) {
+                renderDetailForm(null);
+            } else {
+                const nama_produk = $(lastCard).find('.var-produk-select').val() || '';
+                const kode_produksi = $(lastCard).find('.var-batch-select').val() || $(lastCard).find('.var-batch-manual').val() || '';
+                const kode_expired = $(lastCard).find('.expired-date').val() || '';
+                const jumlah = $(lastCard).find('input[name$="[jumlah]"]').val() || '';
+                const satuan = $(lastCard).find('select[name$="[satuan]"]').val() || '';
+                const keterangan = $(lastCard).find('input[name$="[keterangan]"]').val() || '';
 
                 renderDetailForm({
-                    nama_produk: firstProduk || ''
+                    nama_produk,
+                    kode_produksi,
+                    kode_expired,
+                    jumlah,
+                    satuan,
+                    keterangan
                 });
+            }
 
-                reindexDetails();
-                updateTotalItem();
-            });
-        }
+            reindexDetails();
+            updateTotalItem();
+        });
 
         if (container) {
             container.addEventListener('click', function(e) {
                 const removeBtn = e.target.closest('.remove-detail-btn');
 
                 if (removeBtn) {
+                    const cards = container.querySelectorAll('.dynamic-item-card');
+
+                    if (cards.length <= 1) {
+                        return;
+                    }
+
                     removeBtn.closest('.dynamic-item-card').remove();
                     reindexDetails();
                     updateTotalItem();

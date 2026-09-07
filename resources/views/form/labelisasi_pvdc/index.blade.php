@@ -242,7 +242,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                                     <form action="{{ route('labelisasi_pvdc.verification.update', $dep->uuid) }}" method="POST">
                                                         @csrf @method('PUT')
-
+                                                        <input type="hidden" name="page" value="{{ request()->query('page', 1) }}">
+                                                        <input type="hidden" name="date" value="{{ request()->query('date', '') }}">
+                                                        <input type="hidden" name="shift" value="{{ request()->query('shift', '') }}">
+                                                        <input type="hidden" name="search" value="{{ request()->query('search', '') }}">
                                                         <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" style="background: linear-gradient(145deg, #7a1f12, #9E3419);">
 
                                                             {{-- HEADER --}}

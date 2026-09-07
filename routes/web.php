@@ -122,7 +122,7 @@ Route::middleware('auth')->group(function () {
     // Halo test
     Route::get('/halo', [HaloController::class, 'index']);
 
-    //update plant opsi user 
+    //update plant opsi user
     Route::put('/users/{uuid}/plant-option', [UserController::class, 'updatePlantOption'])
     ->name('user.updatePlantOption');
 
@@ -143,6 +143,8 @@ Route::middleware('auth')->group(function () {
     ]);
 
     // Produk
+    Route::put('/produk/{uuid}/bahan-baku', [ProdukController::class, 'updateBahanBaku'])
+    ->name('produk.updateBahanBaku');
     Route::resource('produk', ProdukController::class)->parameters([
         'produk' => 'uuid'
     ]);
@@ -344,6 +346,9 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('loading-produks', LoadingProdukController::class)
         ->names('loading-produks');
+
+    Route::get('/loading-produks/{loadingProduk}/kode-produksi', [LoadingProdukController::class, 'kodeProduksi'])
+        ->name('loading-produks.kode-produksi');
 
     // Route::resource('loading-produks', LoadingProdukController::class);
 

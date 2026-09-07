@@ -255,6 +255,9 @@
                 <form action="{{ route('checklistmagnettrap.verify', $item->uuid) }}" method="POST">
                     @csrf
                     @method('PUT')
+                    <input type="hidden" name="page" value="{{ request()->query('page', 1) }}">
+                    <input type="hidden" name="search" value="{{ request()->query('search', '') }}">
+                    <input type="hidden" name="date" value="{{ request()->query('date', '') }}">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bolder fs-4 text-uppercase" id="verifyModalLabel{{ $item->uuid }}"><i
                             class="bi bi-gear-fill me-2"></i>Verification</h5>

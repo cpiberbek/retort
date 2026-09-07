@@ -241,16 +241,18 @@ class MetalController extends Controller
         $metal = Metal::where('uuid', $uuid)->firstOrFail();
 
         $metal->update([
-            'status_spv'  => $request->status_spv,
+            'status_spv' => $request->status_spv,
             'catatan_spv' => $request->catatan_spv,
-            'nama_spv'    => Auth::user()->username,
+            'nama_spv' => Auth::user()->username,
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('metal.index')
-        ->with('success', 'Status Verifikasi Pengecekan Metal Detector berhasil diperbarui.');
+        return redirect()->route('metal.verification', [
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date' => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pengecekan Metal Detector berhasil diperbarui.');
     }
-
     public function destroy($uuid)
     {
         $metal = Metal::where('uuid', $uuid)->firstOrFail();

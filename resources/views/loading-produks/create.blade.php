@@ -36,6 +36,10 @@
     .select2-container--bootstrap-5 .select2-selection {
         border-radius: 8px !important;
     }
+
+    .select2-static + .select2-container {
+        width: 100% !important;
+    }
     .select2-container--bootstrap-5.select2-container--focus .select2-selection,
     .select2-container--bootstrap-5.select2-container--open .select2-selection {
         border-color: #86b7fe;
@@ -81,12 +85,17 @@
                     <div class="card-body">
                         <div class="row g-3">
                             {{-- Informasi Utama --}}
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="tanggal" class="form-label">Hari/Tanggal <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="tanggal" name="tanggal"
                                        value="{{ old('tanggal', date('Y-m-d')) }}" required>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
+                                <label for="dibuat_oleh" class="form-label">Dibuat Oleh</label>
+                                <input type="text" class="form-control" id="dibuat_oleh"
+                                    value="{{ auth()->user()->name }}" readonly>
+                            </div>
+                            <div class="col-md-3">
                                 <label for="shift" class="form-label">Shift <span class="text-danger">*</span></label>
                                 <select class="form-select select2-static" id="shift" name="shift" required>
                                     <option value="Shift 1" @selected(old('shift') == 'Shift 1')>Shift 1</option>
@@ -94,7 +103,7 @@
                                     <option value="Shift 3" @selected(old('shift') == 'Shift 3')>Shift 3</option>
                                 </select>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-3">
                                 <label for="jenis_aktivitas" class="form-label">Jenis Aktivitas <span class="text-danger">*</span></label>
                                 <select class="form-select select2-static" id="jenis_aktivitas" name="jenis_aktivitas" required>
                                     <option value="Loading" @selected(old('jenis_aktivitas') == 'Loading')>Loading</option>
@@ -224,19 +233,30 @@
                 {{-- CARD DETAIL ITEM (DINAMIS) --}}
                 <div class="card mb-4">
                     <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <strong><i class="bi bi-list-nested"></i> Detail Item Produk <span class="text-danger">*</span></strong>
-                            <button type="button" id="add-detail-btn" class="btn btn-secondary btn-sm"><i class="bi bi-plus-lg"></i> Tambah Item (Varian selanjutnya mengikuti Produk pertama yang dipilih.)</button>
-                        </div>
+                        <strong>
+                            <i class="bi bi-list-nested"></i>
+                            Detail Item Produk <span class="text-danger">*</span>
+                        </strong>
                     </div>
+
                     <div class="card-body">
                         <div id="details-container">
                             {{-- Item dinamis akan ditambahkan di sini oleh JS --}}
                         </div>
+
+                        <div class="mt-3">
+                            <button type="button" id="add-detail-btn" class="btn btn-info btn-sm">
+                                <i class="bi bi-plus-lg"></i>
+                                Tambah Item (Varian mengikuti Produk terakhir)
+                            </button>
+                        </div>
+
                         <div class="card border-secondary mt-3">
                             <div class="card-header bg-success text-white">
                                 <strong>Jumlah Total Item Produk</strong><br>
-                                <small><strong>*Total akan dihitung berdasarkan Varian dan Satuan</strong></small>
+                                <small>
+                                    <strong>*Total akan dihitung berdasarkan Varian dan Satuan</strong>
+                                </small>
                             </div>
                             <div class="card-body">
                                 <h5 class="mb-0 text-start" id="total-item-display">Belum ada data</h5>
@@ -584,10 +604,10 @@
         // --- Event Listener untuk Tombol "Tambah Item" + copy first index ---
         if (addBtn) {
             addBtn.addEventListener('click', () => {
-                let firstProduk = $('.var-produk-select').first().val();
+                let lastProduk = $('.var-produk-select').last().val();
 
                 renderDetailForm({
-                    nama_produk: firstProduk || ''
+                    nama_produk: lastProduk || ''
                 });
 
                 reindexDetails();
@@ -598,16 +618,21 @@
         // --- Event Listener untuk Tombol Hapus ---
         if (container) {
             container.addEventListener('click', function(e) {
-                // Logika Tombol Hapus
                 const removeBtn = e.target.closest('.remove-detail-btn');
+
                 if (removeBtn) {
+                    const items = container.querySelectorAll('.dynamic-item-card');
+
+                    if (items.length <= 1) {
+                        return;
+                    }
+
                     removeBtn.closest('.dynamic-item-card').remove();
                     reindexDetails();
                     updateTotalItem();
                 }
             });
         }
-
         // --- Render data 'old' jika ada (setelah validasi gagal) ---
         const oldItems = @json(old('details', []));
 

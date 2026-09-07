@@ -122,7 +122,9 @@
         <h1>Detail Inspeksi #{{ $packagingInspection->id }}</h1>
         <div class="page-header-actions">
             <a href="{{ route('packaging-inspections.index') }}" class="btn btn-secondary">&larr; Kembali ke Daftar</a>
+            @can('can access edit button')
             <a href="{{ route('packaging-inspections.edit', $packagingInspection) }}" class="btn btn-primary">Edit Data</a>
+            @endcan
         </div>
     </div>
 
@@ -157,7 +159,7 @@
                         <th>Penerimaan</th>
                         <th>No. Polisi</th>
                         <th>Kondisi Kendaraan</th>
-                        <th>PBB / OP</th>
+                        <th>DO/PO/OP</th>
                         <th>Keterangan</th>
                     </tr>
                 </thead>

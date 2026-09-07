@@ -271,6 +271,10 @@
                             <form action="{{ route('metal.verification.update', $dep->uuid) }}" method="POST">
                                 @csrf
                                 @method('PUT')
+
+                                <input type="hidden" name="page" value="{{ request('page', 1) }}">
+                                <input type="hidden" name="search" value="{{ request('search') }}">
+                                <input type="hidden" name="date" value="{{ request('date') }}">
                                 <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                 style="background: linear-gradient(145deg, #7a1f12, #9E3419);
                                 box-shadow: 0 15px 40px rgba(0,0,0,0.5);">

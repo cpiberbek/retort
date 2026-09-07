@@ -174,28 +174,63 @@
 
                         </div>
 
+                       
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label fw-bold">Suhu</label>
-                                @php $hasSuhu = !is_null($packing->suhu) && $packing->suhu !== ''; @endphp
-                                <input type="number" step="0.01" name="suhu" class="form-control" value="{{ old('suhu', $packing->suhu) }}" {{ $hasSuhu ? 'readonly' : '' }} min="0">
-                                @if($hasSuhu)
-                                <input type="hidden" name="suhu" value="{{ $packing->suhu }}">
-                                @endif
-                            </div>
 
-                            <div class="col-md-6">
-                                <label class="form-label fw-bold">Speed Conveyor</label>
-                                @php $hasSpeed = !is_null($packing->speed) && $packing->speed !== ''; @endphp
-                                <input type="number" step="0.01" name="speed" class="form-control" value="{{ old('speed', $packing->speed) }}" {{ $hasSpeed ? 'readonly' : '' }} min="0">
-                                @if($hasSpeed)
-                                <input type="hidden" name="speed" value="{{ $packing->speed }}">
-                                @endif
+                                @php
+                                    $suhuData = old('suhu', $packing->suhu ?? []);
+                                    if (is_string($suhuData)) {
+                                        $suhuData = json_decode($suhuData, true) ?? [];
+                                    }
+                                @endphp
+
+                                <div id="suhu-wrapper">
+                                    @forelse($suhuData as $index => $suhu)
+                                        @if($suhu !== null && $suhu !== '')
+                                            <div class="input-group mb-2 suhu-item">
+                                                <input type="number"
+                                                    name="suhu[]"
+                                                    class="form-control"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value="{{ $suhu }}"
+                                                    placeholder="Suhu Sealer {{ $index + 1 }}"
+                                                    readonly>
+                                            </div>
+                                        @endif
+                                    @empty
+                                        <div class="input-group mb-2 suhu-item">
+                                            <input type="number"
+                                                name="suhu[]"
+                                                class="form-control"
+                                                step="0.01"
+                                                min="0"
+                                                placeholder="Suhu Sealer 1">
+                                        </div>
+                                    @endforelse
+                                </div>
+
+                                <button type="button" id="btn-add-suhu" class="btn btn-success btn-sm">
+                                    <i class="bi bi-plus-circle"></i> Add Suhu Sealer
+                                </button>
                             </div>
                         </div>
 
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
+                                <label class="form-label fw-bold">Speed Conveyor</label>
+                                @php $hasSpeed = !is_null($packing->speed) && $packing->speed !== ''; @endphp
+                                <input type="number" step="0.01" name="speed" class="form-control"
+                                    value="{{ old('speed', $packing->speed) }}"
+                                    {{ $hasSpeed ? 'readonly' : '' }} min="0">
+                                @if($hasSpeed)
+                                    <input type="hidden" name="speed" value="{{ $packing->speed }}">
+                                @endif
+                            </div>
+
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Kondisi Segel</label>
                                 @php $hasSegel = !empty($packing->kondisi_segel); @endphp
                                 <select name="kondisi_segel" class="form-control" {{ $hasSegel ? 'disabled' : '' }}>
@@ -204,19 +239,23 @@
                                     <option value="Tidak OK" {{ $packing->kondisi_segel == 'Tidak OK' ? 'selected' : '' }}>Tidak OK</option>
                                 </select>
                                 @if($hasSegel)
-                                <input type="hidden" name="kondisi_segel" value="{{ $packing->kondisi_segel }}">
+                                    <input type="hidden" name="kondisi_segel" value="{{ $packing->kondisi_segel }}">
                                 @endif
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <label class="form-label fw-bold">Jumlah Produk per Pack/Toples</label>
                                 @php $hasJml = !is_null($packing->jumlah_produk) && $packing->jumlah_produk !== ''; @endphp
-                                <input type="number" name="jumlah_produk" class="form-control" value="{{ old('jumlah_produk', $packing->jumlah_produk) }}" {{ $hasJml ? 'readonly' : '' }} min="0">
+                                <input type="number" name="jumlah_produk" class="form-control"
+                                    value="{{ old('jumlah_produk', $packing->jumlah_produk) }}"
+                                    {{ $hasJml ? 'readonly' : '' }} min="0">
                                 @if($hasJml)
-                                <input type="hidden" name="jumlah_produk" value="{{ $packing->jumlah_produk }}">
+                                    <input type="hidden" name="jumlah_produk" value="{{ $packing->jumlah_produk }}">
                                 @endif
                             </div>
                         </div>
+
+
 
                         <hr style="border: 1px solid #000;">
 
@@ -466,6 +505,33 @@
             let oldBatch = "{{ old('kode_toples', $packing->kode_toples ?? '') }}";
             loadBatches(namaProdukSelect.val(), oldBatch);
         }
+    });
+
+    $(document).ready(function () {
+        let suhuCount = $('#suhu-wrapper .suhu-item').length;
+
+        $('#btn-add-suhu').on('click', function () {
+            suhuCount++;
+
+            $('#suhu-wrapper').append(`
+                <div class="input-group mb-2 suhu-item">
+                    <input type="number" name="suhu[]" class="form-control" step="0.01" min="0" placeholder="Suhu Sealer ${suhuCount}">
+                    <button type="button" class="btn btn-danger btn-remove-suhu">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+            `);
+        });
+
+        $(document).on('click', '.btn-remove-suhu', function () {
+            $(this).closest('.suhu-item').remove();
+
+            $('#suhu-wrapper .suhu-item').each(function (index) {
+                $(this).find('input').attr('placeholder', 'Suhu Sealer ' + (index + 1));
+            });
+
+            suhuCount = $('#suhu-wrapper .suhu-item').length;
+        });
     });
 
     document.addEventListener("DOMContentLoaded", function () {

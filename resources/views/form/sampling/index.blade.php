@@ -125,7 +125,7 @@
             </div>
         </form>
 
-            {{-- warning modal--}}
+        {{-- warning modal --}}
         <div class="modal fade" id="warningModal" tabindex="-1">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
@@ -133,7 +133,8 @@
                         <h5 class="modal-title">(!) Filter Belum Lengkap Untuk Export Data</h5>
                     </div>
                     <div class="modal-body">
-                        Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan export.
+                        Silakan pilih <b>Tanggal</b> yang spesifik di bagian filter terlebih dahulu sebelum melakukan
+                        export.
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
@@ -163,8 +164,8 @@
                 nama_produk.addEventListener('change', () => form.submit());
             });
 
-            document.addEventListener('DOMContentLoaded', function () {
-                $('#exportPdfBtn, #exportExcelBtn').on('click', function (e) {
+            document.addEventListener('DOMContentLoaded', function() {
+                $('#exportPdfBtn, #exportExcelBtn').on('click', function(e) {
                     const date = $('#filter_date').val();
 
                     if (!date) {
@@ -348,6 +349,7 @@
                                                 </button>
                                             </form>
                                         @endcan
+
                                         <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1"
                                             aria-labelledby="verifyModalLabel{{ $dep->uuid }}" aria-hidden="true">
                                             <div class="modal-dialog modal-dialog-centered modal-md">
@@ -355,6 +357,11 @@
                                                     method="POST">
                                                     @csrf
                                                     @method('PUT')
+                                                    <input type="hidden" name="page"
+                                                        value="{{ request('page', 1) }}">
+                                                    <input type="hidden" name="search"
+                                                        value="{{ request('search') }}">
+                                                    <input type="hidden" name="date" value="{{ request('date') }}">
                                                     <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                                         style="background: linear-gradient(145deg, #7a1f12, #9E3419);
 										box-shadow: 0 15px 40px rgba(0,0,0,0.5);">

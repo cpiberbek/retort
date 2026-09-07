@@ -12,159 +12,309 @@
                 @csrf
                 @method('PUT')
 
-                {{-- ===================== IDENTITAS DATA ===================== --}}
+                @php
+                    $dateValue = old('date', $pemusnahan->date);
+                    $produkValue = old('nama_produk', $pemusnahan->nama_produk);
+                    $batchValue = old('kode_produksi', $pemusnahan->kode_produksi);
+                    $expiredValue = old('expired_date', $pemusnahan->expired_date);
+                    $analisaValue = old('analisa', $pemusnahan->analisa);
+                    $keteranganValue = old('keterangan', $pemusnahan->keterangan);
+                @endphp
+
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
                         <strong>Identitas Data Sampling</strong>
                     </div>
+
                     <div class="card-body">
                         <div class="row mb-3">
-                            {{-- Tanggal --}}
                             <div class="col-md-6">
                                 <label class="form-label">Tanggal</label>
-                                <input type="date" name="date" id="dateInput" class="form-control"
-                                value="{{ old('date', $pemusnahan->date) }}"
-                                {{ $pemusnahan->date ? 'readonly' : '' }} required>
+                                <input type="date"
+                                    name="date"
+                                    id="dateInput"
+                                    class="form-control"
+                                    value="{{ $dateValue }}"
+                                    {{ $dateValue ? 'readonly' : '' }}
+                                    required>
                             </div>
 
-                            {{-- Nama Produk --}}
                             <div class="col-md-6">
                                 <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" class="form-control selectpicker" data-live-search="true"
-                                {{ $pemusnahan->nama_produk ? 'disabled' : '' }} required>
-                                <option value="">-- Pilih Varian --</option>
-                                @foreach($produks as $produk)
-                                <option value="{{ $produk->nama_produk }}" 
-                                    {{ (old('nama_produk', $pemusnahan->nama_produk) == $produk->nama_produk) ? 'selected' : '' }}>
-                                    {{ $produk->nama_produk }}
-                                </option>
-                                @endforeach
-                            </select>
-                            @if($pemusnahan->nama_produk)
-                            <input type="hidden" name="nama_produk" value="{{ $pemusnahan->nama_produk }}">
-                            @endif
+
+                                <select id="nama_produk"
+                                    class="form-control selectpicker"
+                                    data-live-search="true"
+                                    {{ $produkValue ? 'disabled' : '' }}
+                                    required>
+                                    <option value="">-- Pilih Varian --</option>
+
+                                    @foreach($produks as $produk)
+                                        <option value="{{ $produk->nama_produk }}"
+                                            {{ $produkValue == $produk->nama_produk ? 'selected' : '' }}>
+                                            {{ $produk->nama_produk }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                @if($produkValue)
+                                    <input type="hidden"
+                                        name="nama_produk"
+                                        value="{{ $produkValue }}">
+                                @else
+                                    <input type="hidden"
+                                        name="nama_produk"
+                                        id="nama_produk_hidden">
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Kode Batch</label>
+
+                                <select id="kode_produksi"
+                                    class="form-control selectpicker"
+                                    data-live-search="true"
+                                    disabled
+                                    required>
+                                </select>
+
+                                <input type="hidden"
+                                    name="kode_produksi"
+                                    id="kode_produksi_hidden"
+                                    value="{{ $batchValue }}">
+
+                                <small id="kodeError" class="text-danger d-none"></small>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Exp. Date</label>
+
+                                <input type="date"
+                                    name="expired_date"
+                                    id="expired_date"
+                                    class="form-control"
+                                    value="{{ $expiredValue }}"
+                                    {{ $expiredValue ? 'readonly' : '' }}>
+
+                                <small class="text-muted">
+                                    Tanggal ini dihitung otomatis 7 bulan dari kode batch
+                                </small>
+                            </div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        {{-- Kode Produksi --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Kode Batch</label>
-                            <input type="text" name="kode_produksi" id="kode_produksi" class="form-control"
-                            maxlength="10"
-                            value="{{ old('kode_produksi', $pemusnahan->kode_produksi) }}"
-                            {{ $pemusnahan->kode_produksi ? 'readonly' : '' }} required>
-                            <small id="kodeError" class="text-danger d-none"></small>
-                        </div>
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <strong>Analisa Masalah</strong>
+                    </div>
 
-                        {{-- Expired Date --}}
-                        <div class="col-md-6">
-                            <label class="form-label">Exp. Date</label>
-                            <input type="date" name="expired_date" id="expired_date" class="form-control"
-                            value="{{ old('expired_date', $pemusnahan->expired_date) }}"
-                            {{ $pemusnahan->expired_date ? 'readonly' : '' }}>
-                            <small class="text-muted">Tanggal ini dihitung otomatis 7 bulan dari kode batch</small>
-                        </div>
+                    <div class="card-body">
+                        <textarea name="analisa"
+                            class="form-control"
+                            rows="3"
+                            placeholder="Tambahkan analisa bila ada"
+                            {{ $analisaValue ? 'readonly' : '' }}>{{ $analisaValue }}</textarea>
                     </div>
                 </div>
-            </div>
 
-            {{-- ===================== CATATAN ===================== --}}
-            <div class="card mb-4">
-                <div class="card-header bg-light"><strong>Analisa Masalah</strong></div>
-                <div class="card-body">
-                    <textarea name="analisa" class="form-control" rows="3" placeholder="Tambahkan analisa bila ada"
-                    {{ $pemusnahan->analisa ? 'readonly' : '' }}>{{ old('analisa', $pemusnahan->analisa) }}</textarea>
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <strong>Keterangan</strong>
+                    </div>
+
+                    <div class="card-body">
+                        <textarea name="keterangan"
+                            class="form-control"
+                            rows="3"
+                            placeholder="Tambahkan keterangan bila ada"
+                            {{ $keteranganValue ? 'readonly' : '' }}>{{ $keteranganValue }}</textarea>
+                    </div>
                 </div>
-            </div>
 
-            <div class="card mb-4">
-                <div class="card-header bg-light"><strong>Keterangan</strong></div>
-                <div class="card-body">
-                    <textarea name="keterangan" class="form-control" rows="3" placeholder="Tambahkan keterangan bila ada"
-                    {{ $pemusnahan->keterangan ? 'readonly' : '' }}>{{ old('keterangan', $pemusnahan->keterangan) }}</textarea>
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Update
+                    </button>
+
+                    <a href="{{ route('pemusnahan.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
                 </div>
-            </div>
-
-            {{-- ===================== TOMBOL ===================== --}}
-            <div class="d-flex justify-content-between mt-3">
-                <button type="submit" class="btn btn-success">
-                    <i class="bi bi-save"></i> Update
-                </button>
-                <a href="{{ route('pemusnahan.index') }}" class="btn btn-secondary">
-                    <i class="bi bi-arrow-left"></i> Kembali
-                </a>
-            </div>
-        </form>
+            </form>
+        </div>
     </div>
 </div>
-</div>
 
-{{-- ===================== SCRIPT ===================== --}}
 @push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+
+<link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
 <script>
-    $(document).ready(function () {
+    $(document).ready(function() {
         $('.selectpicker').selectpicker();
-    });
 
-    const kodeInput = document.getElementById('kode_produksi');
-    const expDateInput = document.getElementById('expired_date');
-    const kodeError = document.getElementById('kodeError');
+        const produkSelect = $('#nama_produk');
+        const batchSelect = $('#kode_produksi');
+        const batchHidden = $('#kode_produksi_hidden');
+        const expiredInput = $('#expired_date');
+        const kodeError = $('#kodeError');
 
-    if (!kodeInput.hasAttribute('readonly')) {
-        kodeInput.addEventListener('input', function () {
-            let value = this.value.toUpperCase().replace(/\s+/g, '');
-            this.value = value;
-            kodeError.textContent = '';
-            kodeError.classList.add('d-none');
-            expDateInput.value = '';
+        const currentBatchUuid = @json($batchValue);
+        const currentExpiredDate = @json($expiredValue);
 
-            if (value.length !== 10) {
-                kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
-                kodeError.classList.remove('d-none');
+        function hitungExpired(kode) {
+            kode = String(kode || '').toUpperCase();
+
+            const tahunKode = {
+                O: 2024,
+                P: 2025,
+                Q: 2026,
+                R: 2027,
+                S: 2028,
+                T: 2029,
+                U: 2030,
+                V: 2031,
+                W: 2032,
+                X: 2033,
+                Y: 2034,
+                Z: 2035
+            };
+
+            const bulanKode = {
+                A: 1,
+                B: 2,
+                C: 3,
+                D: 4,
+                E: 5,
+                F: 6,
+                G: 7,
+                H: 8,
+                I: 9,
+                J: 10,
+                K: 11,
+                L: 12
+            };
+
+            const format = kode.substring(0, 4);
+
+            if (!/^[A-Z]{2}\d{2}$/.test(format)) {
+                return null;
+            }
+
+            const tahun = tahunKode[format[0]];
+            const bulan = bulanKode[format[1]];
+            const hari = parseInt(format.substring(2, 4), 10);
+
+            if (!tahun || !bulan || !hari) {
+                return null;
+            }
+
+            const date = new Date(tahun, bulan - 1, hari);
+
+            if (
+                date.getFullYear() !== tahun ||
+                date.getMonth() !== bulan - 1 ||
+                date.getDate() !== hari
+            ) {
+                return null;
+            }
+
+            date.setMonth(date.getMonth() + 7);
+
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function loadBatch(selectedUuid) {
+            const produk = produkSelect.val();
+
+            batchSelect.empty();
+            batchSelect.selectpicker('refresh');
+
+            if (!produk) {
+                batchHidden.val('');
                 return;
             }
 
-            const format = /^[A-Z0-9]+$/;
-            if (!format.test(value)) {
-                kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-                kodeError.classList.remove('d-none');
+            fetch("{{ route('lookup.batch', ['nama_produk' => '__PRODUK__']) }}"
+                .replace('__PRODUK__', encodeURIComponent(produk)))
+                .then(res => res.json())
+                .then(data => {
+                    batchSelect.empty();
+
+                    let selectedBatch = null;
+
+                    data.forEach(batch => {
+                        const selected = String(batch.uuid) === String(selectedUuid);
+
+                        batchSelect.append(`
+                            <option value="${batch.uuid}" data-kode="${batch.kode_produksi}" ${selected ? 'selected' : ''}>
+                                ${batch.kode_produksi}
+                            </option>
+                        `);
+
+                        if (selected) {
+                            selectedBatch = batch;
+                        }
+                    });
+
+                    batchSelect.selectpicker('refresh');
+
+                    if (selectedBatch) {
+                        batchHidden.val(selectedBatch.uuid);
+
+                        if (!expiredInput.prop('readonly')) {
+                            const expired = hitungExpired(selectedBatch.kode_produksi);
+                            expiredInput.val(expired || currentExpiredDate || '');
+                        }
+                    } else {
+                        batchHidden.val(selectedUuid || '');
+                        expiredInput.val(currentExpiredDate || '');
+                    }
+                })
+                .catch(() => {
+                    batchSelect.empty();
+                    batchSelect.selectpicker('refresh');
+                    batchHidden.val(selectedUuid || '');
+                    expiredInput.val(currentExpiredDate || '');
+                });
+        }
+
+        batchSelect.on('change', function() {
+            const selectedOption = $(this).find(':selected');
+            const uuid = selectedOption.val();
+            const kode = selectedOption.data('kode');
+
+            batchHidden.val(uuid || '');
+
+            kodeError.text('');
+            kodeError.addClass('d-none');
+
+            if (!kode) {
                 return;
             }
 
-            const bulanChar = value.charAt(1);
-            const validBulan = /^[A-L]$/;
-            if (!validBulan.test(bulanChar)) {
-                kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
-                kodeError.classList.remove('d-none');
-                return;
+            const expired = hitungExpired(kode);
+
+            if (expired && !expiredInput.prop('readonly')) {
+                expiredInput.val(expired);
+            } else if (!expired && !expiredInput.prop('readonly')) {
+                expiredInput.val('');
+                kodeError.text('Kode batch tidak memiliki format yang valid.');
+                kodeError.removeClass('d-none');
             }
-
-            const hariStr = value.substr(2, 2);
-            const hari = parseInt(hariStr, 10);
-            if (isNaN(hari) || hari < 1 || hari > 31) {
-                kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
-                kodeError.classList.remove('d-none');
-                return;
-            }
-
-            const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
-            const bulanIndex = bulanMap[bulanChar];
-            const tahun = new Date().getFullYear();
-
-            let expDate = new Date(tahun, bulanIndex, hari);
-            expDate.setMonth(expDate.getMonth() + 7);
-
-            const yyyy = expDate.getFullYear();
-            const mm = String(expDate.getMonth() + 1).padStart(2, '0');
-            const dd = String(expDate.getDate()).padStart(2, '0');
-            expDateInput.value = `${yyyy}-${mm}-${dd}`;
         });
-    }
+
+        if (produkSelect.val()) {
+            loadBatch(currentBatchUuid);
+        }
+    });
 </script>
 @endpush
 @endsection

@@ -279,7 +279,10 @@ MODAL VERIFIKASI (LOOPING)
             <form action="{{ route('pemeriksaan-kekuatan-magnet-trap.verify.spv', $item->id) }}" method="POST">
                 @csrf
                 @method('POST') 
-                
+                <input type="hidden" name="page" value="{{ request()->query('page', 1) }}">
+                <input type="hidden" name="month" value="{{ request()->query('month', '') }}">
+                <input type="hidden" name="date" value="{{ request()->query('date', '') }}">
+                <input type="hidden" name="search" value="{{ request()->query('search', '') }}">
                 <div class="modal-header">
                     <h5 class="modal-title fw-bolder fs-4 text-uppercase" id="verifyModalLabel{{ $item->id }}">
                         <i class="bi bi-gear-fill me-2"></i>Verification

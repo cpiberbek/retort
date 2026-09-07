@@ -289,9 +289,6 @@
                     <div class="card-header">
                         <div class="d-flex justify-content-between align-items-center">
                             <strong><i class="bi bi-list-nested"></i> Detail Item Produk <span class="text-danger">*</span></strong>
-                            <button type="button" id="add-detail-btn" class="btn btn-secondary btn-sm">
-                                <i class="bi bi-plus-lg"></i> Tambah Item
-                            </button>
                         </div>
                     </div>
 
@@ -346,6 +343,12 @@
                             @endforeach
 
                             <div id="new-details-container"></div>
+                            <div class="mt-3">
+                               <button type="button" id="add-detail-btn" class="btn btn-info btn-sm">
+                                <i class="bi bi-plus-lg"></i>
+                                    Tambah Item (Varian mengikuti Produk terakhir)
+                                </button>
+                            </div>
                         </div>
 
                         <div class="alert alert-secondary mb-3">
@@ -723,7 +726,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (addBtn) {
         addBtn.addEventListener('click', function() {
-            renderDetailForm(null);
+            const allCards = document.querySelectorAll('#details-container .dynamic-item-card');
+            const lastCard = allCards[allCards.length - 1];
+
+            const lastProduct =
+                lastCard?.querySelector('.var-produk-select')?.value ||
+                lastCard?.querySelector('.nama-produk-old')?.value ||
+                '';
+
+            renderDetailForm({
+                nama_produk: lastProduct
+            });
+
             reindexNewDetails();
             updateTotalItem();
         });
@@ -731,10 +745,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     newDetailsContainer.addEventListener('click', function(e) {
         const removeBtn = e.target.closest('.remove-detail-btn');
-
         if (!removeBtn) return;
 
+        const totalItems = document.querySelectorAll('#details-container .dynamic-item-card').length;
+
+        if (totalItems <= 1) {
+            return;
+        }
+
         removeBtn.closest('.dynamic-item-card').remove();
+
         reindexNewDetails();
         updateTotalItem();
     });

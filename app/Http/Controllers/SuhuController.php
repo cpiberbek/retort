@@ -460,8 +460,11 @@ class SuhuController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('suhu.index')
-            ->with('success', 'Status Verifikasi Pemeriksaan Suhu dan RH berhasil diperbarui.');
+        return redirect()->route('suhu.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pemeriksaan Suhu dan RH berhasil diperbarui.');
     }
 
     public function destroy($uuid)

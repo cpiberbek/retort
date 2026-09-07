@@ -339,6 +339,14 @@
                                                     method="POST">
                                                     @csrf
                                                     @method('PUT')
+                                                    <input type="hidden" name="page"
+                                                        value="{{ request('page', 1) }}">
+                                                    <input type="hidden" name="search"
+                                                        value="{{ request('search') }}">
+                                                    <input type="hidden" name="start_date"
+                                                        value="{{ request('start_date') }}">
+                                                    <input type="hidden" name="end_date"
+                                                        value="{{ request('end_date') }}">
                                                     <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                                         style="background: linear-gradient(145deg, #7a1f12, #9E3419);
                                 box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
@@ -445,7 +453,7 @@
     </div>
     </div>
 
-     {{-- warning modal--}}
+    {{-- warning modal --}}
     <div class="modal fade" id="warningModal" tabindex="-1">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
@@ -498,30 +506,30 @@
         }
     </style>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const exportBtn = document.getElementById('exportPdfBtn');
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const exportBtn = document.getElementById('exportPdfBtn');
 
-        if (exportBtn) {
-            exportBtn.addEventListener('click', function() {
-                const date = document.getElementById('filter_date').value;
-                const shift = document.getElementById('filter_shift').value;
-                const namaProduk = document.getElementById('filter_nama_produk').value;
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    const date = document.getElementById('filter_date').value;
+                    const shift = document.getElementById('filter_shift').value;
+                    const namaProduk = document.getElementById('filter_nama_produk').value;
 
-                if (!date) {
-                    new bootstrap.Modal(document.getElementById('warningModal')).show();
-                    return;
-                }
+                    if (!date) {
+                        new bootstrap.Modal(document.getElementById('warningModal')).show();
+                        return;
+                    }
 
-                const params = new URLSearchParams({
-                    date: date,
-                    shift: shift,
-                    nama_produk: namaProduk
+                    const params = new URLSearchParams({
+                        date: date,
+                        shift: shift,
+                        nama_produk: namaProduk
+                    });
+
+                    window.open("{{ route('organoleptik.exportPdf') }}?" + params.toString(), "_blank");
                 });
-
-                window.open("{{ route('organoleptik.exportPdf') }}?" + params.toString(), "_blank");
-            });
-        }
-    });
-</script>
+            }
+        });
+    </script>
 @endsection

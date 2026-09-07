@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Auth; 
+use Illuminate\Support\Facades\Auth;
 
 class PemeriksaanKekuatanMagnetTrap extends Model
 {
@@ -23,6 +23,9 @@ class PemeriksaanKekuatanMagnetTrap extends Model
         'kekuatan_median_1' => 'decimal:2',
         'kekuatan_median_2' => 'decimal:2',
         'kekuatan_median_3' => 'decimal:2',
+        'kekuatan_median_4' => 'decimal:2',
+        'kekuatan_median_5' => 'decimal:2',
+        'kekuatan_median_6' => 'decimal:2',
     ];
 
     /**

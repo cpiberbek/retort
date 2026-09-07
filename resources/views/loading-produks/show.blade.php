@@ -163,7 +163,9 @@
         <h1><i class="bi bi-truck-ramp-box" style="color: var(--color-primary);"></i> Detail Pemeriksaan</h1>
         <div class="page-header-actions">
             <a href="{{ route('loading-produks.index') }}" class="btn-custom btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
+            @can('can access edit button')
             <a href="{{ route('loading-produks.edit', $loadingProduk->uuid) }}" class="btn-custom btn-primary"><i class="bi bi-pencil"></i> Edit Data</a>
+            @endcan
         </div>
     </div>
 

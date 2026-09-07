@@ -12,7 +12,7 @@ use Carbon\Carbon;
 class TraceabilityController extends Controller
 {
     public function __construct()
-    { 
+    {
         $this->middleware('auth');
     }
 
@@ -25,25 +25,25 @@ class TraceabilityController extends Controller
         // $type_user = Auth::user()->type_user;
 
         $data = Traceability::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('penyebab', 'like', "%{$search}%")
-                ->orWhere('asal_informasi', 'like', "%{$search}%")
-                ->orWhere('nama_dagang', 'like', "%{$search}%")
-                ->orWhere('jenis_pangan', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%")
-                ->orWhere('no_pendaftaran', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('penyebab', 'like', "%{$search}%")
+                        ->orWhere('asal_informasi', 'like', "%{$search}%")
+                        ->orWhere('nama_dagang', 'like', "%{$search}%")
+                        ->orWhere('jenis_pangan', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhere('no_pendaftaran', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.traceability.index', compact('data', 'search', 'date'));
     }
@@ -58,17 +58,21 @@ class TraceabilityController extends Controller
         $userPlant = Auth::user()->plant;
 
         $traceability = Traceability::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-        $traceability->status_spv = $request->status_spv; 
+        $traceability->status_spv = $request->status_spv;
         $traceability->catatan_spv = $request->catatan_spv;
         $traceability->nama_spv = Auth::user()->username;
         $traceability->tgl_update_spv = now();
         $traceability->save();
 
-        return redirect()->route('traceability.index')
-        ->with('success', 'Status Verifikasi Laporan Traceability Berhasil diperbarui.');
+        return redirect()->route('traceability.index', [
+            'page'       => $request->input('page', 1),
+            'search'     => $request->input('search'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ])->with('success', 'Status Verifikasi Laporan Traceability Berhasil diperbarui.');
     }
 
     public function updateApproval(Request $request, $uuid)
@@ -80,18 +84,22 @@ class TraceabilityController extends Controller
         $userPlant = Auth::user()->plant;
 
         $traceability = Traceability::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
-        $traceability->persetujuan_trace = "Setuju"; 
-        $traceability->status_manager = $request->status_manager; 
+        $traceability->persetujuan_trace = "Setuju";
+        $traceability->status_manager = $request->status_manager;
         $traceability->catatan_manager = $request->catatan_manager;
         $traceability->nama_manager = Auth::user()->username;
         $traceability->tgl_update_manager = now();
         $traceability->save();
 
-        return redirect()->route('traceability.index')
-        ->with('success', 'Status Persetujuan Laporan Traceability Berhasil diperbarui.');
+        return redirect()->route('traceability.index', [
+            'page'       => $request->input('page', 1),
+            'search'     => $request->input('search'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ])->with('success', 'Status Persetujuan Laporan Traceability Berhasil diperbarui.');
     }
 
     public function create()
@@ -131,7 +139,21 @@ class TraceabilityController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'penyebab', 'asal_informasi', 'jenis_pangan', 'nama_dagang', 'berat_bersih', 'jenis_kemasan', 'kode_produksi', 'tanggal_produksi', 'tanggal_kadaluarsa', 'no_pendaftaran', 'jumlah_produksi', 'tindak_lanjut', 'total_waktu', 'kesimpulan'
+            'date',
+            'penyebab',
+            'asal_informasi',
+            'jenis_pangan',
+            'nama_dagang',
+            'berat_bersih',
+            'jenis_kemasan',
+            'kode_produksi',
+            'tanggal_produksi',
+            'tanggal_kadaluarsa',
+            'no_pendaftaran',
+            'jumlah_produksi',
+            'tindak_lanjut',
+            'total_waktu',
+            'kesimpulan'
         ]);
 
         $data['username']            = $username;
@@ -149,15 +171,15 @@ class TraceabilityController extends Controller
     public function edit(string $uuid)
     {
         $traceability = Traceability::where('uuid', $uuid)
-        ->where('plant', Auth::user()->plant)
-        ->firstOrFail();
+            ->where('plant', Auth::user()->plant)
+            ->firstOrFail();
 
         $userPlant = Auth::user()->plant;
         $forms = List_form::where('plant', $userPlant)->get();
 
         $traceabilityData = !empty($traceability->kelengkapan_form)
-        ? json_decode($traceability->kelengkapan_form, true)
-        : [];
+            ? json_decode($traceability->kelengkapan_form, true)
+            : [];
         return view('form.traceability.edit', compact('traceability', 'traceabilityData', 'forms'));
     }
 
@@ -168,8 +190,8 @@ class TraceabilityController extends Controller
         $username_updated = Auth::user()->username ?? 'User RTM';
 
         $traceability = Traceability::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
         $request->validate([
             'date'             => 'required|date',
@@ -224,20 +246,20 @@ class TraceabilityController extends Controller
         $userPlant = Auth::user()->plant;
 
         $traceability = Traceability::where('uuid', $uuid)
-        ->where('plant', $userPlant)
-        ->firstOrFail();
+            ->where('plant', $userPlant)
+            ->firstOrFail();
 
         $traceability->delete();
 
         return redirect()->route('traceability.index')
-        ->with('success', 'Data Laporan Traceability berhasil dihapus'); 
+            ->with('success', 'Data Laporan Traceability berhasil dihapus');
     }
 
     public function recyclebin()
     {
         $traceability = Traceability::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.traceability.recyclebin', compact('traceability'));
     }
@@ -247,7 +269,7 @@ class TraceabilityController extends Controller
         $traceability->restore();
 
         return redirect()->route('traceability.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -255,7 +277,6 @@ class TraceabilityController extends Controller
         $traceability->forceDelete();
 
         return redirect()->route('traceability.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
-
 }

@@ -26,13 +26,13 @@
                     </button>
                 @endcan
                 @can('can access export')
-                    <a href="{{ route('suhu.exportPdf', ['date' => request('date')]) }}"
-                        target="_blank" class="btn btn-danger" id="exportPdfBtn">
+                    <a href="{{ route('suhu.exportPdf', ['date' => request('date')]) }}" target="_blank" class="btn btn-danger"
+                        id="exportPdfBtn">
                         <i class="bi bi-file-earmark-pdf"></i> Export PDF
                     </a>
 
-                    <a href="{{ route('suhu.exportExcel', ['date' => request('date')]) }}"
-                        class="btn btn-success" id="exportExcelBtn">
+                    <a href="{{ route('suhu.exportExcel', ['date' => request('date')]) }}" class="btn btn-success"
+                        id="exportExcelBtn">
                         <i class="bi bi-file-earmark-excel"></i> Export Excel
                     </a>
                 @endcan
@@ -163,7 +163,8 @@
                                                                     class="table table-bordered table-sm mb-0 text-center align-middle">
                                                                     <thead class="table-light">
                                                                         <tr>
-                                                                            <th style="width: 20%" class="text-start ps-3">
+                                                                            <th style="width: 20%"
+                                                                                class="text-start ps-3">
                                                                                 Detail</th>
                                                                             @foreach ($areaList as $area)
                                                                                 <th>{{ $area->area }}</th>
@@ -312,20 +313,23 @@
                                         @endif
                                     </td>
                                     <td class="text-center align-middle">
-                                        @if(!empty($dep->keterangan))
+                                        @if (!empty($dep->keterangan))
                                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                                                 data-bs-target="#keteranganModal{{ $dep->uuid }}">
                                                 Lihat Keterangan
                                             </button>
 
-                                            <div class="modal fade" id="keteranganModal{{ $dep->uuid }}" tabindex="-1">
+                                            <div class="modal fade" id="keteranganModal{{ $dep->uuid }}"
+                                                tabindex="-1">
                                                 <div class="modal-dialog">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
                                                             <h5 class="modal-title">Keterangan</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                            <button type="button" class="btn-close"
+                                                                data-bs-dismiss="modal"></button>
                                                         </div>
-                                                        <div class="modal-body text-start" style="word-break: break-word; white-space: normal;">
+                                                        <div class="modal-body text-start"
+                                                            style="word-break: break-word; white-space: normal;">
                                                             {{ $dep->keterangan }}
                                                         </div>
                                                     </div>
@@ -387,6 +391,11 @@
                                                     method="POST">
                                                     @csrf
                                                     @method('PUT')
+                                                    <input type="hidden" name="page"
+                                                        value="{{ request('page', 1) }}">
+                                                    <input type="hidden" name="search"
+                                                        value="{{ request('search') }}">
+                                                    <input type="hidden" name="date" value="{{ request('date') }}">
                                                     <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                                         style="background: linear-gradient(145deg, #7a1f12, #9E3419);
                                             box-shadow: 0 15px 40px rgba(0,0,0,0.5);">
@@ -496,7 +505,8 @@
     </div>
 
     {{-- option modal --}}
-    <div class="modal fade" id="createSuhuModal" tabindex="-1" aria-labelledby="createSuhuModalLabel" aria-hidden="true">
+    <div class="modal fade" id="createSuhuModal" tabindex="-1" aria-labelledby="createSuhuModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
 
@@ -513,22 +523,14 @@
 
                             <div class="col-md-6">
                                 <label for="create_date" class="form-label">Tanggal</label>
-                                <input type="date"
-                                    name="date"
-                                    id="create_date"
-                                    class="form-control"
-                                    value="{{ now()->toDateString() }}"
-                                    required>
+                                <input type="date" name="date" id="create_date" class="form-control"
+                                    value="{{ now()->toDateString() }}" required>
                             </div>
 
                             <div class="col-md-6">
                                 <label for="create_pukul" class="form-label">Pukul</label>
-                                <input type="time"
-                                    name="pukul"
-                                    id="create_pukul"
-                                    class="form-control"
-                                    step="3600"
-                                    required>
+                                <input type="time" name="pukul" id="create_pukul" class="form-control"
+                                    step="3600" required>
                             </div>
 
                         </div>
@@ -542,14 +544,14 @@
                     <script>
                         const pukulInput = document.getElementById('create_pukul');
 
-                        pukulInput.addEventListener('input', function () {
+                        pukulInput.addEventListener('input', function() {
                             if (this.value) {
                                 const hour = this.value.split(':')[0];
                                 this.value = `${hour}:00`;
                             }
                         });
 
-                        pukulInput.addEventListener('change', function () {
+                        pukulInput.addEventListener('change', function() {
                             if (this.value) {
                                 const hour = this.value.split(':')[0];
                                 this.value = `${hour}:00`;
@@ -558,14 +560,11 @@
                     </script>
 
                     <div class="modal-footer">
-                        <button type="button"
-                            class="btn btn-secondary"
-                            data-bs-dismiss="modal">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                             Batal
                         </button>
 
-                        <button type="submit"
-                            class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary">
                             Buat Data
                         </button>
                     </div>
@@ -597,7 +596,7 @@
 
     {{-- js convert --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             const exportPdfBtn = document.getElementById('exportPdfBtn');
             const exportExcelBtn = document.getElementById('exportExcelBtn');
             const dateInput = document.getElementById('filter_date');
