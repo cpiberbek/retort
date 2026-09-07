@@ -583,33 +583,37 @@ class StuffingController extends Controller
      return view('form.stuffing.index', compact('data', 'search', 'date'));
  }
 
- public function updateVerification(Request $request, $uuid)
- {
-    $request->validate([
-        'status_spv'   => 'required|in:1,2', 
-        'catatan_spv'  => 'nullable|string|max:255',
-    ]);
+    public function updateVerification(Request $request, $uuid)
+    {
+        $request->validate([
+            'status_spv'   => 'required|in:1,2', 
+            'catatan_spv'  => 'nullable|string|max:255',
+        ]);
 
-    $stuffing = Stuffing::where('uuid', $uuid)->firstOrFail();
+        $stuffing = Stuffing::where('uuid', $uuid)->firstOrFail();
 
-    $username_spv = Auth::user()->username ?? 'SPV';
+        $username_spv = Auth::user()->username ?? 'SPV';
 
-    // Mencegah status_spv double update
-    if ($stuffing->status_spv != 0) {
-        return back()->with('error', 'Data sudah diverifikasi sebelumnya!');
+        // Mencegah status_spv double update
+        if ($stuffing->status_spv != 0) {
+            return back()->with('error', 'Data sudah diverifikasi sebelumnya!');
+        }
+
+        $stuffing->update([
+            'status_spv' => $request->status_spv,
+            'catatan_spv' => $request->catatan_spv,
+            'username_spv' => $username_spv,
+            'tgl_update_spv' => now(),
+        ]);
+
+        return redirect()->route('stuffing.index', [
+            'page' => $request->input('page', 1),
+            'date' => $request->input('date'),
+            'shift' => $request->input('shift'),
+            'kode_batch' => $request->input('kode_batch'),
+            'search' => $request->input('search'),
+        ])->with('success', 'Verifikasi berhasil disimpan.');
     }
-
-    $stuffing->update([
-        'status_spv'       => $request->status_spv,
-        'catatan_spv'      => $request->catatan_spv,
-        'username_spv'     => $username_spv,
-        'tgl_update_spv'   => now(),
-    ]);
-
-    return redirect()
-    ->route('stuffing.index')
-    ->with('success', 'Verifikasi berhasil disimpan.');
-}
 
 public function destroy($uuid)
 {

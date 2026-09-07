@@ -44,7 +44,8 @@
                                     <label for="nama_produk" class="form-label fw-semibold">
                                         Nama Varian <span class="text-danger">*</span>
                                     </label>
-                                    <select id="nama_produk" name="nama_produk" class="form-control selectpicker" data-live-search="true" required>
+                                    <select id="nama_produk" name="nama_produk" class="form-control selectpicker"
+                                        data-live-search="true" required>
                                         <option value="">-- Pilih Varian --</option>
                                         @foreach ($produks as $produk)
                                             <option value="{{ $produk->nama_produk }}">
@@ -64,7 +65,7 @@
                                     <small id="kodeError" class="text-danger d-none"></small>
                                 </div>
                             </div>
-                            
+
                             <div class="row mb-3">
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Palet <span class="text-danger">*</span></label>
@@ -170,7 +171,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {{-- ===================== CATATAN ===================== --}}
                     <div class="card mb-4">
                         <div class="card-header bg-light"><strong>Item Mutu</strong></div>
@@ -201,35 +202,37 @@
 
     {{-- ===================== SCRIPT ===================== --}}
     @push('scripts')
-    {{-- Include jQuery (Select2 depends on it) --}}
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+        {{-- Include jQuery (Select2 depends on it) --}}
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+        <link rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+        <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    <script>
-        $(document).ready(function() {
-            if (typeof $.fn.selectpicker === 'function') {
-                $('.selectpicker').selectpicker();
-            }
+        <script>
+            $(document).ready(function() {
+                if (typeof $.fn.selectpicker === 'function') {
+                    $('.selectpicker').selectpicker();
+                }
 
-            // Atur Tanggal, Waktu & Shift Otomatis
-            const dateInput = document.getElementById("dateInput");
-            const timeInput = document.getElementById("timeInput");
-            const shiftInput = document.getElementById("shiftInput");
+                // Atur Tanggal, Waktu & Shift Otomatis
+                const dateInput = document.getElementById("dateInput");
+                const timeInput = document.getElementById("timeInput");
+                const shiftInput = document.getElementById("shiftInput");
 
-            const now = new Date();
-            const yyyy = now.getFullYear();
-            const mm = String(now.getMonth() + 1).padStart(2, '0');
-            const dd = String(now.getDate()).padStart(2, '0');
-            const hh = String(now.getHours()).padStart(2, '0');
-            const min = String(now.getMinutes()).padStart(2, '0');
+                const now = new Date();
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
 
-            if(dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
-            if(timeInput) timeInput.value = `${hh}:${min}`;
+                if (dateInput) dateInput.value = `${yyyy}-${mm}-${dd}`;
+                if (timeInput) timeInput.value = `${hh}:${min}`;
 
                 const hour = parseInt(hh);
                 if (hour >= 7 && hour < 15) shiftInput.value = "1";
@@ -247,25 +250,25 @@
                 // 1. AJAX LOAD BATCH BERDASARKAN VARIAN
                 function initBatchSelect() {
                     let produkValue = namaProdukSelect.val();
-                    
+
                     if (kodeBatchSelect.data('select2')) {
                         kodeBatchSelect.select2('destroy');
                     }
-                    
+
                     currentMincingUuid = null;
                     paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);
                     jumlahBoxInput.val('');
                     expDateInput.val('');
-                    
+
                     if (!produkValue) {
                         kodeBatchSelect.html('<option value="">Pilih Varian Terlebih Dahulu</option>');
                         kodeBatchSelect.prop("disabled", true);
                         return;
                     }
-                    
+
                     kodeBatchSelect.html('<option value="">-- Pilih Kode Batch --</option>');
                     kodeBatchSelect.prop("disabled", false);
-                    
+
                     kodeBatchSelect.select2({
                         theme: "bootstrap-5",
                         width: '100%',
@@ -275,11 +278,15 @@
                             url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(produkValue),
                             dataType: 'json',
                             delay: 250,
-                            data: function (params) {
-                                return { q: params.term };
+                            data: function(params) {
+                                return {
+                                    q: params.term
+                                };
                             },
-                            processResults: function (data) {
-                                return { results: data };
+                            processResults: function(data) {
+                                return {
+                                    results: data
+                                };
                             },
                             cache: true
                         }
@@ -294,7 +301,7 @@
                     initBatchSelect();
                 }
 
-                
+
 
                 // 2. AJAX LOAD PALET & HITUNG EXPIRED BERDASARKAN BATCH
                 kodeBatchSelect.on('change', function() {
@@ -302,29 +309,125 @@
                     let kode_produksi = $(this).select2('data')[0]?.text;
 
                     currentMincingUuid = uuid_produksi || null;
-                    paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled', true);
+                    paletSelect.html('<option value="">Pilih Batch terlebih dahulu</option>').prop('disabled',
+                        true);
                     jumlahBoxInput.val('');
                     expDateInput.val('');
-                    
+
                     if (!kode_produksi) return;
 
-                    // A. Hitung Expired Date
+                    // A. Hitung Expired Date berdasarkan KODE BATCH
                     if (!kode_produksi.includes('--')) {
-                        const bulanChar = kode_produksi.charAt(1);
-                        const hari = parseInt(kode_produksi.substr(2, 2));
-                        const bulanMap = { A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8, J: 9, K: 10, L: 11 };
-                        let kodeBulan = bulanMap[bulanChar];
-                        
-                        if (kodeBulan !== undefined) {
-                            let today = new Date();
-                            let tahun = today.getFullYear();
-                            if (kodeBulan < today.getMonth()) tahun++;
-                            
-                            let expDate = new Date(tahun, kodeBulan, hari);
-                            expDate.setMonth(expDate.getMonth() + 7);
-                            let localExp = new Date(expDate.getTime() - (expDate.getTimezoneOffset() * 60000));
-                            expDateInput.val(localExp.toISOString().slice(0, 10));
+
+                        kode_produksi = kode_produksi.trim().toUpperCase();
+
+                        // ============================
+                        // KODE TAHUN
+                        // ============================
+                        const tahunMap = {
+                            Q: 2026,
+                            R: 2027,
+                            S: 2028,
+                            T: 2029,
+                            U: 2030
+                        };
+
+                        // ============================
+                        // KODE BULAN
+                        // A = Januari
+                        // B = Februari
+                        // ...
+                        // F = Juni
+                        // G = Juli
+                        // H = Agustus
+                        // I = September
+                        // J = Oktober
+                        // K = November
+                        // L = Desember
+                        // ============================
+                        const bulanMap = {
+                            A: 1,
+                            B: 2,
+                            C: 3,
+                            D: 4,
+                            E: 5,
+                            F: 6,
+                            G: 7,
+                            H: 8,
+                            I: 9,
+                            J: 10,
+                            K: 11,
+                            L: 12
+                        };
+
+                        // ============================
+                        // AMBIL DARI KODE BATCH
+                        // ============================
+                        const kodeTahun = kode_produksi.charAt(0);
+                        const kodeBulan = kode_produksi.charAt(1);
+                        const kodeTanggal = kode_produksi.substring(2, 4);
+
+                        const tahunProduksi = tahunMap[kodeTahun];
+                        const bulanProduksi = bulanMap[kodeBulan];
+                        const tanggalProduksi = parseInt(kodeTanggal, 10);
+
+                        console.log('Kode Batch:', kode_produksi);
+                        console.log('Kode Tahun:', kodeTahun);
+                        console.log('Tahun Produksi:', tahunProduksi);
+                        console.log('Kode Bulan:', kodeBulan);
+                        console.log('Bulan Produksi:', bulanProduksi);
+                        console.log('Tanggal Produksi:', tanggalProduksi);
+
+                        // ============================
+                        // VALIDASI
+                        // ============================
+                        if (
+                            !tahunProduksi ||
+                            !bulanProduksi ||
+                            isNaN(tanggalProduksi) ||
+                            tanggalProduksi < 1 ||
+                            tanggalProduksi > 31
+                        ) {
+                            expDateInput.val('');
+                            return;
                         }
+
+                        // ============================
+                        // HITUNG EXP + 7 BULAN
+                        // ============================
+                        let bulanExp = bulanProduksi + 7;
+                        let tahunExp = tahunProduksi;
+
+                        if (bulanExp > 12) {
+                            bulanExp -= 12;
+                            tahunExp++;
+                        }
+
+                        // ============================
+                        // JUMLAH HARI PADA BULAN EXP
+                        // ============================
+                        const jumlahHariDalamBulan = new Date(
+                            tahunExp,
+                            bulanExp,
+                            0
+                        ).getDate();
+
+                        const tanggalExp = Math.min(
+                            tanggalProduksi,
+                            jumlahHariDalamBulan
+                        );
+
+                        // ============================
+                        // FORMAT YYYY-MM-DD
+                        // ============================
+                        const hasilExp =
+                            tahunExp + '-' +
+                            String(bulanExp).padStart(2, '0') + '-' +
+                            String(tanggalExp).padStart(2, '0');
+
+                        console.log('Tanggal EXP:', hasilExp);
+
+                        expDateInput.val(hasilExp);
                     }
 
                     // B. Load Palet dari Release Packing
@@ -343,14 +446,16 @@
                         success: function(data) {
                             paletSelect.prop('disabled', false);
                             paletSelect.html('<option value="">-- Pilih Palet --</option>');
-                            
-                            if(data.length === 0){
+
+                            if (data.length === 0) {
                                 paletSelect.html('<option value="">Palet Tidak Ditemukan</option>');
                                 return;
                             }
 
                             data.forEach(function(item) {
-                                paletSelect.append(`<option value="${item.no_palet}">${item.no_palet}</option>`);
+                                paletSelect.append(
+                                    `<option value="${item.no_palet}">${item.no_palet}</option>`
+                                    );
                             });
                         }
                     });
@@ -374,10 +479,10 @@
                             kode_produksi: currentMincingUuid,
                             no_palet: selectedPalet
                         },
-                        success: function (response) {
+                        success: function(response) {
                             jumlahBoxInput.val(response.jumlah_box ?? response.total_box ?? 0);
                         },
-                        error: function () {
+                        error: function() {
                             jumlahBoxInput.val(0);
                         }
                     });

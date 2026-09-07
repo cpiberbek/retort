@@ -49,7 +49,7 @@ class WashingController extends Controller
 
         return view('form.washing.index', compact('data', 'search', 'date', 'shift', 'kode_batch'));
     }
-    
+
     public function exportPdf(Request $request)
     {
         $search = $request->input('search');
@@ -124,10 +124,10 @@ class WashingController extends Controller
         $username   = Auth::user()->username ?? 'User RTM';
         $userPlant  = Auth::user()->plant;
         $nama_produksi = session()->has('selected_produksi')
-        ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
-        : 'Produksi RTT';
+            ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
+            : 'Produksi RTT';
 
-    // Validasi semua field sesuai tipe data
+        // Validasi semua field sesuai tipe data
         $request->validate([
             'date'                   => 'required|date',
             'shift'                  => 'required|string',
@@ -160,17 +160,37 @@ class WashingController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'shift', 'nama_produk', 'kode_produksi', 'pukul',
-            'panjang_produk', 'diameter_produk', 'airtrap', 'lengket',
-            'sisa_adonan', 'kebocoran', 'kekuatan_seal', 'print_kode',
-            'konsentrasi_pckleer', 'suhu_pckleer_1', 'suhu_pckleer_2',
-            'ph_pckleer', 'kondisi_air_pckleer', 'konsentrasi_pottasium',
-            'suhu_pottasium', 'ph_pottasium', 'kondisi_pottasium',
-            'suhu_heater', 'speed_1', 'speed_2', 'speed_3', 'speed_4',
+            'date',
+            'shift',
+            'nama_produk',
+            'kode_produksi',
+            'pukul',
+            'panjang_produk',
+            'diameter_produk',
+            'airtrap',
+            'lengket',
+            'sisa_adonan',
+            'kebocoran',
+            'kekuatan_seal',
+            'print_kode',
+            'konsentrasi_pckleer',
+            'suhu_pckleer_1',
+            'suhu_pckleer_2',
+            'ph_pckleer',
+            'kondisi_air_pckleer',
+            'konsentrasi_pottasium',
+            'suhu_pottasium',
+            'ph_pottasium',
+            'kondisi_pottasium',
+            'suhu_heater',
+            'speed_1',
+            'speed_2',
+            'speed_3',
+            'speed_4',
             'catatan'
         ]);
 
-    // Tambahan default
+        // Tambahan default
         $data['username']            = $username;
         $data['plant']               = $userPlant;
         $data['nama_produksi']       = $nama_produksi;
@@ -233,14 +253,37 @@ class WashingController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'shift', 'nama_produk', 'kode_produksi', 'pukul',
-            'panjang_produk', 'diameter_produk', 'airtrap', 'lengket',
-            'sisa_adonan', 'kebocoran', 'kekuatan_seal', 'print_kode',
-            'konsentrasi_pckleer', 'suhu_pckleer_1', 'suhu_pckleer_2',
-            'ph_pckleer', 'kondisi_air_pckleer', 'konsentrasi_pottasium',
-            'suhu_pottasium', 'ph_pottasium', 'kondisi_pottasium',
-            'suhu_heater', 'speed_1', 'speed_2', 'speed_3', 'speed_4',
-            'berat_produk', 'suhu_produk', 'jumlah_tray', 'total_reject',
+            'date',
+            'shift',
+            'nama_produk',
+            'kode_produksi',
+            'pukul',
+            'panjang_produk',
+            'diameter_produk',
+            'airtrap',
+            'lengket',
+            'sisa_adonan',
+            'kebocoran',
+            'kekuatan_seal',
+            'print_kode',
+            'konsentrasi_pckleer',
+            'suhu_pckleer_1',
+            'suhu_pckleer_2',
+            'ph_pckleer',
+            'kondisi_air_pckleer',
+            'konsentrasi_pottasium',
+            'suhu_pottasium',
+            'ph_pottasium',
+            'kondisi_pottasium',
+            'suhu_heater',
+            'speed_1',
+            'speed_2',
+            'speed_3',
+            'speed_4',
+            'berat_produk',
+            'suhu_produk',
+            'jumlah_tray',
+            'total_reject',
             'catatan'
         ]);
 
@@ -300,14 +343,37 @@ class WashingController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'shift', 'nama_produk', 'kode_produksi', 'pukul',
-            'panjang_produk', 'diameter_produk', 'airtrap', 'lengket',
-            'sisa_adonan', 'kebocoran', 'kekuatan_seal', 'print_kode',
-            'konsentrasi_pckleer', 'suhu_pckleer_1', 'suhu_pckleer_2',
-            'ph_pckleer', 'kondisi_air_pckleer', 'konsentrasi_pottasium',
-            'suhu_pottasium', 'ph_pottasium', 'kondisi_pottasium',
-            'suhu_heater', 'speed_1', 'speed_2', 'speed_3', 'speed_4',
-            'berat_produk', 'suhu_produk', 'jumlah_tray', 'total_reject',
+            'date',
+            'shift',
+            'nama_produk',
+            'kode_produksi',
+            'pukul',
+            'panjang_produk',
+            'diameter_produk',
+            'airtrap',
+            'lengket',
+            'sisa_adonan',
+            'kebocoran',
+            'kekuatan_seal',
+            'print_kode',
+            'konsentrasi_pckleer',
+            'suhu_pckleer_1',
+            'suhu_pckleer_2',
+            'ph_pckleer',
+            'kondisi_air_pckleer',
+            'konsentrasi_pottasium',
+            'suhu_pottasium',
+            'ph_pottasium',
+            'kondisi_pottasium',
+            'suhu_heater',
+            'speed_1',
+            'speed_2',
+            'speed_3',
+            'speed_4',
+            'berat_produk',
+            'suhu_produk',
+            'jumlah_tray',
+            'total_reject',
             'catatan'
         ]);
 
@@ -323,21 +389,21 @@ class WashingController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Washing::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.washing.index', compact('data', 'search', 'date'));
     }
@@ -358,8 +424,11 @@ class WashingController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('washing.index')
-        ->with('success', 'Status Verifikasi Pemeriksaan Washing - Drying berhasil diperbarui.');
+        return redirect()->route('washing.index', [
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date' => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pemeriksaan Washing - Drying berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -372,8 +441,8 @@ class WashingController extends Controller
     public function recyclebin()
     {
         $washing = Washing::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.washing.recyclebin', compact('washing'));
     }
@@ -383,7 +452,7 @@ class WashingController extends Controller
         $washing->restore();
 
         return redirect()->route('washing.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -391,6 +460,6 @@ class WashingController extends Controller
         $washing->forceDelete();
 
         return redirect()->route('washing.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 }

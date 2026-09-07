@@ -203,25 +203,36 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
     public function verifySpv(Request $request, PemeriksaanKekuatanMagnetTrap $pemeriksaanKekuatanMagnetTrap)
     {
         $validatedData = $request->validate([
-            'status_spv' => ['required', Rule::in([1, 2])], 
+            'status_spv' => ['required', Rule::in([1, 2])],
             'catatan_spv' => ['nullable', 'required_if:status_spv,2', 'string'],
         ]);
 
         try {
             $pemeriksaanKekuatanMagnetTrap->status_spv = $validatedData['status_spv'];
             $pemeriksaanKekuatanMagnetTrap->catatan_spv = $validatedData['catatan_spv'];
-            $pemeriksaanKekuatanMagnetTrap->verified_by = Auth::user()->uuid; 
+            $pemeriksaanKekuatanMagnetTrap->verified_by = Auth::user()->uuid;
             $pemeriksaanKekuatanMagnetTrap->verified_at = now();
             $pemeriksaanKekuatanMagnetTrap->save();
 
-            $message = $validatedData['status_spv'] == 1 ? 'Data berhasil diverifikasi.' : 'Data ditandai untuk revisi.';
-            // Route name diubah
-            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index')->with('success', $message);
+            $message = $validatedData['status_spv'] == 1
+                ? 'Data berhasil diverifikasi.'
+                : 'Data ditandai untuk revisi.';
 
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index', [
+                'page' => $request->input('page', 1),
+                'month' => $request->input('month'),
+                'date' => $request->input('date'),
+                'search' => $request->input('search'),
+            ])->with('success', $message);
         } catch (\Exception $e) {
             Log::error('Error verifikasi SPV Magnet Trap: ' . $e->getMessage());
-            // Route name diubah
-            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index')->with('error', 'Terjadi kesalahan saat menyimpan data.');
+
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index', [
+                'page' => $request->input('page', 1),
+                'month' => $request->input('month'),
+                'date' => $request->input('date'),
+                'search' => $request->input('search'),
+            ])->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 

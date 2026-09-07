@@ -25,46 +25,46 @@ class PvdcController extends Controller
         $namaProduk    = $request->input('nama_produk');
         $userPlant     = Auth::user()->plant;
 
-    // Ambil list produk untuk dropdown
+        // Ambil list produk untuk dropdown
         $produks = Pvdc::where('plant', $userPlant)
-        ->select('nama_produk')
-        ->distinct()
-        ->orderBy('nama_produk')
-        ->get();
+            ->select('nama_produk')
+            ->distinct()
+            ->orderBy('nama_produk')
+            ->get();
 
-    // Query utama PVDC
+        // Query utama PVDC
         $data = Pvdc::query()
-        ->where('plant', $userPlant)
+            ->where('plant', $userPlant)
 
-        // Filter pencarian bebas
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('nama_supplier', 'like', "%{$search}%")
-                ->orWhere('catatan', 'like', "%{$search}%");
-            });
-        })
+            // Filter pencarian bebas
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('catatan', 'like', "%{$search}%");
+                });
+            })
 
-        // Filter berdasarkan tanggal
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
+            // Filter berdasarkan tanggal
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
 
-        // Filter shift
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
+            // Filter shift
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
 
-        // Filter nama produk
-        ->when($namaProduk, function ($query) use ($namaProduk) {
-            $query->where('nama_produk', $namaProduk);
-        })
+            // Filter nama produk
+            ->when($namaProduk, function ($query) use ($namaProduk) {
+                $query->where('nama_produk', $namaProduk);
+            })
 
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         $pvdc = Pvdc::first();
 
@@ -86,14 +86,14 @@ class PvdcController extends Controller
 
         $produks = Produk::where('plant', $userPlant)->get();
         $mesins = Mesin::where('plant', $userPlant)
-        ->where('jenis_mesin', 'Stuffing')
-        ->orderBy('nama_mesin')
-        ->get();
+            ->where('jenis_mesin', 'Stuffing')
+            ->orderBy('nama_mesin')
+            ->get();
 
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         return view('form.pvdc.create', compact('produks', 'mesins', 'suppliers'));
     }
@@ -123,7 +123,7 @@ class PvdcController extends Controller
         Pvdc::create($data);
 
         return redirect()->route('pvdc.index')
-        ->with('success', 'Data No. Lot PVDC berhasil disimpan');
+            ->with('success', 'Data No. Lot PVDC berhasil disimpan');
     }
 
     public function update(string $uuid)
@@ -133,14 +133,14 @@ class PvdcController extends Controller
 
         $produks = Produk::where('plant', $userPlant)->get();
         $mesins = Mesin::where('plant', $userPlant)
-        ->where('jenis_mesin', 'Stuffing')
-        ->orderBy('nama_mesin')
-        ->get();
+            ->where('jenis_mesin', 'Stuffing')
+            ->orderBy('nama_mesin')
+            ->get();
 
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         $pvdcData = !empty($pvdc->data_pvdc) ? json_decode($pvdc->data_pvdc, true) : [];
 
@@ -150,8 +150,8 @@ class PvdcController extends Controller
             }
             // Paksa detail jadi array numerik (buang key aneh 1.3333 dst)
             $details = is_array($mesinRow['detail'])
-            ? array_values($mesinRow['detail'])
-            : [];
+                ? array_values($mesinRow['detail'])
+                : [];
 
             foreach ($details as &$detailRow) {
                 if (empty($detailRow['batch'])) {
@@ -214,14 +214,14 @@ class PvdcController extends Controller
 
         $produks = Produk::where('plant', $userPlant)->get();
         $mesins = Mesin::where('plant', $userPlant)
-        ->where('jenis_mesin', 'Stuffing')
-        ->orderBy('nama_mesin')
-        ->get();
+            ->where('jenis_mesin', 'Stuffing')
+            ->orderBy('nama_mesin')
+            ->get();
 
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         $pvdcData = !empty($pvdc->data_pvdc) ? json_decode($pvdc->data_pvdc, true) : [];
 
@@ -290,23 +290,23 @@ class PvdcController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Pvdc::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%")
-                ->orWhere('nama_supplier', 'like', "%{$search}%")
-                ->orWhere('no_lot', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('no_lot', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.pvdc.index', compact('data', 'search', 'date'));
     }
@@ -328,8 +328,11 @@ class PvdcController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('pvdc.index')
-        ->with('success', 'Status Verifikasi Data No. Lot PVDC berhasil diperbarui.');
+        return redirect()->route('pvdc.index', [
+            'page' => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date' => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Data No. Lot PVDC berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -342,8 +345,8 @@ class PvdcController extends Controller
     public function recyclebin()
     {
         $pvdc = Pvdc::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.pvdc.recyclebin', compact('pvdc'));
     }
@@ -353,7 +356,7 @@ class PvdcController extends Controller
         $pvdc->restore();
 
         return redirect()->route('pvdc.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -361,7 +364,7 @@ class PvdcController extends Controller
         $pvdc->forceDelete();
 
         return redirect()->route('pvdc.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function exportPdf(Request $request)
@@ -487,5 +490,4 @@ class PvdcController extends Controller
         $pdf->Output('Laporan_PVDC_' . date('Ymd_His') . '.pdf', 'I');
         exit();
     }
-
 }

@@ -227,7 +227,11 @@ class KlorinController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('klorin.index')->with('success', 'Status verifikasi berhasil diperbarui.');
+        return redirect()->route('klorin.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status verifikasi berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -249,8 +253,8 @@ class KlorinController extends Controller
     public function recyclebin()
     {
         $klorin = Klorin::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.klorin.recyclebin', compact('klorin'));
     }
@@ -261,7 +265,7 @@ class KlorinController extends Controller
         $klorin->restore();
 
         return redirect()->route('klorin.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
 
     public function deletePermanent($uuid)
@@ -270,7 +274,7 @@ class KlorinController extends Controller
         $klorin->forceDelete();
 
         return redirect()->route('klorin.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function exportPdf(Request $request)

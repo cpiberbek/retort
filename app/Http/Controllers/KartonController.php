@@ -17,7 +17,7 @@ use TCPDF;
 
 class KartonController extends Controller
 {
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $search = $request->input('search');
         $date = $request->input('date');
@@ -63,19 +63,19 @@ class KartonController extends Controller
         $produks = Produk::where('plant', $userPlant)->get();
 
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         $operators = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Operator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Operator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         $koordinators  = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Koordinator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Koordinator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         return view('form.karton.create', compact('produks', 'operators', 'koordinators', 'suppliers'));
     }
@@ -112,8 +112,8 @@ class KartonController extends Controller
         ]);
 
         $kartonPath = $request->hasFile('kode_karton')
-        ? $this->compressAndStore($request->file('kode_karton'), 'kode_karton')
-        : null;
+            ? $this->compressAndStore($request->file('kode_karton'), 'kode_karton')
+            : null;
 
         Karton::create([
             'date'                => $request->date,
@@ -150,20 +150,20 @@ class KartonController extends Controller
         $userPlant = Auth::user()->plant;
 
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         $produks    = Produk::where('plant', $userPlant)->get();
         $operators = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Operator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Operator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         $koordinators  = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Koordinator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Koordinator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         return view('form.karton.update', compact('karton', 'produks', 'koordinators', 'operators', 'suppliers'));
     }
@@ -225,20 +225,20 @@ class KartonController extends Controller
         $userPlant = Auth::user()->plant;
 
         $suppliers = Supplier::where('plant', $userPlant)
-        ->where('jenis_barang', 'Packaging')
-        ->orderBy('nama_supplier')
-        ->get();
+            ->where('jenis_barang', 'Packaging')
+            ->orderBy('nama_supplier')
+            ->get();
 
         $produks    = Produk::where('plant', $userPlant)->get();
         $operators = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Operator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Operator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         $koordinators  = Operator::where('plant', $userPlant)
-        ->where('bagian', 'Koordinator')
-        ->orderBy('nama_karyawan')
-        ->get();
+            ->where('bagian', 'Koordinator')
+            ->orderBy('nama_karyawan')
+            ->get();
 
         return view('form.karton.edit', compact('karton', 'produks', 'koordinators', 'operators', 'suppliers'));
     }
@@ -295,173 +295,177 @@ class KartonController extends Controller
 
     public function verification(Request $request)
     {
-     $search     = $request->input('search');
-     $date = $request->input('date');
-     $userPlant  = Auth::user()->plant;
+        $search     = $request->input('search');
+        $date = $request->input('date');
+        $userPlant  = Auth::user()->plant;
 
-     $data = Karton::query()
-     ->where('plant', $userPlant)
-     ->when($search, function ($query) use ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('username', 'like', "%{$search}%")
-            ->orWhere('nama_produk', 'like', "%{$search}%")
-            ->orWhere('kode_produksi', 'like', "%{$search}%")
-            ->orWhere('kode_karton', 'like', "%{$search}%")
-            ->orWhere('nama_supplier', 'like', "%{$search}%");
-        });
-    })
-     ->when($date, function ($query) use ($date) {
-        $query->whereDate('date', $date);
-    })
-     ->orderBy('date', 'desc')
-     ->orderBy('created_at', 'desc')
-     ->paginate(10)
-     ->appends($request->all());
+        $data = Karton::query()
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhere('kode_karton', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
-     return view('form.karton.index', compact('data', 'search', 'date'));
- }
-
- public function updateVerification(Request $request, $uuid)
- {
-    $request->validate([
-        'status_spv'  => 'required|in:1,2',
-        'catatan_spv' => 'nullable|string|max:255',
-    ]);
-
-    $karton = Karton::where('uuid', $uuid)->firstOrFail();
-
-    $karton->update([
-        'status_spv'      => $request->status_spv,
-        'catatan_spv'     => $request->catatan_spv,
-        'nama_spv'        => Auth::user()->username,
-        'tgl_update_spv'  => now(),
-    ]);
-
-    return redirect()->route('karton.index')->with('success', 'Status verifikasi Kontrol Labelisasi Karton berhasil diperbarui.');
-}
-
-public function destroy($uuid)
-{
-    $karton = Karton::where('uuid', $uuid)->firstOrFail();
-
-    if ($karton->kode_karton && Storage::exists($karton->kode_karton)) {
-        Storage::delete($karton->kode_karton);
-    }
-    if ($karton->handbasin && Storage::exists($karton->handbasin)) {
-        Storage::delete($karton->handbasin);
+        return view('form.karton.index', compact('data', 'search', 'date'));
     }
 
-    $karton->delete();
+    public function updateVerification(Request $request, $uuid)
+    {
+        $request->validate([
+            'status_spv'  => 'required|in:1,2',
+            'catatan_spv' => 'nullable|string|max:255',
+        ]);
 
-    return redirect()->route('karton.index')->with('success', 'Data Kontrol Labelisasi Karton berhasil dihapus.');
-}
+        $karton = Karton::where('uuid', $uuid)->firstOrFail();
 
-public function recyclebin()
-{
-    $karton = Karton::onlyTrashed()
-    ->orderBy('deleted_at', 'desc')
-    ->paginate(10);
+        $karton->update([
+            'status_spv'      => $request->status_spv,
+            'catatan_spv'     => $request->catatan_spv,
+            'nama_spv'        => Auth::user()->username,
+            'tgl_update_spv'  => now(),
+        ]);
 
-    return view('form.karton.recyclebin', compact('karton'));
-}
-public function restore($uuid)
-{
-    $karton = Karton::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $karton->restore();
-
-    return redirect()->route('karton.recyclebin')
-    ->with('success', 'Data berhasil direstore.');
-}
-public function deletePermanent($uuid)
-{
-    $karton = Karton::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $karton->forceDelete();
-
-    return redirect()->route('karton.recyclebin')
-    ->with('success', 'Data berhasil dihapus permanen.');
-}
-
-public function exportPdf(Request $request)
-{
-    $date = $request->input('date');
-    $nama_produk = $request->input('nama_produk');
-    $search = $request->input('search');
-    $userPlant = Auth::user()->plant;
-
-    $kartons = Karton::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('nama_produk', 'like', "%{$search}%")
-                  ->orWhereHas('mincing', function ($m) use ($search) {
-                      $m->where('kode_produksi', 'like', "%{$search}%");
-                  });
-            });
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('created_at', 'asc')
-        ->get()
-        ->chunk(4);
-
-    $noDokumen = List_form::where('plant', $userPlant)
-        ->where('laporan', 'Kontrol Labelisasi Cartooning')
-        ->value('no_dokumen');
-
-    if (ob_get_length()) {
-        ob_end_clean();
+        return redirect()->route('karton.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status verifikasi Kontrol Labelisasi Karton berhasil diperbarui.');
     }
 
-    $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+    public function destroy($uuid)
+    {
+        $karton = Karton::where('uuid', $uuid)->firstOrFail();
 
-    $pdf->SetCreator(PDF_CREATOR);
-    $pdf->SetAuthor('Company');
-    $pdf->SetTitle('Kontrol Labelisasi Karton');
+        if ($karton->kode_karton && Storage::exists($karton->kode_karton)) {
+            Storage::delete($karton->kode_karton);
+        }
+        if ($karton->handbasin && Storage::exists($karton->handbasin)) {
+            Storage::delete($karton->handbasin);
+        }
 
-    $pdf->SetPrintHeader(false);
-    $pdf->SetPrintFooter(false);
+        $karton->delete();
 
-    $pdf->SetMargins(10, 10, 10);
-    $pdf->SetAutoPageBreak(true, 10);
-    $pdf->SetFont('helvetica', '', 8);
-
-    $totalPage = $kartons->count();
-
-    foreach ($kartons as $index => $data) {
-        $pdf->AddPage('L', 'F4');
-
-        $html = view('reports.kontrol-labelisasi-karton', [
-            'kartons' => $data,
-            'request' => $request,
-            'noDokumen' => $noDokumen,
-            'pageIndex' => $index,
-            'totalPage' => $totalPage
-        ])->render();
-
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
+        return redirect()->route('karton.index')->with('success', 'Data Kontrol Labelisasi Karton berhasil dihapus.');
     }
 
-    $pdf->Output('Kontrol_Labelisasi_Karton_' . date('Ymd_His') . '.pdf', 'I');
-    exit();
-}
+    public function recyclebin()
+    {
+        $karton = Karton::onlyTrashed()
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
-private function compressAndStore($file, $prefix)
-{
-    $manager = new ImageManager(new Driver());
-    $path = 'public/karton';
-    $filename = $prefix . '_' . Str::uuid() . '.jpg';
+        return view('form.karton.recyclebin', compact('karton'));
+    }
+    public function restore($uuid)
+    {
+        $karton = Karton::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $karton->restore();
 
-    $image = $manager->read($file)
-    ->scale(width: 1280)
-    ->toJpeg(quality: 90);
+        return redirect()->route('karton.recyclebin')
+            ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $karton = Karton::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $karton->forceDelete();
 
-    Storage::put("$path/$filename", (string) $image);
+        return redirect()->route('karton.recyclebin')
+            ->with('success', 'Data berhasil dihapus permanen.');
+    }
 
-    return "$path/$filename";
-}
+    public function exportPdf(Request $request)
+    {
+        $date = $request->input('date');
+        $nama_produk = $request->input('nama_produk');
+        $search = $request->input('search');
+        $userPlant = Auth::user()->plant;
+
+        $kartons = Karton::query()
+            ->where('plant', $userPlant)
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($nama_produk, function ($query) use ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nama_produk', 'like', "%{$search}%")
+                        ->orWhereHas('mincing', function ($m) use ($search) {
+                            $m->where('kode_produksi', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->orderBy('date', 'asc')
+            ->orderBy('created_at', 'asc')
+            ->get()
+            ->chunk(4);
+
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Kontrol Labelisasi Cartooning')
+            ->value('no_dokumen');
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('Company');
+        $pdf->SetTitle('Kontrol Labelisasi Karton');
+
+        $pdf->SetPrintHeader(false);
+        $pdf->SetPrintFooter(false);
+
+        $pdf->SetMargins(10, 10, 10);
+        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->SetFont('helvetica', '', 8);
+
+        $totalPage = $kartons->count();
+
+        foreach ($kartons as $index => $data) {
+            $pdf->AddPage('L', 'F4');
+
+            $html = view('reports.kontrol-labelisasi-karton', [
+                'kartons' => $data,
+                'request' => $request,
+                'noDokumen' => $noDokumen,
+                'pageIndex' => $index,
+                'totalPage' => $totalPage
+            ])->render();
+
+            $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
+        }
+
+        $pdf->Output('Kontrol_Labelisasi_Karton_' . date('Ymd_His') . '.pdf', 'I');
+        exit();
+    }
+
+    private function compressAndStore($file, $prefix)
+    {
+        $manager = new ImageManager(new Driver());
+        $path = 'public/karton';
+        $filename = $prefix . '_' . Str::uuid() . '.jpg';
+
+        $image = $manager->read($file)
+            ->scale(width: 1280)
+            ->toJpeg(quality: 90);
+
+        Storage::put("$path/$filename", (string) $image);
+
+        return "$path/$filename";
+    }
 }

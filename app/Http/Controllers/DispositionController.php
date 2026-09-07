@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Disposition;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; 
-use Illuminate\Validation\Rule;   
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class DispositionController extends Controller
 {
@@ -27,28 +27,28 @@ class DispositionController extends Controller
         // 3. Filter Search (Pencarian Global)
         if ($request->filled('search')) {
             $search = $request->search;
-            
+
             // Kita bungkus dalam where(function...) agar logika OR tidak merusak logika AND tanggal
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nomor', 'like', "%{$search}%")
-                ->orWhere('kepada', 'like', "%{$search}%")
+                    ->orWhere('kepada', 'like', "%{$search}%")
 
-                  // Sesuai Model Anda: Gunakan 'uraian_disposisi' dan 'catatan'
-                ->orWhere('uraian_disposisi', 'like', "%{$search}%")
-                ->orWhere('catatan', 'like', "%{$search}%")
+                    // Sesuai Model Anda: Gunakan 'uraian_disposisi' dan 'catatan'
+                    ->orWhere('uraian_disposisi', 'like', "%{$search}%")
+                    ->orWhere('catatan', 'like', "%{$search}%")
 
-                  // Pencarian Relasi: Mencari berdasarkan nama User (creator)
-                ->orWhereHas('creator', function($subQuery) use ($search) {
-                  $subQuery->where('name', 'like', "%{$search}%");
-              });
+                    // Pencarian Relasi: Mencari berdasarkan nama User (creator)
+                    ->orWhereHas('creator', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 
         // 4. Ambil data, urutkan dari yang terbaru, dan paginasi
         // withQueryString() wajib ada agar filter tidak hilang saat pindah halaman
         $dispositions = $query->latest()
-        ->paginate(10)
-        ->withQueryString();
+            ->paginate(10)
+            ->withQueryString();
 
         return view('dispositions.index', compact('dispositions'));
     }
@@ -89,7 +89,7 @@ class DispositionController extends Controller
         Disposition::create($validatedData);
 
         return redirect()->route('dispositions.index')
-        ->with('success', 'Data disposisi berhasil ditambahkan.');
+            ->with('success', 'Data disposisi berhasil ditambahkan.');
     }
 
     /**
@@ -99,7 +99,7 @@ class DispositionController extends Controller
     public function show(Disposition $disposition)
     {
         // Anda bisa load relasinya di sini jika perlu
-        // $disposition->load('creator'); 
+        // $disposition->load('creator');
         return view('dispositions.show', compact('disposition'));
     }
 
@@ -130,14 +130,14 @@ class DispositionController extends Controller
         $validatedData['disposisi_material'] = $request->has('disposisi_material');
         $validatedData['disposisi_prosedur'] = $request->has('disposisi_prosedur');
 
-        // Catatan: 'created_by' tidak di-set di sini, karena 'created_by' 
+        // Catatan: 'created_by' tidak di-set di sini, karena 'created_by'
         // seharusnya tidak berubah saat update.
         // Jika Anda ingin melacak siapa yang meng-update, Anda perlu kolom 'updated_by'
-        
+
         $disposition->update($validatedData);
 
         return redirect()->route('dispositions.index')
-        ->with('success', 'Data disposisi berhasil diperbarui.');
+            ->with('success', 'Data disposisi berhasil diperbarui.');
     }
 
     /**
@@ -149,14 +149,14 @@ class DispositionController extends Controller
         $disposition->delete();
 
         return redirect()->route('dispositions.index')
-        ->with('success', 'Data disposisi berhasil dihapus.');
+            ->with('success', 'Data disposisi berhasil dihapus.');
     }
 
     public function recyclebin()
     {
         $disposition = Disposition::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('dispositions.recyclebin', compact('disposition'));
     }
@@ -166,7 +166,7 @@ class DispositionController extends Controller
         $disposition->restore();
 
         return redirect()->route('dispositions.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -174,7 +174,7 @@ class DispositionController extends Controller
         $disposition->forceDelete();
 
         return redirect()->route('dispositions.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function verification(Request $request)
@@ -192,16 +192,16 @@ class DispositionController extends Controller
         // Filter Pencarian (disesuaikan untuk disposisi)
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('nomor', 'like', "%{$search}%")
-                ->orWhere('kepada', 'like', "%{$search}%");
+                    ->orWhere('kepada', 'like', "%{$search}%");
             });
         }
 
         // Load relasi untuk efisiensi
-        $dispositions = $query->with('verifiedBy', 'creator') 
-        ->paginate(15)
-        ->appends($request->query());
+        $dispositions = $query->with('verifiedBy', 'creator')
+            ->paginate(15)
+            ->appends($request->query());
 
         return view('dispositions.verification', compact('dispositions'));
     }
@@ -234,10 +234,14 @@ class DispositionController extends Controller
 
             $message = $validatedData['status_spv'] == 1 ? 'Data berhasil diverifikasi.' : 'Data ditandai untuk revisi.';
             return redirect()->route('dispositions.index')->with('success', $message);
-
         } catch (\Exception $e) {
             // Handle jika ada error
-            return redirect()->route('dispositions.index')->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
+            return redirect()->route('dispositions.index', [
+                'page'       => $request->input('page', 1),
+                'search'     => $request->input('search'),
+                'start_date' => $request->input('start_date'),
+                'end_date'   => $request->input('end_date'),
+            ])->with('error', 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage());
         }
     }
 

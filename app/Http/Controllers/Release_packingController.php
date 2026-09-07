@@ -19,24 +19,24 @@ class Release_packingController extends Controller
         $userPlant    = Auth::user()->plant;
 
         $data = Release_packing::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($jenis_kemasan, function ($query) use ($jenis_kemasan) {
-            $query->where('jenis_kemasan', $jenis_kemasan);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($jenis_kemasan, function ($query) use ($jenis_kemasan) {
+                $query->where('jenis_kemasan', $jenis_kemasan);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.release_packing.index', compact('data', 'search', 'date', 'jenis_kemasan'));
     }
@@ -66,7 +66,14 @@ class Release_packingController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
+            'date',
+            'jenis_kemasan',
+            'nama_produk',
+            'kode_produksi',
+            'expired_date',
+            'no_palet',
+            'release',
+            'keterangan'
         ]);
 
         if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $data['kode_produksi'])) {
@@ -76,7 +83,7 @@ class Release_packingController extends Controller
             }
         }
 
-    // Tambahan default
+        // Tambahan default
         $data['username']            = $username;
         $data['plant']               = $userPlant;
         $data['status_spv']          = "0";
@@ -112,7 +119,14 @@ class Release_packingController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
+            'date',
+            'jenis_kemasan',
+            'nama_produk',
+            'kode_produksi',
+            'expired_date',
+            'no_palet',
+            'release',
+            'keterangan'
         ]);
 
         if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $data['kode_produksi'])) {
@@ -154,7 +168,14 @@ class Release_packingController extends Controller
         ]);
 
         $data = $request->only([
-            'date', 'jenis_kemasan', 'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan'
+            'date',
+            'jenis_kemasan',
+            'nama_produk',
+            'kode_produksi',
+            'expired_date',
+            'no_palet',
+            'release',
+            'keterangan'
         ]);
 
         if (preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $data['kode_produksi'])) {
@@ -176,21 +197,21 @@ class Release_packingController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Release_packing::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%")
-                ->orWhere('kode_produksi', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.release_packing.index', compact('data', 'search', 'date'));
     }
@@ -211,8 +232,11 @@ class Release_packingController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('release_packing.index')
-        ->with('success', 'Status Verifikasi Data Release Packing diperbarui.');
+        return redirect()->route('release_packing.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Data Release Packing diperbarui.');
     }
 
     public function destroy($uuid)
@@ -225,8 +249,8 @@ class Release_packingController extends Controller
     public function recyclebin()
     {
         $release_packing = Release_packing::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.release_packing.recyclebin', compact('release_packing'));
     }
@@ -236,7 +260,7 @@ class Release_packingController extends Controller
         $release_packing->restore();
 
         return redirect()->route('release_packing.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -244,7 +268,7 @@ class Release_packingController extends Controller
         $release_packing->forceDelete();
 
         return redirect()->route('release_packing.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
 
     public function exportPdf(Request $request)
@@ -259,7 +283,7 @@ class Release_packingController extends Controller
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('kode_produksi', 'like', "%{$search}%")
-                    ->orWhere('nama_produk', 'like', "%{$search}%");
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
                 });
             })
             ->when($date, function ($query) use ($date) {

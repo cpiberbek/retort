@@ -22,27 +22,27 @@ class OrganoleptikController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Organoleptik::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%");
-            });
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
-        
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($nama_produk, function ($query) use ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
         // $row = $data->first();
         // dd(
         //     $row->organoleptik_detail,
@@ -88,14 +88,14 @@ class OrganoleptikController extends Controller
             'sensori.*.rasa_gurih'      => 'nullable|numeric|between:0,3',
             'sensori.*.rasa_manis'      => 'nullable|numeric|between:0,3',
             'sensori.*.rasa_daging'     => 'nullable|numeric|between:0,3',
-            'sensori.*.rasa_keseluruhan'=> 'nullable|numeric|between:0,3',
+            'sensori.*.rasa_keseluruhan' => 'nullable|numeric|between:0,3',
             'sensori.*.rata_score'      => 'nullable|numeric',
             'sensori.*.release'         => 'nullable|string',
             // ------------------------------
         ]);
 
-        $sensoris = $validated['sensori']; 
-        
+        $sensoris = $validated['sensori'];
+
         foreach ($sensoris as $index => $item) {
 
             $sensoris[$index]['kode_produksi']      = $item['kode_produksi'];
@@ -124,7 +124,7 @@ class OrganoleptikController extends Controller
         ]);
 
         return redirect()->route('organoleptik.index')
-        ->with('success', '✅ Pemeriksaan Organoleptik berhasil disimpan.');
+            ->with('success', '✅ Pemeriksaan Organoleptik berhasil disimpan.');
     }
 
     public function update(string $uuid)
@@ -165,7 +165,7 @@ class OrganoleptikController extends Controller
             'sensori.*.rasa_gurih'      => 'nullable|numeric|between:0,3',
             'sensori.*.rasa_manis'      => 'nullable|numeric|between:0,3',
             'sensori.*.rasa_daging'     => 'nullable|numeric|between:0,3',
-            'sensori.*.rasa_keseluruhan'=> 'nullable|numeric|between:0,3',
+            'sensori.*.rasa_keseluruhan' => 'nullable|numeric|between:0,3',
             'sensori.*.rata_score'      => 'nullable|numeric',
             'sensori.*.release'         => 'nullable|string',
             // ------------------------------
@@ -200,7 +200,7 @@ class OrganoleptikController extends Controller
         ]);
 
         return redirect()->route('organoleptik.index')
-        ->with('success', '✅ Pemeriksaan Organoleptik berhasil diperbarui.');
+            ->with('success', '✅ Pemeriksaan Organoleptik berhasil diperbarui.');
     }
 
     public function edit(string $uuid)
@@ -231,7 +231,7 @@ class OrganoleptikController extends Controller
             'sensori.*.rasa_gurih'      => 'nullable|numeric|between:0,3',
             'sensori.*.rasa_manis'      => 'nullable|numeric|between:0,3',
             'sensori.*.rasa_daging'     => 'nullable|numeric|between:0,3',
-            'sensori.*.rasa_keseluruhan'=> 'nullable|numeric|between:0,3',
+            'sensori.*.rasa_keseluruhan' => 'nullable|numeric|between:0,3',
             'sensori.*.rata_score'      => 'nullable|numeric',
             'sensori.*.release'         => 'nullable|string',
         ]);
@@ -281,7 +281,7 @@ class OrganoleptikController extends Controller
         ]);
 
         return redirect()->route('organoleptik.index')
-        ->with('success', '✅ Pemeriksaan Organoleptik berhasil diperbarui.');
+            ->with('success', '✅ Pemeriksaan Organoleptik berhasil diperbarui.');
     }
 
     public function verification(Request $request)
@@ -292,20 +292,20 @@ class OrganoleptikController extends Controller
         $userPlant  = Auth::user()->plant;
 
         $data = Organoleptik::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where(function ($q) use ($search) {
-                $q->where('username', 'like', "%{$search}%")
-                ->orWhere('nama_produk', 'like', "%{$search}%");
-            });
-        })
-        ->when($start_date && $end_date, function ($query) use ($start_date, $end_date) {
-            $query->whereBetween('date', [$start_date, $end_date]);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($start_date && $end_date, function ($query) use ($start_date, $end_date) {
+                $query->whereBetween('date', [$start_date, $end_date]);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
         return view('form.organoleptik.index', compact('data', 'search', 'start_date', 'end_date'));
     }
@@ -326,8 +326,12 @@ class OrganoleptikController extends Controller
             'tgl_update_spv' => now(),
         ]);
 
-        return redirect()->route('organoleptik.index')
-        ->with('success', '✅ Status Verifikasi Pemeriksaan Organoleptik berhasil diperbarui.');
+        return redirect()->route('organoleptik.index', [
+            'page'       => $request->input('page', 1),
+            'search'     => $request->input('search'),
+            'start_date' => $request->input('start_date'),
+            'end_date'   => $request->input('end_date'),
+        ])->with('success', '✅ Status Verifikasi Pemeriksaan Organoleptik berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -340,8 +344,8 @@ class OrganoleptikController extends Controller
     public function recyclebin()
     {
         $organoleptik = Organoleptik::onlyTrashed()
-        ->orderBy('deleted_at', 'desc')
-        ->paginate(10);
+            ->orderBy('deleted_at', 'desc')
+            ->paginate(10);
 
         return view('form.organoleptik.recyclebin', compact('organoleptik'));
     }
@@ -351,7 +355,7 @@ class OrganoleptikController extends Controller
         $organoleptik->restore();
 
         return redirect()->route('organoleptik.recyclebin')
-        ->with('success', 'Data berhasil direstore.');
+            ->with('success', 'Data berhasil direstore.');
     }
     public function deletePermanent($uuid)
     {
@@ -359,9 +363,9 @@ class OrganoleptikController extends Controller
         $organoleptik->forceDelete();
 
         return redirect()->route('organoleptik.recyclebin')
-        ->with('success', 'Data berhasil dihapus permanen.');
+            ->with('success', 'Data berhasil dihapus permanen.');
     }
-    
+
     public function exportPdf(Request $request)
     {
         $date = $request->input('date');
@@ -370,23 +374,23 @@ class OrganoleptikController extends Controller
         $userPlant = Auth::user()->plant;
 
         $organoleptiks = Organoleptik::query()
-        ->where('plant', $userPlant)
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->when($shift, function ($query) use ($shift) {
-            $query->where('shift', $shift);
-        })
-        ->when($nama_produk, function ($query) use ($nama_produk) {
-            $query->where('nama_produk', $nama_produk);
-        })
-        ->orderBy('date', 'asc')
-        ->orderBy('shift', 'asc')
-        ->get();
+            ->where('plant', $userPlant)
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($nama_produk, function ($query) use ($nama_produk) {
+                $query->where('nama_produk', $nama_produk);
+            })
+            ->orderBy('date', 'asc')
+            ->orderBy('shift', 'asc')
+            ->get();
 
         $noDokumen = List_form::where('plant', $userPlant)
-        ->where('laporan', 'Pemeriksaan Organoleptik')
-        ->value('no_dokumen');
+            ->where('laporan', 'Pemeriksaan Organoleptik')
+            ->value('no_dokumen');
 
         // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
         if (ob_get_length()) {
@@ -420,8 +424,8 @@ class OrganoleptikController extends Controller
         $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
 
         // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
+        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
+            require_once(dirname(__FILE__) . '/lang/eng.php');
             $pdf->setLanguageArray($l);
         }
 

@@ -13,7 +13,7 @@ use TCPDF;
 class Retain_rteController extends Controller
 {
 
-   public function index(Request $request)
+    public function index(Request $request)
     {
         $search = $request->input('search');
         $date = $request->input('date');
@@ -262,8 +262,11 @@ class Retain_rteController extends Controller
             'tgl_update_spv'  => now(),
         ]);
 
-        return redirect()->route('retain_rte.index')
-            ->with('success', 'Status Verifikasi Pemeriksaan Sampel Retain RTE berhasil diperbarui.');
+        return redirect()->route('retain_rte.index', [
+            'page'   => $request->input('page', 1),
+            'search' => $request->input('search'),
+            'date'   => $request->input('date'),
+        ])->with('success', 'Status Verifikasi Pemeriksaan Sampel Retain RTE berhasil diperbarui.');
     }
 
     public function destroy($uuid)
