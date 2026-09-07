@@ -174,18 +174,48 @@ class MincingController extends Controller
         $expandedNonPremix = [];
 
         foreach ($nonPremix as $np) {
-            foreach ((array) ($np['inspection_uuid'] ?? []) as $uuid) {
+
+            // Ambil inspection UUID jika ada
+            $inspectionUuids = $np['inspection_uuid'] ?? [];
+
+            // Pastikan selalu array
+            $inspectionUuids = is_array($inspectionUuids)
+                ? $inspectionUuids
+                : [$inspectionUuids];
+
+            /*
+     * Kalau tidak ada inspection_uuid,
+     * tetap simpan bahan tersebut.
+     */
+            if (empty($inspectionUuids)) {
+
+                $np['inspection_uuid'] = null;
+
+                $expandedNonPremix[] = $np;
+
+                continue;
+            }
+
+            /*
+     * Kalau ada beberapa kode batch,
+     * buat satu data untuk setiap batch.
+     */
+            foreach ($inspectionUuids as $uuid) {
+
                 $item = $np;
-                $item['inspection_uuid'] = $uuid;
+                $item['inspection_uuid'] = $uuid ?: null;
+
                 $expandedNonPremix[] = $item;
             }
         }
 
-        $request->merge([
-            'non_premix' => $expandedNonPremix
-        ]);
-
-        $expandedNonPremix = array_map('unserialize', array_unique(array_map('serialize', $expandedNonPremix)));
+        // Hilangkan data duplikat
+        $expandedNonPremix = array_map(
+            'unserialize',
+            array_unique(
+                array_map('serialize', $expandedNonPremix)
+            )
+        );
 
         $request->merge([
             'non_premix' => $expandedNonPremix

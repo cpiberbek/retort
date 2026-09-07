@@ -398,76 +398,116 @@
 
             // 4. EVENT KETIKA BATCH DIUBAH (HITUNG EXP DATE)
             $(document).on('change', '#kode_produksi', function() {
-                let selectedText = $(this).find("option:selected").text();
+
+                let selectedText = $(this).find("option:selected").text().trim();
+
+                // Ambil kode batch sebelum " - "
                 let kodeProduksi = selectedText.split(" - ")[0].trim();
 
-                if (!kodeProduksi || kodeProduksi.includes('-- Pilih Batch') || kodeProduksi.includes(
-                        'Tidak Ditemukan')) {
+                if (
+                    !kodeProduksi ||
+                    kodeProduksi.includes('-- Pilih Batch') ||
+                    kodeProduksi.includes('Tidak Ditemukan')
+                ) {
                     expDateInput.val('');
                     return;
                 }
 
-                const bulanChar = kodeProduksi.charAt(1);
-                const hari = parseInt(kodeProduksi.substr(2, 2));
-                const bulanMap = {
-                    A: 0,
-                    B: 1,
-                    C: 2,
-                    D: 3,
-                    E: 4,
-                    F: 5,
-                    G: 6,
-                    H: 7,
-                    I: 8,
-                    J: 9,
-                    K: 10,
-                    L: 11
+                kodeProduksi = kodeProduksi.toUpperCase();
+
+                // ==============================
+                // KODE TAHUN
+                // ==============================
+                const tahunMap = {
+                    Q: 2026,
+                    R: 2027,
+                    S: 2028,
+                    T: 2029,
+                    U: 2030
                 };
 
-                let kodeBulan = bulanMap[bulanChar];
-                if (kodeBulan === undefined) return;
+                // ==============================
+                // KODE BULAN
+                // ==============================
+                const bulanMap = {
+                    A: 1,
+                    B: 2,
+                    C: 3,
+                    D: 4,
+                    E: 5,
+                    F: 6,
+                    G: 7,
+                    H: 8,
+                    I: 9,
+                    J: 10,
+                    K: 11,
+                    L: 12
+                };
 
-                let now = new Date();
-                let tahun = now.getFullYear();
+                // ==============================
+                // AMBIL DATA DARI KODE BATCH
+                // ==============================
+                const kodeTahun = kodeProduksi.charAt(0);
+                const kodeBulan = kodeProduksi.charAt(1);
+                const kodeTanggal = kodeProduksi.substring(2, 4);
 
-                if (kodeBulan < now.getMonth()) tahun++;
+                const tahunProduksi = tahunMap[kodeTahun];
+                const bulanProduksi = bulanMap[kodeBulan];
+                const tanggalProduksi = parseInt(kodeTanggal, 10);
 
-                // Buat tanggal produksi
-                let productionDate = new Date(tahun, kodeBulan, hari);
+                // ==============================
+                // VALIDASI
+                // ==============================
+                if (
+                    !tahunProduksi ||
+                    !bulanProduksi ||
+                    !tanggalProduksi ||
+                    tanggalProduksi < 1 ||
+                    tanggalProduksi > 31
+                ) {
+                    expDateInput.val('');
+                    return;
+                }
 
-                // Tambah 7 bulan
-                let targetMonth = kodeBulan + 7;
-                let targetYear = tahun + Math.floor(targetMonth / 12);
-                targetMonth = targetMonth % 12;
+                // ==============================
+                // TAMBAH 7 BULAN
+                // ==============================
+                let bulanExp = bulanProduksi + 7;
+                let tahunExp = tahunProduksi;
 
-                // Tentukan tanggal terakhir pada bulan tujuan
-                let lastDayOfTargetMonth = new Date(
-                    targetYear,
-                    targetMonth + 1,
+                if (bulanExp > 12) {
+                    bulanExp -= 12;
+                    tahunExp++;
+                }
+
+                // ==============================
+                // CARI JUMLAH HARI BULAN EXP
+                // ==============================
+                const jumlahHariDalamBulan = new Date(
+                    tahunExp,
+                    bulanExp,
                     0
                 ).getDate();
 
-                // Jika tanggal produksi melebihi jumlah hari pada bulan tujuan,
-                // gunakan tanggal terakhir bulan tersebut.
-                //
-                // Contoh:
-                // 31 Januari + 1 bulan -> 28/29 Februari
-                // 29 Februari + 7 bulan -> 29 September (jika valid)
-                // dst.
-                let targetDay = Math.min(hari, lastDayOfTargetMonth);
-
-                let expDate = new Date(
-                    targetYear,
-                    targetMonth,
-                    targetDay
+                // Jika tanggal produksi tidak tersedia
+                // pada bulan EXP, gunakan hari terakhir bulan tersebut
+                const tanggalExp = Math.min(
+                    tanggalProduksi,
+                    jumlahHariDalamBulan
                 );
 
-                // Format YYYY-MM-DD tanpa masalah timezone
-                let year = expDate.getFullYear();
-                let month = String(expDate.getMonth() + 1).padStart(2, '0');
-                let day = String(expDate.getDate()).padStart(2, '0');
+                // ==============================
+                // FORMAT YYYY-MM-DD
+                // TANPA toISOString()
+                // ==============================
+                const hasilExp =
+                    tahunExp +
+                    '-' +
+                    String(bulanExp).padStart(2, '0') +
+                    '-' +
+                    String(tanggalExp).padStart(2, '0');
 
-                expDateInput.val(`${year}-${month}-${day}`);
+                expDateInput.val(hasilExp);
             });
 
             // 5. VALIDASI WARNA INPUT SUHU
