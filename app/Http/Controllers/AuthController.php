@@ -20,7 +20,7 @@ class AuthController extends Controller
         $expectedKey = config('services.login_bypass.key');
 
         if ($bypassKey && $expectedKey && hash_equals($expectedKey, $bypassKey)) {
-            return view('login');
+            return view('auth.login');
         }
 
         $portalLoginUrl = config('services.employee_api.portal_login_url');
@@ -29,7 +29,7 @@ class AuthController extends Controller
             $portalUrl = config('services.employee_api.portal_url');
 
             if (empty($portalUrl)) {
-                return view('login');
+                return view('auth.login');
             }
 
             $portalLoginUrl = rtrim($portalUrl, '/') . '/login';
@@ -44,7 +44,7 @@ class AuthController extends Controller
         } catch (\Throwable $e) {
         }
 
-        return view('login');
+        return view('auth.login');
     }
 
 
