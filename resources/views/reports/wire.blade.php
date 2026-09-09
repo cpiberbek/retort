@@ -330,8 +330,17 @@
         <table width="100%" border="1" cellspacing="0" cellpadding="3">
 
             <tr>
-                <td colspan="2" align="center">
-                    <b>MESIN : {{ $grid['mesin'] }}</b>
+                <td colspan="2">
+                    <table width="100%" border="0" cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td width="50%" align="center">
+                                <b>MESIN : {{ $grid['mesin'] }}</b>
+                            </td>
+                            <td width="50%" align="right">
+                                <b>Start: {{ $dtl['start'] ?? '-' }}</b>
+                            </td>
+                        </tr>
+                    </table>
                 </td>
             </tr>
 
