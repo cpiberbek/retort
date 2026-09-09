@@ -1,75 +1,76 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<meta charset="utf-8">
+    <meta charset="utf-8">
 
-<style>
-body{
-    font-family: helvetica;
-    font-size:10px;
-}
-
-.title{
-    text-align:center;
-    font-size:15px;
-    font-weight:bold;
-    margin-bottom:10px;
-}
-
-.info{
-    width:100%;
-    border-collapse:collapse;
-    margin-bottom:8px;
-}
-
-.info td{
-    border:none;
-    padding:2px;
-}
-
-.main{
-    width:100%;
-    border-collapse:collapse;
-}
-
-.main th,
-.main td{
-    border:1px solid #000;
-    padding:5px;
-    vertical-align:middle;
-}
-
-.main th{
-    text-align:center;
-    font-weight:bold;
-}
-
-.center{
-    text-align:center;
-}
-
-.row{
-    height:28px;
-}
-
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
+    <style>
+        body {
             font-family: times;
             font-size: 9pt;
         }
-</style>
 
+        .title {
+            text-align: center;
+            font-size: 15px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .info {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 8px;
+        }
+
+        .info td {
+            border: none;
+            padding: 2px;
+        }
+
+        .main {
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+        }
+
+        .main th,
+        .main td {
+            border: 1px solid #000;
+            padding: 5px;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .main th {
+            font-weight: bold;
+        }
+
+        .main tbody td {
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .row {
+            height: 28px;
+        }
+    </style>
 </head>
 
 <body>
 
 @php
-$header = $produks->first();
+    $header = $produks->first();
+
+    function resolveNameFromUsername($username)
+    {
+        if (empty($username)) {
+            return '-';
+        }
+
+        $user = \App\Models\User::where('username', $username)->first();
+
+        return $user->name ?? $username;
+    }
 @endphp
 
 <div style="margin-left:-30px;">
@@ -78,8 +79,9 @@ $header = $produks->first();
             <td width="55">
                 <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
             </td>
+
             <td>
-                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
+                <span style="font-size:12pt;"><b>PT Charoen</b></span><br>
                 <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
                 <span style="font-size:12pt;"><b>Food Division</b></span>
             </td>
@@ -90,7 +92,9 @@ $header = $produks->first();
 <div class="title">
     DATA LABELISASI PVDC
 </div>
+
 <br>
+
 <table class="info">
     <tr>
         <td width="10%"><b>Hari / Tanggal</b></td>
@@ -103,59 +107,79 @@ $header = $produks->first();
         <td width="40%">: {{ $header->nama_produk ?? '-' }}</td>
     </tr>
 </table>
-<br><br>
-<table class="main">
 
+<br><br>
+
+<table class="main">
     <thead>
         <tr>
-            <th width="20%" align="center">Kode<br>Mesin</th>
-            <th width="20%" align="center">Kode Produksi</th>
-            <th width="20%" align="center">Paraf<br>Operator</th>
-            <th width="20%" align="center">Paraf<br>QC</th>
-            <th width="20%" align="center">Keterangan</th>
+            <th width="15%" rowspan="2" style="vertical-align: middle;">
+                Kode<br>Mesin
+            </th>
+
+            <th width="30%" rowspan="2" style="vertical-align: middle;">
+                Kode Produksi
+            </th>
+
+            <th width="15%" colspan="2" style="vertical-align: middle;">
+                Paraf
+            </th>
+
+            <th width="40%" rowspan="2" style="vertical-align: middle;">
+                Keterangan
+            </th>
+        </tr>
+
+        <tr>
+            <th width="7.5%" style="vertical-align: middle;">
+                Operator
+            </th>
+
+            <th width="7.5%" style="vertical-align: middle;">
+                QC
+            </th>
         </tr>
     </thead>
 
     <tbody>
+        @foreach($produks as $row)
+            @foreach($row->labelisasi_detail as $item)
+                <tr class="row">
+                    <td width="15%" style="vertical-align: middle; text-align: center;">
+                        {{ $item['mesin'] }}
+                    </td>
 
-    @foreach($produks as $row)
-        @foreach($row->labelisasi_detail as $item)
+                    <td width="30%" style="vertical-align: middle; text-align: center;">
+                        {{ optional($item['mincing'])->kode_produksi ?? '-' }}<br>
+                        <img src="{{ storage_path('app/public/' . $item['file']) }}" width="60">
+                    </td>
 
-        <tr class="row">
-            <td class="center">
-                {{ $item['mesin'] }}
-            </td>
+                    <td width="7.5%" style="vertical-align: middle; text-align: center;">
+                        {{ $row->nama_operator ?? '-' }}
+                    </td>
 
-            <td>
-                {{ optional($item['mincing'])->kode_produksi }}
-            </td>
+                    <td width="7.5%" style="vertical-align: middle; text-align: center;">
+                        {{ resolveNameFromUsername($row->username) }}
+                    </td>
 
-            <td class="center">
-                {{ !empty($row->username_updated) ? $row->username_updated : $row->username }}
-            </td>
-
-            <td class="center">
-                {{ $row->nama_spv }}
-            </td>
-
-            <td>
-                {{ $item['keterangan'] }}
-            </td>
-        </tr>
-
+                    <td width="40%" style="vertical-align: middle; text-align: center;">
+                        {{ $item['keterangan'] }}
+                    </td>
+                </tr>
+            @endforeach
         @endforeach
-    @endforeach
-
     </tbody>
-
 </table>
+
 <table width="100%">
     <tr>
         <td width="75%"></td>
+
         <td width="25%" align="right" style="font-style: italic;">
             {{ $noDokumen }}
         </td>
     </tr>
 </table>
+
 </body>
 </html>
