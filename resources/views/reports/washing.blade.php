@@ -219,7 +219,7 @@ $item = $items->first();
             Suhu PC Kleer : 46 ± 3°C &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             Suhu Heater : 125 - 135°C 
             <br>
-            &nbsp;&nbsp;Konsentrasi PC Kleer : 0.7% (Ayam), 1% (Sapi), 0.8% (Cuci)&nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;Konsentrasi PC Kleer : 0.7% (Ayam), 1% (Sapi), 0.8% (Cuci Ulang)&nbsp;&nbsp;&nbsp;
             Konsentrasi Potassium Sorbate : 0.15%
         </td>
     </tr>
