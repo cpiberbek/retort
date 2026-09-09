@@ -103,7 +103,7 @@
 
 <br>
 
-<h2 class="title">CHECKLIST CLEANING MAGNET TRAP</h2>
+{{-- <h2 class="title">CHECKLIST CLEANING MAGNET TRAP</h2> --}}
 
 <br>
 
@@ -111,7 +111,7 @@
 
     <tr>
         <th rowspan="3">NO</th>
-        <th colspan="11" style="text-align:left;">
+        <th colspan="10" style="text-align:left;">
             Periode : {{ $month ? \Carbon\Carbon::parse($month)->locale('id')->translatedFormat('F Y') : '-' }}
         </th>
     </tr>
@@ -138,7 +138,7 @@
             <span style="color:red">*</span> KETERANGAN
         </th>
 
-        <th colspan="3">
+        <th colspan="2">
             PETUGAS
         </th>
     </tr>
@@ -152,7 +152,7 @@
         <th>TIDAK SESUAI</th>
 
         <th>QC</th>
-        <th>PROD</th>
+        {{-- <th>PROD</th> --}}
         <th>ENG</th>
     </tr>
 
@@ -168,7 +168,7 @@
         <td>{{ $item->kondisi_magnet_trap ?? '-' }}</td>
         <td>{{ Str::limit($item->keterangan ?? '-', 30) }}</td>
         <td>{{ $item->petugas_qc ?? '-' }}</td>
-        <td>-</td>
+ 
         <td>{{ $item->petugas_eng ?? '-' }}</td>
     </tr>
     @empty
