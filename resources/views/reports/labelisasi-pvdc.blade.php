@@ -90,7 +90,7 @@
 </div>
 
 <div class="title">
-    DATA LABELISASI PVDC
+    KONTROL LABELISASI PVDC
 </div>
 
 <br>
