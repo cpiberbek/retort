@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Verifikasi Timer Chamber</title>
+    <title>Verifikasi Timer Chamber</title>
     <style>
         /* CSS Dasar untuk TCPDF */
         body {
@@ -68,7 +68,7 @@
     </tr>
 </table>
 
-<h2 class="title" style="margin:5px 0 0 0;">LAPORAN VERIFIKASI TIMER CHAMBER</h2>
+<h2 class="title" style="margin:5px 0 0 0;">VERIFIKASI TIMER CHAMBER</h2>
 
 @php
     $groups = $items->groupBy(fn($item) => $item->date . '_' . $item->shift);
