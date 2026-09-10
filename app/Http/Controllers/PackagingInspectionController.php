@@ -11,6 +11,8 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
+use TCPDF;
+use App\Models\List_form;
 
 class PackagingInspectionController extends Controller
 {
@@ -359,6 +361,10 @@ class PackagingInspectionController extends Controller
         $shift = $request->input('shift');
         $userPlant = Auth::user()->plant;
 
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Kedatangan Bahan Kemas')
+            ->value('no_dokumen');
+
         $query = PackagingInspection::with(['items']);
         if (Auth::check() && !empty($userPlant)) {
             $query->where('plant_uuid', $userPlant);
@@ -400,7 +406,7 @@ class PackagingInspectionController extends Controller
         $pdf->AddPage();
 
         // 3. Render
-        $html = view('reports.pemeriksaan-packaging', compact('inspections', 'request'))->render();
+        $html = view('reports.pemeriksaan-packaging', compact('inspections', 'request', 'noDokumen'))->render();
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Pemeriksaan_Packaging_' . date('d-m-Y_His') . '.pdf';

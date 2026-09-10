@@ -175,7 +175,12 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
         @foreach($item->productDetails as $detail)
         <tr>
             <td class="center">{{ $no++ }}</td>
-            <td>{{ $item->bahan_baku }}</td>
+            <td>
+                {{ $item->bahan_baku }}
+                ({{ DB::table('master_raw_materials')
+                    ->where('nama_bahan_baku', $item->bahan_baku)
+                    ->value('satuan') ?? '' }})
+            </td>
             <td>{{ $item->supplier }}</td>
             <td>{{ $detail->kode_batch }}</td>
             <td>{{ \Carbon\Carbon::parse($detail->exp)->format('d-m-Y') }}</td>
