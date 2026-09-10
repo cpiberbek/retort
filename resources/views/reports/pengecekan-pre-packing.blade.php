@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8">
-
     <style>
         body {
             font-size: 8px;
@@ -138,40 +138,77 @@
 
         <tr style="font-weight: bold;">
             <th rowspan="2" style="width:3%;">No</th>
-            <th colspan="2" style="width:20%;">Varian</th>
+
+            <th colspan="2" style="width:20%;">
+                Varian
+            </th>
+
             <th rowspan="2" style="width:7%;">
                 No.<br>Conveyor
             </th>
+
             <th rowspan="2" style="width:8%;">
                 Suhu<br>Varian
             </th>
+
             <th rowspan="2" style="width:10%;">
                 Bagian Badan Sosis
             </th>
-            <th colspan="2" style="width:12%;">Air (%)</th>
-            <th colspan="2" style="width:12%;">Minyak (%)</th>
+
+            <th colspan="2" style="width:12%;">
+                Air (%)
+            </th>
+
+            <th colspan="2" style="width:12%;">
+                Minyak (%)
+            </th>
+
             <th colspan="2" style="width:18%;">
                 Berat Varian per
             </th>
+
             <th rowspan="2" style="width:10%;">
                 PARAF<br>QC
             </th>
         </tr>
 
         <tr style="font-weight: bold;">
-            <th class="center">Nama</th>
-            <th class="center">Kode</th>
-            <th class="center">Basah</th>
-            <th class="center">Kering</th>
-            <th class="center">Basah</th>
-            <th class="center">Kering</th>
-            <th class="center">pcs</th>
+
+            <th class="center">
+                Nama
+            </th>
+
+            <th class="center">
+                Kode
+            </th>
+
+            <th class="center">
+                Basah
+            </th>
+
+            <th class="center">
+                Kering
+            </th>
+
+            <th class="center">
+                Basah
+            </th>
+
+            <th class="center">
+                Kering
+            </th>
+
+            <th class="center">
+                pcs
+            </th>
+
             <th class="center">
                 Toples<br>(berat kotor)
             </th>
+
         </tr>
 
-        @forelse($prepackings as $index => $prepacking)
+        @foreach($prepackings as $index => $prepacking)
 
             @php
                 $number = ($pageIndex * 6) + $index + 1;
@@ -180,30 +217,31 @@
 
                 $airBasahUjung = $kondisi['basah_air_ujung'] ?? 0;
                 $airKeringUjung = $kondisi['kering_air_ujung'] ?? 0;
+
                 $minyakBasahUjung = $kondisi['basah_minyak_ujung'] ?? 0;
                 $minyakKeringUjung = $kondisi['kering_minyak_ujung'] ?? 0;
 
                 $airBasahSeal = $kondisi['basah_air_seal'] ?? 0;
                 $airKeringSeal = $kondisi['kering_air_seal'] ?? 0;
+
                 $minyakBasahSeal = $kondisi['basah_minyak_seal'] ?? 0;
                 $minyakKeringSeal = $kondisi['kering_minyak_seal'] ?? 0;
 
                 $berat = json_decode($prepacking->berat_produk, true) ?? [];
 
-                $pcsUjung = implode(' | ', [
-                    $berat['pcs_1'] ?? 0,
-                    $berat['pcs_2'] ?? 0,
-                    $berat['pcs_3'] ?? 0,
-                ]);
+                $pcs1 = $berat['pcs_1'] ?? 0;
+                $pcs2 = $berat['pcs_2'] ?? 0;
+                $pcs3 = $berat['pcs_3'] ?? 0;
 
-                $toplesUjung = implode(' | ', [
-                    $berat['toples_1'] ?? 0,
-                    $berat['toples_2'] ?? 0,
-                    $berat['toples_3'] ?? 0,
-                ]);
+                $toples1 = $berat['toples_1'] ?? 0;
+                $toples2 = $berat['toples_2'] ?? 0;
+                $toples3 = $berat['toples_3'] ?? 0;
+
+                $suhuVarian = json_decode($prepacking->suhu_produk, true) ?? [];
             @endphp
 
             <tr>
+
                 <td rowspan="3" class="center">
                     {{ $number }}
                 </td>
@@ -221,13 +259,21 @@
                 </td>
 
                 <td rowspan="3" class="center">
-                    {{ $prepacking->suhu_produk
-                        ? implode(' | ', json_decode($prepacking->suhu_produk, true))
-                        : '-'
-                    }}
+                    @if(!empty($suhuVarian))
+                        @foreach($suhuVarian as $suhu)
+                            {{ $suhu }}
+                            @if(!$loop->last)
+                                |
+                            @endif
+                        @endforeach
+                    @else
+                        -
+                    @endif
                 </td>
 
-                <td>Ujung</td>
+                <td>
+                    Ujung
+                </td>
 
                 <td class="center">
                     {{ $airBasahUjung }}
@@ -246,20 +292,24 @@
                 </td>
 
                 <td class="center">
-                    {{ $pcsUjung }}
+                    {{ $pcs1 }}
                 </td>
 
                 <td class="center">
-                    {{ $toplesUjung }}
+                    {{ $toples1 }}
                 </td>
 
                 <td rowspan="3" class="center">
-                    {{ $prepacking->username ?? '-' }}
+                    {{ \App\Models\User::where('username', $prepacking->username)->value('name') ?? $prepacking->username ?? '-' }}
                 </td>
+
             </tr>
 
             <tr>
-                <td>Seal</td>
+
+                <td>
+                    Seal
+                </td>
 
                 <td class="center">
                     {{ $airBasahSeal }}
@@ -277,20 +327,28 @@
                     {{ $minyakKeringSeal }}
                 </td>
 
-                <td class="center">-</td>
+                <td class="center">
+                    {{ $pcs2 }}
+                </td>
 
-                <td class="center">-</td>
+                <td class="center">
+                    {{ $toples2 }}
+                </td>
+
             </tr>
 
             <tr>
-                <td>Total</td>
+
+                <td>
+                    Total
+                </td>
 
                 <td class="center">
                     {{ $airBasahUjung + $airBasahSeal }}
                 </td>
 
                 <td class="center">
-                    {{ $airKeringUjung + $airKeringSeal }}
+                    {{ abs(100 - ($airKeringUjung + $airKeringSeal)) }}
                 </td>
 
                 <td class="center">
@@ -298,67 +356,20 @@
                 </td>
 
                 <td class="center">
-                    {{ $minyakKeringUjung + $minyakKeringSeal }}
+                    {{ abs(100 - ($minyakKeringUjung + $minyakKeringSeal)) }}
                 </td>
 
-                <td class="center">-</td>
+                <td class="center">
+                    {{ $pcs3 }}
+                </td>
 
-                <td class="center">-</td>
+                <td class="center">
+                    {{ $toples3 }}
+                </td>
+
             </tr>
 
-        @empty
-
-        @endforelse
-
-        @if($pages->count() === 1 && count($prepackings) < 6)
-
-            @for($i = count($prepackings) + 1; $i <= 6; $i++)
-
-                <tr>
-                    <td rowspan="3" class="center">
-                        {{ $i }}
-                    </td>
-
-                    <td rowspan="3"></td>
-                    <td rowspan="3"></td>
-                    <td rowspan="3"></td>
-                    <td rowspan="3"></td>
-
-                    <td>Ujung</td>
-
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-
-                    <td rowspan="3"></td>
-                </tr>
-
-                <tr>
-                    <td>Seal</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-                <tr>
-                    <td>Total</td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                </tr>
-
-            @endfor
-
-        @endif
+        @endforeach
 
     </table>
 
@@ -377,6 +388,7 @@
         @php
             $catatan = $prepackings
                 ->map(function ($item) {
+
                     $kode = \App\Models\Mincing::where(
                         'uuid',
                         $item->kode_produksi
@@ -410,11 +422,15 @@
         </table>
 
         <table width="100%" class="small">
+
             <tr>
+
                 <td width="70%"></td>
 
                 <td width="30%">
+
                     <table width="100%" class="sign">
+
                         <tr>
                             <td>
                                 Disetujui Oleh,
@@ -432,7 +448,7 @@
                                 (
                                 <u>
                                     @if($namaSpv)
-                                        {{ $namaSpv }}
+                                        {{ \App\Models\User::where('username', $namaSpv)->value('name') ?? $namaSpv }}
                                     @else
                                         Belum Semua Entry Disetujui Oleh SPV
                                     @endif
@@ -442,9 +458,13 @@
                                 QC SPV
                             </td>
                         </tr>
+
                     </table>
+
                 </td>
+
             </tr>
+
         </table>
 
     @endif
@@ -452,4 +472,5 @@
 @endforeach
 
 </body>
+
 </html>
