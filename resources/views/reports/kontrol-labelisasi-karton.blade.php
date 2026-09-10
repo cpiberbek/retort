@@ -110,7 +110,7 @@
 <table width="101%" class="box">
     <tr>
         <th width="10%" class="center">No.</th>
-        <th width="50%" class="center">Bukti Kode</th>
+        <th width="50%" class="center">Kode Produksi</th>
         <th width="40%" colspan="2" class="center">Detail</th>
     </tr>
 
@@ -178,9 +178,8 @@
 
     <tr>
         <td>Paraf QC</td>
-        <td>{{ $karton->username ?? '-' }}</td>
+        <td>{{ \App\Models\User::where('username', $karton->username)->value('name') ?? $karton->username ?? '-' }}</td>
     </tr>
-
     <tr>
         <td>Paraf Koordinator</td>
         <td>{{ $karton->nama_koordinator ?? '-' }}</td>
