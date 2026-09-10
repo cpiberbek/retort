@@ -422,7 +422,8 @@
                                                     <button type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
                                                         tabindex="-1">±</button>
-                                                    <input type="number" name="suhu_akhir_emulsi_gel" step="0.01"
+                                                    <input type="text"
+                                                        name="suhu_akhir_emulsi_gel"
                                                         inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
@@ -463,12 +464,14 @@
                                                     <button type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
                                                         tabindex="-1">±</button>
-                                                    <input type="number" name="suhu_akhir_mixing" step="0.01"
+                                                    <input type="text"
+                                                        name="suhu_akhir_mixing"
                                                         inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
                                             </td>
                                         </tr>
+
                                         <tr>
                                             <td class="text-start fw-semibold">Suhu Akhir Emulsifying (Std 14±2°C)</td>
                                             <td>
@@ -476,7 +479,8 @@
                                                     <button type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus"
                                                         tabindex="-1">±</button>
-                                                    <input type="number" name="suhu_akhir_emulsi" step="0.01"
+                                                    <input type="text"
+                                                        name="suhu_akhir_emulsi"
                                                         inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input">
                                                 </div>
