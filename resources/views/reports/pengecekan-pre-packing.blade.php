@@ -1,8 +1,10 @@
 <!DOCTYPE html>
+
 <html>
 
 <head>
     <meta charset="utf-8">
+
     <style>
         body {
             font-size: 8px;
@@ -87,15 +89,18 @@
                     <td width="55">
                         <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
                     </td>
+
                     <td>
                         <span style="font-size:12pt;">
                             <b>PT Charoen</b>
                         </span>
                         <br>
+
                         <span style="font-size:12pt;">
                             <b>Pokphand Indonesia</b>
                         </span>
                         <br>
+
                         <span style="font-size:12pt;">
                             <b>Food Division</b>
                         </span>
@@ -107,9 +112,11 @@
         <table width="100%" border="0" cellpadding="3" cellspacing="0">
             <tr>
                 <td width="18%"></td>
+
                 <td width="64%" align="center" style="font-size:12pt;">
                     <b>PEMERIKSAAN PRE PACKING</b>
                 </td>
+
                 <td width="18%"></td>
             </tr>
         </table>
@@ -128,6 +135,7 @@
                 <td width="15%">
                     Hari / Tanggal: {{ $dateFilter }}
                 </td>
+
                 <td width="85%"></td>
             </tr>
         </table>
@@ -137,7 +145,10 @@
     <table width="100%" class="tbl-main small" cellpadding="3" align="center">
 
         <tr style="font-weight: bold;">
-            <th rowspan="2" style="width:3%;">No</th>
+
+            <th rowspan="2" style="width:3%;">
+                No
+            </th>
 
             <th colspan="2" style="width:20%;">
                 Varian
@@ -170,6 +181,7 @@
             <th rowspan="2" style="width:10%;">
                 PARAF<br>QC
             </th>
+
         </tr>
 
         <tr style="font-weight: bold;">
@@ -237,7 +249,11 @@
                 $toples2 = $berat['toples_2'] ?? 0;
                 $toples3 = $berat['toples_3'] ?? 0;
 
-                $suhuVarian = json_decode($prepacking->suhu_produk, true) ?? [];
+                 $suhuVarian = json_decode($prepacking->suhu_produk, true) ?? [];
+
+                $suhu1 = $suhuVarian['suhu_1'] ?? $suhuVarian[0] ?? '-';
+                $suhu2 = $suhuVarian['suhu_2'] ?? $suhuVarian[1] ?? '-';
+                $suhu3 = $suhuVarian['suhu_3'] ?? $suhuVarian[2] ?? '-';
             @endphp
 
             <tr>
@@ -258,17 +274,8 @@
                     {{ $prepacking->conveyor ?? '-' }}
                 </td>
 
-                <td rowspan="3" class="center">
-                    @if(!empty($suhuVarian))
-                        @foreach($suhuVarian as $suhu)
-                            {{ $suhu }}
-                            @if(!$loop->last)
-                                |
-                            @endif
-                        @endforeach
-                    @else
-                        -
-                    @endif
+                <td class="center">
+                    {{ $suhu1 }}
                 </td>
 
                 <td>
@@ -307,6 +314,10 @@
 
             <tr>
 
+                <td class="center">
+                    {{ $suhu2 }}
+                </td>
+
                 <td>
                     Seal
                 </td>
@@ -338,6 +349,10 @@
             </tr>
 
             <tr>
+
+                <td class="center">
+                    {{ $suhu3 }}
+                </td>
 
                 <td>
                     Total
@@ -377,11 +392,13 @@
 
         <table width="100%">
             <tr>
+
                 <td width="75%"></td>
 
                 <td width="25%" align="right" style="font-style: italic;">
                     {{ $noDokumen }}
                 </td>
+
             </tr>
         </table>
 
@@ -413,12 +430,14 @@
         @endphp
 
         <table width="100%" class="small">
+
             <tr>
                 <td>
                     <b>CATATAN :</b><br>
                     {!! nl2br(e($catatan ?: '-')) !!}
                 </td>
             </tr>
+
         </table>
 
         <table width="100%" class="small">
