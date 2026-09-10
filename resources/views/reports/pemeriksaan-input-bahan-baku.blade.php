@@ -194,7 +194,27 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
             <td>{{ $item->dokumen_coa_file ? 'V' : 'X' }}</td>
             <td>{{ $item->nopol_mobil }}</td>
             <td>{{ $item->suhu_mobil }}</td>
-            <td>{{ $item->kondisi_mobil }}</td>
+            @php
+    $mappingKondisi = [
+        'Bersih' => 1,
+        'Kering' => 2,
+        'Tidak Bocor' => 3,
+        'Tidak Berdebu' => 4,
+        'Tidak Basah' => 5,
+        'Bebas Hama' => 6,
+        'Bebas Noda (Karat, cat, tinta)' => 7,
+        'Bebas Bekas oli di lantai/dinding' => 8,
+        'Tidak ada produk non halal' => 9,
+    ];
+
+    $kondisiMobil = $item->kondisi_mobil;
+
+    foreach ($mappingKondisi as $nama => $nomor) {
+        $kondisiMobil = str_replace($nama, $nomor, $kondisiMobil);
+    }
+@endphp
+
+<td>{{ $kondisiMobil }}</td>
             <td>{{ $item->do_po }}</td>
             <td>{{ $item->keterangan }}</td>\
         </tr>
@@ -214,8 +234,9 @@ $date = $firstItem ? \Carbon\Carbon::parse($firstItem->setup_kedatangan)->format
         <td width="70%">
             <strong>Keterangan :</strong><br>
             * V = sesuai spesifikasi / standar<br>
-            ** 1 = bersih &nbsp; 2 = kotor &nbsp; 3 = bau &nbsp; 4 = bocor<br>
-            &nbsp;&nbsp;&nbsp;&nbsp;5 = basah &nbsp; 6 = kering &nbsp; 7 = bebas hama<br>
+            ** 1 = bersih &nbsp; 2 = kering &nbsp; 3 = tidak bocor &nbsp; 4 = tidak berdebu<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;5 = tidak basah &nbsp; 6 = bebas hama &nbsp; 7 = bebas noda (karat, cat, tinta)<br>
+            &nbsp;&nbsp;&nbsp;&nbsp;8 = bebas bekas oli di lantai/dinding &nbsp; 9 = tidak ada produk non halal<br>
             *** 1 = Jika raw meat dilakukan pengujian suhu varian<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;2 = Pengisian nomor segel<br>
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;3 = Pengisian nama supir<br>
