@@ -4095,7 +4095,7 @@
 
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">DATA PEMERIKSAAN SAMPLING FINISH GOOD</span>
+                        <span class="fw-bold">DATA PEMERIKSAAN SAMPLING PRODUK</span>
                         <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
                     <div class="card-body">
