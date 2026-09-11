@@ -3433,6 +3433,378 @@
 
             @break
 
+            @case('CHAMBER')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA VERIFIKASI TIMER CHAMBER</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Pemeriksaan</th>
+                                        <th>QC (User)</th>
+                                        <th>Operator</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->date)
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @php
+                                                    $chambers = is_string($dep->verifikasi ?? null)
+                                                        ? json_decode($dep->verifikasi, true)
+                                                        : ($dep->verifikasi ?? null);
+
+                                                    $rentang_menit = [5, 10, 20, 30, 60];
+                                                @endphp
+
+                                                @if (!empty($chambers) && is_array($chambers))
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#chamberModal{{ $dep->uuid }}"
+                                                        class="text-primary fw-bold text-decoration-none"
+                                                        style="cursor: pointer;">
+                                                        Result
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="chamberModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-labelledby="chamberModalLabel{{ $dep->uuid }}"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-primary text-white">
+
+                                                                    <h5 class="modal-title"
+                                                                        id="chamberModalLabel{{ $dep->uuid }}">
+                                                                        <i class="bi bi-list-task me-2"></i>
+                                                                        Detail Verifikasi Timer Chamber
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+
+                                                                    <div class="table-responsive">
+
+                                                                        <table class="table table-bordered table-striped table-sm text-center align-middle mb-3"
+                                                                            style="font-size: 0.8rem;">
+
+                                                                            <thead class="table-light">
+
+                                                                                <tr class="table-secondary">
+
+                                                                                    <th rowspan="2"
+                                                                                        colspan="2"
+                                                                                        class="align-middle">
+                                                                                        RENTANG UKUR
+                                                                                    </th>
+
+                                                                                    @foreach ($chambers as $index => $row)
+
+                                                                                        <th colspan="6"
+                                                                                            class="fw-bold">
+                                                                                            No. Chamber {{ $index + 1 }}
+                                                                                        </th>
+
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                                <tr>
+
+                                                                                    @foreach ($chambers as $index => $row)
+
+                                                                                        <th colspan="2">
+                                                                                            PLC
+                                                                                        </th>
+
+                                                                                        <th colspan="2">
+                                                                                            STOPWATCH
+                                                                                        </th>
+
+                                                                                        <th colspan="2">
+                                                                                            KOREKSI
+                                                                                        </th>
+
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                                <tr>
+
+                                                                                    <th>MNT</th>
+                                                                                    <th>DTK</th>
+
+                                                                                    @foreach ($chambers as $index => $row)
+
+                                                                                        <th>MNT</th>
+                                                                                        <th>DTK</th>
+
+                                                                                        <th>MNT</th>
+                                                                                        <th>DTK</th>
+
+                                                                                        <th colspan="2">
+                                                                                            Factor
+                                                                                        </th>
+
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                            </thead>
+
+                                                                            <tbody>
+
+                                                                                @foreach ($rentang_menit as $rentang)
+
+                                                                                    <tr>
+
+                                                                                        <td class="fw-bold">
+                                                                                            {{ $rentang }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            00
+                                                                                        </td>
+
+                                                                                        @foreach ($chambers as $index => $row)
+
+                                                                                            <td>
+                                                                                                {{ $row['plc_menit_' . $rentang] ?? '-' }}
+                                                                                            </td>
+
+                                                                                            <td>
+                                                                                                {{ $row['plc_detik_' . $rentang] ?? '-' }}
+                                                                                            </td>
+
+                                                                                            <td>
+                                                                                                {{ $row['stopwatch_menit_' . $rentang] ?? '-' }}
+                                                                                            </td>
+
+                                                                                            <td>
+                                                                                                {{ $row['stopwatch_detik_' . $rentang] ?? '-' }}
+                                                                                            </td>
+
+                                                                                            <td colspan="2"
+                                                                                                class="fw-bold text-danger">
+                                                                                                {{ $row['faktor_koreksi_' . $rentang] ?? '-' }}
+                                                                                            </td>
+
+                                                                                        @endforeach
+
+                                                                                    </tr>
+
+                                                                                @endforeach
+
+                                                                            </tbody>
+
+                                                                        </table>
+
+                                                                    </div>
+
+                                                                    @if (!empty($dep->catatan))
+
+                                                                        <h6 class="text-primary fw-bold mt-2">
+                                                                            <i class="bi bi-journal-text me-1"></i>
+                                                                            Catatan
+                                                                        </h6>
+
+                                                                        <p>
+                                                                            {{ $dep->catatan }}
+                                                                        </p>
+
+                                                                    @endif
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_operator ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#revisionModal{{ $dep->uuid }}"
+                                                        class="text-danger fw-bold text-decoration-none"
+                                                        style="cursor: pointer;">
+                                                        Revision
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="revisionModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-dialog-centered">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-danger text-white">
+
+                                                                    <h5 class="modal-title">
+                                                                        Detail Revisi
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+
+                                                                    <ul class="list-unstyled mb-0">
+
+                                                                        <li>
+                                                                            <strong>Status:</strong>
+                                                                            Revision
+                                                                        </li>
+
+                                                                        <li>
+                                                                            <strong>Catatan:</strong>
+                                                                            {{ $dep->catatan_spv ?? '-' }}
+                                                                        </li>
+
+                                                                    </ul>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                Belum ada data verifikasi timer chamber.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                 <div class="card shadow-sm border-0 mb-4">
