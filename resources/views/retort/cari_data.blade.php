@@ -3077,6 +3077,362 @@
 
             @break
 
+            @case('PEMASAKAN')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PENGECEKAN PEMASAKAN</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Jumlah Tray</th>
+                                        <th>No. Chamber</th>
+                                        <th>Berat Varian (Gram)</th>
+                                        <th>Suhu Varian (°C)</th>
+                                        <th>Total Reject (Kg)</th>
+                                        <th>Pengecekan</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        @php
+                                            $cooking = $dep->cooking ?? [];
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->date)
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            {{-- KODE BATCH --}}
+                                            <td class="text-center align-middle">
+
+                                                @if (is_array($dep->kode_produksi))
+
+                                                    @foreach ($dep->kode_produksi as $uuid)
+
+                                                        {{ $dep->stuffingData[$uuid]->kode_produksi ?? 'Tidak ditemukan' }}
+
+                                                        @if (!$loop->last)
+                                                            <br>
+                                                        @endif
+
+                                                    @endforeach
+
+                                                @else
+
+                                                    -
+
+                                                @endif
+
+                                            </td>
+
+                                            {{-- JUMLAH TRAY --}}
+                                            <td class="text-center align-middle">
+
+                                                @if (is_array($dep->jumlah_tray))
+
+                                                    @foreach ($dep->jumlah_tray as $tray)
+                                                        {{ $tray }}
+
+                                                        @if (!$loop->last)
+                                                            <br>
+                                                        @endif
+                                                    @endforeach
+
+                                                @else
+
+                                                    -
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->no_chamber ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->berat_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->suhu_produk ?? '-' }}
+                                            </td>
+
+                                            {{-- TOTAL REJECT --}}
+                                            <td class="text-center align-middle">
+
+                                                @php
+                                                    $rejects = is_array($dep->total_reject)
+                                                        ? array_filter(
+                                                            $dep->total_reject,
+                                                            fn($v) => !is_null($v) && $v !== ''
+                                                        )
+                                                        : [];
+                                                @endphp
+
+                                                {{ !empty($rejects) ? implode(' / ', $rejects) : '-' }}
+
+                                            </td>
+
+                                            {{-- PEMERIKSAAN --}}
+                                            <td class="text-center align-middle">
+
+                                                @if (!empty($cooking))
+
+                                                    <a href="#"
+                                                        class="fw-bold text-decoration-underline text-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#cookingModal{{ $dep->uuid }}">
+                                                        Result
+                                                    </a>
+
+                                                    {{-- MODAL DETAIL PEMASAKAN --}}
+                                                    <div class="modal fade"
+                                                        id="cookingModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+                                                            <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+
+                                                                <div class="modal-header bg-primary bg-gradient text-white">
+
+                                                                    <h5 class="modal-title fw-semibold">
+                                                                        <i class="bi bi-fire me-2"></i>
+                                                                        Detail Proses Pemasakan
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body p-4 bg-light-subtle">
+
+                                                                    @php
+                                                                        $sections = [
+                                                                            '2. Tekanan & Suhu Awal' => [
+                                                                                'Tekanan Angin' => 'tekanan_angin',
+                                                                                'Tekanan Steam' => 'tekanan_steam',
+                                                                                'Tekanan Air' => 'tekanan_air',
+                                                                            ],
+
+                                                                            '3. Pemanasan Awal' => [
+                                                                                'Suhu Air Awal' => 'suhu_air_awal',
+                                                                                'Tekanan Awal' => 'tekanan_awal',
+                                                                                'Waktu Mulai' => 'waktu_mulai_awal',
+                                                                                'Waktu Selesai' => 'waktu_selesai_awal',
+                                                                            ],
+
+                                                                            '4. Proses Pemanasan' => [
+                                                                                'Suhu Air Proses' => 'suhu_air_proses',
+                                                                                'Tekanan Proses' => 'tekanan_proses',
+                                                                                'Waktu Mulai' => 'waktu_mulai_proses',
+                                                                                'Waktu Selesai' => 'waktu_selesai_proses',
+                                                                            ],
+
+                                                                            '5. Sterilisasi' => [
+                                                                                'Suhu Air Sterilisasi' => 'suhu_air_sterilisasi',
+                                                                                'Thermometer Retort' => 'thermometer_retort',
+                                                                                'Tekanan Sterilisasi' => 'tekanan_sterilisasi',
+                                                                            ],
+
+                                                                            '10. Hasil Pemasakan' => [
+                                                                                'Suhu Varian Akhir' => 'suhu_produk_akhir',
+                                                                                'Panjang' => 'panjang',
+                                                                                'Diameter' => 'diameter',
+                                                                                'Rasa' => 'rasa',
+                                                                                'Warna' => 'warna',
+                                                                                'Texture' => 'texture',
+                                                                            ],
+                                                                        ];
+                                                                    @endphp
+
+                                                                    @foreach ($sections as $sectionTitle => $rows)
+
+                                                                        <div class="mb-3">
+
+                                                                            <h6 class="fw-bold text-primary">
+                                                                                {{ $sectionTitle }}
+                                                                            </h6>
+
+                                                                            <div class="table-responsive shadow-sm rounded">
+
+                                                                                <table class="table table-bordered table-sm align-middle text-center mb-0 bg-white">
+
+                                                                                    <tbody>
+
+                                                                                        @foreach ($rows as $label => $key)
+
+                                                                                            <tr>
+
+                                                                                                <td class="fw-semibold text-start ps-3 w-50">
+                                                                                                    {{ $label }}
+                                                                                                </td>
+
+                                                                                                <td class="text-start ps-3">
+
+                                                                                                    @php
+                                                                                                        $value = $cooking[$key] ?? '-';
+                                                                                                    @endphp
+
+                                                                                                    @if (is_array($value))
+
+                                                                                                        @foreach ($value as $val)
+                                                                                                            <span class="badge bg-gradient bg-light text-dark border border-secondary me-1 mb-1">
+                                                                                                                {{ $val }}
+                                                                                                            </span>
+                                                                                                        @endforeach
+
+                                                                                                    @else
+
+                                                                                                        {{ $value }}
+
+                                                                                                    @endif
+
+                                                                                                </td>
+
+                                                                                            </tr>
+
+                                                                                        @endforeach
+
+                                                                                    </tbody>
+
+                                                                                </table>
+
+                                                                            </div>
+
+                                                                        </div>
+
+                                                                    @endforeach
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span>-</span>
+
+                                                @endif
+
+                                            </td>
+
+                                            {{-- QC --}}
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
+                                            </td>
+
+                                            {{-- SPV --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revisi
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="fw-bold text-secondary">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="12" class="text-center">
+                                                Belum ada data pemasakan.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                 <div class="card shadow-sm border-0 mb-4">

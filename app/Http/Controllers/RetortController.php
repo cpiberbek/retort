@@ -198,6 +198,49 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'pemasakans') {
+
+                $query = \App\Models\Pemasakan::query()
+                    ->where(function ($q) use ($columns, $txt_cari) {
+
+                        foreach ($columns as $col) {
+                            $q->orWhere(
+                                DB::raw("CAST($col AS CHAR)"),
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        }
+                    })
+                    ->limit(50)
+                    ->get();
+
+                $allUUID = [];
+
+                foreach ($query as $row) {
+
+                    if (is_array($row->kode_produksi)) {
+                        $allUUID = array_merge(
+                            $allUUID,
+                            $row->kode_produksi
+                        );
+                    }
+                }
+
+                $allUUID = array_unique($allUUID);
+
+                $stuffingData = collect();
+
+                if (!empty($allUUID)) {
+                    $stuffingData = \App\Models\Mincing::whereIn('uuid', $allUUID)
+                        ->orWhereIn('kode_produksi', $allUUID)
+                        ->get()
+                        ->keyBy('uuid');
+                }
+
+                foreach ($query as $row) {
+                    $row->stuffingData = $stuffingData;
+                }
+
             } else {
 
                 $query = DB::table($table)
