@@ -4091,6 +4091,401 @@
 
             @break
 
+            @case('SAMPLING')
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN SAMPLING FINISH GOOD</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal | Shift</th>
+                                        <th>Jenis Sampling</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Jumlah</th>
+                                        <th>Jamur</th>
+                                        <th>Lendir</th>
+                                        <th>Klip Tajam</th>
+                                        <th>Pin Hole</th>
+                                        <th>Air Trap PVDC</th>
+                                        <th>Air Trap Produk</th>
+                                        <th>Keriput</th>
+                                        <th>Bengkok</th>
+                                        <th>Non Kode</th>
+                                        <th>Over Lap</th>
+                                        <th>Kecil</th>
+                                        <th>Terjepit</th>
+                                        <th>Double Klip</th>
+                                        <th>Seal Halus</th>
+                                        <th>Basah</th>
+                                        <th>Dll</th>
+                                        <th>Catatan</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+
+                                                |
+
+                                                Shift:
+                                                {{ $dep->shift ?? '-' }}
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->jenis_sampel ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @php
+                                                    $kodeBatch = $dep->kode_produksi ?? '-';
+
+                                                    if (
+                                                        $kodeBatch &&
+                                                        \Illuminate\Support\Str::isUuid($kodeBatch)
+                                                    ) {
+                                                        $kodeBatch = \App\Models\Mincing::where(
+                                                            'uuid',
+                                                            $kodeBatch
+                                                        )->value('kode_produksi') ?? $kodeBatch;
+                                                    }
+                                                @endphp
+
+                                                {{ $kodeBatch }}
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->jumlah ?? '-' }}
+                                                {{ $dep->jenis_kemasan ?? '' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->jamur ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->jamur, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->jamur ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->lendir ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->lendir, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->lendir ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->klip_tajam ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->klip_tajam, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->klip_tajam ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->pin_hole ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->pin_hole, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->pin_hole ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->air_trap_pvdc ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->air_trap_pvdc, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->air_trap_pvdc ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->air_trap_produk ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->air_trap_produk, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->air_trap_produk ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->keriput ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->keriput, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->keriput ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->bengkok ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->bengkok, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->bengkok ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->non_kode ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->non_kode, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->non_kode ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->over_lap ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->over_lap, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->over_lap ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->kecil ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->kecil, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->kecil ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->terjepit ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->terjepit, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->terjepit ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->double_klip ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->double_klip, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->double_klip ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->seal_halus ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->seal_halus, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->seal_halus ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->basah ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->basah, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->basah ?? '-') }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ is_numeric($dep->dll ?? null)
+                                                    ? rtrim(rtrim(number_format((float) $dep->dll, 2, ',', '.'), '0'), ',')
+                                                    : ($dep->dll ?? '-') }}
+                                            </td>
+
+                                            {{-- CATATAN --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->catatan)
+
+                                                    <a href="#"
+                                                        class="text-primary text-decoration-underline"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#catatanModalCombined{{ $dep->uuid ?? $dep->id }}">
+
+                                                        Lihat Catatan
+
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="catatanModalCombined{{ $dep->uuid ?? $dep->id }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-dialog-centered">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-primary text-white">
+
+                                                                    <h5 class="modal-title">
+                                                                        Catatan
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+                                                                    {{ $dep->catatan }}
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                            {{-- QC --}}
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
+                                            </td>
+
+                                            {{-- SPV --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#revisionModalCombined{{ $dep->uuid ?? $dep->id }}"
+                                                        class="text-danger fw-bold text-decoration-none"
+                                                        style="cursor: pointer;">
+
+                                                        Revision
+
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="revisionModalCombined{{ $dep->uuid ?? $dep->id }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-dialog-centered">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-danger text-white">
+
+                                                                    <h5 class="modal-title">
+                                                                        Detail Revisi
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body">
+
+                                                                    <ul class="list-unstyled mb-0">
+
+                                                                        <li>
+                                                                            <strong>Status:</strong>
+                                                                            Revision
+                                                                        </li>
+
+                                                                        <li>
+                                                                            <strong>Catatan:</strong>
+                                                                            {{ $dep->catatan_spv ?? '-' }}
+                                                                        </li>
+
+                                                                    </ul>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+
+                                                                        Tutup
+
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="25" class="text-center">
+                                                Belum ada data sampling.
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
