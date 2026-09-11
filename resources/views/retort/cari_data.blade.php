@@ -1100,7 +1100,105 @@
                     </div>
                 </div>
 
-                @break
+            @break
+
+            @case('PEMERIKSAAN KEKUATAN MAGNET')
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN KEKUATAN MAGNET TRAP</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle">
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal</th>
+                                        <th>Kondisi Visual</th>
+                                        <th>Petugas QC</th>
+                                        <th>Parameter</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $item)
+                                        <tr>
+                                            <td class="text-center">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $item->tanggal
+                                                    ? \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y')
+                                                    : ($item->created_at
+                                                        ? \Carbon\Carbon::parse($item->created_at)->format('d-m-Y')
+                                                        : '-') }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->kondisi_magnet_trap ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->petugas_qc ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                @if ($item->parameter_sesuai)
+                                                    <span class="fw-bold text-success">
+                                                        <i class="bi bi-check-circle-fill"></i>
+                                                        Sesuai
+                                                    </span>
+                                                @else
+                                                    <span class="fw-bold text-danger">
+                                                        <i class="bi bi-x-circle-fill"></i>
+                                                        Tdk Sesuai
+                                                    </span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center">
+                                                @if ($item->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        <i class="bi bi-check-circle-fill"></i>
+                                                        Verified
+                                                    </span>
+                                                @elseif ($item->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        <i class="bi bi-exclamation-circle-fill"></i>
+                                                        Revisi
+                                                    </span>
+                                                @else
+                                                    <span class="fw-bold text-secondary">
+                                                        <i class="bi bi-hourglass-split"></i>
+                                                        Pending
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                Belum ada data pemeriksaan kekuatan magnet trap.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            @break
 
 
                 @default
