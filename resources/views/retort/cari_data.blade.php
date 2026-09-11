@@ -2266,6 +2266,259 @@
 
             @break
 
+            @case('WIRE')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA NO. LOT WIRE</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Nama Supplier</th>
+                                        <th>Data Wire</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+                                    
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ !empty($dep->date)
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->nama_supplier ?? '-' }}
+                                            </td>
+
+                                            {{-- Data Wire --}}
+                                            <td class="text-center align-middle">
+
+                                                @php
+                                                    $data_wire = $dep->data_wire ?? null;
+
+                                                    if (is_string($data_wire)) {
+                                                        $data_wire = json_decode($data_wire, true);
+                                                    }
+
+                                                    if (!is_array($data_wire)) {
+                                                        $data_wire = [];
+                                                    }
+                                                @endphp
+
+                                                @if (!empty($data_wire))
+
+                                                    <a href="#"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#wireModal{{ $dep->uuid }}"
+                                                        class="fw-bold text-decoration-underline">
+                                                        Result
+                                                    </a>
+
+                                                    {{-- Modal Detail Wire --}}
+                                                    <div class="modal fade"
+                                                        id="wireModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog"
+                                                            style="max-width: 70%;">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-warning text-white">
+
+                                                                    <h5 class="modal-title">
+                                                                        Detail Pemeriksaan Wire
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+
+                                                                    @foreach ($data_wire as $mIndex => $mesin)
+
+                                                                        <div class="mb-3 border-bottom pb-3">
+
+                                                                            <h6 class="fw-bold text-primary">
+                                                                                Mesin:
+                                                                                {{ $mesin['mesin'] ?? '-' }}
+                                                                            </h6>
+
+                                                                            <table
+                                                                                class="table table-bordered table-sm text-center">
+
+                                                                                <thead class="table-light">
+
+                                                                                    <tr>
+                                                                                        <th>No</th>
+                                                                                        <th>Start - End</th>
+                                                                                        <th>No. Lot</th>
+                                                                                    </tr>
+
+                                                                                </thead>
+
+                                                                                <tbody>
+
+                                                                                    @if (!empty($mesin['detail']))
+
+                                                                                        @foreach ($mesin['detail'] as $idx => $dtl)
+
+                                                                                            <tr>
+
+                                                                                                <td>
+                                                                                                    {{ $idx + 1 }}
+                                                                                                </td>
+
+                                                                                                <td>
+                                                                                                    {{ $dtl['start'] ?? '' }}
+                                                                                                    -
+                                                                                                    {{ $dtl['end'] ?? '' }}
+                                                                                                </td>
+
+                                                                                                <td>
+                                                                                                    {{ $dtl['no_lot'] ?? '' }}
+                                                                                                </td>
+
+                                                                                            </tr>
+
+                                                                                        @endforeach
+
+                                                                                    @else
+
+                                                                                        <tr>
+                                                                                            <td colspan="3">
+                                                                                                Tidak ada data
+                                                                                            </td>
+                                                                                        </tr>
+
+                                                                                    @endif
+
+                                                                                </tbody>
+
+                                                                            </table>
+
+                                                                        </div>
+
+                                                                    @endforeach
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span>-</span>
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->username ?? '-' }}
+                                            </td>
+
+                                            {{-- Status SPV --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revisi
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="7" class="text-center">
+                                                Belum ada data Wire.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                 <div class="card shadow-sm border-0 mb-4">
