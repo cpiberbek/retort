@@ -3805,207 +3805,554 @@
 
             @break
 
-                @default
+            @case('SAMPLING FG')
 
-                <div class="card shadow-sm border-0 mb-4">
-
+                <div class="card shadow-sm mb-4">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-
-                        <span class="fw-bold">
-                            {{ $title }}
-                        </span>
-
-                        <span class="badge bg-light text-dark">
-                            {{ $data->count() }}
-                        </span>
-
+                        <span class="fw-bold">DATA PEMERIKSAAN SAMPLING FINISH GOOD</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
+                    <div class="card-body">
 
-                    <div class="table-responsive">
+                        <div class="table-responsive">
 
-                        <table class="table table-hover table-striped table-sm align-middle mb-0">
+                            <table class="table table-bordered">
 
-                            <thead class="table-light text-center">
+                                <thead class="table-secondary text-center">
 
-                                <tr>
+                                    <tr>
+                                        <th rowspan="2" style="width: 3%;">NO.</th>
+                                        <th rowspan="2" style="width: 8%;">Tanggal | Shift</th>
+                                        <th rowspan="2" style="width: 4%;">Palet</th>
+                                        <th rowspan="2" style="width: 12%;">Nama Varian</th>
+                                        <th rowspan="2" style="width: 6%;">Kode Batch</th>
+                                        <th rowspan="2" style="width: 6%;">Exp. Date</th>
 
-                                    <th style="width:50px;">
-                                        No
-                                    </th>
-
-                                    @foreach (array_keys((array) $data->first()) as $col)
-
-                                        @continue(in_array($col, $hiddenColumns))
-
-                                        <th>
-                                            {{ ucwords(str_replace('_', ' ', $col)) }}
+                                        <th colspan="4">
+                                            Pemeriksaan Proses Cartoning
                                         </th>
 
-                                    @endforeach
+                                        <th rowspan="2" style="width: 5%;">
+                                            Isi<br>/Box
+                                        </th>
 
-                                </tr>
+                                        <th rowspan="2" style="width: 4%;">
+                                            Jml<br>Box
+                                        </th>
 
-                            </thead>
+                                        <th colspan="3">
+                                            Status Varian
+                                        </th>
 
-                            <tbody>
+                                        <th rowspan="2" style="width: 5%;">
+                                            Item<br>Mutu
+                                        </th>
 
-                                @foreach ($data as $i => $row)
+                                        <th rowspan="2" style="width: 8%;">
+                                            Catatan
+                                        </th>
+
+                                        <th rowspan="2" style="width: 4%;">
+                                            QC
+                                        </th>
+
+                                        <th rowspan="2" style="width: 4%;">
+                                            Koord
+                                        </th>
+
+                                        <th rowspan="2" style="width: 4%;">
+                                            SPV
+                                        </th>
+                                    </tr>
 
                                     <tr>
 
-                                        <td class="text-center">
-                                            {{ $i + 1 }}
-                                        </td>
+                                        <th style="width: 4%;">
+                                            Jam
+                                        </th>
 
-                                        @foreach ((array) $row as $key => $value)
+                                        <th style="width: 4%;">
+                                            Kalib
+                                        </th>
 
-                                            @continue(in_array($key, $hiddenColumns))
+                                        <th style="width: 4%;">
+                                            Berat
+                                        </th>
 
-                                            <td style="max-width: 250px; word-wrap: break-word;">
+                                        <th style="width: 5%;">
+                                            Ket
+                                        </th>
 
-                                                @if ($key == 'plant' && isset($row->plant_nama))
+                                        <th style="width: 3%;">
+                                            Rls
+                                        </th>
 
-                                                    <span class="badge bg-info text-dark">
-                                                        {{ $row->plant_nama }}
+                                        <th style="width: 3%;">
+                                            Rjc
+                                        </th>
+
+                                        <th style="width: 3%;">
+                                            Hld
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+
+                                            <td class="text-center">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $dep->palet ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+
+                                                @php
+                                                    $kodeBatch = $dep->kode_produksi ?? '-';
+
+                                                    if (
+                                                        $kodeBatch &&
+                                                        \Illuminate\Support\Str::isUuid($kodeBatch)
+                                                    ) {
+                                                        $kodeBatch = \App\Models\Mincing::where(
+                                                            'uuid',
+                                                            $kodeBatch
+                                                        )->value('kode_produksi') ?? $kodeBatch;
+                                                    }
+                                                @endphp
+
+                                                {{ $kodeBatch }}
+
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $dep->exp_date
+                                                    ? \Carbon\Carbon::parse($dep->exp_date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            {{-- JAM --}}
+                                            <td class="text-center">
+                                                {{ $dep->pukul
+                                                    ? \Carbon\Carbon::parse($dep->pukul)->format('H:i')
+                                                    : '-' }}
+                                            </td>
+
+                                            {{-- KALIBRASI --}}
+                                            <td class="text-center">
+
+                                                @if ($dep->kalibrasi == 'Sesuai')
+
+                                                    <span class="text-success fw-bold">
+                                                        ✔
                                                     </span>
-
-                                                @elseif (
-                                                    Str::contains($key, ['file', 'foto', 'gambar']) &&
-                                                    $value
-                                                )
-
-                                                    <a href="{{ asset('storage/' . $value) }}"
-                                                        target="_blank"
-                                                        class="btn btn-sm btn-outline-primary">
-                                                        Lihat File
-                                                    </a>
-
-                                                @elseif (
-                                                    is_string($value) &&
-                                                    Str::startsWith($value, ['{', '['])
-                                                )
-
-                                                    @php
-                                                        $decoded = json_decode($value, true);
-                                                    @endphp
-
-                                                    @if (
-                                                        json_last_error() === JSON_ERROR_NONE &&
-                                                        is_array($decoded)
-                                                    )
-
-                                                        <div class="bg-light border rounded p-2 small"
-                                                            style="max-height:180px; overflow:auto;">
-
-                                                            @if (
-                                                                isset($decoded[0]) &&
-                                                                is_array($decoded[0]) &&
-                                                                isset($decoded[0]['area'])
-                                                            )
-
-                                                                @foreach ($decoded as $rowJson)
-
-                                                                    <div>
-                                                                        {{ $rowJson['area'] ?? '-' }} :
-                                                                        <strong>
-                                                                            {{ $rowJson['nilai'] ?? '-' }}
-                                                                        </strong>
-                                                                    </div>
-
-                                                                @endforeach
-
-                                                            @else
-
-                                                                @foreach ($decoded as $item => $detail)
-
-                                                                    @if (is_array($detail))
-
-                                                                        <div class="mb-2">
-
-                                                                            <strong>
-                                                                                {{ $item }}
-                                                                            </strong>
-
-                                                                            <ul class="mb-1 ps-3">
-
-                                                                                @foreach ($detail as $k => $v)
-
-                                                                                    @continue(empty($v))
-
-                                                                                    <li>
-
-                                                                                        @if ($v == '✔')
-
-                                                                                            <span class="badge bg-success">
-                                                                                                OK
-                                                                                            </span>
-
-                                                                                        @elseif ($k == 'keterangan')
-
-                                                                                            <span class="text-danger">
-                                                                                                {{ $v }}
-                                                                                            </span>
-
-                                                                                        @else
-
-                                                                                            {{ $k }}:
-                                                                                            {{ $v }}
-
-                                                                                        @endif
-
-                                                                                    </li>
-
-                                                                                @endforeach
-
-                                                                            </ul>
-
-                                                                        </div>
-
-                                                                    @else
-
-                                                                        <div>
-                                                                            <strong>
-                                                                                {{ $item }}:
-                                                                            </strong>
-
-                                                                            {{ $detail }}
-                                                                        </div>
-
-                                                                    @endif
-
-                                                                @endforeach
-
-                                                            @endif
-
-                                                        </div>
-
-                                                    @else
-
-                                                        {{ $value }}
-
-                                                    @endif
 
                                                 @else
 
-                                                    {{ $value ?? '-' }}
+                                                    <span class="text-danger fw-bold">
+                                                        ✘
+                                                    </span>
 
                                                 @endif
 
                                             </td>
 
-                                        @endforeach
+                                            {{-- BERAT --}}
+                                            <td class="text-center">
+                                                {{ $dep->berat_produk ?? '-' }}
+                                            </td>
 
-                                    </tr>
+                                            {{-- KETERANGAN --}}
+                                            <td class="text-center small">
+                                                {{ $dep->keterangan ?? '-' }}
+                                            </td>
 
-                                @endforeach
+                                            {{-- ISI / BOX --}}
+                                            <td class="text-center">
+                                                {{ $dep->isi_per_box ?? '-' }}
+                                            </td>
 
-                            </tbody>
+                                            {{-- JUMLAH BOX --}}
+                                            <td class="text-center">
+                                                {{ $dep->jumlah_box ?? '-' }}
+                                            </td>
 
-                        </table>
+                                            {{-- RELEASE --}}
+                                            <td class="text-center">
+                                                {{ $dep->release ?? '-' }}
+                                            </td>
+
+                                            {{-- REJECT --}}
+                                            <td class="text-center">
+                                                {{ $dep->reject ?? '-' }}
+                                            </td>
+
+                                            {{-- HOLD --}}
+                                            <td class="text-center">
+                                                {{ $dep->hold ?? '-' }}
+                                            </td>
+
+                                            {{-- ITEM MUTU --}}
+                                            <td class="text-center small">
+                                                {{ $dep->item_mutu ?? '-' }}
+                                            </td>
+
+                                            {{-- CATATAN --}}
+                                            <td class="text-start small">
+                                                {{ $dep->catatan ?? '-' }}
+                                            </td>
+
+                                            {{-- QC --}}
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
+                                            </td>
+
+                                            {{-- KOORD --}}
+                                            <td class="text-center">
+                                                {{ $dep->nama_koordinator ?? '-' }}
+                                            </td>
+
+                                            {{-- STATUS SPV --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revisi
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="fw-bold text-secondary">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="20" class="text-center py-3">
+                                                Belum ada data.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
 
                     </div>
 
                 </div>
+
+            @break
+
+                @default
+
+                    <div class="card shadow-sm border-0 mb-4">
+
+                        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+
+                            <span class="fw-bold">
+                                {{ $title }}
+                            </span>
+
+                            <span class="badge bg-light text-dark">
+                                {{ $data->count() }}
+                            </span>
+
+                        </div>
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover table-striped table-sm align-middle mb-0">
+
+                                <thead class="table-light text-center">
+
+                                    <tr>
+
+                                        <th style="width:50px;">
+                                            No
+                                        </th>
+
+                                        @foreach (array_keys((array) $data->first()) as $col)
+
+                                            @continue(in_array($col, $hiddenColumns))
+
+                                            <th>
+                                                {{ ucwords(str_replace('_', ' ', $col)) }}
+                                            </th>
+
+                                        @endforeach
+
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @foreach ($data as $i => $row)
+
+                                        <tr>
+
+                                            <td class="text-center">
+                                                {{ $i + 1 }}
+                                            </td>
+
+                                            @foreach ((array) $row as $key => $value)
+
+                                                @continue(in_array($key, $hiddenColumns))
+
+                                                <td style="max-width: 250px; word-wrap: break-word;">
+
+                                                    @if ($key == 'plant' && isset($row->plant_nama))
+
+                                                        <span class="badge bg-info text-dark">
+                                                            {{ $row->plant_nama }}
+                                                        </span>
+
+                                                    @elseif (
+                                                        Str::contains($key, ['file', 'foto', 'gambar']) &&
+                                                        $value
+                                                    )
+
+                                                        <a href="{{ asset('storage/' . $value) }}"
+                                                            target="_blank"
+                                                            class="btn btn-sm btn-outline-primary">
+                                                            Lihat File
+                                                        </a>
+
+                                                    @elseif (is_array($value))
+
+                                                        <div class="bg-light border rounded p-2 small"
+                                                            style="max-height:180px; overflow:auto;">
+
+                                                            @foreach ($value as $arrayKey => $arrayValue)
+
+                                                                @if (is_array($arrayValue))
+
+                                                                    <div class="mb-2">
+
+                                                                        <strong>
+                                                                            {{ is_string($arrayKey)
+                                                                                ? ucwords(str_replace('_', ' ', $arrayKey))
+                                                                                : 'Data' }}
+                                                                        </strong>
+
+                                                                        <ul class="mb-1 ps-3">
+
+                                                                            @foreach ($arrayValue as $subKey => $subValue)
+
+                                                                                @if (is_array($subValue))
+
+                                                                                    <li>
+                                                                                        {{ $subKey }}:
+                                                                                        {{ json_encode($subValue, JSON_UNESCAPED_UNICODE) }}
+                                                                                    </li>
+
+                                                                                @else
+
+                                                                                    <li>
+                                                                                        {{ $subKey }}:
+                                                                                        {{ $subValue ?? '-' }}
+                                                                                    </li>
+
+                                                                                @endif
+
+                                                                            @endforeach
+
+                                                                        </ul>
+
+                                                                    </div>
+
+                                                                @else
+
+                                                                    <div>
+                                                                        <strong>
+                                                                            {{ is_string($arrayKey)
+                                                                                ? ucwords(str_replace('_', ' ', $arrayKey)) . ':'
+                                                                                : '' }}
+                                                                        </strong>
+
+                                                                        {{ $arrayValue ?? '-' }}
+                                                                    </div>
+
+                                                                @endif
+
+                                                            @endforeach
+
+                                                        </div>
+
+                                                    @elseif (
+                                                        is_string($value) &&
+                                                        Str::startsWith($value, ['{', '['])
+                                                    )
+
+                                                        @php
+                                                            $decoded = json_decode($value, true);
+                                                        @endphp
+
+                                                        @if (
+                                                            json_last_error() === JSON_ERROR_NONE &&
+                                                            is_array($decoded)
+                                                        )
+
+                                                            <div class="bg-light border rounded p-2 small"
+                                                                style="max-height:180px; overflow:auto;">
+
+                                                                @if (
+                                                                    isset($decoded[0]) &&
+                                                                    is_array($decoded[0]) &&
+                                                                    isset($decoded[0]['area'])
+                                                                )
+
+                                                                    @foreach ($decoded as $rowJson)
+
+                                                                        <div>
+                                                                            {{ $rowJson['area'] ?? '-' }} :
+                                                                            <strong>
+                                                                                {{ $rowJson['nilai'] ?? '-' }}
+                                                                            </strong>
+                                                                        </div>
+
+                                                                    @endforeach
+
+                                                                @else
+
+                                                                    @foreach ($decoded as $item => $detail)
+
+                                                                        @if (is_array($detail))
+
+                                                                            <div class="mb-2">
+
+                                                                                <strong>
+                                                                                    {{ $item }}
+                                                                                </strong>
+
+                                                                                <ul class="mb-1 ps-3">
+
+                                                                                    @foreach ($detail as $k => $v)
+
+                                                                                        @continue(empty($v))
+
+                                                                                        <li>
+
+                                                                                            @if ($v == '✔')
+
+                                                                                                <span class="badge bg-success">
+                                                                                                    OK
+                                                                                                </span>
+
+                                                                                            @elseif ($k == 'keterangan')
+
+                                                                                                <span class="text-danger">
+                                                                                                    {{ $v }}
+                                                                                                </span>
+
+                                                                                            @else
+
+                                                                                                {{ $k }}:
+                                                                                                {{ $v }}
+
+                                                                                            @endif
+
+                                                                                        </li>
+
+                                                                                    @endforeach
+
+                                                                                </ul>
+
+                                                                            </div>
+
+                                                                        @else
+
+                                                                            <div>
+                                                                                <strong>
+                                                                                    {{ $item }}:
+                                                                                </strong>
+
+                                                                                {{ $detail }}
+                                                                            </div>
+
+                                                                        @endif
+
+                                                                    @endforeach
+
+                                                                @endif
+
+                                                            </div>
+
+                                                        @else
+
+                                                            {{ $value }}
+
+                                                        @endif
+
+                                                    @else
+
+                                                        {{ $value ?? '-' }}
+
+                                                    @endif
+
+                                                </td>
+
+                                            @endforeach
+
+                                        </tr>
+
+                                    @endforeach
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
 
                 @break
 

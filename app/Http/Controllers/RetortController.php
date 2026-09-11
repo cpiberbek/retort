@@ -115,6 +115,7 @@ class RetortController extends Controller
                             );
                         }
                     })
+                    ->orderBy('created_at', 'desc')
                     ->limit(50)
                     ->get();
 
@@ -139,10 +140,11 @@ class RetortController extends Controller
                             );
                         });
                     })
+                    ->orderBy('created_at', 'desc')
                     ->limit(50)
                     ->get();
 
-            }  elseif ($table === 'pvdcs') {
+            } elseif ($table === 'pvdcs') {
 
                 $query = \App\Models\Pvdc::query()
                     ->where(function ($q) use ($columns, $txt_cari) {
@@ -155,10 +157,11 @@ class RetortController extends Controller
                             );
                         }
                     })
+                    ->orderBy('created_at', 'desc')
                     ->limit(50)
                     ->get();
 
-            }  elseif ($table === 'wires') {
+            } elseif ($table === 'wires') {
 
                 $query = \App\Models\Wire::query()
                     ->where(function ($q) use ($columns, $txt_cari) {
@@ -171,10 +174,11 @@ class RetortController extends Controller
                             );
                         }
                     })
+                    ->orderBy('created_at', 'desc')
                     ->limit(50)
                     ->get();
 
-            }  elseif ($table === 'washings') {
+            } elseif ($table === 'washings') {
 
                 $query = \App\Models\Washing::with('mincing')
                     ->where(function ($q) use ($columns, $txt_cari) {
@@ -195,6 +199,7 @@ class RetortController extends Controller
                             );
                         });
                     })
+                    ->orderBy('created_at', 'desc')
                     ->limit(50)
                     ->get();
 
@@ -211,6 +216,7 @@ class RetortController extends Controller
                             );
                         }
                     })
+                    ->orderBy('created_at', 'desc')
                     ->limit(50)
                     ->get();
 
@@ -241,6 +247,33 @@ class RetortController extends Controller
                     $row->stuffingData = $stuffingData;
                 }
 
+            } elseif ($table === 'sampling_fgs') {
+
+                $kodeProduksi = \App\Models\Mincing::where(
+                    'kode_produksi',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Sampling_fg::query()
+                    ->where(function ($q) use ($txt_cari, $kodeProduksi) {
+
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('item_mutu', 'like', "%{$txt_cari}%")
+                            ->orWhere('catatan', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_koordinator', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_spv', 'like', "%{$txt_cari}%");
+
+                        if ($kodeProduksi->isNotEmpty()) {
+                            $q->orWhereIn('kode_produksi', $kodeProduksi);
+                        }
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
@@ -254,9 +287,10 @@ class RetortController extends Controller
                             );
                         }
                     })
+                    ->orderBy('created_at', 'desc')
                     ->limit(50)
                     ->get();
-            } 
+            }
 
             $results[$table] = $query;
 
