@@ -80,7 +80,7 @@
 
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">FORM MINCING</span>
+                        <span class="fw-bold">DATA MINCING</span>
                         <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
                     <div class="card-body">
@@ -728,7 +728,7 @@
 
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                        <span class="fw-bold">FORM METAL DETECTOR</span>
+                        <span class="fw-bold">DATA METAL DETECTOR</span>
                         <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
                     <div class="card-body">
@@ -989,6 +989,118 @@
                 </div>
 
             @break
+
+            @case('MAGNET TRAP')
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA CLEANING MAGNET TRAP</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle">
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Tanggal | Pukul</th>
+                                        <th>Jml Temuan</th>
+                                        <th>Status</th>
+                                        <th>Keterangan</th>
+                                        <th>Produksi</th>
+                                        <th>Engineer</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $item)
+                                        <tr>
+                                            <td class="text-center">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $item->mincing->kode_produksi ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ \Carbon\Carbon::parse($item->tanggal ?? $item->created_at)->format('d-m-Y') }}
+                                                <br>
+                                                <span class="text-muted small">
+                                                    {{ $item->pukul ? \Carbon\Carbon::parse($item->pukul)->format('H:i') : '-' }}
+                                                </span>
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ $item->jumlah_temuan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                @if ($item->status == 'v')
+                                                    <span class="fw-bold text-success">
+                                                        <i class="bi bi-check-circle-fill"></i> OK
+                                                    </span>
+                                                @else
+                                                    <span class="fw-bold text-danger">
+                                                        <i class="bi bi-x-circle-fill"></i> NOT OK
+                                                    </span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ Str::limit($item->keterangan ?? '-', 35) }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ optional($item->produksi)->nama_karyawan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                {{ optional($item->engineer)->nama_karyawan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center">
+                                                @if ($item->status_spv == 1)
+                                                    <span class="badge-status status-verified">
+                                                        <i class="fas fa-check-circle me-1"></i>Verified
+                                                    </span>
+                                                @elseif ($item->status_spv == 2)
+                                                    <span class="badge-status status-revision">
+                                                        <i class="fas fa-exclamation-circle me-1"></i>Revision
+                                                    </span>
+                                                @else
+                                                    <span class="badge-status status-pending">
+                                                        <i class="fas fa-clock me-1"></i>Pending
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center">
+                                                Belum ada data cleaning magnet trap.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                @break
 
 
                 @default

@@ -101,25 +101,47 @@ class RetortController extends Controller
                 // 🔥 ambil semua kolom
                 $columns = DB::getSchemaBuilder()->getColumnListing($table);
 
-                $query = DB::table($table)
-                    ->where(function ($q) use ($columns, $txt_cari) {
+                if ($table === 'magnet_traps') {
 
-                        foreach ($columns as $col) {
+                    $query = \App\Models\MagnetTrapModel::query()
+                        ->with(['updater', 'mincing', 'produksi', 'engineer'])
+                        ->where(function ($q) use ($columns, $txt_cari) {
 
-                            $q->orWhere(
-                                DB::raw("CAST($col AS CHAR)"),
-                                'like',
-                                "%{$txt_cari}%"
-                            );
-                        }
-                    })
-                    ->limit(50)
-                    ->get();
+                            foreach ($columns as $col) {
+                                $q->orWhere(
+                                    DB::raw("CAST($col AS CHAR)"),
+                                    'like',
+                                    "%{$txt_cari}%"
+                                );
+                            }
+                        })
+                        ->limit(50)
+                        ->get();
+
+                } else {
+
+                    $query = DB::table($table)
+                        ->where(function ($q) use ($columns, $txt_cari) {
+
+                            foreach ($columns as $col) {
+                                $q->orWhere(
+                                    DB::raw("CAST($col AS CHAR)"),
+                                    'like',
+                                    "%{$txt_cari}%"
+                                );
+                            }
+                        })
+                        ->limit(50)
+                        ->get();
+                }
 
                 $results[$table] = $query;
             } catch (\Exception $e) {
 
-                // 🔥 kalau tabel error tetap lanjut
+                if ($table === 'magnet_traps') {
+                    dd($e->getMessage());
+                }
+
                 $results[$table] = collect();
             }
         }
