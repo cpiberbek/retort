@@ -96,55 +96,76 @@ class RetortController extends Controller
 
         foreach ($tables as $table) {
 
-            try {
+        try {
 
-                // 🔥 ambil semua kolom
-                $columns = DB::getSchemaBuilder()->getColumnListing($table);
+            // Ambil semua kolom
+            $columns = DB::getSchemaBuilder()->getColumnListing($table);
 
-                if ($table === 'magnet_traps') {
+            if ($table === 'magnet_traps') {
 
-                    $query = \App\Models\MagnetTrapModel::query()
-                        ->with(['updater', 'mincing', 'produksi', 'engineer'])
-                        ->where(function ($q) use ($columns, $txt_cari) {
+                $query = \App\Models\MagnetTrapModel::query()
+                    ->with(['updater', 'mincing', 'produksi', 'engineer'])
+                    ->where(function ($q) use ($columns, $txt_cari) {
 
-                            foreach ($columns as $col) {
-                                $q->orWhere(
-                                    DB::raw("CAST($col AS CHAR)"),
-                                    'like',
-                                    "%{$txt_cari}%"
-                                );
-                            }
-                        })
-                        ->limit(50)
-                        ->get();
+                        foreach ($columns as $col) {
+                            $q->orWhere(
+                                DB::raw("CAST($col AS CHAR)"),
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        }
+                    })
+                    ->limit(50)
+                    ->get();
 
-                } else {
+            } elseif ($table === 'stuffings') {
 
-                    $query = DB::table($table)
-                        ->where(function ($q) use ($columns, $txt_cari) {
+                $query = \App\Models\Stuffing::with('mincing')
+                    ->where(function ($q) use ($columns, $txt_cari) {
 
-                            foreach ($columns as $col) {
-                                $q->orWhere(
-                                    DB::raw("CAST($col AS CHAR)"),
-                                    'like',
-                                    "%{$txt_cari}%"
-                                );
-                            }
-                        })
-                        ->limit(50)
-                        ->get();
-                }
+                        foreach ($columns as $col) {
+                            $q->orWhere(
+                                DB::raw("CAST($col AS CHAR)"),
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        }
 
-                $results[$table] = $query;
-            } catch (\Exception $e) {
+                        $q->orWhereHas('mincing', function ($m) use ($txt_cari) {
+                            $m->where(
+                                'kode_produksi',
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        });
+                    })
+                    ->limit(50)
+                    ->get();
 
-                if ($table === 'magnet_traps') {
-                    dd($e->getMessage());
-                }
+            } else {
 
-                $results[$table] = collect();
+                $query = DB::table($table)
+                    ->where(function ($q) use ($columns, $txt_cari) {
+
+                        foreach ($columns as $col) {
+                            $q->orWhere(
+                                DB::raw("CAST($col AS CHAR)"),
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        }
+                    })
+                    ->limit(50)
+                    ->get();
             }
+
+            $results[$table] = $query;
+
+        } catch (\Exception $e) {
+
+            $results[$table] = collect();
         }
+    }
 
         return view('retort.cari_data', $results);
     }
