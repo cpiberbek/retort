@@ -640,7 +640,7 @@
 
                                             </td>
 
-                                            <td class="text-center">
+                                            <td class="text-center align-middle">
                                                 {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
                                             </td>
 
@@ -790,7 +790,7 @@
                                                     : '<span class="text-danger fw-bold">x</span>' !!}
                                             </td>
 
-                                            <td class="text-center">
+                                            <td class="text-center align-middle">
                                                 {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
                                             </td>
 
@@ -1581,7 +1581,7 @@
 
                                             </td>
 
-                                            <td class="text-center">
+                                            <td class="text-center align-middle">
                                                 {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
                                             </td>
 
@@ -1691,8 +1691,230 @@
 
             @break
 
+            @case('LABELISASI PVDC')
 
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA KONTROL LABELISASI PVDC</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
 
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle">
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Hasil Pemeriksaan</th>
+                                        <th>QC</th>
+                                        <th>Operator</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                <br>
+                                                <span class="text-muted small">
+                                                    Shift: {{ $dep->shift ?? '-' }}
+                                                </span>
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            {{-- Modal Result --}}
+                                            <td class="text-center align-middle">
+
+                                                @if (!empty($dep->uuid))
+
+                                                    <a href="#"
+                                                        class="fw-bold text-decoration-underline btn-result-combined"
+                                                        data-uuid="{{ $dep->uuid }}">
+                                                        Result
+                                                    </a>
+
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_operator ?? '-' }}
+                                            </td>
+
+                                            {{-- Status SPV --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <a href="#"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#labelisasiRevisionModal{{ $dep->uuid }}"
+                                                        class="text-danger fw-bold text-decoration-none">
+                                                        Revision
+                                                    </a>
+
+                                                    {{-- Modal Revision --}}
+                                                    <div class="modal fade"
+                                                        id="labelisasiRevisionModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-dialog-centered">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-danger text-white">
+
+                                                                    <h5 class="modal-title">
+                                                                        Detail Revisi
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+
+                                                                    <ul class="list-unstyled mb-0">
+
+                                                                        <li>
+                                                                            <strong>Status:</strong>
+                                                                            Revision
+                                                                        </li>
+
+                                                                        <li>
+                                                                            <strong>Catatan:</strong>
+                                                                            {{ $dep->catatan_spv ?? '-' }}
+                                                                        </li>
+
+                                                                    </ul>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="7" class="text-center align-middle">
+                                                Belum ada data labelisasi PVDC.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Result Modal --}}
+                <script>
+                    document.addEventListener('click', function (e) {
+
+                        const button = e.target.closest('.btn-result-combined');
+
+                        if (!button) {
+                            return;
+                        }
+
+                        e.preventDefault();
+
+                        const uuid = button.dataset.uuid;
+
+                        fetch("{{ url('/labelisasi-pvdc') }}/" + uuid + "/result")
+                            .then(response => response.text())
+                            .then(html => {
+
+                                document.body.insertAdjacentHTML('beforeend', html);
+
+                                const modalElement =
+                                    document.getElementById('resultModal' + uuid);
+
+                                if (!modalElement) {
+                                    return;
+                                }
+
+                                const modal = new bootstrap.Modal(modalElement);
+
+                                modalElement.addEventListener(
+                                    'hidden.bs.modal',
+                                    function () {
+                                        this.remove();
+                                    }
+                                );
+
+                                modal.show();
+                            })
+                            .catch(error => {
+                                console.error('Gagal mengambil result:', error);
+                            });
+
+                    });
+                </script>
+
+            @break
 
                 @default
 
