@@ -1916,6 +1916,356 @@
 
             @break
 
+            @case('PVDC')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA NO. LOT PVDC</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Nama Supplier</th>
+                                        <th>Tanggal Kedatangan</th>
+                                        <th>Tanggal Expired</th>
+                                        <th>Data PVDC</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                {{ $dep->nama_produk ?? '-' }}
+
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->nama_supplier ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->tgl_kedatangan)
+                                                    ? \Carbon\Carbon::parse($dep->tgl_kedatangan)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->tgl_expired)
+                                                    ? \Carbon\Carbon::parse($dep->tgl_expired)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            {{-- Data PVDC --}}
+                                            <td class="text-center align-middle">
+
+                                                @php
+                                                    $data_pvdc = is_string($dep->data_pvdc ?? null)
+                                                        ? json_decode($dep->data_pvdc, true)
+                                                        : ($dep->data_pvdc ?? null);
+                                                @endphp
+
+                                                @if (!empty($data_pvdc) && !empty($dep->pvdc_detail))
+
+                                                    @php
+                                                        $batches = collect($dep->pvdc_detail)
+                                                            ->flatMap(function ($mesin) {
+                                                                return collect($mesin['detail'] ?? [])
+                                                                    ->map(function ($detail) {
+                                                                        return data_get(
+                                                                            $detail,
+                                                                            'mincing.kode_produksi'
+                                                                        );
+                                                                    })
+                                                                    ->filter();
+                                                            })
+                                                            ->unique()
+                                                            ->values()
+                                                            ->implode(', ');
+                                                    @endphp
+
+                                                    <a href="#"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#pvdcModal{{ $dep->uuid }}"
+                                                        style="font-weight: bold; text-decoration: underline;">
+                                                        Result
+                                                    </a>
+
+                                                    {{-- Modal Detail PVDC --}}
+                                                    <div class="modal fade"
+                                                        id="pvdcModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-labelledby="pvdcModalLabel{{ $dep->uuid }}"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-warning text-white">
+
+                                                                    <h5 class="modal-title"
+                                                                        id="pvdcModalLabel{{ $dep->uuid }}">
+                                                                        Detail Pemeriksaan PVDC -
+                                                                        Batch: {{ $batches ?: 'N/A' }}
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body table-responsive">
+
+                                                                    @foreach ($dep->pvdc_detail as $mIndex => $mesin)
+
+                                                                        <div class="mb-3 border p-3 rounded bg-light">
+
+                                                                            <h6 class="fw-bold mb-2">
+                                                                                Mesin:
+                                                                                {{ $mesin['mesin'] ?? '-' }}
+                                                                            </h6>
+
+                                                                            <table
+                                                                                class="table table-bordered table-striped table-sm text-center align-middle bg-white">
+
+                                                                                <thead class="table-secondary">
+
+                                                                                    <tr>
+                                                                                        <th>No</th>
+                                                                                        <th>Batch</th>
+                                                                                        <th>No. Lot</th>
+                                                                                        <th>Waktu</th>
+                                                                                    </tr>
+
+                                                                                </thead>
+
+                                                                                <tbody>
+
+                                                                                    @if (!empty($mesin['detail']))
+
+                                                                                        @foreach ($mesin['detail'] as $index => $detail)
+
+                                                                                            <tr>
+
+                                                                                                <td>
+                                                                                                    {{ $loop->iteration }}
+                                                                                                </td>
+
+                                                                                                <td>
+                                                                                                    {{ data_get($detail, 'mincing.kode_produksi') ?? '-' }}
+                                                                                                </td>
+
+                                                                                                <td>
+                                                                                                    {{ $detail['no_lot'] ?? '-' }}
+                                                                                                </td>
+
+                                                                                                <td>
+                                                                                                    {{ $detail['waktu'] ?? '-' }}
+                                                                                                </td>
+
+                                                                                            </tr>
+
+                                                                                        @endforeach
+
+                                                                                    @else
+
+                                                                                        <tr>
+                                                                                            <td colspan="4">
+                                                                                                Tidak ada data batch
+                                                                                            </td>
+                                                                                        </tr>
+
+                                                                                    @endif
+
+                                                                                </tbody>
+
+                                                                            </table>
+
+                                                                        </div>
+
+                                                                    @endforeach
+
+                                                                    <div class="mt-3 text-start">
+                                                                        <strong>Catatan:</strong>
+                                                                        {{ $dep->catatan ?? '-' }}
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span>-</span>
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->username ?? '-' }}
+                                            </td>
+
+                                            {{-- Status SPV --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#revisionModal{{ $dep->uuid }}"
+                                                        class="text-danger fw-bold text-decoration-none">
+                                                        Revision
+                                                    </a>
+
+                                                    {{-- Modal Revisi --}}
+                                                    <div class="modal fade"
+                                                        id="revisionModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-dialog-centered">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-danger text-white">
+
+                                                                    <h5 class="modal-title">
+                                                                        Detail Revisi
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+
+                                                                    <ul class="list-unstyled mb-0">
+
+                                                                        <li>
+                                                                            <strong>Status:</strong>
+                                                                            Revision
+                                                                        </li>
+
+                                                                        <li>
+                                                                            <strong>Catatan:</strong>
+                                                                            {{ $dep->catatan_spv ?? '-' }}
+                                                                        </li>
+
+                                                                    </ul>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="9" class="text-center">
+                                                Belum ada data PVDC.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                 <div class="card shadow-sm border-0 mb-4">

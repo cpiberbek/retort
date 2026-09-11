@@ -142,6 +142,22 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            }  elseif ($table === 'pvdcs') {
+
+                $query = \App\Models\Pvdc::query()
+                    ->where(function ($q) use ($columns, $txt_cari) {
+
+                        foreach ($columns as $col) {
+                            $q->orWhere(
+                                DB::raw("CAST($col AS CHAR)"),
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        }
+                    })
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
@@ -157,7 +173,7 @@ class RetortController extends Controller
                     })
                     ->limit(50)
                     ->get();
-            }
+            } 
 
             $results[$table] = $query;
 
