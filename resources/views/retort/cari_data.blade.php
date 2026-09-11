@@ -2154,7 +2154,7 @@
                                             </td>
 
                                             <td class="text-center align-middle">
-                                                {{ $dep->username ?? '-' }}
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
                                             </td>
 
                                             {{-- Status SPV --}}
@@ -2467,7 +2467,7 @@
                                             </td>
 
                                             <td class="text-center align-middle">
-                                                {{ $dep->username ?? '-' }}
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
                                             </td>
 
                                             {{-- Status SPV --}}
@@ -2502,6 +2502,564 @@
                                         <tr>
                                             <td colspan="7" class="text-center">
                                                 Belum ada data Wire.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
+            @case('WASHING')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN WASHING DRYING</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Waktu</th>
+                                        <th>Pemeriksaan</th>
+                                        <th>QC</th>
+                                        <th>Produksi</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->date)
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->mincing->kode_produksi ?? $dep->kode_produksi ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->pukul)
+                                                    ? \Carbon\Carbon::parse($dep->pukul)->format('H:i')
+                                                    : '-' }}
+                                            </td>
+
+                                            {{-- PEMERIKSAAN --}}
+                                            <td class="text-center align-middle">
+
+                                                <a href="javascript:void(0);"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#detailModal{{ $dep->uuid }}"
+                                                    class="text-primary fw-bold text-decoration-none"
+                                                    style="cursor: pointer;">
+                                                    Result
+                                                </a>
+
+                                                {{-- Modal Detail --}}
+                                                <div class="modal fade"
+                                                    id="detailModal{{ $dep->uuid }}"
+                                                    tabindex="-1"
+                                                    aria-labelledby="detailModalLabel{{ $dep->uuid }}"
+                                                    aria-hidden="true">
+
+                                                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+
+                                                        <div class="modal-content">
+
+                                                            <div class="modal-header bg-primary text-white">
+
+                                                                <h5 class="modal-title"
+                                                                    id="detailModalLabel{{ $dep->uuid }}">
+                                                                    Detail Pemeriksaan Washing - Drying
+                                                                </h5>
+
+                                                                <button type="button"
+                                                                    class="btn-close btn-close-white"
+                                                                    data-bs-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                </button>
+
+                                                            </div>
+
+                                                            <div class="modal-body text-start">
+
+                                                                {{-- IDENTIFIKASI --}}
+                                                                <h6 class="text-secondary fw-bold mt-2">
+                                                                    Identifikasi
+                                                                </h6>
+
+                                                                <table class="table table-bordered table-sm mb-3">
+
+                                                                    <tbody>
+
+                                                                        <tr>
+                                                                            <th style="width: 50%;">
+                                                                                Nama Varian
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->nama_produk ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Kode Batch
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->mincing->kode_produksi ?? $dep->kode_produksi ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                                {{-- PENGECEKAN --}}
+                                                                <h6 class="text-primary fw-bold mt-2">
+                                                                    <i class="bi bi-check2-square me-1"></i>
+                                                                    Pengecekan
+                                                                </h6>
+
+                                                                <table class="table table-bordered table-sm mb-3">
+
+                                                                    <tbody>
+
+                                                                        <tr>
+                                                                            <th style="width: 50%;">
+                                                                                Panjang Varian Akhir (Cm)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->panjang_produk ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Diameter Varian Akhir (Mm)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->diameter_produk ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Airtrap
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->airtrap ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Lengket
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->lengket ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Sisa Adonan
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->sisa_adonan ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Kekuatan Seal
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->kekuatan_seal ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Print Kode Batch
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->print_kode ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                                {{-- PC KLEER --}}
+                                                                <h6 class="text-primary fw-bold mt-2">
+                                                                    <i class="bi bi-droplet-half me-1"></i>
+                                                                    PC Kleer
+                                                                </h6>
+
+                                                                <table class="table table-bordered table-sm mb-3">
+
+                                                                    <tbody>
+
+                                                                        <tr>
+                                                                            <th style="width: 50%;">
+                                                                                Konsentrasi PC Kleer 1 (%)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->konsentrasi_pckleer ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Suhu PC Kleer 1 (°C)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->suhu_pckleer_1 ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Suhu PC Kleer 2 (°C)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->suhu_pckleer_2 ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                pH PC Kleer
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->ph_pckleer ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Kondisi Air PC Kleer
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->kondisi_air_pckleer ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                                {{-- POTTASIUM SORBATE --}}
+                                                                <h6 class="text-primary fw-bold mt-2">
+                                                                    <i class="bi bi-flask me-1"></i>
+                                                                    Pottasium Sorbate
+                                                                </h6>
+
+                                                                <table class="table table-bordered table-sm mb-3">
+
+                                                                    <tbody>
+
+                                                                        <tr>
+                                                                            <th style="width: 50%;">
+                                                                                Konsentrasi Pottasium Sorbate (%)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->konsentrasi_pottasium ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Suhu Pottasium Sorbate (°C)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->suhu_pottasium ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                pH Pottasium Sorbate
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->ph_pottasium ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Kondisi Air Pottasium Sorbate
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->kondisi_pottasium ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                                {{-- SUHU & SPEED --}}
+                                                                <h6 class="text-primary fw-bold mt-2">
+                                                                    <i class="bi bi-speedometer2 me-1"></i>
+                                                                    Suhu & Speed Conveyor
+                                                                </h6>
+
+                                                                <table class="table table-bordered table-sm mb-3">
+
+                                                                    <tbody>
+
+                                                                        <tr>
+                                                                            <th style="width: 50%;">
+                                                                                Suhu Heater (°C)
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->suhu_heater ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Speed Conv. Drying 1
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->speed_1 ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Speed Conv. Drying 2
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->speed_2 ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Speed Conv. Drying 3
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->speed_3 ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                        <tr>
+                                                                            <th>
+                                                                                Speed Conv. Drying 4
+                                                                            </th>
+
+                                                                            <td>
+                                                                                {{ $dep->speed_4 ?? '-' }}
+                                                                            </td>
+                                                                        </tr>
+
+                                                                    </tbody>
+
+                                                                </table>
+
+                                                                {{-- CATATAN --}}
+                                                                @if (!empty($dep->catatan))
+
+                                                                    <h6 class="text-primary fw-bold mt-2">
+                                                                        <i class="bi bi-journal-text me-1"></i>
+                                                                        Catatan
+                                                                    </h6>
+
+                                                                    <p>
+                                                                        {{ $dep->catatan }}
+                                                                    </p>
+
+                                                                @endif
+
+                                                            </div>
+
+                                                            <div class="modal-footer">
+
+                                                                <button type="button"
+                                                                    class="btn btn-secondary btn-sm"
+                                                                    data-bs-dismiss="modal">
+                                                                    Tutup
+                                                                </button>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+                                            {{-- QC --}}
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? '-' }}
+                                            </td>
+
+                                            {{-- PRODUKSI --}}
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produksi ?? '-' }}
+                                            </td>
+
+                                            {{-- STATUS SPV --}}
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#revisionModal{{ $dep->uuid }}"
+                                                        class="text-danger fw-bold text-decoration-none"
+                                                        style="cursor: pointer;">
+                                                        Revision
+                                                    </a>
+
+                                                    {{-- Modal Revisi --}}
+                                                    <div class="modal fade"
+                                                        id="revisionModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-dialog-centered">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-danger text-white">
+
+                                                                    <h5 class="modal-title">
+                                                                        Detail Revisi
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+
+                                                                    <ul class="list-unstyled mb-0">
+
+                                                                        <li>
+                                                                            <strong>Status:</strong>
+                                                                            Revision
+                                                                        </li>
+
+                                                                        <li>
+                                                                            <strong>Catatan:</strong>
+                                                                            {{ $dep->catatan_spv ?? '-' }}
+                                                                        </li>
+
+                                                                    </ul>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="9" class="text-center">
+                                                Belum ada data pengecekan washing.
                                             </td>
                                         </tr>
 

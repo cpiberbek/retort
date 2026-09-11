@@ -174,6 +174,30 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            }  elseif ($table === 'washings') {
+
+                $query = \App\Models\Washing::with('mincing')
+                    ->where(function ($q) use ($columns, $txt_cari) {
+
+                        foreach ($columns as $col) {
+                            $q->orWhere(
+                                DB::raw("CAST($col AS CHAR)"),
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        }
+
+                        $q->orWhereHas('mincing', function ($m) use ($txt_cari) {
+                            $m->where(
+                                'kode_produksi',
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        });
+                    })
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
