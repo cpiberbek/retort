@@ -38,23 +38,37 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        $("#btn_cari").click(function() {
-            $.ajax({
-                url: "{{ url('/retort/cari') }}",
-                method: "POST",
-                data: $("#form").serialize(),
-                beforeSend: function() {
-                    $("#div_data").html(`
+    $("#btn_cari").click(function() {
+        $.ajax({
+            url: "{{ url('/retort/cari') }}",
+            method: "POST",
+            data: $("#form").serialize(),
+
+            beforeSend: function() {
+                $("#div_data").html(`
                     <div class="text-center py-4">
                         <div class="spinner-border text-danger"></div>
                         <p class="mt-2">Mencari data...</p>
                     </div>
                 `);
-                },
-                success: function(res) {
-                    $("#div_data").html(res);
-                }
-            });
+            },
+
+            success: function(res) {
+                $("#div_data").html(res);
+            },
+
+            error: function(xhr) {
+                console.log(xhr);
+
+                $("#div_data").html(`
+                    <div class="alert alert-danger">
+                        <strong>Gagal mengambil data.</strong><br>
+                        Status: ${xhr.status}<br>
+                        ${xhr.responseText ? xhr.responseText.substring(0, 500) : 'Tidak ada response dari server.'}
+                    </div>
+                `);
+            }
         });
-    </script>
+    });
+</script>
 @endsection
