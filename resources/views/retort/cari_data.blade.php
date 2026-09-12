@@ -4642,6 +4642,439 @@
 
             @break
 
+            @case('PACKING')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN PROSES PACKING</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Waktu</th>
+                                        <th>Pemeriksaan Packing</th>
+                                        <th>QC</th>
+                                        <th>Produksi</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        @php
+                                            $suhuData = [];
+
+                                            if (is_array($dep->suhu)) {
+                                                $suhuData = $dep->suhu;
+                                            } elseif (is_string($dep->suhu) && !empty($dep->suhu)) {
+                                                $decodedSuhu = json_decode($dep->suhu, true);
+                                                $suhuData = is_array($decodedSuhu) ? $decodedSuhu : [];
+                                            }
+
+                                            $kemasans = [];
+
+                                            if (is_array($dep->data_kemasan)) {
+                                                $kemasans = $dep->data_kemasan;
+                                            } elseif (is_object($dep->data_kemasan)) {
+                                                $kemasans = (array) $dep->data_kemasan;
+                                            } elseif (is_string($dep->data_kemasan) && !empty($dep->data_kemasan)) {
+                                                $decodedKemasan = json_decode($dep->data_kemasan, true);
+                                                $kemasans = is_array($decodedKemasan) ? $decodedKemasan : [];
+                                            }
+
+                                            if (
+                                                !empty($kemasans) &&
+                                                !array_is_list($kemasans) &&
+                                                (
+                                                    isset($kemasans['jenis_kemasan']) ||
+                                                    isset($kemasans['no_lot_kemasan']) ||
+                                                    isset($kemasans['tgl_kedatangan']) ||
+                                                    isset($kemasans['nama_supplier'])
+                                                )
+                                            ) {
+                                                $kemasans = [$kemasans];
+                                            }
+
+                                            $kodeToples = $dep->kode_toples ?? null;
+
+                                            $kodeProduksi = $kodeToples
+                                                ? \App\Models\Mincing::where('uuid', $kodeToples)->value('kode_produksi')
+                                                : null;
+
+                                            $qcName = \App\Models\User::where('username', $dep->username)->value('name');
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->waktu
+                                                    ? \Carbon\Carbon::parse($dep->waktu)->format('H:i')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                <a href="javascript:void(0);"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#packingSearchModal{{ $dep->uuid }}"
+                                                    class="fw-bold text-decoration-underline text-primary">
+                                                    Result
+                                                </a>
+
+                                                <div class="modal fade"
+                                                    id="packingSearchModal{{ $dep->uuid }}"
+                                                    tabindex="-1"
+                                                    aria-labelledby="packingSearchModalLabel{{ $dep->uuid }}"
+                                                    aria-hidden="true">
+
+                                                    <div class="modal-dialog modal-xl">
+
+                                                        <div class="modal-content text-start">
+
+                                                            <div class="modal-header bg-info text-white">
+
+                                                                <h5 class="modal-title"
+                                                                    id="packingSearchModalLabel{{ $dep->uuid }}">
+                                                                    Detail Pemeriksaan Proses Packing:
+                                                                    {{ $dep->nama_produk ?? '-' }}
+                                                                </h5>
+
+                                                                <button type="button"
+                                                                    class="btn-close"
+                                                                    data-bs-dismiss="modal"
+                                                                    aria-label="Close">
+                                                                </button>
+
+                                                            </div>
+
+                                                            <div class="modal-body">
+
+                                                                <div class="row">
+
+                                                                    <div class="col-md-6">
+
+                                                                        <table class="table table-sm table-bordered">
+
+                                                                            <tr>
+                                                                                <th>Waktu</th>
+                                                                                <td>
+                                                                                    {{ $dep->waktu
+                                                                                        ? \Carbon\Carbon::parse($dep->waktu)->format('H:i')
+                                                                                        : '-' }}
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Kode Toples (Batch)</th>
+                                                                                <td>
+                                                                                    {{ $kodeProduksi ?? $kodeToples ?? '-' }}
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Suhu</th>
+                                                                                <td>
+
+                                                                                    @if (!empty($suhuData))
+
+                                                                                        @foreach ($suhuData as $suhu)
+
+                                                                                            @php
+                                                                                                $suhuValue = is_array($suhu)
+                                                                                                    ? ($suhu['suhu'] ?? '-')
+                                                                                                    : (is_object($suhu)
+                                                                                                        ? ($suhu->suhu ?? '-')
+                                                                                                        : $suhu);
+                                                                                            @endphp
+
+                                                                                            {{ $suhuValue }}°C{{ !$loop->last ? ', ' : '' }}
+
+                                                                                        @endforeach
+
+                                                                                    @else
+
+                                                                                        -
+
+                                                                                    @endif
+
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Jml Produk</th>
+                                                                                <td>
+                                                                                    {{ $dep->jumlah_produk ?? '-' }}
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>QR Code</th>
+                                                                                <td>
+
+                                                                                    @if (!empty($dep->qrcode) && !in_array($dep->qrcode, ['Ok', 'Tidak Ok']))
+
+                                                                                        <a href="{{ asset($dep->qrcode) }}"
+                                                                                            target="_blank">
+
+                                                                                            <img src="{{ asset($dep->qrcode) }}"
+                                                                                                width="60"
+                                                                                                class="img-thumbnail"
+                                                                                                alt="QR Code">
+
+                                                                                        </a>
+
+                                                                                    @else
+
+                                                                                        {{ $dep->qrcode ?? '-' }}
+
+                                                                                    @endif
+
+                                                                                </td>
+                                                                            </tr>
+
+                                                                        </table>
+
+                                                                    </div>
+
+                                                                    <div class="col-md-6">
+
+                                                                        <table class="table table-sm table-bordered">
+
+                                                                            <tr>
+                                                                                <th>Kalibrasi</th>
+                                                                                <td>
+                                                                                    {{ $dep->kalibrasi ?? '-' }}
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Berat Pcs</th>
+                                                                                <td>
+                                                                                    {{ $dep->berat_pcs ?? '-' }} gr
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Berat Pack</th>
+                                                                                <td>
+                                                                                    {{ $dep->berat_pack ?? '-' }} gr
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Kondisi Segel</th>
+                                                                                <td>
+                                                                                    {{ $dep->kondisi_segel ?? '-' }}
+                                                                                </td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Kode Printing</th>
+                                                                                <td>
+
+                                                                                    @if (!empty($dep->kode_printing))
+
+                                                                                        <a href="{{ asset($dep->kode_printing) }}"
+                                                                                            target="_blank">
+
+                                                                                            <img src="{{ asset($dep->kode_printing) }}"
+                                                                                                width="60"
+                                                                                                class="img-thumbnail"
+                                                                                                alt="Printing">
+
+                                                                                        </a>
+
+                                                                                    @else
+
+                                                                                        -
+
+                                                                                    @endif
+
+                                                                                </td>
+                                                                            </tr>
+
+                                                                        </table>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <h6 class="mt-4 fw-bold text-primary">
+                                                                    <i class="bi bi-box-seam"></i>
+                                                                    Data Kemasan:
+                                                                </h6>
+
+                                                                <div class="table-responsive">
+
+                                                                    <table class="table table-bordered table-sm text-center align-middle">
+
+                                                                        <thead class="table-light">
+
+                                                                            <tr>
+                                                                                <th>Jenis Kemasan</th>
+                                                                                <th>No. Lot Kemasan</th>
+                                                                                <th>Tanggal Kedatangan</th>
+                                                                                <th>Supplier</th>
+                                                                            </tr>
+
+                                                                        </thead>
+
+                                                                        @php
+                                                                            $kemasans = $dep->data_kemasan;
+
+                                                                            if (is_string($kemasans)) {
+                                                                                $kemasans = json_decode($kemasans, true);
+
+                                                                                if (is_string($kemasans)) {
+                                                                                    $kemasans = json_decode($kemasans, true);
+                                                                                }
+                                                                            }
+
+                                                                            $kemasans = is_array($kemasans) ? $kemasans : [];
+                                                                        @endphp
+
+                                                                        <tbody>
+                                                                            @foreach ($kemasans as $item)
+                                                                                <tr>
+                                                                                    <td>{{ $item['jenis_kemasan'] ?? '-' }}</td>
+                                                                                    <td>{{ $item['no_lot_kemasan'] ?? '-' }}</td>
+                                                                                    <td>
+                                                                                        {{ $item['tgl_kedatangan']
+                                                                                            ? \Carbon\Carbon::parse($item['tgl_kedatangan'])->format('d-m-Y')
+                                                                                            : '-' }}
+                                                                                    </td>
+                                                                                    <td>{{ $item['nama_supplier'] ?? '-' }}</td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+
+                                                                    </table>
+
+                                                                </div>
+
+                                                                <div class="mt-3">
+                                                                    <strong>Keterangan:</strong>
+                                                                    {{ $dep->keterangan ?? '-' }}
+                                                                </div>
+
+                                                            </div>
+
+                                                            <div class="modal-footer">
+
+                                                                <button type="button"
+                                                                    class="btn btn-secondary btn-sm"
+                                                                    data-bs-dismiss="modal">
+                                                                    Tutup
+                                                                </button>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $qcName ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produksi ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="8" class="text-center">
+                                                Belum ada data packing.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
+
+
+
 
                 @default
 
