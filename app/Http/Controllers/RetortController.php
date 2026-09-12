@@ -274,6 +274,24 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'release_packings') {
+
+                $query = \App\Models\Release_packing::query()
+                    ->where(function ($q) use ($txt_cari) {
+
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('jenis_kemasan', 'like', "%{$txt_cari}%")
+                            ->orWhere('no_palet', 'like', "%{$txt_cari}%")
+                            ->orWhere('release', 'like', "%{$txt_cari}%")
+                            ->orWhere('keterangan', 'like', "%{$txt_cari}%")
+                            ->orWhere('status_spv', 'like', "%{$txt_cari}%");
+                    })
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)

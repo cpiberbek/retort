@@ -4486,6 +4486,163 @@
 
             @break
 
+            @case('RELEASE PACKING')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA RELEASE PACKING</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date</th>
+                                        <th>Jenis Kemasan</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Expired</th>
+                                        <th>No. Palet</th>
+                                        <th>Jumlah Release</th>
+                                        <th>Keterangan</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->jenis_kemasan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @php
+                                                    $kodeBatch = $dep->kode_produksi ?? '-';
+
+                                                    if (
+                                                        $kodeBatch &&
+                                                        \Illuminate\Support\Str::isUuid($kodeBatch)
+                                                    ) {
+                                                        $kodeBatch = $dep->mincing->kode_produksi ?? '-';
+                                                    }
+                                                @endphp
+
+                                                {{ $kodeBatch }}
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->expired_date
+                                                    ? \Carbon\Carbon::parse($dep->expired_date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->no_palet ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->release ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->keterangan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="11" class="text-center">
+                                                Belum ada data release packing.
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
