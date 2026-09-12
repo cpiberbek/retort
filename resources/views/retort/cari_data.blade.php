@@ -5072,7 +5072,267 @@
 
             @break
 
+            @case('KARTON')
 
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA KONTROL LABELISASI KARTON</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-bordered table-striped table-hover mb-0">
+
+                                <thead class="table-secondary text-center">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal</th>
+                                        <th>Start - Finish</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Bukti Kode</th>
+                                        <th>Tgl Kedatangan</th>
+                                        <th>Jumlah</th>
+                                        <th>Nama Supplier</th>
+                                        <th>No. Lot Karton</th>
+                                        <th>Keterangan</th>
+                                        <th>Operator</th>
+                                        <th>KR</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                {{ $dep->waktu_mulai
+                                                    ? \Carbon\Carbon::parse($dep->waktu_mulai)->format('H:i')
+                                                    : '-' }}
+
+                                                -
+
+                                                {{ $dep->waktu_selesai
+                                                    ? \Carbon\Carbon::parse($dep->waktu_selesai)->format('H:i')
+                                                    : '-' }}
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->mincing->kode_produksi ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->kode_karton)
+
+                                                    <a href="{{ asset('storage/' . str_replace('public/', '', $dep->kode_karton)) }}"
+                                                        target="_blank">
+
+                                                        <img src="{{ asset('storage/' . str_replace('public/', '', $dep->kode_karton)) }}"
+                                                            alt="Karton"
+                                                            style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px;">
+
+                                                    </a>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        Tidak ada gambar
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                {{ $dep->tgl_kedatangan
+                                                    ? \Carbon\Carbon::parse($dep->tgl_kedatangan)->format('d-m-Y')
+                                                    : '-' }}
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->jumlah ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_supplier ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->no_lot ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->keterangan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_operator ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_koordinator ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#kartonRevisionModal{{ $dep->uuid }}"
+                                                        class="text-danger fw-bold text-decoration-none">
+
+                                                        Revision
+
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="kartonRevisionModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-labelledby="kartonRevisionModalLabel{{ $dep->uuid }}"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-dialog-centered">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-danger text-white">
+
+                                                                    <h5 class="modal-title"
+                                                                        id="kartonRevisionModalLabel{{ $dep->uuid }}">
+
+                                                                        Detail Revisi
+
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+
+                                                                    <ul class="list-unstyled mb-0">
+
+                                                                        <li>
+                                                                            <strong>Status:</strong>
+                                                                            Revision
+                                                                        </li>
+
+                                                                        <li>
+                                                                            <strong>Catatan:</strong>
+                                                                            {{ $dep->catatan_spv ?? '-' }}
+                                                                        </li>
+
+                                                                    </ul>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+
+                                                                        Tutup
+
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="15" class="text-center">
+                                                Belum ada data karton.
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
 
 
 
