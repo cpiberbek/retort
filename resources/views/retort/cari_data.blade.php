@@ -40,7 +40,7 @@
             'PEMASAKAN RTE' => $pemasakan_rtes,
             'PEMERIKSAAN KEKUATAN MAGNET' => $pemeriksaan_kekuatan_magnet_traps,
             'PEMERIKSAAN RETAIN' => $pemeriksaan_retains,
-            'PEMERIKSAAN RETAIN ITEM' => $pemeriksaan_retain_items,
+            // 'PEMERIKSAAN RETAIN ITEM' => $pemeriksaan_retain_items,
             'PEMUSNAHAN' => $pemusnahans,
             'PENYIMPANGAN KUALITAS' => $penyimpangan_kualitas,
             'PLANT' => $plants,
@@ -5625,6 +5625,168 @@
                                             <td colspan="6" class="text-center">
                                                 Belum ada data organoleptik.
                                             </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
+            @case('PEMERIKSAAN RETAIN')
+
+                <div class="card card-custom mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN RETAIN</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle">
+
+                                <thead class="table-secondary text-center">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal</th>
+                                        <th>Hari</th>
+                                        <th>Kode Batch</th>
+                                        <th>Keterangan</th>
+                                        <th>Jumlah Item</th>
+                                        <th>Dibuat Oleh</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        @php
+                                            $items = \App\Models\PemeriksaanRetainItem::where(
+                                                'pemeriksaan_retain_id',
+                                                $dep->id
+                                            )->get();
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->tanggal)
+                                                    ? \Carbon\Carbon::parse($dep->tanggal)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->hari ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @forelse ($dep->items as $item)
+
+                                                    @php
+                                                        $kodeBatch = $item->kode_produksi ?? null;
+
+                                                        if ($kodeBatch && \Illuminate\Support\Str::isUuid($kodeBatch)) {
+                                                            $kodeBatch = \App\Models\Mincing::where(
+                                                                'uuid',
+                                                                $kodeBatch
+                                                            )->value('kode_produksi') ?? $kodeBatch;
+                                                        }
+                                                    @endphp
+
+                                                    {{ $kodeBatch ?? '-' }}
+
+                                                    @if (!$loop->last)
+                                                        <br>
+                                                    @endif
+
+                                                @empty
+
+                                                    -
+
+                                                @endforelse
+
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ \Illuminate\Support\Str::limit($dep->keterangan ?? '-', 50) }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $items->count() }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('uuid', $dep->created_by)->value('name') ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if (($dep->status_spv ?? null) == 1)
+
+                                                    <span class="badge-status status-verified">
+                                                        <i class="fas fa-check-circle me-1"></i>
+                                                        Verified
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 2)
+
+                                                    <span class="badge-status status-revision">
+                                                        <i class="fas fa-exclamation-circle me-1"></i>
+                                                        Revision
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 0)
+
+                                                    <span class="badge-status status-pending">
+                                                        <i class="fas fa-clock me-1"></i>
+                                                        Pending
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="badge-status status-pending">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="8" class="text-center py-4 text-muted">
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                Belum ada data pemeriksaan retain.
+                                            </td>
+
                                         </tr>
 
                                     @endforelse

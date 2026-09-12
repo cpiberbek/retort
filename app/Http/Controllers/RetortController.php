@@ -292,6 +292,33 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'pemeriksaan_retains') {
+
+                $retainIds = \App\Models\PemeriksaanRetainItem::where(
+                    'kode_produksi',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('pemeriksaan_retain_id');
+
+                $query = \App\Models\PemeriksaanRetain::with([
+                        'items',
+                        'creator',
+                    ])
+                    ->withCount('items')
+                    ->where(function ($q) use ($txt_cari, $retainIds) {
+
+                        $q->where('tanggal', 'like', "%{$txt_cari}%")
+                            ->orWhere('hari', 'like', "%{$txt_cari}%")
+                            ->orWhere('keterangan', 'like', "%{$txt_cari}%");
+
+                        if ($retainIds->isNotEmpty()) {
+                            $q->orWhereIn('id', $retainIds);
+                        }
+                    })
+                    ->orderBy('tanggal', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
