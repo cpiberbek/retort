@@ -5334,7 +5334,312 @@
 
             @break
 
+            @case('ORGANOLEPTIK')
 
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN ORGANOLEPTIK</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table">
+
+                                <thead class="table-secondary text-center">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Hasil Sensori</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        @php
+                                            $sensori = $dep->sensori;
+
+                                            if (is_string($sensori)) {
+                                                $sensori = json_decode($sensori, true);
+
+                                                if (is_string($sensori)) {
+                                                    $sensori = json_decode($sensori, true);
+                                                }
+                                            }
+
+                                            $sensori = is_array($sensori) ? $sensori : [];
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if (!empty($sensori))
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#organoleptikSearchModal{{ $dep->uuid }}"
+                                                        style="font-weight: bold; text-decoration: underline;">
+                                                        Result
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="organoleptikSearchModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-labelledby="organoleptikSearchModalLabel{{ $dep->uuid }}"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog" style="max-width: 70%;">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-info text-white">
+
+                                                                    <h5 class="modal-title text-start"
+                                                                        id="organoleptikSearchModalLabel{{ $dep->uuid }}">
+                                                                        Detail Pemeriksaan Organoleptik
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body">
+
+                                                                    <div class="table-responsive">
+
+                                                                        <table class="table table-bordered table-striped table-sm text-center align-middle">
+
+                                                                            <thead class="table-light">
+
+                                                                                <tr>
+                                                                                    <th>No</th>
+                                                                                    <th>Kode Batch</th>
+                                                                                    <th>Penampilan</th>
+                                                                                    <th>Aroma</th>
+                                                                                    <th>Kekenyalan</th>
+                                                                                    <th>Rasa Asin</th>
+                                                                                    <th>Rasa Gurih</th>
+                                                                                    <th>Rasa Manis</th>
+                                                                                    <th>Rasa Ayam/BBQ/Ikan</th>
+                                                                                    <th>Rasa Keseluruhan</th>
+                                                                                    <th>Hasil Score</th>
+                                                                                    <th>Keterangan</th>
+                                                                                </tr>
+
+                                                                            </thead>
+
+                                                                            <tbody>
+
+                                                                                @foreach ($sensori as $index => $item)
+
+                                                                                    @php
+                                                                                        $kodeProduksi = $item['kode_produksi'] ?? null;
+
+                                                                                        $kodeBatch = $kodeProduksi
+                                                                                            ? (\App\Models\Mincing::where('uuid', $kodeProduksi)->value('kode_produksi')
+                                                                                                ?? \App\Models\Mincing::where('id', $kodeProduksi)->value('kode_produksi')
+                                                                                                ?? $kodeProduksi)
+                                                                                            : '-';
+
+                                                                                        $release = $item['release'] ?? '-';
+                                                                                    @endphp
+
+                                                                                    <tr>
+
+                                                                                        <td>
+                                                                                            {{ $index + 1 }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $kodeBatch }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['penampilan'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['aroma'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['kekenyalan'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rasa_asin'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rasa_gurih'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rasa_manis'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rasa_daging'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rasa_keseluruhan'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rata_score'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+
+                                                                                            @if ($release === 'Release')
+
+                                                                                                <span class="fw-bold text-success">
+                                                                                                    {{ $release }}
+                                                                                                </span>
+
+                                                                                            @elseif ($release === 'Tidak Release')
+
+                                                                                                <span class="fw-bold text-danger">
+                                                                                                    {{ $release }}
+                                                                                                </span>
+
+                                                                                            @else
+
+                                                                                                {{ $release }}
+
+                                                                                            @endif
+
+                                                                                        </td>
+
+                                                                                    </tr>
+
+                                                                                @endforeach
+
+                                                                            </tbody>
+
+                                                                        </table>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <div class="modal-footer">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if ($dep->status_spv == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif ($dep->status_spv == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="6" class="text-center">
+                                                Belum ada data organoleptik.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
 
                 @default
 
