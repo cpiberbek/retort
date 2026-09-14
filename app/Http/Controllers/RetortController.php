@@ -557,6 +557,42 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'sanitasis') {
+
+                $userUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $areaUuids = \App\Models\Area_sanitasi::where(function ($q) use ($txt_cari) {
+                    $q->where('area', 'like', "%{$txt_cari}%")
+                        ->orWhere('sub_area', 'like', "%{$txt_cari}%")
+                        ->orWhere('bagian', 'like', "%{$txt_cari}%");
+                })->pluck('uuid');
+
+                $query = \App\Models\Sanitasi::query()
+                    ->where(function ($q) use ($txt_cari, $userUuids, $areaUuids) {
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('date', 'like', "%{$txt_cari}%")
+                            ->orWhere('shift', 'like', "%{$txt_cari}%")
+                            ->orWhere('pemeriksaan', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produksi', 'like', "%{$txt_cari}%");
+
+                        if ($userUuids->isNotEmpty()) {
+                            $q->orWhereIn('username', $userUuids);
+                        }
+
+                        if ($areaUuids->isNotEmpty()) {
+                            $q->orWhereIn('area', $areaUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('shift', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
