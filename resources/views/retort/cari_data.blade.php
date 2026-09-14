@@ -6066,6 +6066,140 @@
 
             @break
 
+            @case('RAW MATERIAL INSPECTION')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN BAHAN BAKU</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle text-center">
+
+                                <thead class="table-secondary">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tgl Datang</th>
+                                        <th>Dibuat Oleh</th>
+                                        <th>Bahan Baku</th>
+                                        <th>Supplier</th>
+                                        <th>No. DO / PO</th>
+                                        <th>Nopol Mobil</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $item)
+
+                                        <tr>
+
+                                            <td class="align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                {{ $item->setup_kedatangan
+                                                    ? \Carbon\Carbon::parse($item->setup_kedatangan)->format('d-m-Y')
+                                                    : '-' }}
+
+                                                <br>
+
+                                                <span class="text-muted small">
+                                                    {{ $item->setup_kedatangan
+                                                        ? \Carbon\Carbon::parse($item->setup_kedatangan)->format('H:i')
+                                                        : '' }}
+                                                </span>
+
+                                            </td>
+
+                                            <td class="align-middle fw-bold">
+                                                {{ $item->creator->name ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle fw-bold">
+                                                {{ $item->bahan_baku ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ \Illuminate\Support\Str::limit($item->supplier ?? '-', 25) }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $item->do_po ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $item->nopol_mobil ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (($item->status_spv ?? null) == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif (($item->status_spv ?? null) == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @elseif (($item->status_spv ?? null) == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Pending
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="8" class="py-4">
+                                                Belum ada data pemeriksaan bahan baku.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">

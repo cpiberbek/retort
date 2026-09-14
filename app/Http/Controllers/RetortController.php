@@ -343,6 +343,28 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'raw_material_inspections') {
+
+                $query = \App\Models\RawMaterialInspection::with([
+                    'creator',
+                    'updater',
+                ])
+                    ->where(function ($q) use ($txt_cari) {
+
+                        $q->where('bahan_baku', 'like', "%{$txt_cari}%")
+                            ->orWhere('supplier', 'like', "%{$txt_cari}%")
+                            ->orWhere('do_po', 'like', "%{$txt_cari}%")
+                            ->orWhere('nopol_mobil', 'like', "%{$txt_cari}%")
+                            ->orWhere('setup_kedatangan', 'like', "%{$txt_cari}%")
+                            ->orWhereHas('creator', function ($creatorQuery) use ($txt_cari) {
+                                $creatorQuery->where('name', 'like', "%{$txt_cari}%");
+                            });
+                    })
+                    ->orderBy('setup_kedatangan', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
