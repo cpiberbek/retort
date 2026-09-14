@@ -8087,6 +8087,294 @@
                 </div>
             @break
 
+            @case('TRACEABILITY')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA LAPORAN TRACEABILITY</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date</th>
+                                        <th>Penyebab Telusur</th>
+                                        <th>Asal Informasi</th>
+                                        <th>Jenis Pangan</th>
+                                        <th>Nama Dagang</th>
+                                        <th>Berat / Isi Bersih</th>
+                                        <th>Jenis Kemasan</th>
+                                        <th>Kode Produksi</th>
+                                        <th>Tgl Produksi</th>
+                                        <th>Kadaluarsa</th>
+                                        <th>No. Daftar Pangan</th>
+                                        <th>Jumlah Produksi</th>
+                                        <th>Tindak Lanjut</th>
+                                        <th>Kelengkapan</th>
+                                        <th>Kesimpulan</th>
+                                        <th>Pembuat</th>
+                                        <th>SPV</th>
+                                        <th>Manager</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $creatorName = \App\Models\User::where(
+                                                'username',
+                                                $dep->username
+                                            )->value('name') ?? $dep->username ?? '-';
+
+                                            $traceability = $dep->kelengkapan_form;
+
+                                            if (is_string($traceability)) {
+                                                $traceability = json_decode($traceability, true);
+
+                                                if (is_string($traceability)) {
+                                                    $traceability = json_decode($traceability, true);
+                                                }
+                                            }
+
+                                            $traceability = is_array($traceability)
+                                                ? $traceability
+                                                : [];
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td>{{ $dep->penyebab ?? '-' }}</td>
+
+                                            <td>{{ $dep->asal_informasi ?? '-' }}</td>
+
+                                            <td>{{ $dep->jenis_pangan ?? '-' }}</td>
+
+                                            <td>{{ $dep->nama_dagang ?? '-' }}</td>
+
+                                            <td>{{ $dep->berat_bersih ?? '-' }}</td>
+
+                                            <td>{{ $dep->jenis_kemasan ?? '-' }}</td>
+
+                                            <td>{{ $dep->kode_produksi ?? '-' }}</td>
+
+                                            <td>{{ $dep->tanggal_produksi ?? '-' }}</td>
+
+                                            <td>{{ $dep->tanggal_kadaluarsa ?? '-' }}</td>
+
+                                            <td>{{ $dep->no_pendaftaran ?? '-' }}</td>
+
+                                            <td>{{ $dep->jumlah_produksi ?? '-' }}</td>
+
+                                            <td>{{ $dep->tindak_lanjut ?? '-' }}</td>
+
+                                            <td>
+                                                @if (!empty($traceability))
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-warning btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#traceModalSearch{{ $dep->uuid }}">
+                                                        Detail
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="traceModalSearch{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-warning text-white">
+                                                                    <h5 class="modal-title">
+                                                                        Detail Kelengkapan Form
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="modal-body">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-bordered table-striped table-sm text-center align-middle">
+                                                                            <thead class="table-light">
+                                                                                <tr>
+                                                                                    <th>No</th>
+                                                                                    <th>Laporan</th>
+                                                                                    <th>No. Dokumen</th>
+                                                                                    <th>Kelengkapan Laporan</th>
+                                                                                    <th>Total Waktu Telusur</th>
+                                                                                </tr>
+                                                                            </thead>
+
+                                                                            <tbody>
+                                                                                @foreach ($traceability as $i => $row)
+                                                                                    <tr>
+                                                                                        <td>{{ $i + 1 }}</td>
+                                                                                        <td>{{ $row['laporan'] ?? '-' }}</td>
+                                                                                        <td>{{ $row['no_dokumen'] ?? '-' }}</td>
+                                                                                        <td>{{ $row['kelengkapan'] ?? '-' }}</td>
+                                                                                        <td>{{ $row['waktu_telusur'] ?? '-' }}</td>
+                                                                                    </tr>
+                                                                                @endforeach
+
+                                                                                <tr>
+                                                                                    <td colspan="4">
+                                                                                        Total Waktu Traceability
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        {{ $dep->total_waktu ?? '-' }}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                @if (!empty($dep->kesimpulan))
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#kesimpulanModalSearch{{ $dep->uuid }}">
+                                                        Lihat Kesimpulan
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="kesimpulanModalSearch{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-lg modal-dialog-centered">
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title">
+                                                                        Kesimpulan Traceability
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="modal-body text-start">
+                                                                    <p style="white-space: pre-wrap;">
+                                                                        {{ $dep->kesimpulan }}
+                                                                    </p>
+                                                                </div>
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $creatorName }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_manager == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Pending
+                                                    </span>
+                                                @elseif ($dep->status_manager == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_manager == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_manager))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_manager }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="19" class="text-center py-4 text-muted">
+                                                Belum ada data traceability.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
