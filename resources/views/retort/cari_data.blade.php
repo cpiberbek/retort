@@ -6522,6 +6522,156 @@
 
             @break
 
+            @case('SAMPEL')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PENGAMBILAN SAMPEL</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle text-center">
+
+                                <thead class="table-secondary">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal Pengambilan</th>
+                                        <th>Dibuat Oleh</th>
+                                        <th>Jenis Sampel</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Keterangan</th>
+                                        <th>SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        @php
+                                            $kodeBatch = $dep->kode_produksi ?? '-';
+
+                                            if (
+                                                $kodeBatch !== '-' &&
+                                                \Illuminate\Support\Str::isUuid($kodeBatch)
+                                            ) {
+                                                $kodeBatch = \App\Models\Mincing::where(
+                                                    'uuid',
+                                                    $kodeBatch
+                                                )->value('kode_produksi') ?? $kodeBatch;
+                                            }
+
+                                            $creatorName = \App\Models\User::where(
+                                                'uuid',
+                                                $dep->created_by ?? ''
+                                            )->value('name');
+
+                                            if (!$creatorName) {
+                                                $creatorName = \App\Models\User::where(
+                                                    'username',
+                                                    $dep->username_updated ?? $dep->username ?? ''
+                                                )->value('name');
+                                            }
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ !empty($dep->date)
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $creatorName ?? $dep->username_updated ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->jenis_sampel ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $kodeBatch }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->keterangan ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (($dep->status_spv ?? null) == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="8" class="py-4">
+                                                Belum ada data sampel.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">

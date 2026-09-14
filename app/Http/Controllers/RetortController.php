@@ -447,6 +447,43 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'sampels') {
+
+                $mincingUuids = \App\Models\Mincing::where(
+                    'kode_produksi',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $creatorUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Sampel::query()
+                    ->where(function ($q) use ($txt_cari, $mincingUuids, $creatorUuids) {
+
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('username_updated', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('jenis_sampel', 'like', "%{$txt_cari}%")
+                            ->orWhere('keterangan', 'like', "%{$txt_cari}%");
+
+                        if ($mincingUuids->isNotEmpty()) {
+                            $q->orWhereIn('kode_produksi', $mincingUuids);
+                        }
+
+                        if ($creatorUuids->isNotEmpty()) {
+                            $q->orWhereIn('created_by', $creatorUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
