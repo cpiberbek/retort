@@ -824,6 +824,34 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'pemusnahans') {
+
+                $kodeProduksiUuids = \App\Models\Mincing::where(
+                    'kode_produksi',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Pemusnahan::query()
+                    ->with('batch')
+                    ->where(function ($q) use ($txt_cari, $kodeProduksiUuids) {
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('date', 'like', "%{$txt_cari}%")
+                            ->orWhere('expired_date', 'like', "%{$txt_cari}%")
+                            ->orWhere('analisa', 'like', "%{$txt_cari}%")
+                            ->orWhere('keterangan', 'like', "%{$txt_cari}%");
+
+                        if ($kodeProduksiUuids->isNotEmpty()) {
+                            $q->orWhereIn('kode_produksi', $kodeProduksiUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
