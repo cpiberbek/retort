@@ -738,6 +738,38 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'withdrawls') {
+
+                $userUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Withdrawl::query()
+                    ->where(function ($q) use ($txt_cari, $userUuids) {
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('no_withdrawl', 'like', "%{$txt_cari}%")
+                            ->orWhere('rincian', 'like', "%{$txt_cari}%")
+                            ->orWhere('date', 'like', "%{$txt_cari}%")
+                            ->orWhere('exp_date', 'like', "%{$txt_cari}%")
+                            ->orWhere('tanggal_edar', 'like', "%{$txt_cari}%")
+                            ->orWhere('tanggal_tarik', 'like', "%{$txt_cari}%")
+                            ->orWhere('jumlah_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('jumlah_edar', 'like', "%{$txt_cari}%")
+                            ->orWhere('jumlah_tarik', 'like', "%{$txt_cari}%");
+
+                        if ($userUuids->isNotEmpty()) {
+                            $q->orWhereIn('username', $userUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)

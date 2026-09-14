@@ -8375,6 +8375,229 @@
                 </div>
             @break
 
+            @case('WITHDRAWL')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA LAPORAN WITHDRAWL</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | No. Withdrawl</th>
+                                        <th>Nama Produk</th>
+                                        <th>Kode Produksi | Expired Date</th>
+                                        <th>Jumlah Produksi</th>
+                                        <th>Tgl Akhir Edar | Jumlah Edar</th>
+                                        <th>Tgl Penarikan | Jumlah Tarik</th>
+                                        <th>Rincian</th>
+                                        <th>Pembuat</th>
+                                        <th>SPV</th>
+                                        <th>Manager</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $withdrawl = $dep->rincian;
+
+                                            if (is_string($withdrawl)) {
+                                                $withdrawl = json_decode($withdrawl, true);
+
+                                                if (is_string($withdrawl)) {
+                                                    $withdrawl = json_decode($withdrawl, true);
+                                                }
+                                            }
+
+                                            $withdrawl = is_array($withdrawl) ? $withdrawl : [];
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                {{ $dep->no_withdrawl ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->kode_produksi ?? '-' }}
+                                                |
+                                                {{ $dep->exp_date
+                                                    ? \Carbon\Carbon::parse($dep->exp_date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->jumlah_produksi ?? '-' }} Box
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->tanggal_edar
+                                                    ? \Carbon\Carbon::parse($dep->tanggal_edar)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                {{ $dep->jumlah_edar ?? '-' }} Box
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->tanggal_tarik
+                                                    ? \Carbon\Carbon::parse($dep->tanggal_tarik)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                {{ $dep->jumlah_tarik ?? '-' }} Box
+                                            </td>
+
+                                            <td>
+                                                @if (!empty($withdrawl))
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#withdrawlModalSearch{{ $dep->uuid }}"
+                                                        class="fw-bold text-decoration-underline">
+                                                        Detail
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="withdrawlModalSearch{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-warning text-white">
+                                                                    <h5 class="modal-title">
+                                                                        Detail Rincian Withdrawl
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="modal-body">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-bordered table-striped table-sm text-center align-middle">
+                                                                            <thead class="table-light">
+                                                                                <tr>
+                                                                                    <th>No</th>
+                                                                                    <th>Nama Supplier</th>
+                                                                                    <th>Alamat</th>
+                                                                                    <th>Jumlah</th>
+                                                                                </tr>
+                                                                            </thead>
+
+                                                                            <tbody>
+                                                                                @foreach ($withdrawl as $i => $row)
+                                                                                    <tr>
+                                                                                        <td>{{ $i + 1 }}</td>
+                                                                                        <td>{{ $row['nama_supplier'] ?? '-' }}</td>
+                                                                                        <td>{{ $row['alamat'] ?? '-' }}</td>
+                                                                                        <td>{{ $row['jumlah'] ?? '-' }} Box</td>
+                                                                                    </tr>
+                                                                                @endforeach
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_manager == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Pending
+                                                    </span>
+                                                @elseif ($dep->status_manager == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_manager == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_manager))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_manager }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="11" class="text-center py-4 text-muted">
+                                                Belum ada data withdrawl.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
