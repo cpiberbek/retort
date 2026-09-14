@@ -6340,6 +6340,188 @@
 
             @break
 
+            @case('LOADING CHECK')
+
+                <div class="card card-custom mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN LOADING</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle text-center">
+
+                                <thead class="table-secondary">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal</th>
+                                        <th>Dibuat Oleh</th>
+                                        <th>Shift</th>
+                                        <th>Aktivitas</th>
+                                        <th>No. Pol Mobil</th>
+                                        <th>Nama Supir</th>
+                                        <th>Ekspedisi</th>
+                                        <th>Kode Batch</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $produk)
+
+                                        @php
+                                            $kodeBatch = [];
+
+                                            foreach ($produk->details ?? [] as $detail) {
+                                                $kode = $detail->kode_produksi ?? null;
+
+                                                if ($kode && \Illuminate\Support\Str::isUuid($kode)) {
+                                                    $kode = \App\Models\Mincing::where(
+                                                        'uuid',
+                                                        $kode
+                                                    )->value('kode_produksi') ?? $kode;
+                                                }
+
+                                                if ($kode) {
+                                                    $kodeBatch[] = $kode;
+                                                }
+                                            }
+
+                                            $kodeBatch = array_unique($kodeBatch);
+
+                                            $creatorName = $produk->creator->name
+                                                ?? \App\Models\User::where(
+                                                    'uuid',
+                                                    $produk->created_by
+                                                )->value('name')
+                                                ?? '-';
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ !empty($produk->tanggal)
+                                                    ? \Carbon\Carbon::parse($produk->tanggal)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $creatorName }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $produk->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $produk->jenis_aktivitas ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle fw-bold">
+                                                {{ $produk->no_pol_mobil ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $produk->nama_supir ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $produk->ekspedisi ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (!empty($kodeBatch))
+
+                                                    @foreach ($kodeBatch as $kode)
+
+                                                        {{ $kode }}@if (!$loop->last)<br>@endif
+
+                                                    @endforeach
+
+                                                @else
+
+                                                    -
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (($produk->status_spv ?? null) == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif (($produk->status_spv ?? null) == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @elseif (($produk->status_spv ?? null) == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Pending
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="10" class="py-4 text-muted">
+
+                                                <i class="bi bi-box-seam fs-1 d-block mb-2"></i>
+
+                                                Data tidak ditemukan. Silakan tambahkan data baru atau ubah pencarian.
+
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">

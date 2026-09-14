@@ -396,6 +396,57 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'loading_checks') {
+
+                $mincingUuids = \App\Models\Mincing::where(
+                    'kode_produksi',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $creatorUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\LoadingProduk::with([
+                    'creator',
+                    'details',
+                ])
+                    ->where(function ($q) use ($txt_cari, $mincingUuids, $creatorUuids) {
+
+                        $q->where('no_pol_mobil', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_supir', 'like', "%{$txt_cari}%")
+                            ->orWhere('ekspedisi', 'like', "%{$txt_cari}%")
+                            ->orWhere('shift', 'like', "%{$txt_cari}%")
+                            ->orWhere('jenis_aktivitas', 'like', "%{$txt_cari}%");
+
+                        if ($creatorUuids->isNotEmpty()) {
+                            $q->orWhereIn('created_by', $creatorUuids);
+                        }
+
+                        $q->orWhereHas('details', function ($detailQuery) use ($txt_cari, $mincingUuids) {
+
+                            $detailQuery->where(
+                                'kode_produksi',
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+
+                            if ($mincingUuids->isNotEmpty()) {
+                                $detailQuery->orWhereIn(
+                                    'kode_produksi',
+                                    $mincingUuids
+                                );
+                            }
+                        });
+                    })
+                    ->orderBy('tanggal', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
