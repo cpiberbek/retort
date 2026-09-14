@@ -9357,6 +9357,222 @@
                 </div>
             @break
 
+            @case('RETAIN RTE')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN SAMPEL RETAIN RTE</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Analisa</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $analisa = $dep->analisa;
+
+                                            if (is_string($analisa)) {
+                                                $analisa = json_decode($analisa, true);
+
+                                                if (is_string($analisa)) {
+                                                    $analisa = json_decode($analisa, true);
+                                                }
+                                            }
+
+                                            $analisa = is_array($analisa) ? $analisa : [];
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-start">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->kode_produksi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if (!empty($analisa))
+                                                    <a href="javascript:void(0);"
+                                                        class="fw-bold text-decoration-underline text-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#analisaModalSearch{{ $dep->uuid }}">
+                                                        Lihat Analisa
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="analisaModalSearch{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-primary text-white">
+                                                                    <h5 class="modal-title">
+                                                                        Detail Analisa Sampel Retain
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="modal-body p-0">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-bordered table-sm mb-0 text-center align-middle">
+                                                                            <thead class="table-light">
+                                                                                <tr>
+                                                                                    <th>No</th>
+                                                                                    <th>Bulan</th>
+                                                                                    <th>Fisik/Tekstur</th>
+                                                                                    <th>Aroma</th>
+                                                                                    <th>Rasa</th>
+                                                                                    <th>Average Score</th>
+                                                                                    <th>Cemaran</th>
+                                                                                    <th>Keterangan</th>
+                                                                                </tr>
+                                                                            </thead>
+
+                                                                            <tbody>
+                                                                                @foreach ($analisa as $index => $item)
+                                                                                    <tr>
+                                                                                        <td>{{ $index + 1 }}</td>
+
+                                                                                        <td>
+                                                                                            @if (!empty($item['bulan']))
+                                                                                                {{ \Carbon\Carbon::createFromFormat('Y-m', $item['bulan'])->translatedFormat('F Y') }}
+                                                                                            @else
+                                                                                                -
+                                                                                            @endif
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['fisik'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['aroma'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rasa'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['rata_score'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['cemaran'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            @if (isset($item['release']))
+                                                                                                @if ($item['release'] === 'Release')
+                                                                                                    <span class="fw-bold text-success">
+                                                                                                        Release
+                                                                                                    </span>
+                                                                                                @elseif ($item['release'] === 'Tidak Release')
+                                                                                                    <span class="fw-bold text-danger">
+                                                                                                        Tidak Release
+                                                                                                    </span>
+                                                                                                @else
+                                                                                                    {{ $item['release'] }}
+                                                                                                @endif
+                                                                                            @else
+                                                                                                -
+                                                                                            @endif
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                @endforeach
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                Belum ada data pemeriksaan retain RTE.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
