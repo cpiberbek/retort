@@ -7127,7 +7127,7 @@
             @case('KLORIN')
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">DATA PENGECEKAN KLORIN</h5>
+                        <span class="fw-bold">DATA PENGECEKAN KLORIN</span>
                         <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
 
@@ -7252,7 +7252,7 @@
             @case('BERITA ACARA')
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">DATA BERITA ACARA</h5>
+                        <span class="fw-bold">DATA BERITA ACARA</span>
                         <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
 
@@ -7358,7 +7358,7 @@
                 <div class="card shadow-sm mb-4">
                 
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">DATA KONTROL SANITASI AREA</h5>
+                            <span class="fw-bold">DATA KONTROL SANITASI AREA</span>
                             <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
 
@@ -7609,7 +7609,7 @@
             @case('THERMOMETER')
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
-                             <h5 class="mb-0">DATA PENERAAN THERMOMETER</h5>
+                            <span class="fw-bold">DATA PENERAAN THERMOMETER</span>
                             <span class="badge bg-light text-dark">{{ $data->count() }}</span>
                     </div>
 
@@ -7793,6 +7793,174 @@
                                         <tr>
                                             <td colspan="5" class="text-center py-4 text-muted">
                                                 Belum ada data peneraan thermometer.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
+            @case('GMP')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">DATA PEMERIKSAAN PERSONAL HYGIENE DAN KESEHATAN KARYAWAN</span>
+                            <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+                    
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date</th>
+                                        <th>Area Hygiene</th>
+                                        <th>QC</th>
+                                        <th>Produksi</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $pemeriksaan = $dep->pemeriksaan ?? [];
+
+                                            if (is_string($pemeriksaan)) {
+                                                $pemeriksaan = json_decode($pemeriksaan, true);
+
+                                                if (is_string($pemeriksaan)) {
+                                                    $pemeriksaan = json_decode($pemeriksaan, true);
+                                                }
+                                            }
+
+                                            $pemeriksaan = is_array($pemeriksaan) ? $pemeriksaan : [];
+
+                                            $groupedByArea = [];
+
+                                            foreach ($pemeriksaan as $row) {
+                                                $areaName = strtoupper(trim($row['area'] ?? 'Unknown'));
+                                                $groupedByArea[$areaName][] = $row;
+                                            }
+
+                                            $qcName = \App\Models\User::where(
+                                                'uuid',
+                                                $dep->username
+                                            )->value('name') ?? $dep->username ?? '-';
+                                        @endphp
+
+                                        <tr>
+                                            <td>
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-start">
+                                                @if (!empty($groupedByArea))
+                                                    <div class="d-flex flex-wrap justify-content-center gap-1">
+                                                        @foreach ($groupedByArea as $areaName => $rows)
+                                                            @php
+                                                                $totalAttr = 0;
+                                                                $countChecked = 0;
+
+                                                                foreach ($rows as $row) {
+                                                                    $attrKeys = array_diff(
+                                                                        array_keys($row),
+                                                                        [
+                                                                            'nama_karyawan',
+                                                                            'pukul',
+                                                                            'keterangan',
+                                                                            'area',
+                                                                        ]
+                                                                    );
+
+                                                                    foreach ($attrKeys as $keyAttr) {
+                                                                        $totalAttr++;
+
+                                                                        if ((int) ($row[$keyAttr] ?? 0) === 1) {
+                                                                            $countChecked++;
+                                                                        }
+                                                                    }
+                                                                }
+
+                                                                $persen = $totalAttr > 0
+                                                                    ? round(($countChecked / $totalAttr) * 100, 1)
+                                                                    : 0;
+
+                                                                $pillStyle = $persen == 0
+                                                                    ? 'background:#d1fae5;border-color:#6ee7b7;color:#065f46;'
+                                                                    : ($persen <= 20
+                                                                        ? 'background:#fef9c3;border-color:#fde047;color:#713f12;'
+                                                                        : ($persen <= 50
+                                                                            ? 'background:#ffedd5;border-color:#fb923c;color:#7c2d12;'
+                                                                            : 'background:#fee2e2;border-color:#f87171;color:#7f1d1d;'));
+                                                            @endphp
+
+                                                            <span
+                                                                style="display:inline-flex;align-items:center;gap:4px;border:1.5px solid;border-radius:20px;padding:3px 8px;font-size:0.75rem;font-weight:600;white-space:nowrap;line-height:1.4;{{ $pillStyle }}">
+                                                                <span style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                                                    {{ $areaName }}
+                                                                </span>
+
+                                                                <span
+                                                                    style="background:rgba(0,0,0,.08);border-radius:10px;padding:1px 5px;font-size:0.7rem;flex-shrink:0;">
+                                                                    {{ $persen }}%
+                                                                </span>
+                                                            </span>
+                                                        @endforeach
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->nama_produksi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="text-center py-4 text-muted">
+                                                Belum ada data GMP karyawan.
                                             </td>
                                         </tr>
                                     @endforelse

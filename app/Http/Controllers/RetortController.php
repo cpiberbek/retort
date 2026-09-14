@@ -617,6 +617,64 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'gmps') {
+
+                $userUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $areaNames = \App\Models\Area_hygiene::where(
+                    'area',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('area');
+
+                $query = \App\Models\Gmp::query()
+                    ->where(function ($q) use ($txt_cari, $userUuids, $areaNames) {
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('date', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('pemeriksaan', 'like', "%{$txt_cari}%");
+
+                        if ($userUuids->isNotEmpty()) {
+                            $q->orWhereIn('username', $userUuids);
+                        }
+
+                        if ($areaNames->isNotEmpty()) {
+                            foreach ($areaNames as $areaName) {
+                                $q->orWhere('pemeriksaan', 'like', "%{$areaName}%");
+                            }
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
+                foreach ($query as $row) {
+                    $pemeriksaan = $row->pemeriksaan;
+
+                    if (is_string($pemeriksaan)) {
+                        $pemeriksaan = json_decode($pemeriksaan, true);
+
+                        if (is_string($pemeriksaan)) {
+                            $pemeriksaan = json_decode($pemeriksaan, true);
+                        }
+                    }
+
+                    $row->pemeriksaan = is_array($pemeriksaan) ? $pemeriksaan : [];
+
+                    $row->areas = \App\Models\Area_hygiene::where(
+                        'plant',
+                        $row->plant
+                    )
+                        ->orderBy('area', 'asc')
+                        ->pluck('area')
+                        ->toArray();
+                }
+
             } else {
 
                 $query = DB::table($table)
