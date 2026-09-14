@@ -7606,6 +7606,203 @@
                 </div>
             @break
 
+            @case('THERMOMETER')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                             <h5 class="mb-0">DATA PENERAAN THERMOMETER</h5>
+                            <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Hasil Peneraan</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $peneraan = $dep->peneraan;
+
+                                            if (is_string($peneraan)) {
+                                                $peneraan = json_decode($peneraan, true);
+
+                                                if (is_string($peneraan)) {
+                                                    $peneraan = json_decode($peneraan, true);
+                                                }
+                                            }
+
+                                            $peneraan = is_array($peneraan) ? $peneraan : [];
+
+                                            $qcName = \App\Models\User::where(
+                                                'uuid',
+                                                $dep->username
+                                            )->value('name') ?? $dep->username ?? '-';
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if (!empty($peneraan))
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-info btn-sm"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#peneraanModalSearch{{ $dep->uuid }}">
+                                                        Lihat Hasil Peneraan
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="peneraanModalSearch{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-primary text-white">
+                                                                    <h5 class="modal-title">
+                                                                        Tanggal:
+                                                                        {{ $dep->date
+                                                                            ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                                            : '-' }}
+                                                                        |
+                                                                        Shift {{ $dep->shift ?? '-' }}
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="modal-body">
+                                                                    <div class="table-responsive">
+                                                                        <table class="table table-bordered table-sm text-center align-middle mb-0">
+                                                                            <thead class="table-light">
+                                                                                <tr>
+                                                                                    <th>No</th>
+                                                                                    <th>Kode Thermometer</th>
+                                                                                    <th>Area</th>
+                                                                                    <th>Standar (0.0°C)</th>
+                                                                                    <th>Pukul</th>
+                                                                                    <th>Hasil Tera</th>
+                                                                                    <th>Tindakan Perbaikan</th>
+                                                                                </tr>
+                                                                            </thead>
+
+                                                                            <tbody>
+                                                                                @foreach ($peneraan as $index => $item)
+                                                                                    <tr>
+                                                                                        <td>
+                                                                                            {{ $index + 1 }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['kode_thermometer'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['area'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['standar'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['pukul'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['hasil_tera'] ?? '-' }}
+                                                                                        </td>
+
+                                                                                        <td>
+                                                                                            {{ $item['tindakan_perbaikan'] ?? '-' }}
+                                                                                        </td>
+                                                                                    </tr>
+                                                                                @endforeach
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                </div>
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="5" class="text-center py-4 text-muted">
+                                                Belum ada data peneraan thermometer.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
