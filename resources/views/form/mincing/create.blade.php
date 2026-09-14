@@ -2037,17 +2037,17 @@
         });
 
         // --- Tombol ± Toggle Minus ---
-        document.addEventListener('click', function(e) {
-            const btn = e.target.closest('.btn-toggle-minus');
-            if (!btn) return;
-            const input = btn.closest('.input-group').querySelector('input');
-            if (!input) return;
-            input.value = input.value.startsWith('-') ?
-                input.value.slice(1) :
-                '-' + input.value;
-            input.dispatchEvent(new Event('input'));
-            input.focus();
-        });
+        // document.addEventListener('click', function(e) {
+        //     const btn = e.target.closest('.btn-toggle-minus');
+        //     if (!btn) return;
+        //     const input = btn.closest('.input-group').querySelector('input');
+        //     if (!input) return;
+        //     input.value = input.value.startsWith('-') ?
+        //         input.value.slice(1) :
+        //         '-' + input.value;
+        //     input.dispatchEvent(new Event('input'));
+        //     input.focus();
+        // });
 
         // ==========================================
         // RELASI WAKTU PROSES

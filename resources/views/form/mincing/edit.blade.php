@@ -1504,6 +1504,12 @@
             if (!btn) {
                 return;
             }
+
+            const input = btn.closest('.input-group')?.querySelector('input');
+
+            if (!input) {
+                return;
+            }
             if (!input) return;
             input.value = input.value.startsWith('-') ?
                 input.value.slice(1) :
