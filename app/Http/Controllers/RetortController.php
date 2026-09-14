@@ -800,6 +800,30 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'timbangans') {
+
+                $userUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Timbangan::query()
+                    ->where(function ($q) use ($txt_cari, $userUuids) {
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('peneraan', 'like', "%{$txt_cari}%")
+                            ->orWhere('date', 'like', "%{$txt_cari}%")
+                            ->orWhere('shift', 'like', "%{$txt_cari}%");
+
+                        if ($userUuids->isNotEmpty()) {
+                            $q->orWhereIn('username', $userUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
