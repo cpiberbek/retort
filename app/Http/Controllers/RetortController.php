@@ -484,6 +484,38 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'suhus') {
+
+                $userUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Suhu::query()
+                    ->where(function ($q) use ($txt_cari, $userUuids) {
+
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('shift', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('keterangan', 'like', "%{$txt_cari}%");
+
+                        if ($userUuids->isNotEmpty()) {
+                            $q->orWhereIn('username', $userUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
+                foreach ($query as $row) {
+                    $row->area_suhus = \App\Models\Area_suhu::where(
+                        'plant',
+                        $row->plant
+                    )->get();
+                }
+
             } else {
 
                 $query = DB::table($table)

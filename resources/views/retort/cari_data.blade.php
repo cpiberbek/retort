@@ -6672,6 +6672,458 @@
 
             @break
 
+            @case('SUHU')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN SUHU DAN RH</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle text-center">
+
+                                <thead class="table-secondary">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Pukul</th>
+                                        <th>Pemeriksaan</th>
+                                        <th>Keterangan</th>
+                                        <th>QC</th>
+                                        <th>Produksi</th>
+                                        <th>SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        @php
+                                            $hasilSuhu = $dep->hasil_suhu ?? [];
+
+                                            if (is_string($hasilSuhu)) {
+                                                $hasilSuhu = json_decode($hasilSuhu, true);
+
+                                                if (is_string($hasilSuhu)) {
+                                                    $hasilSuhu = json_decode($hasilSuhu, true);
+                                                }
+                                            }
+
+                                            $hasilSuhu = is_array($hasilSuhu) ? $hasilSuhu : [];
+
+                                            $areaList = is_iterable($dep->area_suhus ?? null)
+                                                ? collect($dep->area_suhus)
+                                                : collect();
+
+                                            $qcName = \App\Models\User::where(
+                                                'username',
+                                                $dep->username
+                                            )->value('name') ?? $dep->username ?? '-';
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift: {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->pukul
+                                                    ? \Carbon\Carbon::parse($dep->pukul)->format('H:i')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (!empty($hasilSuhu))
+
+                                                    <a href="javascript:void(0);"
+                                                        class="btn btn-info btn-sm text-white"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#suhuSearchModal{{ $dep->uuid }}">
+                                                        <i class="bi bi-eye"></i>
+                                                        Lihat Hasil
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="suhuSearchModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-labelledby="suhuSearchModalLabel{{ $dep->uuid }}"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-primary text-white">
+
+                                                                    <h5 class="modal-title"
+                                                                        id="suhuSearchModalLabel{{ $dep->uuid }}">
+                                                                        Tanggal:
+                                                                        {{ $dep->date
+                                                                            ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                                            : '-' }}
+                                                                        |
+                                                                        Shift: {{ $dep->shift ?? '-' }}
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal"
+                                                                        aria-label="Close">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body p-0">
+
+                                                                    <div class="table-responsive">
+
+                                                                        <table class="table table-bordered table-sm mb-0 text-center align-middle">
+
+                                                                            <thead class="table-light">
+
+                                                                                <tr>
+                                                                                    <th class="text-start ps-3">
+                                                                                        Detail
+                                                                                    </th>
+
+                                                                                    @foreach ($areaList as $area)
+                                                                                        <th>{{ $area->area }}</th>
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                            </thead>
+
+                                                                            <tbody>
+
+                                                                                <tr>
+
+                                                                                    <td class="fw-bold text-start ps-3 bg-light">
+                                                                                        Standar (°C)
+                                                                                    </td>
+
+                                                                                    @foreach ($areaList as $area)
+
+                                                                                        <td class="bg-light">
+
+                                                                                            @if ($area->standar_min !== null && $area->standar_max !== null)
+                                                                                                ({{ $area->standar_min }})
+                                                                                                -
+                                                                                                ({{ $area->standar_max }})
+                                                                                            @else
+                                                                                                -
+                                                                                            @endif
+
+                                                                                        </td>
+
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                                <tr>
+
+                                                                                    <td class="fw-bold text-start ps-3">
+                                                                                        Aktual (°C)
+                                                                                    </td>
+
+                                                                                    @foreach ($areaList as $area)
+
+                                                                                        @php
+                                                                                            $matched = collect($hasilSuhu)->firstWhere(
+                                                                                                'area',
+                                                                                                $area->area
+                                                                                            );
+
+                                                                                            $nilai = isset($matched['suhu'])
+                                                                                                ? floatval($matched['suhu'])
+                                                                                                : null;
+
+                                                                                            $min = $area->standar_min;
+                                                                                            $max = $area->standar_max;
+
+                                                                                            if (
+                                                                                                $nilai === null ||
+                                                                                                is_nan($nilai)
+                                                                                            ) {
+                                                                                                $colorClass = 'text-dark';
+                                                                                                $displayNilai = '-';
+                                                                                            } elseif (
+                                                                                                $min !== null &&
+                                                                                                $max !== null
+                                                                                            ) {
+                                                                                                $actualMin = min($min, $max);
+                                                                                                $actualMax = max($min, $max);
+
+                                                                                                $colorClass =
+                                                                                                    $nilai >= $actualMin &&
+                                                                                                    $nilai <= $actualMax
+                                                                                                        ? 'text-success'
+                                                                                                        : 'text-danger';
+
+                                                                                                $displayNilai = $nilai;
+                                                                                            } else {
+                                                                                                $colorClass = 'text-dark';
+                                                                                                $displayNilai = $nilai;
+                                                                                            }
+                                                                                        @endphp
+
+                                                                                        <td class="fw-bold {{ $colorClass }}">
+                                                                                            {{ $displayNilai }}
+                                                                                        </td>
+
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                                <tr>
+
+                                                                                    <td class="fw-bold text-start ps-3 bg-light">
+                                                                                        Standar RH (%)
+                                                                                    </td>
+
+                                                                                    @foreach ($areaList as $area)
+
+                                                                                        <td class="bg-light">
+
+                                                                                            @if ($area->rh_min !== null && $area->rh_max !== null)
+                                                                                                ({{ $area->rh_min }})
+                                                                                                -
+                                                                                                ({{ $area->rh_max }})
+                                                                                            @else
+                                                                                                -
+                                                                                            @endif
+
+                                                                                        </td>
+
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                                <tr>
+
+                                                                                    <td class="fw-bold text-start ps-3">
+                                                                                        Aktual RH (%)
+                                                                                    </td>
+
+                                                                                    @foreach ($areaList as $area)
+
+                                                                                        @php
+                                                                                            $matched = collect($hasilSuhu)->firstWhere(
+                                                                                                'area',
+                                                                                                $area->area
+                                                                                            );
+
+                                                                                            $nilai = $matched['rh'] ?? null;
+                                                                                            $min = $area->rh_min;
+                                                                                            $max = $area->rh_max;
+
+                                                                                            if (
+                                                                                                $nilai === '-' ||
+                                                                                                $nilai === null
+                                                                                            ) {
+                                                                                                $color = 'text-dark';
+                                                                                                $show = $nilai ?? '-';
+                                                                                            } elseif (
+                                                                                                $min !== null &&
+                                                                                                $max !== null
+                                                                                            ) {
+                                                                                                $color =
+                                                                                                    $nilai >= min($min, $max) &&
+                                                                                                    $nilai <= max($min, $max)
+                                                                                                        ? 'text-success'
+                                                                                                        : 'text-danger';
+
+                                                                                                $show = $nilai;
+                                                                                            } else {
+                                                                                                $color = 'text-dark';
+                                                                                                $show = $nilai;
+                                                                                            }
+                                                                                        @endphp
+
+                                                                                        <td class="fw-bold {{ $color }}">
+                                                                                            {{ $show }}
+                                                                                        </td>
+
+                                                                                    @endforeach
+
+                                                                                </tr>
+
+                                                                            </tbody>
+
+                                                                        </table>
+
+                                                                    </div>
+
+                                                                </div>
+
+                                                                <div class="modal-footer bg-light">
+
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm px-4 rounded-pill"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        Belum ada data
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (!empty($dep->keterangan))
+
+                                                    <a href="javascript:void(0);"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#suhuKeteranganModal{{ $dep->uuid }}"
+                                                        class="text-primary fw-bold text-decoration-underline">
+                                                        Lihat Keterangan
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="suhuKeteranganModal{{ $dep->uuid }}"
+                                                        tabindex="-1"
+                                                        aria-hidden="true">
+
+                                                        <div class="modal-dialog">
+
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header">
+
+                                                                    <h5 class="modal-title">
+                                                                        Keterangan
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+
+                                                                </div>
+
+                                                                <div class="modal-body text-start"
+                                                                    style="word-break: break-word; white-space: normal;">
+                                                                    {{ $dep->keterangan }}
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    </div>
+
+                                                @else
+
+                                                    -
+
+                                                @endif
+
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $qcName }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $dep->nama_produksi ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (($dep->status_spv ?? null) == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="8" class="py-4">
+
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+
+                                                Belum ada data pemeriksaan suhu.
+
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
