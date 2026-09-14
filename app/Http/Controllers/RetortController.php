@@ -675,6 +675,39 @@ class RetortController extends Controller
                         ->toArray();
                 }
 
+            } elseif ($table === 'recalls') {
+
+                $userUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Recall::query()
+                    ->where(function ($q) use ($txt_cari, $userUuids) {
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('penyebab', 'like', "%{$txt_cari}%")
+                            ->orWhere('asal_informasi', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_dagang', 'like', "%{$txt_cari}%")
+                            ->orWhere('jenis_pangan', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('no_pendaftaran', 'like', "%{$txt_cari}%")
+                            ->orWhere('berat_bersih', 'like', "%{$txt_cari}%")
+                            ->orWhere('jenis_kemasan', 'like', "%{$txt_cari}%")
+                            ->orWhere('tanggal_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('tanggal_kadaluarsa', 'like', "%{$txt_cari}%")
+                            ->orWhere('jumlah_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('tindak_lanjut', 'like', "%{$txt_cari}%");
+
+                        if ($userUuids->isNotEmpty()) {
+                            $q->orWhereIn('username', $userUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)

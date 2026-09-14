@@ -7971,6 +7971,122 @@
                 </div>
             @break
 
+            @case('RECALL')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                            <span class="fw-bold">DATA RECALL</span>
+                            <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date</th>
+                                        <th>Penyebab Telusur</th>
+                                        <th>Asal Informasi</th>
+                                        <th>Jenis Pangan</th>
+                                        <th>Nama Dagang</th>
+                                        <th>Berat / Isi Bersih</th>
+                                        <th>Jenis Kemasan</th>
+                                        <th>Kode Produksi</th>
+                                        <th>Tgl Produksi</th>
+                                        <th>Kadaluarsa</th>
+                                        <th>No. Daftar Pangan</th>
+                                        <th>Jumlah Produksi</th>
+                                        <th>Tindak Lanjut</th>
+                                        <th>Pembuat</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $creatorName = \App\Models\User::where(
+                                                'uuid',
+                                                $dep->username
+                                            )->value('name') ?? $dep->username ?? '-';
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->penyebab ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->asal_informasi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->jenis_pangan ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->nama_dagang ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->berat_bersih ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->jenis_kemasan ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->kode_produksi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->tanggal_produksi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->tanggal_kadaluarsa ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->no_pendaftaran ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->jumlah_produksi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->tindak_lanjut ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="15" class="text-center py-4 text-muted">
+                                                Belum ada data recall.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
