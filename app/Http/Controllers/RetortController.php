@@ -319,6 +319,30 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'prepackings') {
+
+                $kodeProduksi = \App\Models\Mincing::where(
+                    'kode_produksi',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Prepacking::query()
+                    ->where(function ($q) use ($txt_cari, $kodeProduksi) {
+
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%");
+
+                        if ($kodeProduksi->isNotEmpty()) {
+                            $q->orWhereIn('kode_produksi', $kodeProduksi);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)

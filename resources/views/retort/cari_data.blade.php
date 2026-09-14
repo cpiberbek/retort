@@ -5803,6 +5803,269 @@
 
             @break
 
+            @case('PREPACKING')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PREPACKING</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle">
+
+                                <thead class="table-secondary text-center">
+
+                                    <tr>
+                                        <th rowspan="2">NO.</th>
+                                        <th rowspan="2">Date</th>
+                                        <th rowspan="2">Nama Varian</th>
+                                        <th rowspan="2">Kode Batch</th>
+                                        <th rowspan="2">No. Conveyor</th>
+                                        <th rowspan="2">Suhu Varian (&deg;C)</th>
+                                        <th colspan="2">Air (%)</th>
+                                        <th colspan="2">Minyak (%)</th>
+                                        <th colspan="2">Berat Varian per</th>
+                                        <th rowspan="2">Catatan</th>
+                                        <th rowspan="2">QC</th>
+                                        <th rowspan="2">SPV</th>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Basah</th>
+                                        <th>Kering</th>
+                                        <th>Basah</th>
+                                        <th>Kering</th>
+                                        <th>Pcs</th>
+                                        <th>Toples (berat kotor)</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $dep)
+
+                                        @php
+                                            $suhuArray = $dep->suhu_produk ?? [];
+
+                                            if (is_string($suhuArray)) {
+                                                $suhuArray = json_decode($suhuArray, true);
+
+                                                if (is_string($suhuArray)) {
+                                                    $suhuArray = json_decode($suhuArray, true);
+                                                }
+                                            }
+
+                                            $suhuArray = is_array($suhuArray) ? $suhuArray : [];
+
+                                            $suhuValues = [];
+
+                                            foreach ($suhuArray as $value) {
+                                                if (is_array($value)) {
+                                                    $suhuValues[] = $value['suhu'] ?? '-';
+                                                } elseif (is_object($value)) {
+                                                    $suhuValues[] = $value->suhu ?? '-';
+                                                } else {
+                                                    $suhuValues[] = $value;
+                                                }
+                                            }
+
+                                            $suhuText = implode(' | ', $suhuValues);
+
+                                            $kondisi = $dep->kondisi_produk ?? [];
+
+                                            if (is_string($kondisi)) {
+                                                $kondisi = json_decode($kondisi, true);
+
+                                                if (is_string($kondisi)) {
+                                                    $kondisi = json_decode($kondisi, true);
+                                                }
+                                            }
+
+                                            $kondisi = is_array($kondisi) ? $kondisi : [];
+
+                                            $airBasah = $kondisi['basah_air_total'] ?? 0;
+                                            $airKering = $kondisi['kering_air_total'] ?? 0;
+                                            $minyakBasah = $kondisi['basah_minyak_total'] ?? 0;
+                                            $minyakKering = $kondisi['kering_minyak_total'] ?? 0;
+
+                                            $airBasah = is_numeric($airBasah) && fmod((float) $airBasah, 1) == 0
+                                                ? (int) $airBasah
+                                                : $airBasah;
+
+                                            $airKering = is_numeric($airKering) && fmod((float) $airKering, 1) == 0
+                                                ? (int) $airKering
+                                                : $airKering;
+
+                                            $minyakBasah = is_numeric($minyakBasah) && fmod((float) $minyakBasah, 1) == 0
+                                                ? (int) $minyakBasah
+                                                : $minyakBasah;
+
+                                            $minyakKering = is_numeric($minyakKering) && fmod((float) $minyakKering, 1) == 0
+                                                ? (int) $minyakKering
+                                                : $minyakKering;
+
+                                            $berat = $dep->berat_produk ?? [];
+
+                                            if (is_string($berat)) {
+                                                $berat = json_decode($berat, true);
+
+                                                if (is_string($berat)) {
+                                                    $berat = json_decode($berat, true);
+                                                }
+                                            }
+
+                                            $berat = is_array($berat) ? $berat : [];
+
+                                            $pcsText = implode(' | ', [
+                                                $berat['pcs_1'] ?? 0,
+                                                $berat['pcs_2'] ?? 0,
+                                                $berat['pcs_3'] ?? 0,
+                                            ]);
+
+                                            $toplesText = implode(' | ', [
+                                                $berat['toples_1'] ?? 0,
+                                                $berat['toples_2'] ?? 0,
+                                                $berat['toples_3'] ?? 0,
+                                            ]);
+
+                                            $kodeBatch = $dep->kode_produksi ?? '-';
+
+                                            if (
+                                                $kodeBatch !== '-' &&
+                                                \Illuminate\Support\Str::isUuid($kodeBatch)
+                                            ) {
+                                                $kodeBatch = \App\Models\Mincing::where(
+                                                    'uuid',
+                                                    $kodeBatch
+                                                )->value('kode_produksi') ?? $kodeBatch;
+                                            }
+
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="text-center align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ !empty($dep->date)
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $kodeBatch }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->conveyor ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $suhuText !== '' ? $suhuText : '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $airBasah }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $airKering }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $minyakBasah }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $minyakKering }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $pcsText }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $toplesText }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $dep->catatan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+
+                                                @if (($dep->status_spv ?? null) == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif (($dep->status_spv ?? null) == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+                                            <td colspan="15" class="text-center">
+                                                Belum ada data prepacking.
+                                            </td>
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
