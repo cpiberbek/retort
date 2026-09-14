@@ -7124,6 +7124,131 @@
 
             @break
 
+            @case('KLORIN')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">DATA PENGECEKAN KLORIN</h5>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Pukul</th>
+                                        <th>Lokasi</th>
+                                        <th>Foot Basin</th>
+                                        <th>Hand Basin</th>
+                                        <th>Catatan</th>
+                                        <th>QC</th>
+                                        <th>Produksi</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $qcName = \App\Models\User::where('uuid', $dep->username)->value('name')
+                                                ?? $dep->username
+                                                ?? '-';
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y') : '-' }}
+                                                |
+                                                {{ $dep->pukul ? \Carbon\Carbon::parse($dep->pukul)->format('H:i') : '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->lokasi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->footbasin)
+                                                    <a href="{{ asset('storage/' . str_replace('public/', '', $dep->footbasin)) }}"
+                                                        target="_blank">
+                                                        <img src="{{ asset('storage/' . str_replace('public/', '', $dep->footbasin)) }}"
+                                                            alt="Foot Basin"
+                                                            style="width:80px;height:80px;object-fit:cover;border-radius:8px;">
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">Tidak ada gambar</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->handbasin)
+                                                    <a href="{{ asset('storage/' . str_replace('public/', '', $dep->handbasin)) }}"
+                                                        target="_blank">
+                                                        <img src="{{ asset('storage/' . str_replace('public/', '', $dep->handbasin)) }}"
+                                                            alt="Hand Basin"
+                                                            style="width:80px;height:80px;object-fit:cover;border-radius:8px;">
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">Tidak ada gambar</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->catatan ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $qcName }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_produksi == 0)
+                                                    <span class="fw-bold text-secondary">Created</span>
+                                                @elseif ($dep->status_produksi == 1)
+                                                    <span class="fw-bold text-success">Checked</span>
+                                                @elseif ($dep->status_produksi == 2)
+                                                    <span class="fw-bold text-danger">Recheck</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">Created</span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">Verified</span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">Revision</span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="9" class="text-center">
+                                                Belum ada data pengecekan klorin.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
