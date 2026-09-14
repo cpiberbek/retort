@@ -9251,6 +9251,112 @@
                 </div>
             @break
 
+            @case('RELEASE PACKING RTE')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA RELEASE PACKING RTE</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>Expired</th>
+                                        <th>Reject</th>
+                                        <th>Release</th>
+                                        <th>Keterangan</th>
+                                        <th>QC</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->kode_produksi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->expired_date
+                                                    ? \Carbon\Carbon::parse($dep->expired_date)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->reject ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->release ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->keterangan ?? '-' }}
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ \App\Models\User::where('username', $dep->username)->value('name') ?? $dep->username ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="10" class="text-center py-4 text-muted">
+                                                Belum ada data release packing RTE.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
