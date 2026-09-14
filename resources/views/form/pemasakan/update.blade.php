@@ -642,7 +642,7 @@
                                     <td>{{ $item['standar'] }}</td>
                                     <td>{{ $item['alternatif'] }}</td>
                                     <td>
-                                        <input type="number" name="cooking[{{ $item['field'] }}]" class="form-control form-control-sm text-center" step="0.01" value="{{ $cooking[$item['field']] ?? '' }}">
+                                        <input type="number" name="cooking[{{ $item['field'] }}]" class="form-control form-control-sm text-center" step="0.01" value="{{ $cooking[$item['field']] ?? '' }}" {{ isset($cooking[$item['field']]) && $cooking[$item['field']] !== '' ? 'readonly' : '' }}>
                                     </td>
                                 </tr>
                                 @endforeach
@@ -772,22 +772,21 @@
             let hasData = false;
             let globalIndex = 0;
 
-            // Proses Batch LAMA (readonly)
             $('.existing_kode_produksi').each(function() {
                 let value = $(this).val();
                 let text = $(this).attr('data-text');
 
-                if (value && value !== "") {
+                if (value) {
                     hasData = true;
-                    let rawVal = currentRejects[globalIndex];
-                    let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
+                    let rawVal = initialRejects[globalIndex] ?? currentRejects[globalIndex] ?? '';
+                    let rejectVal = rawVal === null || rawVal === undefined ? '' : rawVal;
 
                     tbody.append(`
                         <tr>
                             <td class="text-start fw-semibold">${text} (Lama)</td>
                             <td>Kg</td>
                             <td>
-                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}">
+                                <input type="number" step="0.01" name="total_reject[]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}" ${rejectVal !== '' ? 'readonly' : ''}>
                             </td>
                         </tr>
                     `);
@@ -795,12 +794,11 @@
                 }
             });
 
-            // Proses Batch BARU (Select2 dropdown)
             $('.kode_produksi').each(function() {
                 let value = $(this).val();
                 let text = $(this).find('option:selected').text();
 
-                if (value && value !== "") {
+                if (value) {
                     hasData = true;
                     let rawVal = currentRejects[globalIndex];
                     let rejectVal = (rawVal === null || rawVal === undefined || rawVal === '') ? '' : rawVal;
@@ -810,7 +808,7 @@
                             <td class="text-start fw-semibold">${text}</td>
                             <td>Kg</td>
                             <td>
-                                <input type="number" step="0.01" name="total_reject[${globalIndex}]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}">
+                                <input type="number" step="0.01" name="total_reject[]" value="${rejectVal}" class="form-control form-control-sm text-center reject-input" data-index="${globalIndex}">
                             </td>
                         </tr>
                     `);

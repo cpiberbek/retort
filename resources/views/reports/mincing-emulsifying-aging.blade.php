@@ -310,7 +310,7 @@
             <tr>
                 <td colspan="2" class="left"><b>PARAF QC</b></td>
                 <td colspan="4" class="center">
-                    {{ $row->username_updated ?? ($row->username ?? '-') }}
+                    {{ \App\Models\User::where('username', $row->username_updated ?? $row->username)->value('name') ?? '-' }}
                 </td>
             </tr>
 

@@ -92,7 +92,7 @@ class WashingController extends Controller
             ->where('laporan', 'Pemeriksaan Washing - Drying')
             ->value('no_dokumen');
 
-        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
+        $pdf = new \TCPDF('P', PDF_UNIT, 'F4', true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Pemeriksaan Washing - Drying');
 

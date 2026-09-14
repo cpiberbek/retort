@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Laporan Verifikasi Timer Chamber</title>
+    <title>Verifikasi Timer Chamber</title>
     <style>
         /* CSS Dasar untuk TCPDF */
         body {
@@ -36,7 +36,7 @@
 
         /* Font Sizes Specific */
         .f-small { font-size: 7pt; } /* Untuk data tabel yang padat */
-        .f-norm { font-size: 8pt; }
+        .f-norm { font-size: 7pt; }
 
         /* Status Colors */
         .status-ok { color: #006400; font-weight: bold; }
@@ -49,7 +49,7 @@
         td,
         th {
             font-family: times;
-            font-size: 9pt;
+            font-size: 8pt;
         }
     </style>
 </head>
@@ -68,7 +68,7 @@
     </tr>
 </table>
 
-<h2 class="title" style="margin:5px 0 0 0;">LAPORAN VERIFIKASI TIMER CHAMBER</h2>
+<h2 class="title" style="margin:5px 0 0 0;">VERIFIKASI TIMER CHAMBER</h2>
 
 @php
     $groups = $items->groupBy(fn($item) => $item->date . '_' . $item->shift);
@@ -167,7 +167,7 @@
             <tr>
                 <td colspan="2" style="font-weight:bold;">PARAF PRODUKSI</td>
                 <td colspan="{{ count($verifikasi) * 5 }}">
-                    {{ $item->username_updated ?? $item->username ?? '-' }}
+                    {{ \App\Models\User::where('username', $item->username_updated ?? $item->username)->value('name') ?? '-' }}
                 </td>
             </tr>
 

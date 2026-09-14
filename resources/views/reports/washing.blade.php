@@ -34,6 +34,11 @@
             font-family: times;
             font-size: 6pt;
         }
+         @page {
+            size: A4 portrait;
+            margin: 10mm;
+        }
+
     </style>
 </head>
 <body>
@@ -76,14 +81,14 @@ $item = $items->first();
     </tr>
 
     <tr>
-    <td>Kode Produksi</td>
+        <td>Kode Produksi</td>
         <td align="center">
-            {{ \App\Models\Mincing::where('id', $item->id)->value('kode_produksi') ?? '-' }}
+            {{ optional($item->mincing)->kode_produksi ?? '-' }}
         </td>
     </tr>
     <tr>
         <td>Waktu</td>
-        <td align="center">{{ $item->pukul ?? '-' }}</td>
+        <td align="center">{{ $item->pukul ? \Carbon\Carbon::parse($item->pukul)->format('H:i') : '-' }}</td>
     </tr>
 
     <tr>
@@ -214,7 +219,7 @@ $item = $items->first();
             Suhu PC Kleer : 46 ± 3°C &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             Suhu Heater : 125 - 135°C 
             <br>
-            &nbsp;&nbsp;Konsentrasi PC Kleer : 0.7% (Ayam), 1% (Sapi), 0.8% (Cuci)&nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;Konsentrasi PC Kleer : 0.7% (Ayam), 1% (Sapi), 0.8% (Cuci Ulang)&nbsp;&nbsp;&nbsp;
             Konsentrasi Potassium Sorbate : 0.15%
         </td>
     </tr>

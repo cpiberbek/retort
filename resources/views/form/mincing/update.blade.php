@@ -807,7 +807,9 @@
                                                     <button type="button"
                                                         class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
                                                         {{ $mincing->suhu_akhir_emulsi_gel ? 'disabled' : '' }}>±</button>
-                                                    <input type="number" name="suhu_akhir_emulsi_gel" step="0.01" inputmode="decimal"
+                                                    <input type="text"
+                                                        name="suhu_akhir_emulsi_gel"
+                                                        inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input"
                                                         value="{{ rtrim(rtrim(old('suhu_akhir_emulsi_gel', $mincing->suhu_akhir_emulsi_gel), '0'), '.') }}"
                                                         {{ $mincing->suhu_akhir_emulsi_gel ? 'readonly' : '' }}>
@@ -859,7 +861,9 @@
                                                         class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
                                                         {{ $mincing->suhu_akhir_mixing ? 'disabled' : '' }}>±</button>
 
-                                                    <input type="number" name="suhu_akhir_mixing" step="0.01" inputmode="decimal"
+                                                    <input type="text"
+                                                        name="suhu_akhir_mixing"
+                                                        inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input"
                                                         value="{{ rtrim(rtrim(old('suhu_akhir_mixing', $mincing->suhu_akhir_mixing), '0'), '.') }}"
                                                         {{ $mincing->suhu_akhir_mixing ? 'readonly' : '' }}>
@@ -875,7 +879,9 @@
                                                         class="btn btn-outline-secondary btn-toggle-minus" tabindex="-1"
                                                         {{ $mincing->suhu_akhir_emulsi ? 'disabled' : '' }}>±</button>
 
-                                                    <input type="number" name="suhu_akhir_emulsi" step="0.01" inputmode="decimal"
+                                                    <input type="text"
+                                                        name="suhu_akhir_emulsi"
+                                                        inputmode="decimal"
                                                         class="form-control form-control-sm text-center suhu-number-input"
                                                         value="{{ rtrim(rtrim(old('suhu_akhir_emulsi', $mincing->suhu_akhir_emulsi), '0'), '.') }}"
                                                         {{ $mincing->suhu_akhir_emulsi ? 'readonly' : '' }}>
