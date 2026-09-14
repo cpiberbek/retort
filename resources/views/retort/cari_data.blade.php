@@ -7249,6 +7249,110 @@
                 </div>
             @break
 
+            @case('BERITA ACARA')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">DATA BERITA ACARA</h5>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Nomor BA</th>
+                                        <th>Tanggal</th>
+                                        <th>Supplier</th>
+                                        <th>Nama Barang</th>
+                                        <th>Status PPIC</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $item)
+                                        <tr>
+                                            <td class="fw-bold text-secondary">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->nomor ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->tanggal_kedatangan
+                                                    ? \Carbon\Carbon::parse($item->tanggal_kedatangan)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->supplier ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->nama_barang ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($item->status_ppic == 0)
+                                                    <span class="badge-status status-pending">
+                                                        <i class="bi bi-hourglass-split me-1"></i>
+                                                        Pending
+                                                    </span>
+                                                @elseif ($item->status_ppic == 1)
+                                                    <span class="badge-status status-verified">
+                                                        <i class="bi bi-check-circle me-1"></i>
+                                                        Verified
+                                                    </span>
+                                                @elseif ($item->status_ppic == 2)
+                                                    <span class="badge-status status-revision">
+                                                        <i class="bi bi-x-circle me-1"></i>
+                                                        Revisi
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                @if ($item->status_spv == 0)
+                                                    <span class="badge-status status-pending">
+                                                        <i class="bi bi-hourglass-split me-1"></i>
+                                                        Pending
+                                                    </span>
+                                                @elseif ($item->status_spv == 1)
+                                                    <span class="badge-status status-verified">
+                                                        <i class="bi bi-check-circle me-1"></i>
+                                                        Verified
+                                                    </span>
+                                                @elseif ($item->status_spv == 2)
+                                                    <span class="badge-status status-revision">
+                                                        <i class="bi bi-x-circle me-1"></i>
+                                                        Revisi
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                Belum ada data berita acara.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
