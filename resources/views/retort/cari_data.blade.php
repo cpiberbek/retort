@@ -8598,6 +8598,116 @@
                 </div>
             @break
 
+            @case('PENYIMPANGAN KUALITAS')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PENYIMPANGAN KUALITAS</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal</th>
+                                        <th>Nomor</th>
+                                        <th>Nama Varian</th>
+                                        <th>Lot/Kode</th>
+                                        <th>Status Diketahui</th>
+                                        <th>Status Disetujui</th>
+                                        <th>Pembuat</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $item)
+                                        <tr>
+                                            <td>
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->tanggal
+                                                    ? \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y')
+                                                    : '-' }}
+                                            </td>
+
+                                            <td class="fw-bold text-primary">
+                                                {{ $item->nomor ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->nama_produk ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                {{ $item->lot_kode ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($item->status_diketahui == 0)
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-hourglass-split me-1"></i>
+                                                        Pending
+                                                    </span>
+                                                @elseif ($item->status_diketahui == 1)
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle me-1"></i>
+                                                        Verified
+                                                    </span>
+                                                @elseif ($item->status_diketahui == 2)
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle me-1"></i>
+                                                        Revisi
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                @if ($item->status_disetujui == 0)
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="bi bi-hourglass-split me-1"></i>
+                                                        Pending
+                                                    </span>
+                                                @elseif ($item->status_disetujui == 1)
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle me-1"></i>
+                                                        Verified
+                                                    </span>
+                                                @elseif ($item->status_disetujui == 2)
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle me-1"></i>
+                                                        Revisi
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+
+                                            <td class="text-center align-middle">
+                                                {{ $item->creator->name ?? '-' }}
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4 text-muted">
+                                                Belum ada data penyimpangan kualitas.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">

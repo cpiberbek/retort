@@ -770,6 +770,36 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'penyimpangan_kualitas') {
+
+                $creatorUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\PenyimpanganKualitas::with([
+                        'creator',
+                        'updater',
+                        'verifierDiketahui',
+                        'verifierDisetujui'
+                    ])
+                    ->where(function ($q) use ($txt_cari, $creatorUuids) {
+                        $q->where('nomor', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('lot_kode', 'like', "%{$txt_cari}%")
+                            ->orWhere('ditujukan_untuk', 'like', "%{$txt_cari}%")
+                            ->orWhere('tanggal', 'like', "%{$txt_cari}%");
+
+                        if ($creatorUuids->isNotEmpty()) {
+                            $q->orWhereIn('created_by', $creatorUuids);
+                        }
+                    })
+                    ->orderBy('tanggal', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)
