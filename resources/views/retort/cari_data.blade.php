@@ -8992,6 +8992,265 @@
                 </div>
             @break
 
+            @case('PEMASAKAN RTE')
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMASAKAN RTE</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-striped table-bordered align-middle text-center">
+                                <thead class="table-secondary">
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Date | Shift</th>
+                                        <th>Nama Varian</th>
+                                        <th>Kode Batch</th>
+                                        <th>No. Chamber</th>
+                                        <th>Berat Varian (Gram)</th>
+                                        <th>Suhu Varian (°C)</th>
+                                        <th>Jumlah Tray</th>
+                                        <th>Total Reject (Kg)</th>
+                                        <th>Pengecekan</th>
+                                        <th>QC</th>
+                                        <th>Produksi</th>
+                                        <th>SPV</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @php $no = 1; @endphp
+
+                                    @forelse ($data as $dep)
+                                        @php
+                                            $cooking = $dep->cooking;
+
+                                            if (is_string($cooking)) {
+                                                $cooking = json_decode($cooking, true);
+
+                                                if (is_string($cooking)) {
+                                                    $cooking = json_decode($cooking, true);
+                                                }
+                                            }
+
+                                            $cooking = is_array($cooking) ? $cooking : [];
+
+                                            $creatorName = \App\Models\User::where(
+                                                'username',
+                                                $dep->username
+                                            )->value('name') ?? $dep->username ?? '-';
+
+                                            $sections = [
+                                                '1. Persiapan' => [
+                                                    'Tekanan Angin (Kg/cm²)' => 'tekanan_angin',
+                                                    'Tekanan Steam (Kg/cm²)' => 'tekanan_steam',
+                                                    'Tekanan Air (Kg/cm²)' => 'tekanan_air',
+                                                ],
+                                                '2. Pemanasan Awal' => [
+                                                    'Suhu Air Awal (°C)' => 'suhu_air_awal',
+                                                    'Tekanan Awal (Mpa)' => 'tekanan_awal',
+                                                    'Waktu Mulai' => 'waktu_mulai_awal',
+                                                    'Waktu Selesai' => 'waktu_selesai_awal',
+                                                ],
+                                                '3. Proses Pemanasan' => [
+                                                    'Suhu Air Proses (°C)' => 'suhu_air_proses',
+                                                    'Tekanan Proses (Mpa)' => 'tekanan_proses',
+                                                    'Waktu Mulai' => 'waktu_mulai_proses',
+                                                    'Waktu Selesai' => 'waktu_selesai_proses',
+                                                ],
+                                                '4. Sterilisasi' => [
+                                                    'Suhu Air Sterilisasi (°C)' => 'suhu_air_sterilisasi',
+                                                    'Thermometer Retort (°C)' => 'thermometer_retort',
+                                                    'Tekanan Sterilisasi (Mpa)' => 'tekanan_sterilisasi',
+                                                    'Waktu Mulai' => 'waktu_mulai_sterilisasi',
+                                                    'Waktu Pengecekan' => 'waktu_pengecekan_sterilisasi',
+                                                    'Waktu Selesai' => 'waktu_selesai_sterilisasi',
+                                                ],
+                                                '5. Pendinginan Awal' => [
+                                                    'Suhu Air (°C)' => 'suhu_air_pendinginan_awal',
+                                                    'Tekanan (Mpa)' => 'tekanan_pendinginan_awal',
+                                                    'Waktu Mulai' => 'waktu_mulai_pendinginan_awal',
+                                                    'Waktu Selesai' => 'waktu_selesai_pendinginan_awal',
+                                                ],
+                                                '6. Pendinginan' => [
+                                                    'Suhu Air (°C)' => 'suhu_air_pendinginan',
+                                                    'Tekanan (Mpa)' => 'tekanan_pendinginan',
+                                                    'Waktu Mulai' => 'waktu_mulai_pendinginan',
+                                                    'Waktu Selesai' => 'waktu_selesai_pendinginan',
+                                                ],
+                                                '7. Proses Akhir' => [
+                                                    'Suhu Air (°C)' => 'suhu_air_akhir',
+                                                    'Tekanan (Mpa)' => 'tekanan_akhir',
+                                                    'Waktu Mulai' => 'waktu_mulai_akhir',
+                                                    'Waktu Selesai' => 'waktu_selesai_akhir',
+                                                ],
+                                                '8. Total Waktu Proses' => [
+                                                    'Waktu Mulai Total (WIB)' => 'waktu_mulai_total',
+                                                    'Waktu Selesai Total (WIB)' => 'waktu_selesai_total',
+                                                ],
+                                                '9. Sensori' => [
+                                                    'Suhu Varian Akhir (°C)' => 'suhu_produk_akhir',
+                                                    'Sobek Seal' => 'sobek_seal',
+                                                ],
+                                            ];
+                                        @endphp
+
+                                        <tr>
+                                            <td>{{ $no++ }}</td>
+
+                                            <td>
+                                                {{ $dep->date
+                                                    ? \Carbon\Carbon::parse($dep->date)->format('d-m-Y')
+                                                    : '-' }}
+                                                |
+                                                Shift {{ $dep->shift ?? '-' }}
+                                            </td>
+
+                                            <td>{{ $dep->nama_produk ?? '-' }}</td>
+
+                                            <td>{{ $dep->kode_produksi ?? '-' }}</td>
+
+                                            <td>{{ $dep->no_chamber ?? '-' }}</td>
+
+                                            <td>{{ $dep->berat_produk ?? '-' }}</td>
+
+                                            <td>{{ $dep->suhu_produk ?? '-' }}</td>
+
+                                            <td>{{ $dep->jumlah_tray ?? '-' }}</td>
+
+                                            <td>{{ $dep->total_reject ?? '-' }}</td>
+
+                                            <td>
+                                                @if (!empty($cooking))
+                                                    <a href="javascript:void(0);"
+                                                        class="fw-bold text-decoration-underline text-primary"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#cookingModalSearch{{ $dep->uuid }}">
+                                                        Result
+                                                    </a>
+
+                                                    <div class="modal fade"
+                                                        id="cookingModalSearch{{ $dep->uuid }}"
+                                                        tabindex="-1">
+
+                                                        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                                                            <div class="modal-content">
+
+                                                                <div class="modal-header bg-primary text-white">
+                                                                    <h5 class="modal-title">
+                                                                        Detail Proses Pemasakan
+                                                                    </h5>
+
+                                                                    <button type="button"
+                                                                        class="btn-close btn-close-white"
+                                                                        data-bs-dismiss="modal">
+                                                                    </button>
+                                                                </div>
+
+                                                                <div class="modal-body">
+                                                                    @foreach ($sections as $title => $rows)
+                                                                        <h6 class="fw-bold text-primary mt-3">
+                                                                            {{ $title }}
+                                                                        </h6>
+
+                                                                        <div class="table-responsive">
+                                                                            <table class="table table-sm table-bordered mb-3 align-middle text-start">
+                                                                                <tbody>
+                                                                                    @foreach ($rows as $label => $key)
+                                                                                        <tr>
+                                                                                            <td class="fw-semibold w-50">
+                                                                                                {{ $label }}
+                                                                                            </td>
+
+                                                                                            <td>
+                                                                                                @php
+                                                                                                    $value = $cooking[$key] ?? '-';
+
+                                                                                                    if (is_array($value)) {
+                                                                                                        echo collect($value)
+                                                                                                            ->map(
+                                                                                                                fn($v) => '<span class="badge bg-light text-dark border border-secondary me-1 mb-1">'
+                                                                                                                    . e($v)
+                                                                                                                    . '</span>'
+                                                                                                            )
+                                                                                                            ->implode('');
+                                                                                                    } else {
+                                                                                                        echo e($value);
+                                                                                                    }
+                                                                                                @endphp
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    @endforeach
+                                                                                </tbody>
+                                                                            </table>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+
+                                                                <div class="modal-footer">
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary btn-sm"
+                                                                        data-bs-dismiss="modal">
+                                                                        Tutup
+                                                                    </button>
+                                                                </div>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+
+                                            <td>
+                                                {{ $creatorName }}
+                                            </td>
+
+                                            <td>
+                                                {{ $dep->nama_produksi ?? '-' }}
+                                            </td>
+
+                                            <td>
+                                                @if ($dep->status_spv == 0)
+                                                    <span class="fw-bold text-secondary">
+                                                        Created
+                                                    </span>
+                                                @elseif ($dep->status_spv == 1)
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+                                                @elseif ($dep->status_spv == 2)
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                    @if (!empty($dep->catatan_spv))
+                                                        <div class="small text-muted mt-1">
+                                                            {{ $dep->catatan_spv }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span>-</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="13" class="text-center py-4 text-muted">
+                                                Belum ada data pemasakan RTE.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">

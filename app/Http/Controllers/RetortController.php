@@ -852,6 +852,49 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'pemasakan_rtes') {
+
+                $kodeProduksiUuids = \App\Models\Mincing::where(
+                    'kode_produksi',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $userUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\Pemasakan_rte::query()
+                    ->where(function ($q) use ($txt_cari, $kodeProduksiUuids, $userUuids) {
+                        $q->where('username', 'like', "%{$txt_cari}%")
+                            ->orWhere('nama_produk', 'like', "%{$txt_cari}%")
+                            ->orWhere('kode_produksi', 'like', "%{$txt_cari}%")
+                            ->orWhere('date', 'like', "%{$txt_cari}%")
+                            ->orWhere('shift', 'like', "%{$txt_cari}%")
+                            ->orWhere('no_chamber', 'like', "%{$txt_cari}%");
+
+                        if ($kodeProduksiUuids->isNotEmpty()) {
+                            $q->orWhereIn('kode_produksi', $kodeProduksiUuids);
+                        }
+
+                        if ($userUuids->isNotEmpty()) {
+                            $q->orWhereIn('username', $userUuids);
+                        }
+                    })
+                    ->orderBy('date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
+                foreach ($query as $row) {
+                    $row->kode_produksi = \App\Models\Mincing::where(
+                        'uuid',
+                        $row->kode_produksi
+                    )->value('kode_produksi') ?? $row->kode_produksi;
+                }
+
             } else {
 
                 $query = DB::table($table)
