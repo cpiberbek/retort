@@ -365,6 +365,37 @@ class RetortController extends Controller
                     ->limit(50)
                     ->get();
 
+            } elseif ($table === 'packaging_inspections') {
+
+                $creatorUuids = \App\Models\User::where(
+                    'name',
+                    'like',
+                    "%{$txt_cari}%"
+                )->pluck('uuid');
+
+                $query = \App\Models\PackagingInspection::with('items')
+                    ->where(function ($q) use ($txt_cari, $creatorUuids) {
+
+                        $q->where('shift', 'like', "%{$txt_cari}%")
+                            ->orWhere('uuid', 'like', "%{$txt_cari}%");
+
+                        if ($creatorUuids->isNotEmpty()) {
+                            $q->orWhereIn('created_by', $creatorUuids);
+                        }
+
+                        $q->orWhereHas('items', function ($itemQuery) use ($txt_cari) {
+                            $itemQuery->where(
+                                'packaging_type',
+                                'like',
+                                "%{$txt_cari}%"
+                            );
+                        });
+                    })
+                    ->orderBy('inspection_date', 'desc')
+                    ->orderBy('created_at', 'desc')
+                    ->limit(50)
+                    ->get();
+
             } else {
 
                 $query = DB::table($table)

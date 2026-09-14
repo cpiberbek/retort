@@ -6200,6 +6200,146 @@
 
             @break
 
+            @case('PACKAGING INSPECTION')
+
+                <div class="card shadow-sm mb-4">
+
+                    <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">DATA PEMERIKSAAN PACKAGING</span>
+                        <span class="badge bg-light text-dark">{{ $data->count() }}</span>
+                    </div>
+
+                    <div class="card-body">
+
+                        <div class="table-responsive">
+
+                            <table class="table table-hover align-middle text-center">
+
+                                <thead class="table-secondary">
+
+                                    <tr>
+                                        <th>NO.</th>
+                                        <th>Tanggal Inspeksi</th>
+                                        <th>Dibuat Oleh</th>
+                                        <th>Jenis Packaging</th>
+                                        <th>Shift</th>
+                                        <th>Status SPV</th>
+                                    </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                    @php
+                                        $no = 1;
+                                    @endphp
+
+                                    @forelse ($data as $inspection)
+
+                                        @php
+                                            $packagingTypes = $inspection->items
+                                                ->pluck('packaging_type')
+                                                ->filter()
+                                                ->unique()
+                                                ->implode(', ');
+
+                                            $creatorName = \App\Models\User::where(
+                                                'uuid',
+                                                $inspection->created_by
+                                            )->value('name');
+                                        @endphp
+
+                                        <tr>
+
+                                            <td class="align-middle">
+                                                {{ $no++ }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                {{ $inspection->inspection_date
+                                                    ? \Carbon\Carbon::parse($inspection->inspection_date)->format('d-m-Y')
+                                                    : '-' }}
+
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $creatorName ?? '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+                                                {{ $packagingTypes ?: '-' }}
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if ($inspection->shift)
+                                                    <span class="badge bg-light text-dark border">
+                                                        Shift {{ $inspection->shift }}
+                                                    </span>
+                                                @else
+                                                    -
+                                                @endif
+
+                                            </td>
+
+                                            <td class="align-middle">
+
+                                                @if (($inspection->status_spv ?? null) == 1)
+
+                                                    <span class="fw-bold text-success">
+                                                        Verified
+                                                    </span>
+
+                                                @elseif (($inspection->status_spv ?? null) == 2)
+
+                                                    <span class="fw-bold text-danger">
+                                                        Revision
+                                                    </span>
+
+                                                @elseif (($inspection->status_spv ?? null) == 0)
+
+                                                    <span class="fw-bold text-secondary">
+                                                        Pending
+                                                    </span>
+
+                                                @else
+
+                                                    <span class="text-muted">
+                                                        -
+                                                    </span>
+
+                                                @endif
+
+                                            </td>
+
+                                        </tr>
+
+                                    @empty
+
+                                        <tr>
+
+                                            <td colspan="6" class="py-4 text-muted">
+                                                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                                Belum ada data pemeriksaan packaging.
+                                            </td>
+
+                                        </tr>
+
+                                    @endforelse
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            @break
+
                 @default
 
                     <div class="card shadow-sm border-0 mb-4">
