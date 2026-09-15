@@ -252,11 +252,11 @@
                                 {{-- 1. K.A / FFA (FIXED) --}}
                                 <div class="col-md-3 col-6">
                                     <label for="analisa_ka_ffa" class="form-label d-block">K.A / FFA</label>
-                                    <input type="number" step="0.01"
+                                    <input type="text"
                                         class="form-control @error('analisa_ka_ffa') is-invalid @enderror"
                                         id="analisa_ka_ffa" name="analisa_ka_ffa"
                                         value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}"
-                                        min="0">
+                                        oninput="this.value = this.value.replace(/[^0-9.-]/g, '')">
                                     @error('analisa_ka_ffa')
                                         <span class="invalid-feedback"
                                             role="alert"><strong>{{ $message }}</strong></span>

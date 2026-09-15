@@ -229,12 +229,13 @@
                             <div class="col-md-3 col-6">
                                 <label for="analisa_ka_ffa" class="form-label d-block">K.A / FFA</label>
                                 @php $isKaFfaFilled = !is_null($inspection->analisa_ka_ffa); @endphp
-                                <input type="number" step="0.01" 
-                                    class="form-control @error('analisa_ka_ffa') is-invalid @enderror" 
-                                    id="analisa_ka_ffa" 
-                                    name="analisa_ka_ffa" 
-                                    value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}" 
-                                    min="0"
+                                <input type="text"
+                                    inputmode="decimal"
+                                    class="form-control @error('analisa_ka_ffa') is-invalid @enderror"
+                                    id="analisa_ka_ffa"
+                                    name="analisa_ka_ffa"
+                                    value="{{ old('analisa_ka_ffa', $inspection->analisa_ka_ffa ?? '') }}"
+                                    oninput="this.value = this.value.replace(/[^0-9.-]/g, '')"
                                     {{ $isKaFfaFilled ? 'readonly' : '' }}>
                                 @error('analisa_ka_ffa') 
                                     <span class="invalid-feedback" role="alert"><strong>{{ $message }}</strong></span> 
@@ -373,9 +374,31 @@
                                         'Tidak ada produk non halal'
                                     ];
 
-                                    $selectedKondisi = collect(old('kondisi_mobil', isset($inspection) ? explode(',', $inspection->kondisi_mobil ?? '') : []))
-                                        ->filter()
-                                        ->toArray();
+                                    $selectedKondisi = old('kondisi_mobil');
+
+                                    if ($selectedKondisi === null) {
+                                        $selectedKondisi = $inspection->kondisi_mobil
+                                            ? str_replace(
+                                                'Bebas Noda (Karat, cat, tinta)',
+                                                'Bebas Noda (Karat|cat|tinta)',
+                                                $inspection->kondisi_mobil
+                                            )
+                                            : '';
+
+                                        $selectedKondisi = array_map(
+                                            'trim',
+                                            explode(',', $selectedKondisi)
+                                        );
+
+                                        $selectedKondisi = array_map(
+                                            fn ($item) => str_replace(
+                                                'Bebas Noda (Karat|cat|tinta)',
+                                                'Bebas Noda (Karat, cat, tinta)',
+                                                $item
+                                            ),
+                                            $selectedKondisi
+                                        );
+                                    }
                                 @endphp
 
                                 <div class="row g-2 @error('kondisi_mobil') is-invalid @enderror">

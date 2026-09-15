@@ -160,7 +160,9 @@
                 <td class="col-unit">-</td>
                 <td class="col-std">-</td>
                 <td class="col-res text-blue">
-                    {{ implode(', ', \App\Models\Mincing::whereIn('uuid', $item->kode_produksi)->pluck('kode_produksi')->toArray()) }}
+                    {{ implode(', ', array_map(function ($uuid) {
+                        return \App\Models\Mincing::where('uuid', $uuid)->value('kode_produksi');
+                    }, $item->kode_produksi)) }}
                 </td>
             </tr>
             <tr>
@@ -275,26 +277,40 @@
                 <td class="col-no text-bold">5</td>
                 <td colspan="4" class="section-title">STERILISASI</td>
             </tr>
+            @php
+                $sterilSuhu    = $c['suhu_air_sterilisasi'] ?? [];
+                $sterilRetort  = $c['thermometer_retort'] ?? [];
+                $sterilTekanan = $c['tekanan_sterilisasi'] ?? [];
+                $sterilTime    = $c['waktu_pengecekan_sterilisasi'] ?? [];
+                $sterilCount   = max(count($sterilSuhu), count($sterilRetort), count($sterilTekanan), count($sterilTime), 1);
+                $resW          = 25 / $sterilCount; // col-res is 25% total, split evenly
+            @endphp
             <tr>
                 <td class="col-no"></td>
                 <td class="col-desc">Suhu Air</td>
                 <td class="col-unit">°C</td>
                 <td class="col-std">121.2</td>
-                <td class="col-res text-blue">{{ str_replace(', ', ' | ', $show('suhu_air_sterilisasi')) }}</td>
+                @for($i = 0; $i < $sterilCount; $i++)
+                    <td class="text-blue" style="width:{{ $resW }}%; text-align:center; border:1px solid #000; padding:4px;">{{ $sterilSuhu[$i] ?? '-' }}</td>
+                @endfor
             </tr>
             <tr>
                 <td class="col-no"></td>
                 <td class="col-desc">Thermometer Retort</td>
                 <td class="col-unit">°C</td>
                 <td class="col-std">121.2</td>
-                <td class="col-res text-blue">{{ str_replace(', ', ' | ', $show('thermometer_retort')) }}</td>
+                @for($i = 0; $i < $sterilCount; $i++)
+                    <td class="text-blue" style="width:{{ $resW }}%; text-align:center; border:1px solid #000; padding:4px;">{{ $sterilRetort[$i] ?? '-' }}</td>
+                @endfor
             </tr>
             <tr>
                 <td class="col-no"></td>
                 <td class="col-desc">Tekanan</td>
                 <td class="col-unit">Mpa</td>
                 <td class="col-std">0.26</td>
-                <td class="col-res text-blue">{{ str_replace(', ', ' | ', $show('tekanan_sterilisasi')) }}</td>
+                @for($i = 0; $i < $sterilCount; $i++)
+                    <td class="text-blue" style="width:{{ $resW }}%; text-align:center; border:1px solid #000; padding:4px;">{{ $sterilTekanan[$i] ?? '-' }}</td>
+                @endfor
             </tr>
             <tr>
                 <td class="col-no"></td>
@@ -305,11 +321,21 @@
                     {{ $fmtTime('waktu_mulai_sterilisasi') }} - {{ $fmtTime('waktu_selesai_sterilisasi') }}
                 </td>
             </tr>
-
+            <tr>
+                <td class="col-no"></td>
+                <td class="col-desc">Waktu Pengecekan</td>
+                <td class="col-unit">WIB</td>
+                <td class="col-std">Tiap 4 mnt</td>
+                @for($i = 0; $i < $sterilCount; $i++)
+                    <td class="text-blue" style="width:{{ $resW }}%; text-align:center; border:1px solid #000; padding:4px;">
+                        {{ !empty($sterilTime[$i]) ? \Carbon\Carbon::parse($sterilTime[$i])->format('H:i') : '-' }}
+                    </td>
+                @endfor
+            </tr>
             {{-- 6. PENDINGINAN AWAL --}}
             <tr>
                 <td class="col-no text-bold">6</td>
-                <td colspan="4" class="section-title">PENDINGINAN AWAL</td>
+                <td colspan="8" class="section-title">PENDINGINAN AWAL</td>
             </tr>
             <tr>
                 <td class="col-no"></td>
@@ -436,19 +462,45 @@
             </tr>
             <tr>
                 <td class="col-no"></td>
-                <td class="col-desc">Rasa / Warna / Aroma</td>
+                <td class="col-desc">Rasa</td>
                 <td class="col-unit">1 - 3</td>
                 <td class="col-std">Min. 2</td>
-                <td class="col-res text-blue">
-                    R:{{ $show('rasa') }} / W:{{ $show('warna') }} / A:{{ $show('aroma') }}
-                </td>
+                <td class="col-res text-blue">{{ $show('rasa') }}</td>
+            </tr>
+            <tr>
+                <td class="col-no"></td>
+                <td class="col-desc">Warna</td>
+                <td class="col-unit">1 - 3</td>
+                <td class="col-std">Min. 2</td>
+                <td class="col-res text-blue">{{ $show('warna') }}</td>
+            </tr>
+            <tr>
+                <td class="col-no"></td>
+                <td class="col-desc">Aroma</td>
+                <td class="col-unit">1 - 3</td>
+                <td class="col-std">Min. 2</td>
+                <td class="col-res text-blue">{{ $show('aroma') }}</td>
+            </tr>
+            <tr>
+                <td class="col-no"></td>
+                <td class="col-desc">Tekstur</td>
+                <td class="col-unit">1 - 3</td>
+                <td class="col-std">Min. 2</td>
+                <td class="col-res text-blue">{{ $show('texture') }}</td>
+            </tr>
+            <tr>
+                <td class="col-no"></td>
+                <td class="col-desc">Sobek Seal</td>
+                <td class="col-unit"></td>
+                <td class="col-std"></td>
+                <td class="col-res text-blue">{{ $show('sobek_seal') }}</td>
             </tr>
             
             {{-- 11. REJECT --}}
             <tr>
                 <td class="col-no text-bold">11</td>
                 <td colspan="3" class="section-title">TOTAL REJECT</td>
-                <td colspan="6" class="col-res text-blue text-center">{{ implode(', ', $item->jumlah_tray) ?? '0'}} Kg</td>
+                <td colspan="6" class="col-res text-blue text-center">{{ implode(', ', $item->total_reject) ?? '0'}} Kg</td>
             </tr>
         </tbody>
     </table>

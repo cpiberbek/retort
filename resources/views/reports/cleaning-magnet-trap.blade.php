@@ -51,7 +51,7 @@
 
         <td width="50%" style="border:1px solid #000;text-align:center;font-size:18px;padding:5px;">
             <b>FORM</b><br>
-            <b>VERIFIKASI MAGNET TRAP</b>
+            <b>CHECKLIST CLEANING MAGNET TRAP</b>
         </td>
 
         <td width="25%" style="border:1px solid #000;font-size:10px;padding:0;vertical-align:top;">
@@ -98,7 +98,7 @@
     </tr>
 </table>
 
-<h2 class="title">CHECKLIST CLEANING MAGNET TRAP</h2>
+{{-- <h2 class="title">CHECKLIST CLEANING MAGNET TRAP</h2> --}}
 <br>
 <br>
 
@@ -162,15 +162,15 @@
         </td>
 
         <td class="center" style="padding:0;">
-            {{ $item->username ?? '-' }}
+            {{ optional($item->creator)->name ?? '-' }}
         </td>
 
         <td class="center" style="padding:0;">
-            {{ $item->produksi->name ?? $item->produksi_id ?? '-' }}
+            {{ optional($item->produksi)->nama_karyawan ?? '-' }}
         </td>
 
         <td class="center" style="padding:0;">
-            {{ $item->engineer->name ?? $item->engineer_id ?? '-' }}
+            {{ optional($item->engineer)->nama_karyawan ?? '-' }}
         </td>
     </tr>
 

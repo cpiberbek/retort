@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('mincings', function (Blueprint $table) {
-            $table->integer('waktu_mixing_premix')->nullable();
-            $table->integer('waktu_bowl_cutter')->nullable();
+            // $table->integer('waktu_mixing_premix')->nullable();
+            // $table->integer('waktu_bowl_cutter')->nullable();
         });
     }
 
