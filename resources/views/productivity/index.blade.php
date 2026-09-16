@@ -1,0 +1,169 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-fluid">
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Productivity</h1>
+
+    </div>
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-header py-3">
+            <form method="GET"
+                action="{{ route('productivity.index') }}"
+                id="filterForm">
+
+                <div class="row align-items-end">
+
+                    <div class="col-md-3">
+                        <label for="month_year" class="font-weight-bold mb-1">
+                            Filter Bulan & Tahun
+                        </label>
+
+                        <input type="month"
+                            name="month_year"
+                            id="month_year"
+                            class="form-control"
+                            value="{{ request('month_year') }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label for="search" class="font-weight-bold mb-1">
+                            Cari Tonase / Manpower
+                        </label>
+
+                        <input type="text"
+                            name="search"
+                            id="search"
+                            class="form-control"
+                            value="{{ request('search') }}"
+                            placeholder="Cari tonase atau manpower...">
+                    </div>
+
+                    <div class="col-md-2">
+                        <a href="{{ route('productivity.index') }}"
+                            class="btn btn-primary w-100">
+                            <i class="fas fa-sync-alt"></i> Reset
+                        </a>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+
+        <div class="card-body">
+
+            <div class="d-flex justify-content-end mb-3">
+                <a href="{{ route('productivity.create-or-update') }}"
+                    class="btn btn-success px-4 py-2">
+                    <i class="fas fa-plus"></i> Tambah / Update Laporan Bulan ini
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover"
+                    width="100%"
+                    cellspacing="0">
+
+                    <thead class="text-center bg-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Bulan</th>
+                            <th>Tonase Bulanan</th>
+                            <th>Total Manpower</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($productivities as $index => $data)
+                            <tr>
+
+                                <td class="text-center">
+                                    {{ ($productivities->currentPage() - 1) * $productivities->perPage() + $index + 1 }}
+                                </td>
+
+                                <td class="text-center">
+                                    {{ \Carbon\Carbon::parse($data->date)->translatedFormat('F Y') }}
+                                </td>
+
+                                <td class="text-center">
+                                    {{ rtrim(rtrim(number_format($data->tonase_bulanan, 2, '.', ''), '0'), '.') }}
+                                </td>
+
+                                <td class="text-center">
+                                    {{ $data->total_manpower }}
+                                </td>
+
+                                <td class="text-center">
+
+                                    <a href="{{ route('productivity.create-or-update', ['uuid' => $data->uuid]) }}"
+                                        class="btn btn-sm btn-warning"
+                                        title="Update">
+                                        <i class="bi bi-pencil-square"></i> Edit Data
+                                    </a>
+
+                                    <form action="{{ route('productivity.destroy', ['uuid' => $data->uuid]) }}"
+                                        method="POST"
+                                        class="d-inline"
+                                        onsubmit="return confirm('Yakin ingin menghapus data productivity ini?')">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button type="submit"
+                                            class="btn btn-sm btn-danger"
+                                            title="Hapus">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </form>
+
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center">
+                                    Data tidak ditemukan.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+
+                </table>
+            </div>
+
+            @if(method_exists($productivities, 'links'))
+                <div class="d-flex justify-content-end mt-3">
+                    {{ $productivities->links('pagination::bootstrap-4') }}
+                </div>
+            @endif
+
+        </div>
+    </div>
+
+</div>
+@endsection
+
+@push('scripts')
+<script>
+    $(document).ready(function () {
+
+        $('#month_year').on('change', function () {
+            $('#filterForm').submit();
+        });
+
+        let searchTimer;
+
+        $('#search').on('input', function () {
+            clearTimeout(searchTimer);
+
+            searchTimer = setTimeout(function () {
+                $('#filterForm').submit();
+            }, 500);
+        });
+
+    });
+</script>
+@endpush

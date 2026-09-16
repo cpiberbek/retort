@@ -97,53 +97,39 @@
         </li>
     @endcan
 
-    @can('can access control')
-        <div class="sidebar-heading">Access Control</div>
+    @can('can access form qc')
         @php
-            $accessControlActive = request()->routeIs('permissions.*') || request()->routeIs('roles.*');
+            $operationalMonitoringActive =
+                request()->routeIs('productivity.*') ||
+                request()->routeIs('issue-complain.*');
         @endphp
-        <li class="nav-item {{ $accessControlActive ? 'active' : '' }}">
-            <a class="nav-link {{ $accessControlActive ? '' : 'collapsed' }}" href="#" data-bs-toggle="collapse"
-                data-bs-target="#collapseAccessControl" aria-expanded="{{ $accessControlActive ? 'true' : 'false' }}"
-                aria-controls="collapseAccessControl">
-                <i class="fas fa-lock"></i>
-                <span>Access Control</span>
-            </a>
-            <div id="collapseAccessControl" class="collapse {{ $accessControlActive ? 'show' : '' }}"
-                data-bs-parent="#accordionSidebar">
-                <div class="bg-white py-2 collapse-inner rounded">
-                    <a class="collapse-item {{ request()->routeIs('permissions.*') ? 'active' : '' }}"
-                        href="{{ route('permissions.index') }}">Permissions</a>
-                    <a class="collapse-item {{ request()->routeIs('roles.*') ? 'active' : '' }}"
-                        href="{{ route('roles.index') }}">Roles</a>
-                </div>
-            </div>
-        </li>
-    @endcan
 
-        @can('can access form qc')
         <div class="sidebar-heading">Operational Monitoring</div>
 
-        <li class="nav-item">
-            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+        <li class="nav-item {{ $operationalMonitoringActive ? 'active' : '' }}">
+            <a class="nav-link {{ $operationalMonitoringActive ? '' : 'collapsed' }}" href="#"
+                data-bs-toggle="collapse"
                 data-bs-target="#collapseOperationalMonitoring"
-                aria-expanded="false"
+                aria-expanded="{{ $operationalMonitoringActive ? 'true' : 'false' }}"
                 aria-controls="collapseOperationalMonitoring">
 
                 <i class="fas fa-chart-line"></i>
                 <span>Operational Monitoring</span>
             </a>
 
-            <div id="collapseOperationalMonitoring" class="collapse"
+            <div id="collapseOperationalMonitoring"
+                class="collapse {{ $operationalMonitoringActive ? 'show' : '' }}"
                 data-bs-parent="#accordionSidebar">
 
                 <div class="bg-white py-2 collapse-inner rounded">
 
-                    <a class="collapse-item" href="#">
+                    <a class="collapse-item {{ request()->routeIs('productivity.*') ? 'active' : '' }}"
+                        href="{{ route('productivity.index') }}">
                         Productivity
                     </a>
 
-                    <a class="collapse-item" href="#">
+                    <a class="collapse-item {{ request()->routeIs('issue-complain.*') ? 'active' : '' }}"
+                        href="{{ route('issue-complain.index') }}">
                         Isu & Komplain
                     </a>
 

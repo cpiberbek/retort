@@ -962,6 +962,20 @@ Route::middleware('auth')->group(function () {
     Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
     Route::resource('raw-material', MasterRawMaterialController::class);
 });
+
+//Productivity
+Route::get('/productivity', [ProductivityController::class, 'index'])
+    ->name('productivity.index');
+Route::get('/productivity/create-or-update/{uuid?}', [ProductivityController::class, 'createOrUpdate'])
+    ->name('productivity.create-or-update');
+Route::post('/productivity/store', [ProductivityController::class, 'store'])
+    ->name('productivity.store');
+Route::delete('/productivity/{uuid}', [ProductivityController::class, 'destroy'])
+    ->name('productivity.destroy');
+
+Route::get('/issue-complain', [IssueComplainController::class, 'index'])
+    ->name('issue-complain.index');
+
 Route::get('/test-limit', function() {
     return 'Max Input Vars: ' . ini_get('max_input_vars');
 });
