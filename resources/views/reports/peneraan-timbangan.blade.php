@@ -35,27 +35,46 @@
 
 <body>
 
-{{-- HEADER --}}
-
 <table width="100%">
     <tr>
         <td class="small" width="40%">
             PT Charoen Pokphand Indonesia<br>
             Food Division
         </td>
-        
     </tr>
 </table>
+
 <h2 class="title">PENERAAN TIMBANGAN</h2>
+
 <br>
 <br>
 
-{{-- INFO --}}
 @php
-$firstItem = $items->first();
-$date = $firstItem ? \Carbon\Carbon::parse($firstItem->date)->format('d-m-Y') : '';
-$shift = $firstItem ? $firstItem->shift : '';
+    $firstItem = $items->first();
+    $date = $firstItem ? \Carbon\Carbon::parse($firstItem->date)->format('d-m-Y') : '';
+    $shift = $firstItem ? $firstItem->shift : '';
+
+    $allPeneraan = [];
+
+    foreach ($items as $item) {
+        $peneraan = json_decode($item->peneraan, true);
+
+        if (is_array($peneraan)) {
+            foreach ($peneraan as $data) {
+                if (
+                    !empty($data['kode_timbangan']) ||
+                    !empty($data['standar']) ||
+                    !empty($data['pukul']) ||
+                    !empty($data['hasil_tera']) ||
+                    !empty($data['tindakan_perbaikan'])
+                ) {
+                    $allPeneraan[] = $data;
+                }
+            }
+        }
+    }
 @endphp
+
 <table width="100%" class="tbl-header">
     <tr>
         <td width="15%">Hari / Tanggal</td>
@@ -67,7 +86,6 @@ $shift = $firstItem ? $firstItem->shift : '';
 
 <br>
 
-{{-- TABEL UTAMA --}}
 <table width="100%" class="tbl-main small">
     <tr>
         <th rowspan="2" class="center">KODE TIMBANGAN</th>
@@ -80,42 +98,23 @@ $shift = $firstItem ? $firstItem->shift : '';
         <th class="center">HASIL TERA</th>
     </tr>
 
-    @php
-    $allPeneraan = [];
-    foreach($items as $item) {
-        $peneraan = json_decode($item->peneraan, true);
-        if(is_array($peneraan)) {
-            $allPeneraan = array_merge($allPeneraan, $peneraan);
-        }
-    }
-    @endphp
-
     @foreach($allPeneraan as $peneraan)
-    <tr>
-        <td style="height:40px;">{{ $peneraan['kode_timbangan'] ?? '' }}</td>
-        <td>{{ $peneraan['standar'] ?? '' }}</td>
-        <td>{{ $peneraan['pukul'] ?? '' }}</td>
-        <td>{{ $peneraan['hasil_tera'] ?? '' }}</td>
-        <td>{{ $peneraan['tindakan_perbaikan'] ?? '' }}</td>
-    </tr>
+        <tr>
+            <td style="height:40px;">{{ $peneraan['kode_timbangan'] ?? '' }}</td>
+            <td>{{ $peneraan['standar'] ?? '' }}</td>
+            <td>{{ $peneraan['pukul'] ?? '' }}</td>
+            <td>{{ $peneraan['hasil_tera'] ?? '' }}</td>
+            <td>{{ $peneraan['tindakan_perbaikan'] ?? '' }}</td>
+        </tr>
     @endforeach
-
-    @if(count($allPeneraan) < 6)
-    @for($i = count($allPeneraan); $i < 6; $i++)
-    <tr>
-        <td style="height:40px;"></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    @endfor
-    @endif
 </table>
-<div style="text-align:right; font-size:8px;font-style:italic">QT 57 / 00</div>
+
+<div style="text-align:right; font-size:8px;font-style:italic">
+    QT 57 / 00
+</div>
+
 <br>
 
-{{-- KETERANGAN --}}
 <table width="100%" class="small">
     <tr>
         <td>
@@ -127,26 +126,32 @@ $shift = $firstItem ? $firstItem->shift : '';
         </td>
     </tr>
 </table>
+
 <br><br>
 <br>
 
-{{-- TTD --}}
 <table width="100%" class="small">
     <tr>
         <td width="50%" class="sign">
             Dibuat oleh,<br><br><br>
-            ( ___________________ )<br>
+            (<u> {{ $firstItem->username ?? '-' }} </u>)<br>
             QC
         </td>
+
+        @php
+            $semuaDisetujui = $items->isNotEmpty() &&
+                $items->every(fn($item) => (int) $item->status_spv === 1);
+        @endphp
+
         <td width="50%" class="sign">
             Diketahui oleh,<br><br><br>
-            ( ___________________ )<br>
+            (
+            <u>{{ $semuaDisetujui ? ($firstItem->nama_spv ?? '-') : 'Belum semua entry disetujui SPV' }}</u>
+            )<br>
             QC SPV
         </td>
     </tr>
 </table>
-
-
 
 </body>
 </html>
