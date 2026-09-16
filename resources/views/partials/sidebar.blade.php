@@ -121,6 +121,37 @@
         </li>
     @endcan
 
+        @can('can access form qc')
+        <div class="sidebar-heading">Operational Monitoring</div>
+
+        <li class="nav-item">
+            <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                data-bs-target="#collapseOperationalMonitoring"
+                aria-expanded="false"
+                aria-controls="collapseOperationalMonitoring">
+
+                <i class="fas fa-chart-line"></i>
+                <span>Operational Monitoring</span>
+            </a>
+
+            <div id="collapseOperationalMonitoring" class="collapse"
+                data-bs-parent="#accordionSidebar">
+
+                <div class="bg-white py-2 collapse-inner rounded">
+
+                    <a class="collapse-item" href="#">
+                        Productivity
+                    </a>
+
+                    <a class="collapse-item" href="#">
+                        Isu & Komplain
+                    </a>
+
+                </div>
+            </div>
+        </li>
+    @endcan
+
     @can('can access form qc')
         @php
 

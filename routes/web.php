@@ -67,7 +67,9 @@ use App\Http\Controllers\{
     MasterRawMaterialController,
     RetortController,
     MasterPremixController,
-    SsoLoginController
+    SsoLoginController,
+    ProductivityController,
+    IssueComplainController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
