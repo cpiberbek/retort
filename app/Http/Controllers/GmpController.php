@@ -463,6 +463,19 @@ class GmpController extends Controller
         try {
             $userPlant = Auth::user()->plant;
             $username = Auth::user()->username ?? '-';
+
+            $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Pemeriksaan Higiene Karyawan ')
+                ->value('no_dokumen');
+
+            $revisi = 0;
+
+            if ($noDokumen && str_contains($noDokumen, '/')) {
+                $revisi = (int) trim(
+                    substr($noDokumen, strrpos($noDokumen, '/') + 1)
+                );
+            }
+
             $nama_produksi = session('selected_produksi')
                 ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
                 : '-';
@@ -622,6 +635,9 @@ class GmpController extends Controller
 
             $sheet->setCellValue('K7', strtoupper($atribut));
             $sheet->setCellValue('E7', \Carbon\Carbon::parse($date)->format('d F Y'));
+
+            $sheet->setCellValue('AG2', ': ' . ($noDokumen ?? '-'));
+            $sheet->setCellValue('AG3', ': ' . $revisi);
 
             $sheet->setCellValueByColumnAndRow(7, 10, \Carbon\Carbon::parse($date)->format('d-m-Y'));
 
