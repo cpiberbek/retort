@@ -975,6 +975,12 @@ Route::delete('/productivity/{uuid}', [ProductivityController::class, 'destroy']
 
 Route::get('/issue-complain', [IssueComplainController::class, 'index'])
     ->name('issue-complain.index');
+Route::get('/issue-complain/create-or-update/{uuid?}', [IssueComplainController::class, 'createOrUpdate'])
+    ->name('issue-complain.create-or-update');
+Route::post('/issue-complain/store', [IssueComplainController::class, 'store'])
+    ->name('issue-complain.store');
+Route::delete('/issue-complain/{uuid}', [IssueComplainController::class, 'destroy'])
+    ->name('issue-complain.destroy');
 
 Route::get('/test-limit', function() {
     return 'Max Input Vars: ' . ini_get('max_input_vars');

@@ -130,7 +130,7 @@
 
                     <a class="collapse-item {{ request()->routeIs('issue-complain.*') ? 'active' : '' }}"
                         href="{{ route('issue-complain.index') }}">
-                        Isu & Komplain
+                        Issue & Komplain
                     </a>
 
                 </div>
