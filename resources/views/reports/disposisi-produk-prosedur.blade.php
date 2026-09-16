@@ -48,7 +48,7 @@
         
     </tr>
 </table>
-<h2 class="title">DISPOSISI VARIAN DAN PROSEDUR</h2>
+<h2 class="title">DISPOSISI PRODUK DAN PROSEDUR</h2>
 <br>
 <br>
 
@@ -58,9 +58,9 @@ $firstDisposition = $dispositions->first();
 $nomor = $firstDisposition ? $firstDisposition->nomor : '';
 $tanggal = $firstDisposition ? \Carbon\Carbon::parse($firstDisposition->tanggal)->format('d-m-Y') : '';
 $kepada = $firstDisposition ? $firstDisposition->kepada : '';
-$produk = $firstDisposition && $firstDisposition->disposisi_produk ? '√' : '';
-$material = $firstDisposition && $firstDisposition->disposisi_material ? '√' : '';
-$prosedur = $firstDisposition && $firstDisposition->disposisi_prosedur ? '√' : '';
+$produk = $firstDisposition && $firstDisposition->disposisi_produk ? 'V' : '';
+$material = $firstDisposition && $firstDisposition->disposisi_material ? 'V' : '';
+$prosedur = $firstDisposition && $firstDisposition->disposisi_prosedur ? 'V' : '';
 $dasar = $firstDisposition ? $firstDisposition->dasar_disposisi : '';
 $uraian = $firstDisposition ? $firstDisposition->uraian_disposisi : '';
 $catatan = $firstDisposition ? $firstDisposition->catatan : '';
@@ -82,9 +82,9 @@ $catatan = $firstDisposition ? $firstDisposition->catatan : '';
     <tr>
         <td>Disposisi</td>
         <td>
-            <span class="box">{{ $produk }}</span> Varian &nbsp;&nbsp;
-            <span class="box">{{ $material }}</span> Material &nbsp;&nbsp;
-            <span class="box">{{ $prosedur }}</span> Prosedur
+            <span class="box">[ {{ $produk }} ]</span> Varian &nbsp;&nbsp;
+            <span class="box">[ {{ $material }} ]</span> Material &nbsp;&nbsp;
+            <span class="box">[ {{ $prosedur }} ]</span> Prosedur
         </td>
     </tr>
 
@@ -114,23 +114,35 @@ $catatan = $firstDisposition ? $firstDisposition->catatan : '';
         <td>:</td>
     </tr>
 </table>
+<div style="text-align:right; font-size:8px;">QT 29 / 00</div>
 
 <br><br>
 
 <table width="100%" class="small">
     <tr>
+        <td width="33.33%" class="sign">
+            Dibuat Oleh,
+        </td>
+        <td width="33.33%" class="sign">
+            Mengetahui,
+        </td>
+        <td width="33.33%" class="sign">
+            Diperiksa Oleh,
+        </td>
+    </tr>
+    <tr>
         <td width="25%" class="sign">
-            Dibuat Oleh,<br><br><br>
+            <br><br><br>
             ( _____________ )<br>
             Spv. QC
         </td>
         <td width="25%" class="sign">
-            Mengetahui,<br><br><br>
+            <br><br><br>
             ( _____________ )<br>
             Spv. Produksi
         </td>
         <td width="25%" class="sign">
-            Diperiksa Oleh,<br><br><br>
+            <br><br><br>
             ( _____________ )<br>
             Manager Produksi
         </td>
@@ -142,7 +154,7 @@ $catatan = $firstDisposition ? $firstDisposition->catatan : '';
     </tr>
 </table>
 
-<div style="text-align:right; font-size:8px;">QT 29 / 00</div>
+
 
 </body>
 </html>
