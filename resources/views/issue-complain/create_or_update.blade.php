@@ -3,21 +3,9 @@
 @section('content')
 <div class="container-fluid">
 
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Issue & Komplain</h1>
-
-        <a href="{{ route('issue-complain.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
-    </div>
-
     <div class="card shadow-sm border-0">
 
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-                {{ $issueComplain ? 'Edit Issue & Komplain' : 'Tambah Issue & Komplain' }}
-            </h6>
-        </div>
+        <div class="card-header py-3"> <h4 class="mb-0 fw-bold text-primary"> <i class="bi bi-clipboard-check-fill me-2"></i> @if($issueComplain) Update Issue & Komplain @else Buat Issue & Komplain @endif </h4> </div>
 
         <div class="card-body">
 
@@ -51,7 +39,7 @@
                         @enderror
                     </div>
 
-                    <div class="col-md-8 mb-3">
+                    <div class="col-md-4 mb-3">
                         <label for="judul_isu" class="font-weight-bold">
                             Judul Issue
                         </label>

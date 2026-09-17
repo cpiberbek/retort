@@ -29,19 +29,6 @@
                             value="{{ request('month_year') }}">
                     </div>
 
-                    <div class="col-md-4">
-                        <label for="search" class="font-weight-bold mb-1">
-                            Cari Tonase / Manpower
-                        </label>
-
-                        <input type="text"
-                            name="search"
-                            id="search"
-                            class="form-control"
-                            value="{{ request('search') }}"
-                            placeholder="Cari tonase atau manpower...">
-                    </div>
-
                     <div class="col-md-2">
                         <a href="{{ route('productivity.index') }}"
                             class="btn btn-primary w-100">

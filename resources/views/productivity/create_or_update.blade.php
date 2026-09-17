@@ -3,20 +3,17 @@
 @section('content')
 <div class="container-fluid">
 
-    <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Create / Update Productivity</h1>
-
-        <a href="{{ route('productivity.index') }}" class="btn btn-secondary">
-            <i class="fas fa-arrow-left"></i> Kembali
-        </a>
-    </div>
-
     <div class="card shadow-sm border-0">
 
         <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">
-                Data Productivity
-            </h6>
+            <h4 class="mb-0 fw-bold text-primary">
+                <i class="bi bi-clipboard-check-fill me-2"></i>
+                @if(isset($productivity))
+                    Update Data Productivity - {{ \Carbon\Carbon::parse($productivity->date)->translatedFormat('F Y') }}
+                @else
+                    Buat Data Productivity
+                @endif
+            </h4>
         </div>
 
         <div class="card-body">
