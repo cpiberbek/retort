@@ -6,6 +6,7 @@ use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SsoLoginController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,3 +26,12 @@ Route::post('activation', [ApiController::class, 'activation']);
 Route::post('password-change', [ApiController::class, 'changePassword']);
 
 Route::post('/sso/logout', [SsoLoginController::class, 'ssoLogout']);
+
+//dashboard
+//tes
+Route::get('/test', function () {
+    return response()->json([
+        'status' => 'success',
+        'message' => 'API Laravel terhubung'
+    ]);
+});

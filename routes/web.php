@@ -119,8 +119,7 @@ Route::middleware('auth')->group(function () {
     // });
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/set-produksi', [DashboardController::class, 'setProduksi'])->name('set.produksi');
-
+     
     // Halo test
     Route::get('/halo', [HaloController::class, 'index']);
 

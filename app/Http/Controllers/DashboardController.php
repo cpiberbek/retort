@@ -1,55 +1,40 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
-use App\Models\Suhu;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Suhu;
+use App\Models\Area_suhu;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Default tanggal hari ini
-        $tanggal = $request->input('tanggal', Carbon::today()->toDateString());
+        $plant = Auth::user()->plant;
 
-        // Ambil data suhu
-        $data = Suhu::whereDate('date', $tanggal)
-                    ->orderBy('pukul', 'asc')
-                    ->get();
+        $areas = Area_suhu::where('plant', $plant)
+            ->orderBy('area')
+            ->distinct()
+            ->pluck('area');
 
-        // Ambil plant user yang sedang login
-        $userPlant = Auth::user()->plant;
-        $userType  = Auth::user()->type_user ?? null;
-
-        // Hanya buat pop_up_produksi untuk user type 4 & 8
-        if (in_array($userType, [4,8]) && !session()->has('selected_produksi')) {
-            $produksi = User::where('type_user', 3)
-                            ->where('plant', $userPlant)
-                            ->get(); 
-
-            session(['pop_up_produksi' => $produksi]);
-        }
-
-        return view('dashboard', compact('data', 'tanggal'));
+        return view('dashboard', compact('plant', 'areas'));
     }
 
-    public function setProduksi(Request $request)
+    public function suhu(Request $request)
     {
-        $request->validate([
-            'nama_produksi' => 'required|exists:users,uuid',
+        $userUuid = $request->input('user');
+
+        $user = \App\Models\User::where('uuid', $userUuid)->firstOrFail();
+
+        $plant = $user->plant_active ?? $user->plant;
+        $tanggal = now()->format('Y-m-d');
+
+        return response()->json([
+            'plant' => $plant,
+            'tanggal' => $tanggal,
         ]);
-
-        $produksi = User::where('uuid', $request->nama_produksi)->first();
-
-        if ($produksi) {
-            session(['selected_produksi' => $produksi->uuid]);
-        }
-
-        session()->forget('pop_up_produksi');
-
-        return redirect()->route('dashboard');
     }
+
 }
