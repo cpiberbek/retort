@@ -151,7 +151,7 @@
 
                     <td width="30%" style="vertical-align: middle; text-align: center;">
                         {{ optional($item['mincing'])->kode_produksi ?? '-' }}<br>
-                        <img src="{{ storage_path('app/public/' . $item['file']) }}" width="200">
+                        <img src="{{ storage_path('app/public/' . $item['file']) }}" width="60">
                     </td>
 
                     <td width="7.5%" style="vertical-align: middle; text-align: center;">
