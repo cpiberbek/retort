@@ -457,7 +457,7 @@
                                 <td width="50%" class="center">
                                     Diperiksa oleh,
                                     <br><br><br>
-                                    ( ___________________ )
+                                    ( <u>{{ $inspections->pluck('created_by')->filter()->map(fn($uuid) => \App\Models\User::where('uuid', $uuid)->value('name'))->filter()->unique()->implode(', ') ?: '-' }}</u> )
                                     <br>
                                     QC
                                 </td>
@@ -465,7 +465,7 @@
                                 <td width="50%" class="center">
                                     Diverifikasi oleh,
                                     <br><br><br>
-                                    ( ___________________ )
+                                    ( <u>{{ $inspections->pluck('verified_by')->filter()->unique()->count() === $inspections->count() ? \App\Models\User::whereIn('id', $inspections->pluck('verified_by')->filter())->pluck('name')->unique()->implode(', ') : 'Belum Semua Entry Disetujui' }}</u> )
                                     <br>
                                     SPV QC
                                 </td>

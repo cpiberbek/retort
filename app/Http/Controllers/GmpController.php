@@ -14,6 +14,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use TCPDF;
+use App\Models\List_form;
 
 class GmpController extends Controller
 {
@@ -461,6 +463,19 @@ class GmpController extends Controller
         try {
             $userPlant = Auth::user()->plant;
             $username = Auth::user()->username ?? '-';
+
+            $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Pemeriksaan Higiene Karyawan ')
+                ->value('no_dokumen');
+
+            $revisi = 0;
+
+            if ($noDokumen && str_contains($noDokumen, '/')) {
+                $revisi = (int) trim(
+                    substr($noDokumen, strrpos($noDokumen, '/') + 1)
+                );
+            }
+
             $nama_produksi = session('selected_produksi')
                 ? \App\Models\User::where('uuid', session('selected_produksi'))->first()->name
                 : '-';
@@ -512,35 +527,60 @@ class GmpController extends Controller
             $rekap = [];
 
             foreach ($gmpRows as $row) {
+                $json = $row->pemeriksaan;
 
-                // 🔥 FIX: Cegah double decode
-                $json = is_string($row->pemeriksaan) ? json_decode($row->pemeriksaan, true) : $row->pemeriksaan;
-                if (!$json) continue;
+                if (is_string($json)) {
+                    $json = json_decode($json, true);
+                }
+
+                if (!is_array($json)) {
+                    continue;
+                }
 
                 foreach ($json as $entry) {
+                    if (!is_array($entry)) {
+                        continue;
+                    }
 
-                    if (!isset($entry['area'])) continue;
-                    if ($normalize($entry['area']) !== $selectedSlug) continue;
+                    if (!isset($entry['area'])) {
+                        continue;
+                    }
 
-                    $nama = $entry['nama_karyawan'] ?? 'Unknown';
-                    $pukul = $entry['pukul'] ?? '-';
-                    $keterangan = $entry['keterangan'] ?? '';
+                    if ($normalize($entry['area']) !== $selectedSlug) {
+                        continue;
+                    }
+
+                    $nama = trim($entry['nama_karyawan'] ?? 'Unknown');
+
+                    if ($nama === '') {
+                        $nama = 'Unknown';
+                    }
 
                     if (!isset($rekap[$nama])) {
                         $rekap[$nama] = [
-                            'pukul' => '',
-                            'keterangan' => ''
+                            'pukul' => $entry['pukul'] ?? '-',
+                            'keterangan' => $entry['keterangan'] ?? '',
                         ];
+
                         foreach ($attributes as $attr) {
                             $rekap[$nama][$attr] = 0;
                         }
                     }
 
-                    $rekap[$nama]['pukul'] = $pukul;
-                    $rekap[$nama]['keterangan'] = $keterangan;
+                    $rekap[$nama]['pukul'] = $entry['pukul'] ?? $rekap[$nama]['pukul'];
+                    $rekap[$nama]['keterangan'] = $entry['keterangan'] ?? $rekap[$nama]['keterangan'];
 
                     foreach ($attributes as $attr) {
-                        $rekap[$nama][$attr] = isset($entry[$attr]) ? (int)$entry[$attr] : 0;
+                        $value = $entry[$attr] ?? 0;
+
+                        if (
+                            $value === 1 ||
+                            $value === '1' ||
+                            $value === true ||
+                            $value === 'true'
+                        ) {
+                            $rekap[$nama][$attr] = 1;
+                        }
                     }
                 }
             }
@@ -596,6 +636,9 @@ class GmpController extends Controller
             $sheet->setCellValue('K7', strtoupper($atribut));
             $sheet->setCellValue('E7', \Carbon\Carbon::parse($date)->format('d F Y'));
 
+            $sheet->setCellValue('AG2', ': ' . ($noDokumen ?? '-'));
+            $sheet->setCellValue('AG3', ': ' . $revisi);
+
             $sheet->setCellValueByColumnAndRow(7, 10, \Carbon\Carbon::parse($date)->format('d-m-Y'));
 
             $rowNum = 12;
@@ -628,7 +671,7 @@ class GmpController extends Controller
                 $col++;
 
                 foreach ($attributes as $attr) {
-                    $value = $data[$attr] == 1 ? '✓' : '-';
+                    $value = $data[$attr] == 1 ? 'V' : '-';
 
                     $sheet->setCellValueByColumnAndRow($col, $rowNum, $value);
                     $sheet->getStyleByColumnAndRow($col, $rowNum)->applyFromArray($center);
@@ -659,6 +702,237 @@ class GmpController extends Controller
             exit;
         } catch (\Throwable $e) {
             return back()->with('error', "Gagal export: " . $e->getMessage());
+        }
+    }
+
+    // EXPORT PDF
+    public function exportPdf(Request $request)
+    {
+        $date = $request->input('date');
+        $atribut = $request->input('atribut');
+
+        if (!$date || !$atribut) {
+            return redirect()->route('gmp.index')
+                ->with('error', 'Pilih tanggal dan area terlebih dahulu.');
+        }
+
+        try {
+            $userPlant = Auth::user()->plant;
+            $username = Auth::user()->username ?? '-';
+
+            // Nomor dokumen
+            $noDokumen = List_form::where('plant', $userPlant)
+                ->where('laporan', 'Pemeriksaan Higiene Karyawan ')
+                ->value('no_dokumen');
+
+            // Nomor revisi
+            $revisi = 0;
+
+            if ($noDokumen && str_contains($noDokumen, '/')) {
+                $revisi = (int) trim(
+                    substr($noDokumen, strrpos($noDokumen, '/') + 1)
+                );
+            }
+
+            $namaProduksi = session('selected_produksi')
+                ? optional(
+                    \App\Models\User::where(
+                        'uuid',
+                        session('selected_produksi')
+                    )->first()
+                )->name ?? '-'
+                : '-';
+
+            $areas = Area_hygiene::where('plant', $userPlant)->get();
+
+            $selectedArea = $areas->firstWhere('area', $atribut);
+
+            if (!$selectedArea) {
+                return back()->with(
+                    'error',
+                    'Area tidak ditemukan di Area Hygiene.'
+                );
+            }
+
+            $selectedSlug = Str::slug($selectedArea->area, '_');
+
+            $normalize = fn($str) => Str::slug(
+                strtolower($str),
+                '_'
+            );
+
+            $gmpRows = Gmp::where('plant', $userPlant)
+                ->where('date', $date)
+                ->get();
+
+            if ($gmpRows->isEmpty()) {
+                return back()->with(
+                    'error',
+                    "Tidak ada data GMP pada tanggal {$date}."
+                );
+            }
+
+            $attributes = [
+                'anting',
+                'kalung',
+                'cincin',
+                'jam_tangan',
+                'peniti',
+                'bros',
+                'payet',
+                'softlens',
+                'eyelashes',
+                'seragam',
+                'boot',
+                'masker',
+                'ciput_hairnet',
+                'kuku',
+                'parfum',
+                'make_up',
+                'diare',
+                'demam',
+                'luka_bakar',
+                'batuk',
+                'radang',
+                'influenza',
+                'sakit_mata'
+            ];
+
+            $rekap = [];
+
+            foreach ($gmpRows as $row) {
+                $json = $row->pemeriksaan;
+
+                if (is_string($json)) {
+                    $json = json_decode($json, true);
+                }
+
+                if (!is_array($json)) {
+                    continue;
+                }
+
+                foreach ($json as $entry) {
+                    if (!is_array($entry)) {
+                        continue;
+                    }
+
+                    if (!isset($entry['area'])) {
+                        continue;
+                    }
+
+                    if ($normalize($entry['area']) !== $selectedSlug) {
+                        continue;
+                    }
+
+                    $nama = trim(
+                        $entry['nama_karyawan'] ?? 'Unknown'
+                    );
+
+                    if ($nama === '') {
+                        $nama = 'Unknown';
+                    }
+
+                    if (!isset($rekap[$nama])) {
+                        $rekap[$nama] = [
+                            'pukul' => $entry['pukul'] ?? '-',
+                            'keterangan' => $entry['keterangan'] ?? '',
+                        ];
+
+                        foreach ($attributes as $attr) {
+                            $rekap[$nama][$attr] = 0;
+                        }
+                    }
+
+                    $rekap[$nama]['pukul'] =
+                        $entry['pukul'] ??
+                        $rekap[$nama]['pukul'];
+
+                    $rekap[$nama]['keterangan'] =
+                        $entry['keterangan'] ??
+                        $rekap[$nama]['keterangan'];
+
+                    foreach ($attributes as $attr) {
+                        $value = $entry[$attr] ?? 0;
+
+                        if (
+                            $value === 1 ||
+                            $value === '1' ||
+                            $value === true ||
+                            $value === 'true'
+                        ) {
+                            $rekap[$nama][$attr] = 1;
+                        }
+                    }
+                }
+            }
+
+            if (empty($rekap)) {
+                return back()->with(
+                    'error',
+                    "Tidak ada data pada area {$atribut} untuk tanggal {$date}."
+                );
+            }
+
+            $pdf = new TCPDF(
+                'L',
+                'mm',
+                'F4',
+                true,
+                'UTF-8',
+                false
+            );
+
+            $pdf->SetCreator('Retort');
+            $pdf->SetAuthor(Auth::user()->name ?? '-');
+            $pdf->SetTitle('Rekap GMP');
+
+            $pdf->SetMargins(5, 5, 5);
+            $pdf->SetHeaderMargin(0);
+            $pdf->SetFooterMargin(0);
+            $pdf->SetAutoPageBreak(true, 5);
+
+            $pdf->SetFont('times', '', 6);
+
+            $pdf->AddPage();
+
+            $html = view('form.gmp.report', [
+                'date' => $date,
+                'atribut' => $atribut,
+                'rekap' => $rekap,
+                'attributes' => $attributes,
+                'username' => $username,
+                'namaProduksi' => $namaProduksi,
+                'noDokumen' => $noDokumen,
+                'revisi' => $revisi,
+            ])->render();
+
+            $pdf->writeHTML(
+                $html,
+                true,
+                false,
+                true,
+                false,
+                ''
+            );
+
+            $filename = 'Rekap_GMP_' .
+                Str::slug($atribut, '_') .
+                '_' .
+                $date .
+                '.pdf';
+
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            $pdf->Output($filename, 'I');
+            exit;
+
+        } catch (\Throwable $e) {
+            return back()->with(
+                'error',
+                'Gagal export: ' . $e->getMessage()
+            );
         }
     }
 }

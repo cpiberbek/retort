@@ -72,9 +72,20 @@
         @foreach($klorins as $klorin)
         <tr>
             <td class="center">{{ \Carbon\Carbon::parse($klorin->pukul)->format('H:i') }}</td>
-            <td class="center">{{ $klorin->footbasin ? '√' : '' }}</td>
-            <td class="center">{{ $klorin->handbasin ? '√' : '' }}</td>
-            <td class="center">{{ $klorin->username ?? '' }}</td>
+            <td class="center">
+                @if($klorin->footbasin)
+                    <img src="{{ storage_path('app/public/klorin/' . basename($klorin->footbasin)) }}" width="120">
+                @endif
+            </td>
+
+            <td class="center">
+                @if($klorin->handbasin)
+                    <img src="{{ storage_path('app/public/klorin/' . basename($klorin->handbasin)) }}" width="120">
+                @endif
+            </td>
+            <td class="center">
+                {{ \App\Models\User::where('username', $klorin->username)->value('name') ?? $klorin->username ?? '' }}
+            </td>
             <td class="center">{{ $klorin->nama_produksi ?? '' }}</td>
         </tr>
         @endforeach
@@ -93,10 +104,14 @@
 
 <table width="100%" class="small">
     <tr>
-        <td>Keterangan : √ Sesuai Standar</td>
+        <td style="padding-bottom: 5px;">
+            Keterangan : V Sesuai Standar
+        </td>
     </tr>
     <tr>
-        <td>Catatan :</td>
+        <td style="padding-top: 5px;">
+            Catatan : {{ $klorins->pluck('catatan')->filter()->implode(', ') }}
+        </td>
     </tr>
 </table>
 

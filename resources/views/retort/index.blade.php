@@ -19,7 +19,7 @@
                         <input type="text" name="txt_cari" id="txt_cari" class="form-control"
                             placeholder="Ketik kata kunci...">
 
-                        <button type="button" id="btn_cari" class="btn btn-danger">
+                        <button type="submit" id="btn_cari" class="btn btn-danger">
                             Cari
                         </button>
                     </div>
@@ -38,7 +38,9 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        $("#btn_cari").click(function() {
+        $("#form").submit(function(e) {
+            e.preventDefault();
+
             $.ajax({
                 url: "{{ url('/retort/cari') }}",
                 method: "POST",
@@ -82,7 +84,7 @@
                                         </div>
 
                                         <div class="search-card active">
-                                            <i class="fas fa-image"></i>
+                                            <i class="fas fa-file"></i>
                                         </div>
 
                                         <div class="search-card">
@@ -94,7 +96,7 @@
                                         </div>
 
                                         <div class="search-card">
-                                            <i class="fas fa-image"></i>
+                                            <i class="fas fa-file"></i>
                                         </div>
 
                                         <div class="search-card">
@@ -185,7 +187,7 @@
                             </div>
 
                             <p class="mt-3 mb-0 text-muted">
-                                Data sedang dicari, mohon ditunggu...
+                                Data sedang dikumpulkan, mohon ditunggu...
                             </p>
 
                         </div>

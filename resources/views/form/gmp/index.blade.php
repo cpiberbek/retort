@@ -382,6 +382,15 @@
                                 <i class="bi bi-file-earmark-excel"></i> Export Excel
                             </button>
                         </div>
+
+                        <div class="col-auto">
+                            <button type="submit"
+                                formaction="{{ route('gmp.exportPdf') }}"
+                                formtarget="_blank"
+                                class="btn btn-danger btn-sm">
+                                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
