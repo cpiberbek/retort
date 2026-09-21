@@ -925,6 +925,7 @@ Route::middleware('auth')->group(function () {
     Route::get('gmp/verification', [GmpController::class, 'verification'])->name('gmp.verification');
     Route::put('gmp/verification/{uuid}', [GmpController::class, 'updateVerification'])->name('gmp.verification.update');
     Route::get('/gmp/export', [GmpController::class, 'export'])->name('gmp.export');
+    Route::get('/gmp/export-pdf', [GmpController::class, 'exportPdf'])->name('gmp.exportPdf');
     // Route::resource('gmp', GmpController::class)->parameters([
     //     'gmp' => 'uuid'
     // ]);
