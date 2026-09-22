@@ -105,7 +105,7 @@
     // Live
     $grafanaEnvironments = [
         'http://10.7.10.101/retort' => [              
-            'base' => 'http://10.7.10.101:3000',      // ganti kalau Grafana live di host/port lain
+            'base' => 'http://10.7.10.101:3000',      
             'uid'  => 'ad5x69y',
             'slug' => 'dashboard-suhu-live',
         ],

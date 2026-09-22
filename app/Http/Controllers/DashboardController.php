@@ -22,19 +22,5 @@ class DashboardController extends Controller
         return view('dashboard', compact('plant', 'areas'));
     }
 
-    public function suhu(Request $request)
-    {
-        $userUuid = $request->input('user');
-
-        $user = \App\Models\User::where('uuid', $userUuid)->firstOrFail();
-
-        $plant = $user->plant_active ?? $user->plant;
-        $tanggal = now()->format('Y-m-d');
-
-        return response()->json([
-            'plant' => $plant,
-            'tanggal' => $tanggal,
-        ]);
-    }
 
 }

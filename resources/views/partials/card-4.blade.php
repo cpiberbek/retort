@@ -86,9 +86,9 @@
 
 <div class="py-2">
 
-    <div class="d-flex align-items-start">
+    <div class="d-flex align-items-start" style="white-space: nowrap;">
 
-        <div class="quality-left" style="width: 25%; padding-right: 20px;">
+        <div style="width: 105px; flex-shrink: 0; padding-right: 20px;">
             <div style="font-size: 12px; letter-spacing: 2.5px; color: #ea580c; font-weight: 700;">
                 PREVENTIVE
             </div>
@@ -99,11 +99,10 @@
             </div>
         </div>
 
-        <div class="quality-divider"
-            style="width: 1px; height: 43px; background: #ea580c;">
+        <div style="width: 1px; height: 43px; flex-shrink: 0; background: #ea580c;">
         </div>
 
-        <div class="quality-right" style="padding-left: 15px;">
+        <div style="padding-left: 15px; flex-shrink: 0;">
             <div style="font-size: 26px; line-height: 1; font-weight: 700; color: #441b05;">
                 Hold
             </div>

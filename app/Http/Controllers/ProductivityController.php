@@ -86,6 +86,7 @@ class ProductivityController extends Controller
     {
         $request->validate([
             'date' => 'required|date_format:Y-m',
+            'hari_kerja' => 'required|integer|min:1|max:31',
             'tonase_bulanan' => 'required|numeric|min:0',
             'total_manpower' => 'required|integer|min:0',
         ]);
@@ -93,12 +94,23 @@ class ProductivityController extends Controller
         $plant = auth()->user()->plant;
         $date = $request->date . '-01';
 
+        $daysInMonth = \Carbon\Carbon::createFromFormat('Y-m-d', $date)->daysInMonth;
+
+        if ($request->hari_kerja > $daysInMonth) {
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'hari_kerja' => "Hari kerja tidak boleh lebih dari {$daysInMonth} hari untuk bulan ini.",
+                ]);
+        }
+
         $productivity = Productivity::where('plant', $plant)
             ->where('date', $date)
             ->first();
 
         if ($productivity) {
             $productivity->update([
+                'hari_kerja' => $request->hari_kerja,
                 'tonase_bulanan' => $request->tonase_bulanan,
                 'total_manpower' => $request->total_manpower,
                 'username_updated' => auth()->user()->username,
@@ -114,6 +126,7 @@ class ProductivityController extends Controller
             'username' => auth()->user()->username,
             'username_updated' => auth()->user()->username,
             'date' => $date,
+            'hari_kerja' => $request->hari_kerja,
             'plant' => $plant,
             'tonase_bulanan' => $request->tonase_bulanan,
             'total_manpower' => $request->total_manpower,

@@ -20,6 +20,7 @@ class Productivity extends Model
 
     protected $fillable = [
         'date',
+        'hari_kerja',
         'plant',
         'tonase_bulanan',
         'total_manpower',

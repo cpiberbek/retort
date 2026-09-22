@@ -125,7 +125,7 @@
 
                     <a class="collapse-item {{ request()->routeIs('productivity.*') ? 'active' : '' }}"
                         href="{{ route('productivity.index') }}">
-                        Productivity
+                        Rekap Produktivitas
                     </a>
 
                     <a class="collapse-item {{ request()->routeIs('issue-complain.*') ? 'active' : '' }}"

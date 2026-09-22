@@ -4,7 +4,7 @@
 <div class="container-fluid">
 
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Productivity</h1>
+        <h1 class="h3 mb-0 text-gray-800">Rekap Produktivitas</h1>
 
     </div>
 
@@ -137,6 +137,7 @@
                         <tr>
                             <th>No</th>
                             <th>Bulan</th>
+                            <th>Hari Kerja</th>
                             <th>Tonase Bulanan</th>
                             <th>Total Manpower</th>
                             <th>Aksi</th>
@@ -156,11 +157,15 @@
                                 </td>
 
                                 <td class="text-center">
-                                    {{ rtrim(rtrim(number_format($data->tonase_bulanan, 2, '.', ''), '0'), '.') }}
+                                    {{ $data->hari_kerja }} Hari
                                 </td>
 
                                 <td class="text-center">
-                                    {{ $data->total_manpower }}
+                                    {{ rtrim(rtrim(number_format($data->tonase_bulanan, 2, '.', ''), '0'), '.') }} Ton
+                                </td>
+
+                                <td class="text-center">
+                                    {{ $data->total_manpower }} Orang
                                 </td>
 
                                 <td class="text-center">
@@ -189,7 +194,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="text-center">
+                                <td colspan="6" class="text-center">
                                     Data tidak ditemukan.
                                 </td>
                             </tr>
