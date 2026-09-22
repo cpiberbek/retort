@@ -27,5 +27,9 @@ class Productivity extends Model
         'username_updated',
     ];
 
+    protected $casts = [
+        'date' => 'date',
+    ];
+
     protected $dates = ['deleted_at'];
 }

@@ -18,6 +18,16 @@
 
         <div class="card-body">
 
+            @php
+                $defaultDate = now()->format('Y-m');
+
+                if (isset($productivity)) {
+                    $defaultDate = \Carbon\Carbon::parse($productivity->date)->format('Y-m');
+                } elseif (request()->filled('month')) {
+                    $defaultDate = \Carbon\Carbon::createFromDate(now()->year, (int) request('month'), 1)->format('Y-m');
+                }
+            @endphp
+
             <form method="POST" action="{{ route('productivity.store') }}">
                 @csrf
 
@@ -28,13 +38,21 @@
                             Bulan & Tahun
                         </label>
 
-                        <input type="month"
-                            name="date"
-                            id="date"
-                            class="form-control @error('date') is-invalid @enderror"
-                            value="{{ old('date', isset($productivity) ? \Carbon\Carbon::parse($productivity->date)->format('Y-m') : now()->format('Y-m')) }}"
-                            {{ isset($productivity) ? 'readonly' : '' }}
-                            required>
+                        @if(isset($productivity))
+                            <input type="month"
+                                id="date_display"
+                                class="form-control"
+                                value="{{ $defaultDate }}"
+                                disabled>
+                            <input type="hidden" name="date" value="{{ old('date', $defaultDate) }}">
+                        @else
+                            <input type="month"
+                                name="date"
+                                id="date"
+                                class="form-control @error('date') is-invalid @enderror"
+                                value="{{ old('date', $defaultDate) }}"
+                                required>
+                        @endif
 
                         @error('date')
                             <div class="invalid-feedback">

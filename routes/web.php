@@ -971,6 +971,8 @@ Route::post('/productivity/store', [ProductivityController::class, 'store'])
     ->name('productivity.store');
 Route::delete('/productivity/{uuid}', [ProductivityController::class, 'destroy'])
     ->name('productivity.destroy');
+Route::get('productivity/status', [ProductivityController::class, 'status'])
+    ->name('productivity.status');
 
 Route::get('/issue-complain', [IssueComplainController::class, 'index'])
     ->name('issue-complain.index');

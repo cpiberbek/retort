@@ -35,15 +35,51 @@ class ProductivityController extends Controller
         if ($uuid) {
             $productivity = Productivity::where('uuid', $uuid)
                 ->where('plant', $plant)
-                ->firstOrFail();
-        } else {
-            $productivity = Productivity::where('plant', $plant)
-                ->whereMonth('date', now()->month)
-                ->whereYear('date', now()->year)
                 ->first();
+
+            if (!$productivity) {
+                return redirect()
+                    ->route('productivity.index')
+                    ->with('error', 'Data tidak ditemukan di plant yang sedang aktif.');
+            }
+        } else {
+            $productivity = null;
         }
 
         return view('productivity.create_or_update', compact('productivity'));
+    }
+
+    public function status()
+    {
+        $plant = auth()->user()->plant;
+        $year = now()->year;
+        $currentMonth = now()->month;
+
+        $currentProductivity = Productivity::where('plant', $plant)
+            ->whereMonth('date', $currentMonth)
+            ->whereYear('date', $year)
+            ->first();
+
+        $existing = Productivity::where('plant', $plant)
+            ->whereYear('date', $year)
+            ->get(['uuid', 'date'])
+            ->map(fn ($item) => [
+                'uuid'  => $item->uuid,
+                'month' => $item->date->month,
+            ])
+            ->sortBy('month')
+            ->values();
+
+        $existingMonths   = $existing->pluck('month')->toArray();
+        $availableMonths  = array_values(array_diff(range(1, 12), $existingMonths));
+
+        return response()->json([
+            'has_current_month' => (bool) $currentProductivity,
+            'current_uuid'      => $currentProductivity?->uuid,
+            'available_months'  => $availableMonths, // bulan yang masih kosong tahun ini
+            'existing_months'   => $existing,         // buat dropdown edit kalau full
+            'all_filled'        => count($availableMonths) === 0,
+        ]);
     }
 
     public function store(Request $request)
