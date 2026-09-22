@@ -114,15 +114,13 @@
                                             Penyelesaian
                                         </span>
                                     @else
-                                        <span class="badge badge-primary">
-                                            Update
-                                        </span>
+                                        <span class="badge" style="background: #ea580c; color: #fff;">Update</span>
                                     @endif
                                 </td>
 
                                 <td class="text-center">
                                     <button type="button"
-                                        class="btn btn-sm btn-info"
+                                        class="btn btn-sm btn-primary"
                                         data-toggle="modal"
                                         data-target="#detailModal{{ $data->uuid }}">
                                         <i class="fas fa-eye"></i> Detail

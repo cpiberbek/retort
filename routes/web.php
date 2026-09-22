@@ -119,6 +119,9 @@ Route::middleware('auth')->group(function () {
     // });
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('dashboard/issue-complain/filter', [DashboardController::class, 'issueComplainFilter'])
+    ->name('dashboard.issue-complain.filter');
      
     // Halo test
     Route::get('/halo', [HaloController::class, 'index']);

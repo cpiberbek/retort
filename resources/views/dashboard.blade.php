@@ -13,19 +13,7 @@
             </div>
         </div>
 
-        <div class="col-md-4 mb-4">
-            <div class="card shadow-sm mb-4">
-                <div class="card-body">
-                    @include('partials.card-2')
-                </div>
-            </div>
-
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    @include('partials.card-4')
-                </div>
-            </div>
-        </div>
+        
 
         <div class="col-md-4 mb-4">
             <div class="card shadow-sm h-100">
@@ -47,6 +35,20 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     @include('partials.card-5')
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    @include('partials.card-2')
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    @include('partials.card-4')
                 </div>
             </div>
         </div>
