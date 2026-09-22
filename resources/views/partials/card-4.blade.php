@@ -80,36 +80,54 @@
     }
 
     .quality-body {
-        animation: qualityBody .4s ease-out .85s both;
+        animation: qualityBody .5s ease-out .85s both;
     }
 </style>
 
 <div class="py-2">
 
-    <div class="d-flex align-items-start" style="white-space: nowrap;">
+    <div class="d-flex align-items-start justify-content-between" style="white-space: nowrap;">
 
-        <div style="width: 105px; flex-shrink: 0; padding-right: 20px;">
-            <div style="font-size: 12px; letter-spacing: 2.5px; color: #ea580c; font-weight: 700;">
-                PREVENTIVE
+        <div class="d-flex align-items-start">
+
+            <div class="quality-left" style="width: 105px; flex-shrink: 0; padding-right: 20px;">
+                <div style="font-size: 12px; letter-spacing: 2.5px; color: #ea580c; font-weight: 700;">
+                    PREVENTIVE
+                </div>
+
+                <div class="mt-1"
+                    style="font-size: 22px; line-height: 1.1; font-weight: 700; color: #441b05;">
+                    QUALITY
+                </div>
             </div>
 
-            <div class="mt-1"
-                style="font-size: 22px; line-height: 1.1; font-weight: 700; color: #441b05;">
-                QUALITY
+            <div class="quality-divider"
+                style="width: 1px; height: 43px; flex-shrink: 0; background: #ea580c;">
             </div>
+
+            <div class="quality-right" style="padding-left: 15px; flex-shrink: 0;">
+                <div style="font-size: 26px; line-height: 1; font-weight: 700; color: #441b05;">
+                    Hold
+                </div>
+
+                <div style="font-size: 17px; color: #ea580c;">
+                    & Release
+                </div>
+            </div>
+
         </div>
 
-        <div style="width: 1px; height: 43px; flex-shrink: 0; background: #ea580c;">
-        </div>
+        <div class="d-flex align-items-end status-live">
+            {{-- later kalo sudah proper --}}
+            {{-- <span class="status-live-dot"
+                style="font-size: 10px; color: #eb1010; margin-right: 6px;">
+                ●
+            </span>
 
-        <div style="padding-left: 15px; flex-shrink: 0;">
-            <div style="font-size: 26px; line-height: 1; font-weight: 700; color: #441b05;">
-                Hold
-            </div>
+            <span style="font-size: 10px; letter-spacing: 2px; color: #e61616; font-weight: 700;">
+                LIVE
+            </span> --}}
 
-            <div style="font-size: 17px; color: #ea580c;">
-                & Release
-            </div>
         </div>
 
     </div>
@@ -118,8 +136,20 @@
         style="height: 2px; background: linear-gradient(to right, #ea580c 46%, #ea580c 46%, #e2e8f0 43%, #e2e8f0 100%);">
     </div>
 
-    <div class="d-flex align-items-center justify-content-between mt-3 quality-body">
+    <div class="d-flex align-items-center justify-content-center mt-3 quality-body">
+        <div class="card shadow-sm border-0" style="width: 100%; max-width: 360px; background: #fff7ed;">
+            <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
 
+                <div style="font-size: 50px; color: #f28c28; line-height: 1; margin-bottom: 10px;">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+
+                <div style="font-family: 'Arial Black', Arial, sans-serif; font-size: 18px; line-height: 1; letter-spacing: 3px; color: #441b05; font-weight: 900;">
+                    COMING SOON...
+                </div>
+
+            </div>
+        </div>
     </div>
 
 </div>
