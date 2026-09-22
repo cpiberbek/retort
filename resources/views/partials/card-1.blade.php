@@ -136,7 +136,7 @@
 
 <div class="py-2">
     <div class="productivity-label"
-        style="font-size: 10px; letter-spacing: 3px; color: #9a3412; font-weight: 600;">
+        style="font-size: 10px; letter-spacing: 3px; color: #ea580c; font-weight: 600;">
         OPERATIONAL MONITORING
     </div>
 
