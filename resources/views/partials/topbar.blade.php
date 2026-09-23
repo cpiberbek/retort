@@ -87,7 +87,7 @@
             </div>
 
             @if (!empty($plantOpsi) && $plants->count() > 0)
-                <div class="plant-mobile-info" style="padding: 4px 0; line-height: 1.1;">
+                <div class="plant-mobile-info" style="padding: 4px 0; line-height: 0.9;">
 
                     <div class="text-muted" style="font-size: 11px; font-weight: 700;">
                          Switch Plant:
