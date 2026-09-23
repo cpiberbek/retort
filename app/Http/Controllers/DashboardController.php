@@ -25,6 +25,14 @@ class DashboardController extends Controller
         return view('dashboard', compact('plant', 'areas', 'issueComplains'));
     }
 
+    // Kamus card
+    // 1. Rekap Produktivitas
+    // 2. Status Produksi
+    // 3. Suhu
+    // 4. Hold Release
+    // 5. Bad Product
+    // 6. Isu Complain
+
     public function issueComplainFilter(Request $request)
     {
         $plant = Auth::user()->plant;

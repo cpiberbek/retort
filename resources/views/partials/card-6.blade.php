@@ -100,7 +100,7 @@
 
     <div class="d-flex align-items-center justify-content-between mt-1">
         <div class="issue-title" style="font-size: 24px; line-height: 1; font-weight: 600; color: #441b05;">
-            Isu & Komplain
+            Issue & Complain
         </div>
     </div>
 
@@ -200,8 +200,14 @@ $(document).ready(function () {
     });
 
     $(document).on('click', '.issue-detail-btn', function () {
+        const judul_isu = $(this).data('judul_isu');
         const detail = $(this).data('detail');
-        $('#issueDetailModalBody').text(detail);
+
+        $('#issueDetailModalBody').html(
+            '<div class="mb-2"><strong>Topik:<br></strong> "' + $('<div>').text(judul_isu).html() + '"</div>' +
+            '<div><strong>Detail:</strong><br>' + $('<div>').text(detail).html() + '</div>'
+        );
+
         $('#issueDetailModal').modal('show');
     });
 

@@ -25,6 +25,7 @@
             <button type="button"
                 class="btn btn-sm btn-link p-0 mt-1 issue-detail-btn"
                 style="font-size: 11px;"
+                data-judul_isu="{{ $data->judul_isu }}"
                 data-detail="{{ $data->detail }}">
                 Lihat Detail
             </button>
