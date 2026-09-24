@@ -110,22 +110,34 @@
 </style>
 
 @php
-    // Konfigurasi Grafana per environment. Kunci = url('/') aplikasi Laravel.
-    // Live
+    // ------------------------------------------------------------------
+    // Konfigurasi Grafana per environment.
+    // Key = rtrim(url('/'), '/') milik aplikasi Laravel di environment tsb.
+    // ------------------------------------------------------------------
+
+    // LIVE  -> isi sesuai url('/') dan host Grafana di server live
+    $liveUrlKey = 'http://10.7.10.101/retort';
+
     $grafanaEnvironments = [
+        // LOCAL (XAMPP)
         'http://10.7.10.101/retort' => [
+            'base' => 'http://10.7.10.101:3000',
+            'uid'  => 'ad5x69z',
+            'slug' => 'dashboard-productivity-local',
+        ],
+
+        // LIVE
+        $liveUrlKey => [
             'base' => 'http://10.7.10.101:3000',
             'uid'  => 'ad5x69y',
             'slug' => 'dashboard-productivity-live',
         ],
     ];
 
-    // Local (sementara dipakai sampai Grafana live tersedia)
-    $grafanaProductivity = $grafanaEnvironments[rtrim(url('/'), '/')] ?? [
-        'base' => 'http://10.7.10.101:3000',
-        'uid'  => 'ad5x69z',
-        'slug' => 'dashboard-productivity-local',
-    ];
+    // Fallback ke LIVE (bukan local), supaya kalau url('/') tidak cocok
+    // dengan key manapun, tidak diam-diam membaca dashboard local.
+    $grafanaProductivity = $grafanaEnvironments[rtrim(url('/'), '/')]
+        ?? $grafanaEnvironments[$liveUrlKey];
 
     $panelIdProductivity = 'panel-2';
 
@@ -150,7 +162,7 @@
             <i class="fas fa-chart-line"></i>
         </div>
     </div>
-    
+
     <div class="mt-3 productivity-line"
         style="height: 2px; background: linear-gradient(to right, #ea580c 100%, #ea580c 100%, #e2e8f0 43%, #e2e8f0 100%);">
     </div>
