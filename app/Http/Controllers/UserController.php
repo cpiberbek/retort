@@ -83,10 +83,23 @@ class UserController extends Controller
             ], 403);
         }
 
+        $plantActiveToSet = $request->plant_active;
+
+        // Banyumas gak boleh jadi plant_active, paksa ke Berbek
+        $selectedPlantName = Plant::where('uuid', $plantActiveToSet)->value('plant');
+
+        if ($selectedPlantName === 'Banyumas') {
+            $fallbackUuid = Plant::where('plant', 'Berbek')->value('uuid');
+
+            if ($fallbackUuid) {
+                $plantActiveToSet = $fallbackUuid;
+            }
+        }
+
         \Illuminate\Support\Facades\DB::table('users')
             ->where('uuid', $user->uuid)
             ->update([
-                'plant_active' => $request->plant_active,
+                'plant_active' => $plantActiveToSet,
                 'updated_at' => now(),
             ]);
 

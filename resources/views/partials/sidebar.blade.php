@@ -121,6 +121,47 @@
         </li>
     @endcan
 
+    @can('can access operational monitoring')
+        @php
+            $operationalMonitoringActive =
+                request()->routeIs('productivity.*') ||
+                request()->routeIs('issue-complain.*');
+        @endphp
+
+        <div class="sidebar-heading">Operational Monitoring</div>
+
+        <li class="nav-item {{ $operationalMonitoringActive ? 'active' : '' }}">
+            <a class="nav-link {{ $operationalMonitoringActive ? '' : 'collapsed' }}" href="#"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseOperationalMonitoring"
+                aria-expanded="{{ $operationalMonitoringActive ? 'true' : 'false' }}"
+                aria-controls="collapseOperationalMonitoring">
+
+                <i class="fas fa-chart-line"></i>
+                <span>Operational Monitoring</span>
+            </a>
+
+            <div id="collapseOperationalMonitoring"
+                class="collapse {{ $operationalMonitoringActive ? 'show' : '' }}"
+                data-bs-parent="#accordionSidebar">
+
+                <div class="bg-white py-2 collapse-inner rounded">
+
+                    <a class="collapse-item {{ request()->routeIs('productivity.*') ? 'active' : '' }}"
+                        href="{{ route('productivity.index') }}">
+                        Rekap Produktivitas
+                    </a>
+
+                    <a class="collapse-item {{ request()->routeIs('issue-complain.*') ? 'active' : '' }}"
+                        href="{{ route('issue-complain.index') }}">
+                        Issue & Komplain
+                    </a>
+
+                </div>
+            </div>
+        </li>
+    @endcan
+
     @can('can access form qc')
         @php
 

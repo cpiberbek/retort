@@ -30,7 +30,11 @@
 
         $plantOpsi = json_decode($plantOpsiRaw, true) ?? [];
 
-        $plants = \App\Models\Plant::whereIn('uuid', $plantOpsi)->get();
+        // Plant yang sedang aktif & Banyumas tidak ditampilkan sebagai opsi pindah
+        $plants = \App\Models\Plant::whereIn('uuid', $plantOpsi)
+            ->where('uuid', '!=', $user->plant_active)
+            ->where('plant', '!=', 'Banyumas')
+            ->get();
     @endphp
 
     <div class="card border-0 shadow-sm mb-2 mt-2 w-60 plant-info-card" style="border-radius: 12px;">
@@ -40,7 +44,7 @@
 
                 <div>
                     <div class="text-muted" style="font-size: 11px; font-weight: 700;">
-                        Role Akun:
+                        Role:
                     </div>
                     <div style="font-size: 13px; font-weight: 700;">
                         {{ $roleAkun }}
@@ -51,86 +55,63 @@
 
                 <div>
                     <div class="text-muted" style="font-size: 11px; font-weight: 700;">
-                        Plant Akun Asal:
-                    </div>
-                    <div style="font-size: 13px; font-weight: 700;">
-                        Plant {{ $plantAkun ?? '-' }}
-                    </div>
-                </div>
-
-                <span class="text-muted" style="font-size: 20px; font-weight: 300;">│</span>
-
-                <div>
-                    <div class="text-muted" style="font-size: 11px; font-weight: 700;">
-                        Data Plant yang Sedang Diakses:
+                        Current Plant:
                     </div>
                     <div class="text-primary" style="font-size: 13px; font-weight: 700;">
-                        Plant {{ $plantActive ?? '-' }}
+                        {{ $plantActive ?? '-' }}
                     </div>
                 </div>
 
-                @if (!empty($plantOpsi))
+                @if (!empty($plantOpsi) && $plants->count() > 0)
                     <span class="text-muted" style="font-size: 20px; font-weight: 300;">│</span>
 
                     <div>
                         <div class="text-muted" style="font-size: 11px; font-weight: 700;">
-                            Ganti Data Akses Plant:
+                            Switch Plant:
                         </div>
 
                         <div class="d-flex align-items-center" style="gap: 8px;">
-                            <select id="plantActiveSelect" class="form-select form-select-sm" style="min-width: 180px;">
-                                <option value="" disabled selected>Pilih Data Plant</option>
+                            <select id="plantActiveSelect" class="form-select form-select-sm" style="min-width: 180px;" autocomplete="off">
+                                <option value="{{ $user->plant_active }}" selected disabled>{{ $plantActive }}</option>
 
                                 @foreach ($plants as $plant)
                                     <option value="{{ $plant->uuid }}">
-                                        Plant {{ $plant->plant }}
+                                        {{ $plant->plant }}
                                     </option>
                                 @endforeach
                             </select>
-
-                            <button type="button" id="btnPindahPlant" class="btn btn-sm btn-primary" disabled>
-                                Pindah
-                            </button>
                         </div>
                     </div>
                 @endif
 
             </div>
 
-            @if (!empty($plantOpsi))
-                <div class="plant-mobile-info">
+            @if (!empty($plantOpsi) && $plants->count() > 0)
+                <div class="plant-mobile-info" style="padding: 4px 0; line-height: 0.9;">
 
-                    <div class="text-muted plant-mobile-label">
-                         Ganti Data Akses Plant:
+                    <div class="text-muted" style="font-size: 11px; font-weight: 700;">
+                         Switch Plant:
                     </div>
 
                     <div class="d-flex align-items-center plant-mobile-controls">
 
-                        <select id="plantActiveSelectMobile" class="form-select form-select-sm">
-                            <option value="" disabled selected>
-                                Pilih Data Plant
-                            </option>
+                        <select id="plantActiveSelectMobile" class="form-select form-select-sm" autocomplete="off" style="height: 28px; min-height: 28px; padding: 2px 8px; font-size: 12px; line-height: 1;">
+                            <option value="{{ $user->plant_active }}" selected disabled>{{ $plantActive }}</option>
 
                             @foreach ($plants as $plant)
                                 <option value="{{ $plant->uuid }}">
-                                    Plant {{ $plant->plant }}
+                                    {{ $plant->plant }}
                                 </option>
                             @endforeach
                         </select>
-
-                        <button type="button"
-                            id="btnPindahPlantMobile"
-                            class="btn btn-sm btn-primary"
-                            disabled>
-                            Pindah
-                        </button>
 
                         <div class="plant-info-wrapper">
                             <button type="button"
                                 id="plantInfoButton"
                                 class="btn btn-sm btn-light rounded-circle plant-info-button"
                                 aria-label="Informasi plant"
-                                aria-expanded="false">
+                                aria-expanded="false"
+                                style="width: 26px; height: 26px;">
                                 <i class="fas fa-info"></i>
                             </button>
 
@@ -138,7 +119,7 @@
 
                                 <div class="plant-info-row">
                                     <div class="text-muted">
-                                        Role Akun:
+                                        Role:
                                     </div>
                                     <div>
                                         {{ $roleAkun }}
@@ -147,19 +128,10 @@
 
                                 <div class="plant-info-row">
                                     <div class="text-muted">
-                                        Plant Akun Asal:
-                                    </div>
-                                    <div>
-                                        Plant {{ $plantAkun ?? '-' }}
-                                    </div>
-                                </div>
-
-                                <div class="plant-info-row">
-                                    <div class="text-muted">
-                                        Data Plant yang Sedang Diakses:
+                                        Current Plant:
                                     </div>
                                     <div class="text-primary">
-                                        Plant {{ $plantActive ?? '-' }}
+                                        {{ $plantActive ?? '-' }}
                                     </div>
                                 </div>
 
@@ -216,15 +188,20 @@
 </nav>
 
 <script>
-    function changePlant(select, button) {
-        if (!select || !button) return;
+    function changePlant(select) {
+        if (!select) return;
 
-        select.addEventListener('change', function () {
-            button.disabled = !this.value;
-        });
+        const originalValue = select.value;
 
-        button.addEventListener('click', function () {
-            if (!select.value) return;
+        select.addEventListener('change', function (event) {
+            // Abaikan perubahan yang dipicu secara programatik (mis. fake filler / devtools),
+            // hanya proses perubahan asli dari interaksi user.
+            if (!event.isTrusted) {
+                this.value = originalValue;
+                return;
+            }
+
+            if (!this.value) return;
 
             this.disabled = true;
 
@@ -235,7 +212,7 @@
                     'X-CSRF-TOKEN': '{{ csrf_token() }}'
                 },
                 body: JSON.stringify({
-                    plant_active: select.value
+                    plant_active: this.value
                 })
             })
             .then(response => response.json())
@@ -243,24 +220,19 @@
                 if (data.success) {
                     location.reload();
                 } else {
+                    this.value = originalValue;
                     this.disabled = false;
                 }
             })
             .catch(() => {
+                this.value = originalValue;
                 this.disabled = false;
             });
         });
     }
 
-    changePlant(
-        document.getElementById('plantActiveSelect'),
-        document.getElementById('btnPindahPlant')
-    );
-
-    changePlant(
-        document.getElementById('plantActiveSelectMobile'),
-        document.getElementById('btnPindahPlantMobile')
-    );
+    changePlant(document.getElementById('plantActiveSelect'));
+    changePlant(document.getElementById('plantActiveSelectMobile'));
 
     const plantInfoButton = document.getElementById('plantInfoButton');
     const plantInfoPopup = document.getElementById('plantInfoPopup');
@@ -429,7 +401,7 @@
         }
 
         .plant-info-card {
-            width: 100% !important;
+            width: 90% !important;
         }
     }
 
