@@ -67,7 +67,9 @@ use App\Http\Controllers\{
     MasterRawMaterialController,
     RetortController,
     MasterPremixController,
-    SsoLoginController
+    SsoLoginController,
+    ProductivityController,
+    IssueComplainController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
@@ -117,8 +119,10 @@ Route::middleware('auth')->group(function () {
     // });
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/set-produksi', [DashboardController::class, 'setProduksi'])->name('set.produksi');
 
+    Route::get('dashboard/issue-complain/filter', [DashboardController::class, 'issueComplainFilter'])
+    ->name('dashboard.issue-complain.filter');
+     
     // Halo test
     Route::get('/halo', [HaloController::class, 'index']);
 
@@ -960,6 +964,28 @@ Route::middleware('auth')->group(function () {
     Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
     Route::resource('raw-material', MasterRawMaterialController::class);
 });
+
+//Productivity
+Route::get('/productivity', [ProductivityController::class, 'index'])
+    ->name('productivity.index');
+Route::get('/productivity/create-or-update/{uuid?}', [ProductivityController::class, 'createOrUpdate'])
+    ->name('productivity.create-or-update');
+Route::post('/productivity/store', [ProductivityController::class, 'store'])
+    ->name('productivity.store');
+Route::delete('/productivity/{uuid}', [ProductivityController::class, 'destroy'])
+    ->name('productivity.destroy');
+Route::get('productivity/status', [ProductivityController::class, 'status'])
+    ->name('productivity.status');
+
+Route::get('/issue-complain', [IssueComplainController::class, 'index'])
+    ->name('issue-complain.index');
+Route::get('/issue-complain/create-or-update/{uuid?}', [IssueComplainController::class, 'createOrUpdate'])
+    ->name('issue-complain.create-or-update');
+Route::post('/issue-complain/store', [IssueComplainController::class, 'store'])
+    ->name('issue-complain.store');
+Route::delete('/issue-complain/{uuid}', [IssueComplainController::class, 'destroy'])
+    ->name('issue-complain.destroy');
+
 Route::get('/test-limit', function() {
     return 'Max Input Vars: ' . ini_get('max_input_vars');
 });

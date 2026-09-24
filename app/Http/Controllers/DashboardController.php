@@ -1,55 +1,68 @@
 <?php
 
 namespace App\Http\Controllers;
-
 use Illuminate\Http\Request;
-use App\Models\Suhu;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use App\Models\Suhu;
+use App\Models\Area_suhu;
+use App\Models\IssueComplain;
 
 class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // Default tanggal hari ini
-        $tanggal = $request->input('tanggal', Carbon::today()->toDateString());
+        $plant = Auth::user()->plant;
 
-        // Ambil data suhu
-        $data = Suhu::whereDate('date', $tanggal)
-                    ->orderBy('pukul', 'asc')
-                    ->get();
+        $areas = Area_suhu::where('plant', $plant)
+            ->orderBy('area')
+            ->distinct()
+            ->pluck('area');
 
-        // Ambil plant user yang sedang login
-        $userPlant = Auth::user()->plant;
-        $userType  = Auth::user()->type_user ?? null;
+        $issueComplains = $this->issueComplainQuery($request, $plant)->paginate(5);
 
-        // Hanya buat pop_up_produksi untuk user type 4 & 8
-        if (in_array($userType, [4,8]) && !session()->has('selected_produksi')) {
-            $produksi = User::where('type_user', 3)
-                            ->where('plant', $userPlant)
-                            ->get(); 
-
-            session(['pop_up_produksi' => $produksi]);
-        }
-
-        return view('dashboard', compact('data', 'tanggal'));
+        return view('dashboard', compact('plant', 'areas', 'issueComplains'));
     }
 
-    public function setProduksi(Request $request)
+    // Kamus card
+    // 1. Rekap Produktivitas
+    // 2. Status Produksi
+    // 3. Suhu Ruangan
+    // 4. Hold Release
+    // 5. Bad Product (Chamber)
+    // 6. Isu Complain
+    // 7. Bad Product (Packing)
+
+
+    public function issueComplainFilter(Request $request)
     {
-        $request->validate([
-            'nama_produksi' => 'required|exists:users,uuid',
-        ]);
+        $plant = Auth::user()->plant;
 
-        $produksi = User::where('uuid', $request->nama_produksi)->first();
+        $issueComplains = $this->issueComplainQuery($request, $plant)->paginate(5);
 
-        if ($produksi) {
-            session(['selected_produksi' => $produksi->uuid]);
-        }
-
-        session()->forget('pop_up_produksi');
-
-        return redirect()->route('dashboard');
+        return view('partials.dashboard.card-6-list', compact('issueComplains'));
     }
+
+    private function issueComplainQuery(Request $request, $plant)
+    {
+        return IssueComplain::query()
+            ->where('plant', $plant)
+            ->when($request->filled('date'), fn ($q) =>
+                $q->whereDate('date', $request->date)
+            )
+            ->when($request->filled('jenis'), fn ($q) =>
+                $q->where('jenis', $request->jenis)
+            )
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $search = $request->search;
+                $q->where(function ($q2) use ($search) {
+                    $q2->where('judul_isu', 'like', "%{$search}%")
+                        ->orWhere('jenis', 'like', "%{$search}%")
+                        ->orWhere('detail', 'like', "%{$search}%");
+                });
+            })
+            ->orderByDesc('date');
+    }
+
 }
