@@ -283,7 +283,7 @@
         <div class="packing-trend-header">
 
             <div style="font-size: 10px; letter-spacing: 3px; color: #ea580c; font-weight: 700;">
-                SORTING ITEMS
+                COUNTED ITEMS
             </div>
 
             <div class="mt-1"
