@@ -82,8 +82,8 @@
         height: 2px;
         background: linear-gradient(
             to right,
-            #ea580c 45%,
-            #ea580c 45%,
+            #ea580c 100%,
+            #ea580c 100%,
             #e2e8f0 43%,
             #e2e8f0 100%
         );

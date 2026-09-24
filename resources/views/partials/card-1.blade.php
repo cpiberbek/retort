@@ -146,20 +146,13 @@
             Rekap Produktivitas
         </div>
 
-        <div class="productivity-unit"
-            style="
-                font-size: 22px;
-                color: #ea580c;
-                font-weight: 300;
-                transform: scaleY(0.9);
-                transform-origin: center;
-            ">
-            [Kg/MP]
+        <div style="font-size: 27px; line-height: 1; color: #ea580c; padding-right: 8px; transform: translateY(-3px);">
+            <i class="fas fa-chart-line"></i>
         </div>
     </div>
-
+    
     <div class="mt-3 productivity-line"
-        style="height: 2px; background: linear-gradient(to right, #ea580c 58%, #ea580c 91%, #e2e8f0 43%, #e2e8f0 100%);">
+        style="height: 2px; background: linear-gradient(to right, #ea580c 100%, #ea580c 100%, #e2e8f0 43%, #e2e8f0 100%);">
     </div>
 
     <div class="d-flex align-items-center flex-wrap gap-3 mt-3 mb-2 productivity-body">

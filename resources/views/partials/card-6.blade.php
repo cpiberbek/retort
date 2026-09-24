@@ -92,25 +92,32 @@
     }
 </style>
 
-<div class="py-2" id="issueComplainCard">
+    <div class="py-2" id="issueComplainCard">
 
-    <div class="issue-label" style="font-size: 10px; letter-spacing: 3px; color: #9a3412; font-weight: 600;">
-        QA MONITORING
-    </div>
+        <div class="issue-label" style="font-size: 10px; letter-spacing: 3px; color: #ea580c; font-weight: 600;">
+            QA MONITORING
+        </div>
 
-    <div class="d-flex align-items-center justify-content-between mt-1">
-        <div class="issue-title" style="font-size: 24px; line-height: 1; font-weight: 600; color: #441b05;">
+        <div class="d-flex align-items-center justify-content-between mt-1">
+
+        <div class="issue-title"
+            style="font-size: 24px; line-height: 1; font-weight: 600; color: #441b05;">
             Issue & Complain
         </div>
-    </div>
 
-    <div class="mt-3 issue-line" style="height: 2px; background: linear-gradient(to right, #ea580c 45%, #e2e8f0 43%);"></div>
+        <div style="font-size: 24px; line-height: 1; color: #ea580c; padding-right: 8px;">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+    </div>
+    
+    <div class="mt-4 issue-line" style="height: 2px; background: linear-gradient(to right, #ea580c 100%, #e2e8f0 43%);"></div>
 
     <div class="issue-body mt-3">
 
         <div class="d-flex align-items-center flex-wrap gap-2 mb-2">
             <input type="date" id="issueDateFilter" class="issue-select" style="width: 150px;">
-            <input type="text" id="issueSearchFilter" class="issue-select" style="width: 200px;" placeholder="Cari issue...">
+            <input type="text" id="issueSearchFilter" class="issue-select" style="width: 150px;" placeholder="Cari issue...">
             <button type="button" id="issueResetFilter" class="btn btn-sm btn-outline-secondary" style="font-size: 14px;">
                 Reset
             </button>

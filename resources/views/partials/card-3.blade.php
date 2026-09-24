@@ -52,7 +52,7 @@
 
     .temp-line {
         height: 2px;
-        background: linear-gradient(to right, #ea580c 43%, #e2e8f0 43%);
+        background: linear-gradient(to right, #ea580c 100%, #e2e8f0 100%);
         animation: tempLine .65s cubic-bezier(.16, 1, .3, 1) .4s both;
     }
 
@@ -134,7 +134,10 @@
 
     <div class="d-flex align-items-center justify-content-between mt-1">
         <div class="temp-title">Suhu Ruangan</div>
-        <div class="temp-unit">°C</div>
+
+        <i class="fas fa-thermometer-half"
+            style="font-size: 30px; color: #ea580c; padding-right: 8px; transform: translateY(-4px);">
+        </i>
     </div>
 
     <div class="mt-3 temp-line"></div>
@@ -179,7 +182,7 @@
     @if($areas->isNotEmpty())
         <div class="mt-3 temp-frame">
             {{-- src diisi oleh JavaScript di bawah --}}
-            <iframe id="grafanaSuhu" width="100%" height="300" frameborder="0"></iframe>
+            <iframe id="grafanaSuhu" width="100%" height="360" frameborder="0"></iframe>
         </div>
     @endif
 

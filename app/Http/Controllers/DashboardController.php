@@ -28,10 +28,12 @@ class DashboardController extends Controller
     // Kamus card
     // 1. Rekap Produktivitas
     // 2. Status Produksi
-    // 3. Suhu
+    // 3. Suhu Ruangan
     // 4. Hold Release
-    // 5. Bad Product
+    // 5. Bad Product (Chamber)
     // 6. Isu Complain
+    // 7. Bad Product (Packing)
+
 
     public function issueComplainFilter(Request $request)
     {

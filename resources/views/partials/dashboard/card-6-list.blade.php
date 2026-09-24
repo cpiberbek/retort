@@ -49,7 +49,7 @@
                 font-weight: 600;
                 cursor: not-allowed;
             ">
-                &laquo; Sebelumnya
+                &laquo; 
             </span>
         @else
             <a href="#"
@@ -65,7 +65,7 @@
                     font-weight: 600;
                     text-decoration: none;
                 ">
-                &laquo; Sebelumnya
+                &laquo; 
             </a>
         @endif
 
@@ -90,7 +90,7 @@
                     font-weight: 600;
                     text-decoration: none;
                 ">
-                Selanjutnya &raquo;
+                 &raquo;
             </a>
         @else
             <span style="
@@ -103,7 +103,7 @@
                 font-weight: 600;
                 cursor: not-allowed;
             ">
-                Selanjutnya &raquo;
+                 &raquo;
             </span>
         @endif
 

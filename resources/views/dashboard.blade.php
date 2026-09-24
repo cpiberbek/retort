@@ -37,7 +37,15 @@
             </div>
         </div>
 
-        <div class="col-md-4 mb-4">
+        <div class="col-md-8 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    @include('partials.card-7')
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     @include('partials.card-4')
@@ -45,7 +53,7 @@
             </div>
         </div>
 
-        <div class="col-md-4 mb-4">
+        <div class="col-md-6 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     @include('partials.card-2')

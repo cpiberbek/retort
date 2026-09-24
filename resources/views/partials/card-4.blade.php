@@ -133,7 +133,7 @@
     </div>
 
     <div class="mt-3 quality-line"
-        style="height: 2px; background: linear-gradient(to right, #ea580c 46%, #ea580c 46%, #e2e8f0 43%, #e2e8f0 100%);">
+        style="height: 2px; background: linear-gradient(to right, #ea580c 100%, #ea580c 100%, #e2e8f0 43%, #e2e8f0 100%);">
     </div>
 
     <div class="d-flex align-items-center justify-content-center mt-3 quality-body">
