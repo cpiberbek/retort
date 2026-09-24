@@ -97,7 +97,31 @@
         </li>
     @endcan
 
-    @can('can access form qc')
+    @can('can access control')
+        <div class="sidebar-heading">Access Control</div>
+        @php
+            $accessControlActive = request()->routeIs('permissions.*') || request()->routeIs('roles.*');
+        @endphp
+        <li class="nav-item {{ $accessControlActive ? 'active' : '' }}">
+            <a class="nav-link {{ $accessControlActive ? '' : 'collapsed' }}" href="#" data-bs-toggle="collapse"
+                data-bs-target="#collapseAccessControl" aria-expanded="{{ $accessControlActive ? 'true' : 'false' }}"
+                aria-controls="collapseAccessControl">
+                <i class="fas fa-lock"></i>
+                <span>Access Control</span>
+            </a>
+            <div id="collapseAccessControl" class="collapse {{ $accessControlActive ? 'show' : '' }}"
+                data-bs-parent="#accordionSidebar">
+                <div class="bg-white py-2 collapse-inner rounded">
+                    <a class="collapse-item {{ request()->routeIs('permissions.*') ? 'active' : '' }}"
+                        href="{{ route('permissions.index') }}">Permissions</a>
+                    <a class="collapse-item {{ request()->routeIs('roles.*') ? 'active' : '' }}"
+                        href="{{ route('roles.index') }}">Roles</a>
+                </div>
+            </div>
+        </li>
+    @endcan
+
+    @can('can access operational monitoring')
         @php
             $operationalMonitoringActive =
                 request()->routeIs('productivity.*') ||
