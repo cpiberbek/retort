@@ -469,6 +469,8 @@
 
             panelId: 'panel-3',
 
+            showPanelMenu: 'false',
+
         });
 
         defects.forEach(function (defect) {

@@ -128,7 +128,7 @@
 
     <div class="d-flex align-items-center justify-content-center mt-4 status-body">
 
-        <div class="card shadow-sm border-0" style="width: 150%; max-width: 360px; background: #fff7ed;">
+        <div class="card shadow-sm border-0" style="width: 100%; background: #fff7ed;">
             <div class="card-body d-flex flex-column align-items-center justify-content-center" style="min-height: 100px;">
 
                 <div style="font-size: 50px; color: #f28c28; line-height: 1; margin-bottom: 10px;">

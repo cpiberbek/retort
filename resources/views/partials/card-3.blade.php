@@ -214,6 +214,7 @@
                 orgId: '1',
                 theme: 'light',
                 panelId: 'panel-1',
+                showPanelMenu: 'false',
             }).toString().replace(/\+/g, '%20');
 
             return `${grafana.base}/d-solo/${grafana.uid}/${grafana.slug}?${query}`;
