@@ -171,8 +171,35 @@
 
     </div>
 
-    <div class="mt-3 productivity-frame">
+    <div class="mt-3 productivity-frame" style="position: relative;">
         <iframe id="grafanaProductivity" width="100%" height="300" frameborder="0"></iframe>
+
+        <span
+            id="reloadGrafanaProductivity"
+            style="
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                width: 150px;
+                height: 30px;
+                border: 1px solid #ea580c;
+                border-radius: 6px;
+                background: #fff;
+                color: #ea580c;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                z-index: 10;
+                cursor: pointer;
+                font-size: 11px;
+                font-weight: 600;
+            "
+            title="Reload Data"
+        >
+            <i class="fas fa-sync-alt"></i>
+            <span>Reload Data</span>
+        </span>
     </div>
 </div>
 
@@ -180,6 +207,7 @@
     (function () {
         const iframe = document.getElementById('grafanaProductivity');
         const tahunSelector = document.getElementById('tahunSelector');
+        const reloadButton = document.getElementById('reloadGrafanaProductivity');
 
         if (!iframe || !tahunSelector) {
             return;
@@ -209,5 +237,6 @@
 
         refreshGrafana();
         tahunSelector.addEventListener('change', refreshGrafana);
+        reloadButton.addEventListener('click', refreshGrafana);
     })();
 </script>
