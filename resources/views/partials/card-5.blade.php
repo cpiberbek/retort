@@ -167,12 +167,39 @@
 
     </div>
 
-    <div class="mt-3 trend-frame">
+    <div class="mt-3 trend-frame" style="position: relative;">
         <iframe id="grafanaBadProduct"
             width="100%"
             height="368"
             frameborder="0">
         </iframe>
+
+        <span
+            id="reloadGrafanaBadProduct"
+            style="
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                width: 160px;
+                height: 32px;
+                border: 1px solid #ea580c;
+                border-radius: 6px;
+                background: #fff;
+                color: #ea580c;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                z-index: 10;
+                cursor: pointer;
+                font-size: 11px;
+                font-weight: 600;
+            "
+            title="Reload Data"
+        >
+            <i class="fas fa-sync-alt"></i>
+            <span>Reload Data</span>
+        </span>
     </div>
 
 </div>
@@ -181,6 +208,7 @@
     (function () {
         const iframe = document.getElementById('grafanaBadProduct');
         const periodeSelector = document.getElementById('badProductPeriode');
+        const reloadButton = document.getElementById('reloadGrafanaBadProduct');
 
         if (!iframe || !periodeSelector) {
             return;
@@ -220,5 +248,6 @@
         refreshGrafana();
 
         periodeSelector.addEventListener('change', refreshGrafana);
+        reloadButton.addEventListener('click', refreshGrafana);
     })();
 </script>
