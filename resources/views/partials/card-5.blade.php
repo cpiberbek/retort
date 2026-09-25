@@ -207,7 +207,7 @@
                 orgId: '1',
                 theme: 'light',
                 panelId: 'panel-4',
-                showPanelMenu: 'false',
+                kiosk: 'tv',
             }).toString().replace(/\+/g, '%20');
 
             return `${grafana.base}/d-solo/${grafana.uid}/${grafana.slug}?${query}`;
