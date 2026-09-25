@@ -180,9 +180,35 @@
     </div>
 
     @if($areas->isNotEmpty())
-        <div class="mt-3 temp-frame">
-            {{-- src diisi oleh JavaScript di bawah --}}
+        <div class="mt-3 temp-frame" style="position: relative;">
             <iframe id="grafanaSuhu" width="100%" height="360" frameborder="0"></iframe>
+
+            <span
+                id="reloadGrafanaSuhu"
+                style="
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    width: 155px;
+                    height: 32px;
+                    border: 1px solid #ea580c;
+                    border-radius: 6px;
+                    background: #fff;
+                    color: #ea580c;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 7px;
+                    z-index: 10;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 600;
+                "
+                title="Reload Data"
+            >
+                <i class="fas fa-sync-alt"></i>
+                <span>Reload Data</span>
+            </span>
         </div>
     @endif
 
@@ -194,6 +220,7 @@
         const iframe = document.getElementById('grafanaSuhu');
         const areaSelector = document.getElementById('areaSelector');
         const periodeSelector = document.getElementById('periodeSelector');
+        const reloadButton = document.getElementById('reloadGrafanaSuhu');
 
         if (!iframe || !areaSelector || !periodeSelector) {
             return;
@@ -228,6 +255,7 @@
         refreshGrafana();
         areaSelector.addEventListener('change', refreshGrafana);
         periodeSelector.addEventListener('change', refreshGrafana);
+        reloadButton.addEventListener('click', refreshGrafana);
     })();
 </script>
 @endif

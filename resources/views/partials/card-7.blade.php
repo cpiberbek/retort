@@ -401,14 +401,39 @@
 
         </div>
 
-        <div class="mt-3 packing-trend-frame">
-
+        <div class="mt-3 packing-trend-frame" style="position: relative;">
             <iframe id="grafanaBadProductPacking"
                 width="100%"
                 height="300"
                 frameborder="0">
             </iframe>
 
+            <span
+                id="reloadGrafanaBadProductPacking"
+                style="
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    width: 155px;
+                    height: 30px;
+                    border: 1px solid #ea580c;
+                    border-radius: 6px;
+                    background: #fff;
+                    color: #ea580c;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 7px;
+                    z-index: 10;
+                    cursor: pointer;
+                    font-size: 11px;
+                    font-weight: 600;
+                "
+                title="Reload Data"
+            >
+                <i class="fas fa-sync-alt"></i>
+                <span>Reload Data</span>
+            </span>
         </div>
 
     </div>
@@ -426,6 +451,7 @@
 
     const iframe = card.querySelector('#grafanaBadProductPacking');
     const periodeSelector = card.querySelector('#badProductPackingPeriode');
+    const reloadButton = card.querySelector('#reloadGrafanaBadProductPacking');
     const addButton = card.querySelector('#badProductPackingAddButton');
     const dropdown = card.querySelector('#badProductPackingDropdown');
     const optionsContainer = card.querySelector('#badProductPackingOptions');
@@ -754,6 +780,8 @@
     updateCategoryButton();
 
     refreshGrafana();
+
+    reloadButton.addEventListener('click', refreshGrafana);
 
 })();
 </script>
