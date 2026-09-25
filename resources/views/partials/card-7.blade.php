@@ -151,7 +151,7 @@
     }
 
     #badProductPackingCard .defect-add.filter-max:hover::after {
-        content: "Hapus kategori lain untuk menambahkan kategori baru";
+        content: "Hapus Opsi Defect yang sudah ada untuk menampilkan filter defect lainnya (MAX 5)";
         position: absolute;
         left: 0;
         bottom: calc(100% + 8px);
@@ -469,7 +469,7 @@
 
             panelId: 'panel-3',
 
-            showPanelMenu: 'false',
+            kiosk: 'tv',
 
         });
 
