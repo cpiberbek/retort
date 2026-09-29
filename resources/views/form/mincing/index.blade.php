@@ -517,7 +517,9 @@
                                         @endif
                                     </td>
 
-                                    <td class="text-center">{{ $dep->username }}</td>
+                                    <td class="text-center">
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
 
                                     {{-- Kolom Status Produksi --}}
                                     <td class="text-center">

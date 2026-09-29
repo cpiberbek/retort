@@ -183,7 +183,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     data-uuid="{{ $dep->uuid }}">Result</a>
                             </td>
 
-                            <td class="text-center">{{ $dep->username }}</td>
+                            <td class="text-center">
+                                {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                            </td>
                             <td class="text-center">{{ $dep->nama_operator }}</td>
 
                             {{-- Status SPV --}}

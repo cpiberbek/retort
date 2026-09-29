@@ -253,7 +253,9 @@
                                             <span class="text-muted">Belum ada pemeriksaan</span>
                                         @endif
                                     </td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)

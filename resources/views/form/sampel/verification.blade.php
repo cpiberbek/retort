@@ -80,7 +80,9 @@
                             <td>{{ $dep->nama_produk }}</td>
                             <td>{{ $dep->kode_produksi }}</td>
                             <td>{{ $dep->keterangan }}</td>
-                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
 
                             <td class="text-center align-middle">
                                 @if ($dep->status_spv == 0)

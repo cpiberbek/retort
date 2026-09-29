@@ -317,7 +317,9 @@
                                         @endif
                                     </td>
 
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
                                     <td class="text-center align-middle">{{ $dep->nama_operator }}</td>
 
                                     {{-- STATUS SPV (Sama dengan Washing) --}}

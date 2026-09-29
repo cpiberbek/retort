@@ -104,7 +104,9 @@
                             <td class="text-center align-middle">{{ $dep->keterangan }}</td>
                             <td class="text-center align-middle">{{ $dep->nama_operator }}</td>
                             <td class="text-center align-middle">{{ $dep->nama_koordinator }}</td>
-                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center">
+                                {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                            </td>
                             <td class="text-center align-middle">
                                 @if ($dep->status_spv == 0)
                                 <span class="fw-bold text-secondary">Created</span>

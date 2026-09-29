@@ -255,7 +255,9 @@
                                             <span>-</span>
                                         @endif
                                     </td>
-                                    <td class="text-center">{{ $dep->username }}</td>
+                                    <td class="text-center">
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
                                     <td class="text-center">
                                         @if ($dep->status_spv == 1)
                                             <span class="fw-bold text-success">Verified</span>

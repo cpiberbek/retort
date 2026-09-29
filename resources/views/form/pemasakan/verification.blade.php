@@ -235,7 +235,9 @@
 							@endif
 						</td>
 
-						<td class="text-center align-middle">{{ $dep->username }}</td>
+						<td class="text-center">
+							{{ \Illuminate\Support\Facades\DB::table('s')->where('name', $dep->name)->value('name') }}
+						</td>
 						<td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
 						<td class="text-center align-middle">
 							@if ($dep->status_spv == 0)
