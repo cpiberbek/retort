@@ -196,7 +196,9 @@
                                 <th>QC (User)</th>
                                 <th>Operator</th>
                                 <th>Status SPV</th>
-                                <th>Action</th> {{-- Ubah Header jadi Action agar konsisten --}}
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan {{-- Ubah Header jadi Action agar konsisten --}}
                             </tr>
                         </thead>
                         <tbody>

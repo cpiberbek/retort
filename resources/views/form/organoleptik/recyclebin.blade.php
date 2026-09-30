@@ -29,7 +29,9 @@
                             <th>Hasil Sensori</th>
                             <th>QC</th>
                             <th>Dihapus Pada</th>
-                            <th>Action</th>
+                            @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                         </tr>
                     </thead>
 

@@ -177,7 +177,9 @@
                                 <th rowspan="2" style="width: 4%;">QC</th>
                                 <th rowspan="2" style="width: 4%;">Koord</th>
                                 <th rowspan="2" style="width: 4%;">SPV</th>
+                                @can('can access update button')
                                 <th rowspan="2" style="width: 5%;">Action</th>
+                                @endcan
                             </tr>
                             <tr>
                                 <th style="width: 4%;">Jam</th>
@@ -238,6 +240,7 @@
                                         @endif
                                     </td>
 
+                                    @can('can access update button')
                                     {{-- ACTION BUTTONS --}}
                                     <td class="text-center align-middle">
                                         @can('can access verification button')
@@ -317,6 +320,7 @@
                                         </div>
                                         {{-- END MODAL --}}
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>

@@ -82,7 +82,9 @@
 							<th>Catatan</th>
 							<th>QC</th>
 							<th>SPV</th>
-							<th>Verification</th>
+							@can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
 						</tr>
 					</thead>
 					<tbody>

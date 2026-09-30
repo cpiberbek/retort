@@ -105,7 +105,9 @@
                             <th>Produksi</th>
                             <th>Engineer</th>
                             <th>SPV</th>
-                            <th>Verification</th>
+                            @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                         </tr>
                     </thead>
                     <tbody>
@@ -241,7 +243,7 @@
                         @endif
                     </td>
 
-
+                    @can('can access update button')
                     <td class="text-center align-middle">
                         @can('can access verification button')
                         <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
@@ -349,6 +351,7 @@
                         </div>
                     </div>
                 </td>
+                @endcan
             </tr>
             @empty
             <tr>

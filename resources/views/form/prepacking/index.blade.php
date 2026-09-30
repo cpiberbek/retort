@@ -112,7 +112,9 @@
                                 <th rowspan="2">Catatan</th>
                                 <th rowspan="2">QC</th>
                                 <th rowspan="2">SPV</th>
+                                @can('can access update button')
                                 <th rowspan="2">Verification</th>
+                                @endcan
                             </tr>
                             <tr>
                                 <th>Basah</th>

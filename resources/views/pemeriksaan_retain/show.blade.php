@@ -17,7 +17,9 @@
         <h2>Detail Pemeriksaan Retain</h2>
         <div>
             {{-- Tombol 'Kembali' akan mengarahkan ke halaman index atau halaman verifikasi, tergantung dari mana Anda datang --}}
+            @can('can access edit button')
             <a href="{{ route('pemeriksaan_retain.edit', $pemeriksaanRetain->uuid) }}" class="btn btn-warning">Edit</a>
+            @endcan
             <a href="{{ url()->previous(route('pemeriksaan_retain.index')) }}" class="btn btn-secondary">Kembali</a>
         </div>
     </div>
@@ -29,14 +31,14 @@
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-3">
+                {{-- <div class="col-md-3">
                     <strong>ID (Angka):</strong>
                     <p>{{ $pemeriksaanRetain->id }}</p>
-                </div>
-                <div class="col-md-3">
+                </div> --}}
+                {{-- <div class="col-md-3">
                     <strong>UUID:</strong>
                     <p>{{ $pemeriksaanRetain->uuid }}</p>
-                </div>
+                </div> --}}
                 <div class="col-md-3">
                     <strong>Tanggal:</strong>
                     <p>{{ \Carbon\Carbon::parse($pemeriksaanRetain->tanggal)->format('d F Y') }} (Hari {{ $pemeriksaanRetain->hari }})</p>

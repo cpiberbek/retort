@@ -114,7 +114,9 @@
                                 <th class="align-middle">QC</th>
                                 <th class="align-middle">Produksi</th>
                                 <th class="align-middle">SPV</th>
+                                @can('can access update button')
                                 <th class="align-middle" style="width: 20%">Action</th>
+                                @endcan
                             </tr>
                         </thead>
 
@@ -259,6 +261,7 @@
                                             </div>
                                         @endif
                                     </td>
+                                    @can('can access update button')
                                     <td class="text-center align-middle">
                                         {{-- FIX TOMBOL ACTION: Diberi class m-1 agar ada margin di tiap sisinya dan memecah tumpukan --}}
                                         <div class="d-flex flex-wrap justify-content-center">
@@ -331,6 +334,7 @@
                                             </div>
                                         </div>
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>

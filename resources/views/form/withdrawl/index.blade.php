@@ -92,7 +92,9 @@
                                 <th>Pembuat</th>
                                 <th>SPV</th>
                                 <th>Manager</th>
-                                <th>Action</th>
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>

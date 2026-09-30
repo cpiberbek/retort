@@ -219,7 +219,9 @@
                                 <th>QC</th>
                                 <th>Produksi</th>
                                 <th>SPV</th>
-                                <th>Verification</th>
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -606,6 +608,7 @@
                                     </td>
 
                                     {{-- Kolom Aksi / Verifikasi --}}
+                                    @can('can access update button')
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1 flex-wrap">
                                             @can('can access verification button')
@@ -734,6 +737,7 @@
                                             </div>
                                         @endcan
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>

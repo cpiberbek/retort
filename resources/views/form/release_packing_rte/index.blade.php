@@ -117,7 +117,9 @@
                                 <th rowspan="2">Keterangan</th>
                                 <th rowspan="2">QC</th>
                                 <th rowspan="2">SPV</th>
+                                @can('can access update button')
                                 <th rowspan="2">Verification</th>
+                                @endcan
                             </tr>
                             <tr>
                                 <th>Reject</th>
@@ -182,6 +184,7 @@
                                             </div>
                                         @endif
                                     </td>
+                                    @can('can access update button')
                                     <td class="text-center align-middle">
                                         @can('can access verification button')
                                             <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"
@@ -313,6 +316,7 @@
                                             </div>
                                         </div>
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>

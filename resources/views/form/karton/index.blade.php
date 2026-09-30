@@ -185,7 +185,9 @@
                                 <th>KR</th>
                                 <th>QC</th>
                                 <th>SPV</th>
-                                <th>Verification</th> {{-- Changed from Action to Verification --}}
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan {{-- Changed from Action to Verification --}}
                             </tr>
                         </thead>
                         <tbody>
@@ -265,6 +267,7 @@
                                             </div>
                                         @endif
                                     </td>
+                                    @can('can access update button')
                                     <td class="text-center align-middle">
                                         @can('can access verification button')
                                             <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mb-1"
@@ -395,6 +398,7 @@
                                         </div>
                 </div>
                 </td>
+                @endcan
                 </tr>
             @empty
                 <tr>

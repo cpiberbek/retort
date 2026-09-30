@@ -109,7 +109,9 @@
                                 <th>QC</th>
                                 <th>Produksi</th>
                                 <th>SPV</th>
-                                <th>Verification</th> {{-- Changed from Action to Verification --}}
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan {{-- Changed from Action to Verification --}}
                             </tr>
                         </thead>
                         <tbody>

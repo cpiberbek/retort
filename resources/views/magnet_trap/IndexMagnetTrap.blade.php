@@ -155,7 +155,9 @@
                             <th>Produksi</th>
                             <th>Engineer</th>
                             <th>Status SPV</th>
+                            @can('can access update button')
                             <th>Aksi</th>
+                            @endcan
                         </tr>
                     </thead>
                     <tbody>
