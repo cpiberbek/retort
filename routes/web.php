@@ -228,6 +228,12 @@ Route::middleware('auth')->group(function () {
         'checklistmagnettrap/recycle-bin/{uuid}/force-delete',
         [MagnetTrapController::class, 'deletePermanent']
     )->name('checklistmagnettrap.deletePermanent');
+    // audit-magnettrap
+    Route::get('/magnet-trap/audit-data', [MagnetTrapController::class, 'auditIndex'])
+        ->name('checklistmagnettrap.audit');
+
+    Route::post('/magnet-trap/{uuid}/duplicate-to-audit', [MagnetTrapController::class, 'duplicateToAudit'])
+        ->name('checklistmagnettrap.duplicateToAudit');
 
 
     Route::resource('checklistmagnettrap', MagnetTrapController::class);

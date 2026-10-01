@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\HasAudit;
 
 class MagnetTrapModel extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasAudit;
     /**
      * The table associated with the model.
      *
@@ -41,6 +42,8 @@ class MagnetTrapModel extends Model
         'verified_by_spv_uuid',
         'verified_at_spv',
         'tanggal',
+        'is_audit',
+        'source_uuid',
     ];
 
     public function updater()

@@ -202,12 +202,32 @@
                                         </td>
                                         <td class="text-center align-middle">
                                             <div class="d-flex justify-content-center align-items-center">
+                                                {{-- Audit --}}
+                                                @unless(auth()->user()->hasRole('auditor'))
+                                                    <form
+                                                        action="{{ route('checklistmagnettrap.duplicateToAudit', $item->uuid) }}"
+                                                        method="POST"
+                                                        class="d-inline"
+                                                    >
+                                                        @csrf
+
+                                                        <button
+                                                            type="submit"
+                                                            class="btn btn-dark btn-sm mx-1"
+                                                            onclick="return confirm('Buka data ini untuk Audit?')"
+                                                        >
+                                                            <i class="bi bi-files"></i>
+                                                            Edit Data Audit
+                                                        </button>
+                                                    </form>
+                                                @endunless
+
                                                 @can('can access verification button')
                                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1"
-                                                data-bs-toggle="modal" data-bs-target="#verifyModal{{ $item->uuid }}">
-                                                <i class="bi bi-shield-check me-1"></i> Verifikasi
-                                            </button>
-                                            @endcan
+                                                    data-bs-toggle="modal" data-bs-target="#verifyModal{{ $item->uuid }}">
+                                                    <i class="bi bi-shield-check me-1"></i> Verifikasi
+                                                </button>
+                                                @endcan
                                             @can('can access edit button')
                                             <a href="{{ route('checklistmagnettrap.edit', $item->id) }}"
                                                 class="btn btn-warning btn-sm mx-1">

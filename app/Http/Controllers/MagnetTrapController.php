@@ -29,7 +29,13 @@ class MagnetTrapController extends Controller
      */
     public function index(Request $request)
     {
-        $query = MagnetTrapModel::query()->with(['updater', 'mincing', 'produksi', 'engineer']);
+        if (Auth::user()->hasRole('auditor')) {
+            return redirect()->route('checklistmagnettrap.audit');
+        }
+
+        $query = MagnetTrapModel::query()
+            ->with(['updater', 'mincing', 'produksi', 'engineer'])
+            ->where('is_audit', false);
 
         if (Auth::check() && !empty(Auth::user()->plant)) {
             $query->where('plant_uuid', Auth::user()->plant);
@@ -57,6 +63,66 @@ class MagnetTrapController extends Controller
         $data = $query->latest()->paginate(10)->withQueryString();
 
         return view('magnet_trap.IndexMagnetTrap', compact('data'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $auditSourceUuids = MagnetTrapModel::query()
+            ->where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid');
+
+        $query = MagnetTrapModel::query()
+            ->with(['updater', 'mincing', 'produksi', 'engineer'])
+            ->where(function ($q) use ($auditSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($q) use ($auditSourceUuids) {
+                        $q->where('is_audit', false)
+                            ->whereNotIn('uuid', $auditSourceUuids);
+                    });
+            });
+
+        if (Auth::check() && !empty(Auth::user()->plant)) {
+            $query->where('plant_uuid', Auth::user()->plant);
+        }
+
+        $query->when($request->search, function ($q, $search) {
+            return $q->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                    ->orWhere('kode_batch', 'like', "%{$search}%");
+            });
+        });
+
+        if ($request->filled('date')) {
+            $date = $request->input('date');
+
+            $query->where(function ($q) use ($date) {
+                $q->whereDate('tanggal', $date)
+                    ->orWhere(function ($q) use ($date) {
+                        $q->whereNull('tanggal')
+                            ->whereDate('created_at', $date);
+                    });
+            });
+        }
+
+        $data = $query->latest()->paginate(10)->withQueryString();
+
+        return view('magnet_trap.IndexMagnetTrapAudit', compact('data'));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $magnetTrap = MagnetTrapModel::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $magnetTrap->auditVersion;
+
+        if (!$audit) {
+            $audit = $magnetTrap->copyToAudit();
+        }
+
+        return redirect()->route('checklistmagnettrap.edit', $audit->id);
     }
 
     /**
