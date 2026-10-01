@@ -21,24 +21,93 @@ class MetalController extends Controller
 {
     public function index(Request $request)
     {
-        $search     = $request->input('search');
+        if (Auth::user()->hasRole('auditor')) {
+            return redirect()->route('metal.audit');
+        }
+
+        $search = $request->input('search');
         $date = $request->input('date');
-        $userPlant  = Auth::user()->plant;
+        $userPlant = Auth::user()->plant;
 
         $data = Metal::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where('username', 'like', "%{$search}%");
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->where('is_audit', false)
+            ->when($search, function ($query) use ($search) {
+                $query->where('username', 'like', "%{$search}%");
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
 
-        return view('form.metal.index', compact('data', 'search', 'date'));
+        return view('form.metal.index', compact(
+            'data',
+            'search',
+            'date'
+        ));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $userPlant = Auth::user()->plant;
+
+        $auditedSourceUuids = Metal::query()
+            ->where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Metal::query()
+            ->where('plant', $userPlant)
+            ->where(function ($query) use ($auditedSourceUuids) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) use ($auditedSourceUuids) {
+                        $subQuery->where('is_audit', false);
+
+                        if (!empty($auditedSourceUuids)) {
+                            $subQuery->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where('username', 'like', "%{$search}%");
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.metal.index_audit', compact(
+            'data',
+            'search',
+            'date'
+        ));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        $metal = Metal::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $existing = $metal->auditVersion;
+
+        if ($existing) {
+            return redirect()->route('metal.edit.form', $existing->uuid);
+        }
+
+        $clone = $metal->copyToAudit();
+
+        return redirect()->route('metal.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
     }
 
     public function create()

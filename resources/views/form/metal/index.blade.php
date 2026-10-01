@@ -245,6 +245,15 @@
 
                     @can('can access update button')
                     <td class="text-center align-middle">
+                        @unless(auth()->user()->hasRole('auditor'))
+                            <form action="{{ route('metal.duplicateToAudit', $dep->uuid) }}" method="POST" class="d-inline">
+                                @csrf
+                                <button type="submit" class="btn btn-dark btn-sm me-1"
+                                    onclick="return confirm('Buka data ini untuk Audit?')">
+                                    <i class="bi bi-files"></i> Edit Data Audit
+                                </button>
+                            </form>
+                        @endunless
                         @can('can access verification button')
                         <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
                             <i class="bi bi-shield-check me-1"></i> Verifikasi

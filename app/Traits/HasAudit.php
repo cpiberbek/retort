@@ -26,6 +26,8 @@ trait HasAudit
     public function copyToAudit(): self
     {
         $clone = $this->replicate();
+
+        $clone->id = null;
         $clone->uuid = (string) Str::uuid();
         $clone->is_audit = true;
         $clone->source_uuid = $this->uuid;

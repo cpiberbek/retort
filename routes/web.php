@@ -784,7 +784,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/mincing/export-pdf', [MincingController::class, 'exportPdf'])->name('mincing.exportPdf');
     Route::get('/mincing/export-excel', [MincingController::class, 'exportExcel'])->name('mincing.exportExcel');
     Route::delete('/mincing/{uuid}', [MincingController::class, 'destroy'])->name('mincing.destroy');
-    // auditmincing
+    // audit-mincing
     Route::get('/mincing/audit-data', [MincingController::class, 'auditIndex'])->name('mincing.audit');
     Route::post('/mincing/{uuid}/duplicate-to-audit', [MincingController::class, 'duplicateToAudit'])->name('mincing.duplicateToAudit');
 
@@ -802,6 +802,9 @@ Route::middleware('auth')->group(function () {
         ->name('metal.verification.update');
     Route::get('/metal/export-pdf', [MetalController::class, 'exportPdf'])->name('metal.exportPdf');
     Route::delete('/metal/{uuid}', [MetalController::class, 'destroy'])->name('metal.destroy');
+    //audit-metal
+    Route::get('/metal/audit-data', [MetalController::class, 'auditIndex'])->name('metal.audit');
+    Route::post('/metal/{uuid}/duplicate-to-audit', [MetalController::class, 'duplicateToAudit'])->name('metal.duplicateToAudit');
 
     // Pemasakan
     Route::get('/pemasakan/export-pdf', [PemasakanController::class, 'exportPdf'])->name('pemasakan.exportPdf');
