@@ -18,6 +18,10 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
      */
     public function index(Request $request)
     {
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.audit');
+        }
+
         if ($request->filled('date') && $request->filled('month')) {
             return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index', [
                 'date' => $request->date
@@ -31,7 +35,8 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
         }
 
         $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater'])
-            ->where('plant_uuid', auth()->user()->plant);
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where('is_audit', false);
 
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
@@ -59,7 +64,72 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        return view('pemeriksaan-kekuatan-magnet-trap.index', compact('pemeriksaanKekuatanMagnetTraps'));
+        return view(
+            'pemeriksaan-kekuatan-magnet-trap.index',
+            compact('pemeriksaanKekuatanMagnetTraps')
+        );
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater'])
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where(function ($q) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            });
+
+        if ($request->filled('date')) {
+            $query->whereDate('tanggal', $request->date);
+
+        } elseif ($request->filled('month')) {
+            [$year, $month] = explode('-', $request->month);
+
+            $query->whereYear('tanggal', $year)
+                ->whereMonth('tanggal', $month);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('kondisi_magnet_trap', 'like', "%{$search}%")
+                    ->orWhere('petugas_qc', 'like', "%{$search}%")
+                    ->orWhereHas('creator', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $pemeriksaanKekuatanMagnetTraps = $query->latest()
+            ->paginate(15)
+            ->withQueryString();
+
+        return view(
+            'pemeriksaan-kekuatan-magnet-trap.index_audit',
+            compact('pemeriksaanKekuatanMagnetTraps')
+        );
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $pemeriksaanKekuatanMagnetTrap = PemeriksaanKekuatanMagnetTrap::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $pemeriksaanKekuatanMagnetTrap->auditVersion;
+
+        if (!$audit) {
+            $audit = $pemeriksaanKekuatanMagnetTrap->copyToAudit();
+        }
+
+        return redirect()->route(
+            'pemeriksaan-kekuatan-magnet-trap.edit',
+            $audit->id
+        );
     }
     /**
      * Menampilkan form create.

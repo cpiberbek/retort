@@ -449,11 +449,23 @@ Route::middleware('auth')->group(function () {
         [PemeriksaanKekuatanMagnetTrapController::class, 'deletePermanent']
     )->name('pemeriksaan-kekuatan-magnet-trap.deletePermanent');
 
+    //audit-pemeriksaankekuatanmagnettrap
+    Route::get(
+        '/pemeriksaan-kekuatan-magnet-trap/audit-data',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'auditIndex']
+    )->name('pemeriksaan-kekuatan-magnet-trap.audit');
+
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/{uuid}/duplicate-to-audit',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'duplicateToAudit']
+    )->name('pemeriksaan-kekuatan-magnet-trap.duplicateToAudit');
+
+
     Route::resource('pemeriksaan-kekuatan-magnet-trap', PemeriksaanKekuatanMagnetTrapController::class)
         ->names('pemeriksaan-kekuatan-magnet-trap');
 
-    Route::get('checkingpowermagnettrap/export-pdf', [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf'])->name('checkingpowermagnettrap.exportPdf');
-
+    Route::get('checkingpowermagnettrap/export-pdf', [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf'])->name('checkingpowermagnettrap.exportPdf');    
+    
     Route::get(
         '/penyimpangan-kualitas/{penyimpanganKualitas}/update-form',
         [PenyimpanganKualitasController::class, 'showUpdateForm']

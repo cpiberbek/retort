@@ -199,6 +199,25 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                             {{-- Aksi dengan Layout Text-Nowrap + MX-1 --}}
                             <td class="text-center align-middle text-nowrap">
                                 <div class="d-flex justify-content-center align-items-center">
+
+                                    @unless(auth()->user()->hasRole('auditor'))
+                                        <form
+                                            action="{{ route('pemeriksaan-kekuatan-magnet-trap.duplicateToAudit', $item->uuid) }}"
+                                            method="POST"
+                                            class="d-inline"
+                                        >
+                                            @csrf
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-dark btn-sm mx-1"
+                                                title="Edit Data Audit"
+                                                onclick="return confirm('Buka data ini untuk Audit?')"
+                                            >
+                                                <i class="bi bi-files me-1"></i> Edit Data Audit
+                                            </button>
+                                        </form>
+                                    @endunless
                                     
                                     @can('can access verification button')
                                     {{-- 0. Tombol Verifikasi (Memicu Modal) --}}
