@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasAudit;
 
 class Mincing extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, HasAudit;
 
     protected $table = 'mincings';
 
@@ -53,13 +54,16 @@ class Mincing extends Model
         'nama_spv',
         'status_spv',
         'catatan_spv',
-        'tgl_update_spv'
+        'tgl_update_spv',
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
         'premix' => 'array',
         'non_premix' => 'array',
         'suhu_sebelum_grinding' => 'array',
+        'is_audit' => 'boolean',
     ];
 
     //relasi kode batch

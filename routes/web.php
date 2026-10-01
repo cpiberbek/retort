@@ -784,6 +784,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/mincing/export-pdf', [MincingController::class, 'exportPdf'])->name('mincing.exportPdf');
     Route::get('/mincing/export-excel', [MincingController::class, 'exportExcel'])->name('mincing.exportExcel');
     Route::delete('/mincing/{uuid}', [MincingController::class, 'destroy'])->name('mincing.destroy');
+    // auditmincing
+    Route::get('/mincing/audit-data', [MincingController::class, 'auditIndex'])->name('mincing.audit');
+    Route::post('/mincing/{uuid}/duplicate-to-audit', [MincingController::class, 'duplicateToAudit'])->name('mincing.duplicateToAudit');
+
 
     // Metal
     Route::get('/metal', [MetalController::class, 'index'])->name('metal.index');

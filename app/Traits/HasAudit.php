@@ -1,31 +1,11 @@
 <?php
 
-namespace App\Models\Traits;
+namespace App\Traits;
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 trait HasAudit
 {
-    public static function bootHasAudit()
-    {
-        static::created(function ($model) {
-            if (!$model->is_audit && empty($model->source_uuid)) {
-                DB::afterCommit(function () use ($model) {
-                    try {
-                        $freshModel = $model->fresh();
-                        if ($freshModel && !$freshModel->is_audit && !$freshModel->auditVersion()->exists()) {
-                            $freshModel->copyToAudit();
-                        }
-                    } catch (\Throwable $e) {
-                        Log::error('Auto copy to audit failed for model ' . get_class($model) . ' UUID ' . $model->uuid . ': ' . $e->getMessage());
-                    }
-                });
-            }
-        });
-    }
-
     protected function keepApprovalsOnAudit(): bool
     {
         return false;
@@ -33,12 +13,14 @@ trait HasAudit
 
     public function auditVersion()
     {
-        return $this->hasOne(static::class, 'source_uuid', 'uuid')->where('is_audit', true);
+        return $this->hasOne(static::class, 'source_uuid', 'uuid')
+            ->where('is_audit', true);
     }
 
     public function originalVersion()
     {
-        return $this->belongsTo(static::class, 'source_uuid', 'uuid')->where('is_audit', false);
+        return $this->belongsTo(static::class, 'source_uuid', 'uuid')
+            ->where('is_audit', false);
     }
 
     public function copyToAudit(): self
@@ -47,6 +29,35 @@ trait HasAudit
         $clone->uuid = (string) Str::uuid();
         $clone->is_audit = true;
         $clone->source_uuid = $this->uuid;
+
+        if (!$this->keepApprovalsOnAudit()) {
+            $booleanApprovalFields = [
+                'approved_by_qc',
+                'approved_by_produksi',
+                'approved_by_spv',
+            ];
+
+            $nullableApprovalFields = [
+                'qc_approved_by',
+                'qc_approved_at',
+                'produksi_approved_by',
+                'produksi_approved_at',
+                'spv_approved_by',
+                'spv_approved_at',
+            ];
+
+            foreach ($booleanApprovalFields as $field) {
+                if (array_key_exists($field, $clone->getAttributes())) {
+                    $clone->{$field} = false;
+                }
+            }
+
+            foreach ($nullableApprovalFields as $field) {
+                if (array_key_exists($field, $clone->getAttributes())) {
+                    $clone->{$field} = null;
+                }
+            }
+        }
 
         $clone->save();
 

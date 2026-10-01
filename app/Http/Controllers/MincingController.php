@@ -26,6 +26,10 @@ class MincingController extends Controller
 {
     public function index(Request $request)
     {
+        if (Auth::user()->hasRole('auditor')) {
+            return redirect()->route('mincing.audit');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
@@ -34,6 +38,7 @@ class MincingController extends Controller
 
         $data = Mincing::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -62,6 +67,80 @@ class MincingController extends Controller
             'shift',
             'kode_batch'
         ));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kode_batch = $request->input('kode_batch');
+        $userPlant = Auth::user()->plant;
+
+        $auditedSourceUuids = Mincing::query()
+            ->where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Mincing::query()
+            ->where('plant', $userPlant)
+            ->where(function ($query) use ($auditedSourceUuids) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) use ($auditedSourceUuids) {
+                        $subQuery->where('is_audit', false);
+
+                        if (!empty($auditedSourceUuids)) {
+                            $subQuery->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($kode_batch, function ($query) use ($kode_batch) {
+                $query->where('kode_produksi', 'like', "%{$kode_batch}%");
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.mincing.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kode_batch'
+        ));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        $mincing = Mincing::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $existing = $mincing->auditVersion;
+
+        if ($existing) {
+            return redirect()->route('mincing.edit.form', $existing->uuid);
+        }
+
+        $clone = $mincing->copyToAudit();
+
+        return redirect()->route('mincing.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
     }
 
     public function exportPdf(Request $request)

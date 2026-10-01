@@ -611,6 +611,18 @@
                                     @can('can access update button')
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1 flex-wrap">
+
+                                            {{-- EDIT DATA AUDIT --}}
+                                            @unless(auth()->user()->hasRole('auditor'))
+                                                <form action="{{ route('mincing.duplicateToAudit', $dep->uuid) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    <button type="submit" class="btn btn-dark btn-sm"
+                                                        onclick="return confirm('Buka data ini untuk Audit?')">
+                                                        <i class="bi bi-files"></i> Edit Data Audit
+                                                    </button>
+                                                </form>
+                                            @endunless
+
                                             @can('can access verification button')
                                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"
                                                     data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">
