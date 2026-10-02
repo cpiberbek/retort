@@ -639,6 +639,9 @@ Route::middleware('auth')->group(function () {
     // Chamber
     Route::get('/chamber/export-pdf', [ChamberController::class, 'exportPdf'])->name('chamber.exportPdf');
     Route::get('/chamber', [ChamberController::class, 'index'])->name('chamber.index');
+    // audit-chamber
+    Route::get('/chamber/audit-data', [ChamberController::class, 'auditIndex'])->name('chamber.audit');
+    Route::post('/chamber/{uuid}/duplicate-to-audit', [ChamberController::class, 'duplicateToAudit'])->name('chamber.duplicateToAudit');
     Route::get('/chamber/create', [ChamberController::class, 'create'])->name('chamber.create');
     Route::post('/chamber', [ChamberController::class, 'store'])->name('chamber.store');
     Route::get('/chamber/update/{uuid}', [ChamberController::class, 'update'])->name('chamber.update.form');

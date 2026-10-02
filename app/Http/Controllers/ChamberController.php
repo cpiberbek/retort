@@ -17,6 +17,10 @@ class ChamberController extends Controller
 
     public function index(Request $request)
     {
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('chamber.audit');
+        }
+
         $search    = $request->input('search');
         $month     = $request->input('month');
         $date      = $request->input('date');
@@ -33,6 +37,7 @@ class ChamberController extends Controller
 
         $data = Chamber::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -56,7 +61,94 @@ class ChamberController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
-        return view('form.chamber.index', compact('data', 'search', 'month', 'date', 'shift'));
+        return view(
+            'form.chamber.index',
+            compact(
+                'data',
+                'search',
+                'month',
+                'date',
+                'shift'
+            )
+        );
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $search    = $request->input('search');
+        $month     = $request->input('month');
+        $date      = $request->input('date');
+        $shift     = $request->input('shift');
+        $userPlant = Auth::user()->plant;
+
+        if ($month) {
+            $date = null;
+        }
+
+        if ($date) {
+            $month = null;
+        }
+
+        $data = Chamber::query()
+            ->where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_operator', 'like', "%{$search}%");
+                });
+            })
+            ->when($month, function ($query) use ($month) {
+                [$year, $monthNumber] = explode('-', $month);
+
+                $query->whereYear('date', $year)
+                    ->whereMonth('date', $monthNumber);
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view(
+            'form.chamber.index_audit',
+            compact(
+                'data',
+                'search',
+                'month',
+                'date',
+                'shift'
+            )
+        );
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $chamber = Chamber::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $chamber->auditVersion;
+
+        if (!$audit) {
+            $audit = $chamber->copyToAudit();
+        }
+
+        return redirect()->route(
+            'chamber.edit.form',
+            $audit->uuid
+        );
     }
 
     public function exportPdf(Request $request)
