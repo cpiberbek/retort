@@ -779,6 +779,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/labelisasi-pvdc/{uuid}/result', [Labelisasi_pvdcController::class, 'result'])->name('labelisasi_pvdc.result');
     Route::get('/labelisasi_pvdc/create', [Labelisasi_pvdcController::class, 'create'])->name('labelisasi_pvdc.create');
     Route::post('/labelisasi_pvdc', [Labelisasi_pvdcController::class, 'store'])->name('labelisasi_pvdc.store');
+    // labelisasi PVDC-audit
+    Route::get('/labelisasi_pvdc/audit-data', [Labelisasi_pvdcController::class, 'auditIndex'])->name('labelisasi_pvdc.audit');
+    Route::post('/labelisasi_pvdc/{uuid}/duplicate-to-audit', [Labelisasi_pvdcController::class, 'duplicateToAudit'])
+    ->name('labelisasi_pvdc.duplicateToAudit');
     Route::get('/labelisasi_pvdc/update/{uuid}', [Labelisasi_pvdcController::class, 'update'])->name('labelisasi_pvdc.update.form');
     Route::put('/labelisasi_pvdc/update_qc/{uuid}', [Labelisasi_pvdcController::class, 'update_qc'])->name('labelisasi_pvdc.update_qc');
     Route::get('/labelisasi_pvdc/edit/{uuid}', [Labelisasi_pvdcController::class, 'edit'])->name('labelisasi_pvdc.edit.form');

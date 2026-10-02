@@ -217,96 +217,230 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 {{-- Action & Verification --}}
                                 <td class="text-center">
+                                    {{-- Edit Data Audit --}}
+                                    @unless(auth()->user()->hasRole('auditor'))
+                                        <form
+                                            action="{{ route('labelisasi_pvdc.duplicateToAudit', $dep->uuid) }}"
+                                            method="POST"
+                                            class="d-inline"
+                                        >
+                                            @csrf
+
+                                            <button
+                                                type="submit"
+                                                class="btn btn-dark btn-sm me-1 mb-1"
+                                                onclick="return confirm('Buka data ini untuk Audit?')"
+                                            >
+                                                <i class="bi bi-files"></i>
+                                                Edit Data Audit
+                                            </button>
+                                        </form>
+                                    @endunless
                                     @can('can access verification button')
-                                    <button class="btn btn-primary btn-sm fw-bold shadow-sm mb-1" data-bs-toggle="modal"
-                                    data-bs-target="#verifyModal{{ $dep->uuid }}"><i class="bi bi-shield-check"></i>
-                                Verifikasi</button>
-                                @endcan
-                                @can('can access edit button')
-                                <a href="{{ route('labelisasi_pvdc.edit.form', $dep->uuid) }}" class="btn btn-warning btn-sm me-1 mb-1"><i class="bi bi-pencil-square"></i> Edit</a>
-                                @endcan
-                                @can('can access update button')
-                                <a href="{{ route('labelisasi_pvdc.update.form', $dep->uuid) }}"
-                                    class="btn btn-info btn-sm me-1 mb-1"><i class="bi bi-pencil"></i> Update</a>
+                                        <button
+                                            class="btn btn-primary btn-sm fw-bold shadow-sm mb-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#verifyModal{{ $dep->uuid }}"
+                                        >
+                                            <i class="bi bi-shield-check"></i>
+                                            Verifikasi
+                                        </button>
                                     @endcan
+
+                                    @can('can access edit button')
+                                        <a
+                                            href="{{ route('labelisasi_pvdc.edit.form', $dep->uuid) }}"
+                                            class="btn btn-warning btn-sm me-1 mb-1"
+                                        >
+                                            <i class="bi bi-pencil-square"></i>
+                                            Edit
+                                        </a>
+                                    @endcan
+
+                                    @can('can access update button')
+                                        <a
+                                            href="{{ route('labelisasi_pvdc.update.form', $dep->uuid) }}"
+                                            class="btn btn-info btn-sm me-1 mb-1"
+                                        >
+                                            <i class="bi bi-pencil"></i>
+                                            Update
+                                        </a>
+                                    @endcan
+
+                                    
+
                                     @can('can access delete button')
-                                    <form action="{{ route('labelisasi_pvdc.destroy', $dep->uuid) }}" method="POST"
-                                        class="d-inline" onsubmit="return confirm('Hapus data?')">@csrf
-                                        @method('DELETE')<button class="btn btn-danger btn-sm mb-1"><i
-                                            class="bi bi-trash"></i> Hapus</button></form>
-                                            @endcan
+                                        <form
+                                            action="{{ route('labelisasi_pvdc.destroy', $dep->uuid) }}"
+                                            method="POST"
+                                            class="d-inline"
+                                            onsubmit="return confirm('Hapus data?')"
+                                        >
+                                            @csrf
+                                            @method('DELETE')
 
-                                            {{-- Modal Verification (Gradient Style) --}}
-                                            <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                                            <button class="btn btn-danger btn-sm mb-1">
+                                                <i class="bi bi-trash"></i>
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    @endcan
 
-                                                {{-- PERBAIKAN UTAMA: --}}
-                                                {{-- 1. Tambahkan 'modal-dialog-centered' agar di tengah vertikal --}}
-                                                {{-- 2. Tambahkan style="max-width: 700px;" untuk MEMAKSA modal menjadi lebar --}}
-                                                <div class="modal-dialog modal-dialog-centered" style="max-width: 700px;"> 
+                                    {{-- Modal Verification --}}
+                                    <div
+                                        class="modal fade"
+                                        id="verifyModal{{ $dep->uuid }}"
+                                        tabindex="-1"
+                                        aria-hidden="true"
+                                        data-bs-backdrop="static"
+                                    >
+                                        <div
+                                            class="modal-dialog modal-dialog-centered"
+                                            style="max-width: 700px;"
+                                        >
+                                            <form
+                                                action="{{ route('labelisasi_pvdc.verification.update', $dep->uuid) }}"
+                                                method="POST"
+                                            >
+                                                @csrf
+                                                @method('PUT')
 
-                                                    <form action="{{ route('labelisasi_pvdc.verification.update', $dep->uuid) }}" method="POST">
-                                                        @csrf @method('PUT')
-                                                        <input type="hidden" name="page" value="{{ request()->query('page', 1) }}">
-                                                        <input type="hidden" name="date" value="{{ request()->query('date', '') }}">
-                                                        <input type="hidden" name="shift" value="{{ request()->query('shift', '') }}">
-                                                        <input type="hidden" name="search" value="{{ request()->query('search', '') }}">
-                                                        <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white" style="background: linear-gradient(145deg, #7a1f12, #9E3419);">
+                                                <input
+                                                    type="hidden"
+                                                    name="page"
+                                                    value="{{ request()->query('page', 1) }}"
+                                                >
 
-                                                            {{-- HEADER --}}
-                                                            <div class="modal-header border-bottom border-light-subtle p-3 position-relative">
-                                                                <h5 class="modal-title fw-bolder text-uppercase w-100 text-center" style="color: #00ffc4; letter-spacing: 1px;">
-                                                                    <i class="bi bi-gear-fill me-2"></i> VERIFICATION
-                                                                </h5>
-                                                                {{-- Tombol Close --}}
-                                                                <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal"></button>
-                                                            </div>
+                                                <input
+                                                    type="hidden"
+                                                    name="date"
+                                                    value="{{ request()->query('date', '') }}"
+                                                >
 
-                                                            {{-- BODY --}}
-                                                            <div class="modal-body p-4 text-center">
+                                                <input
+                                                    type="hidden"
+                                                    name="shift"
+                                                    value="{{ request()->query('shift', '') }}"
+                                                >
 
-                                                                <p class="mb-4 text-light opacity-75" style="font-size: 0.95rem;">
-                                                                    Pastikan data yang akan diverifikasi di check dengan teliti terlebih dahulu.
-                                                                </p>
+                                                <input
+                                                    type="hidden"
+                                                    name="search"
+                                                    value="{{ request()->query('search', '') }}"
+                                                >
 
-                                                                <div class="row justify-content-center">
-                                                                    <div class="col-10"> {{-- col-10 memastikan konten tidak terlalu mepet pinggir --}}
+                                                <div
+                                                    class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
+                                                    style="background: linear-gradient(145deg, #7a1f12, #9E3419);"
+                                                >
 
-                                                                        {{-- Pilih Status --}}
-                                                                        <div class="mb-4">
-                                                                            <label class="fw-bold mb-2 d-block text-white">Pilih Status Verifikasi</label>
-                                                                            <select name="status_spv" class="form-select form-select-lg fw-bold text-center w-100 shadow-sm" 
-                                                                            style="background: #fff; color: #dc3545; border-radius: 10px; border: none; cursor: pointer;">
-                                                                            <option value="1" {{ $dep->status_spv==1?'selected':'' }}>✅ Verified (Disetujui)</option>
-                                                                            <option value="2" {{ $dep->status_spv==2?'selected':'' }}>❌ Revision (Perlu Perbaikan)</option>
-                                                                        </select>
-                                                                    </div>
+                                                    {{-- HEADER --}}
+                                                    <div
+                                                        class="modal-header border-bottom border-light-subtle p-3 position-relative"
+                                                    >
+                                                        <h5
+                                                            class="modal-title fw-bolder text-uppercase w-100 text-center"
+                                                            style="color: #00ffc4; letter-spacing: 1px;"
+                                                        >
+                                                            <i class="bi bi-gear-fill me-2"></i>
+                                                            VERIFICATION
+                                                        </h5>
 
-                                                                    {{-- Catatan --}}
-                                                                    <div class="mb-2">
-                                                                        <label class="fw-bold mb-2 d-block text-white">Catatan Tambahan (Opsional)</label>
-                                                                        <textarea name="catatan_spv" rows="4" class="form-control w-100 shadow-sm" 
-                                                                        style="background-color: #FFE5DE; border-radius: 10px; border: none;" 
-                                                                        placeholder="Masukkan catatan...">{{ $dep->catatan_spv }}</textarea>
-                                                                    </div>
+                                                        <button
+                                                            type="button"
+                                                            class="btn-close btn-close-white position-absolute end-0 me-3"
+                                                            data-bs-dismiss="modal"
+                                                        ></button>
+                                                    </div>
 
+                                                    {{-- BODY --}}
+                                                    <div class="modal-body p-4 text-center">
+
+                                                        <p
+                                                            class="mb-4 text-light opacity-75"
+                                                            style="font-size: 0.95rem;"
+                                                        >
+                                                            Pastikan data yang akan diverifikasi di check
+                                                            dengan teliti terlebih dahulu.
+                                                        </p>
+
+                                                        <div class="row justify-content-center">
+                                                            <div class="col-10">
+
+                                                                {{-- Pilih Status --}}
+                                                                <div class="mb-4">
+                                                                    <label class="fw-bold mb-2 d-block text-white">
+                                                                        Pilih Status Verifikasi
+                                                                    </label>
+
+                                                                    <select
+                                                                        name="status_spv"
+                                                                        class="form-select form-select-lg fw-bold text-center w-100 shadow-sm"
+                                                                        style="background: #fff; color: #dc3545; border-radius: 10px; border: none; cursor: pointer;"
+                                                                    >
+                                                                        <option
+                                                                            value="1"
+                                                                            {{ $dep->status_spv == 1 ? 'selected' : '' }}
+                                                                        >
+                                                                            ✅ Verified (Disetujui)
+                                                                        </option>
+
+                                                                        <option
+                                                                            value="2"
+                                                                            {{ $dep->status_spv == 2 ? 'selected' : '' }}
+                                                                        >
+                                                                            ❌ Revision (Perlu Perbaikan)
+                                                                        </option>
+                                                                    </select>
                                                                 </div>
+
+                                                                {{-- Catatan --}}
+                                                                <div class="mb-2">
+                                                                    <label class="fw-bold mb-2 d-block text-white">
+                                                                        Catatan Tambahan (Opsional)
+                                                                    </label>
+
+                                                                    <textarea
+                                                                        name="catatan_spv"
+                                                                        rows="4"
+                                                                        class="form-control w-100 shadow-sm"
+                                                                        style="background-color: #FFE5DE; border-radius: 10px; border: none;"
+                                                                        placeholder="Masukkan catatan..."
+                                                                    >{{ $dep->catatan_spv }}</textarea>
+                                                                </div>
+
                                                             </div>
                                                         </div>
+                                                    </div>
 
-                                                        {{-- FOOTER --}}
-                                                        <div class="modal-footer justify-content-center border-top p-3" style="background-color: #9E3419; border-color: rgba(255,255,255,0.2) !important;">
-                                                            <button type="button" class="btn btn-outline-light rounded-pill px-4 me-2 fw-bold" data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit" class="btn fw-bolder rounded-pill px-5 shadow" style="background-color: #E39581; color: #2c3e50;">
-                                                                <i class="bi bi-box-arrow-in-down me-1"></i> SUBMIT
-                                                            </button>
-                                                        </div>
+                                                    {{-- FOOTER --}}
+                                                    <div
+                                                        class="modal-footer justify-content-center border-top p-3"
+                                                        style="background-color: #9E3419; border-color: rgba(255,255,255,0.2) !important;"
+                                                    >
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn-outline-light rounded-pill px-4 me-2 fw-bold"
+                                                            data-bs-dismiss="modal"
+                                                        >
+                                                            Batal
+                                                        </button>
 
-                                                    </div> {{-- End Modal Content --}}
-                                                </form>
-                                            </div> {{-- End Modal Dialog --}}
-                                        </div> 
-                                        {{-- End Modal --}}
-                                    </td>
+                                                        <button
+                                                            type="submit"
+                                                            class="btn fw-bolder rounded-pill px-5 shadow"
+                                                            style="background-color: #E39581; color: #2c3e50;"
+                                                        >
+                                                            <i class="bi bi-box-arrow-in-down me-1"></i>
+                                                            SUBMIT
+                                                        </button>
+                                                    </div>
+
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
                                 </tr>
                                 @empty
                                 <tr>

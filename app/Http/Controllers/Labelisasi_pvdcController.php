@@ -39,6 +39,10 @@ class Labelisasi_pvdcController extends Controller
 
     public function index(Request $request)
     {
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('labelisasi_pvdc.audit');
+        }
+
         $search    = $request->input('search');
         $date      = $request->input('date');
         $shift     = $request->input('shift');
@@ -46,6 +50,7 @@ class Labelisasi_pvdcController extends Controller
 
         $data = Labelisasi_pvdc::query()
         ->where('plant', $userPlant)
+        ->where('is_audit', false)
         ->when($search, function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
@@ -64,6 +69,67 @@ class Labelisasi_pvdcController extends Controller
         ->paginate(10)
         ->appends($request->all());
         return view('form.labelisasi_pvdc.index', compact('data', 'search', 'date', 'shift'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+
+        $userPlant = Auth::user()->plant;
+
+        $data = Labelisasi_pvdc::where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $search = strtolower(trim($search));
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(username) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(nama_produk) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.labelisasi_pvdc.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'shift'
+        ));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $labelisasi = Labelisasi_pvdc::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $labelisasi->auditVersion;
+
+        if (!$audit) {
+            $audit = $labelisasi->copyToAudit();
+        }
+
+        return redirect()->route(
+            'labelisasi_pvdc.edit.form',
+            $audit->uuid
+        );
     }
 
     //modal new function supaya ringan
