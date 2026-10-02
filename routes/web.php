@@ -841,6 +841,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/pemasakan/export-pdf', [PemasakanController::class, 'exportPdf'])->name('pemasakan.exportPdf');
     Route::get('/pemasakan/export-excel', [PemasakanController::class, 'exportExcel'])->name('pemasakan.exportExcel');
     Route::get('/pemasakan', [PemasakanController::class, 'index'])->name('pemasakan.index');
+    // audit-pemasakan
+    Route::get('/pemasakan/audit-data', [PemasakanController::class, 'auditIndex'])->name('pemasakan.audit');
+    Route::post('/pemasakan/{uuid}/duplicate-to-audit', [PemasakanController::class, 'duplicateToAudit'])->name('pemasakan.duplicateToAudit');
     Route::get('/pemasakan/create', [PemasakanController::class, 'create'])->name('pemasakan.create');
     Route::post('/pemasakan', [PemasakanController::class, 'store'])->name('pemasakan.store');
     Route::get('/pemasakan/update/{uuid}', [PemasakanController::class, 'update'])->name('pemasakan.update.form');

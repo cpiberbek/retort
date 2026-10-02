@@ -24,6 +24,10 @@ class PemasakanController extends Controller
 
     public function index(Request $request)
     {
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('pemasakan.audit');
+        }
+
         $search     = $request->input('search');
         $kodeBatch  = $request->input('kode_batch');
         $date       = $request->input('date');
@@ -40,6 +44,7 @@ class PemasakanController extends Controller
 
         $data = Pemasakan::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -88,6 +93,99 @@ class PemasakanController extends Controller
             'stuffingData'
         ));
     }
+
+    public function auditIndex(Request $request)
+    {
+        $search     = $request->input('search');
+        $kodeBatch  = $request->input('kode_batch');
+        $date       = $request->input('date');
+        $shift      = $request->input('shift');
+        $userPlant  = Auth::user()->plant;
+
+        $kodeProduksi = [];
+
+        if ($kodeBatch) {
+            $kodeProduksi = Mincing::where('kode_produksi', $kodeBatch)
+                ->pluck('uuid')
+                ->toArray();
+        }
+
+        $data = Pemasakan::query()
+            ->where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($kodeBatch, function ($query) use ($kodeProduksi) {
+                $query->where(function ($q) use ($kodeProduksi) {
+                    foreach ($kodeProduksi as $uuid) {
+                        $q->orWhere('kode_produksi', 'like', "%{$uuid}%");
+                    }
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        $allUUID = [];
+
+        foreach ($data as $row) {
+            if (is_array($row->kode_produksi)) {
+                $allUUID = array_merge($allUUID, $row->kode_produksi);
+            }
+        }
+
+        $allUUID = array_unique($allUUID);
+
+        $stuffingData = Mincing::whereIn('uuid', $allUUID)
+            ->orWhereIn('kode_produksi', $allUUID)
+            ->get()
+            ->keyBy('uuid');
+
+        return view('form.pemasakan.index_audit', compact(
+            'data',
+            'search',
+            'kodeBatch',
+            'date',
+            'shift',
+            'stuffingData'
+        ));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $pemasakan = Pemasakan::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $pemasakan->auditVersion;
+
+        if (!$audit) {
+            $audit = $pemasakan->copyToAudit();
+        }
+
+        return redirect()->route(
+            'pemasakan.edit.form',
+            $audit->uuid
+        );
+    }
+
     /**
      * Export PDF dengan Filter Shift
      */
