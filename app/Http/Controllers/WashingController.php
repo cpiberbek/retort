@@ -14,6 +14,10 @@ class WashingController extends Controller
 
     public function index(Request $request)
     {
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('washing.audit');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
@@ -22,6 +26,7 @@ class WashingController extends Controller
 
         $data = Washing::with('mincing')
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -48,6 +53,78 @@ class WashingController extends Controller
             ->appends($request->all());
 
         return view('form.washing.index', compact('data', 'search', 'date', 'shift', 'kode_batch'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kode_batch = $request->input('kode_batch');
+        $userPlant = Auth::user()->plant;
+
+        $data = Washing::with('mincing')
+            ->where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhereHas('mincing', function ($sub) use ($search) {
+                            $sub->where('kode_produksi', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($kode_batch, function ($query) use ($kode_batch) {
+                $query->whereHas('mincing', function ($q) use ($kode_batch) {
+                    $q->where('kode_produksi', 'like', "%{$kode_batch}%");
+                });
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view(
+            'form.washing.index_audit',
+            compact(
+                'data',
+                'search',
+                'date',
+                'shift',
+                'kode_batch'
+            )
+        );
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $washing = Washing::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $washing->auditVersion;
+
+        if (!$audit) {
+            $audit = $washing->copyToAudit();
+        }
+
+        return redirect()->route(
+            'washing.edit.form',
+            $audit->uuid
+        );
     }
 
     public function exportPdf(Request $request)

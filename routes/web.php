@@ -870,6 +870,9 @@ Route::middleware('auth')->group(function () {
     // Washing
     Route::get('/washing/export-pdf', [WashingController::class, 'exportPdf'])->name('washing.exportPdf');
     Route::get('/washing', [WashingController::class, 'index'])->name('washing.index');
+    // washing-audit
+    Route::get('/washing/audit-data', [WashingController::class, 'auditIndex'])->name('washing.audit');
+    Route::post('/washing/{uuid}/duplicate-to-audit', [WashingController::class, 'duplicateToAudit'])->name('washing.duplicateToAudit');
     Route::get('/washing/create', [WashingController::class, 'create'])->name('washing.create');
     Route::post('/washing', [WashingController::class, 'store'])->name('washing.store');
     Route::get('/washing/update/{uuid}', [WashingController::class, 'update'])->name('washing.update.form');
