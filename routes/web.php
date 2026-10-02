@@ -587,6 +587,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/stuffing/export-pdf', [App\Http\Controllers\StuffingController::class, 'exportPdf'])->name('stuffing.exportPdf');
     Route::get('/stuffing/export-excel', [App\Http\Controllers\StuffingController::class, 'exportExcel'])->name('stuffing.exportExcel');
     Route::get('/stuffing', [StuffingController::class, 'index'])->name('stuffing.index');
+    // audit-stuffing
+    Route::get('/stuffing/audit-data', [StuffingController::class, 'auditIndex'])->name('stuffing.audit');
+    Route::post('/stuffing/{uuid}/duplicate-to-audit', [StuffingController::class, 'duplicateToAudit'])->name('stuffing.duplicateToAudit');
+    
     Route::get('/stuffing/create', [StuffingController::class, 'create'])->name('stuffing.create');
     Route::post('/stuffing', [StuffingController::class, 'store'])->name('stuffing.store');
     Route::get('/stuffing/update/{uuid}', [StuffingController::class, 'update'])->name('stuffing.update.form');

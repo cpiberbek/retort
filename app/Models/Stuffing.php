@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasAudit;
 
 class Stuffing extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, HasAudit;
 
     protected $table = 'stuffings';
     protected $primaryKey = 'uuid';  
@@ -17,15 +18,30 @@ class Stuffing extends Model
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'shift', 'nama_produk', 'kode_produksi', 'exp_date', 
-        'data_stuffing', // <-- Tambahkan kolom JSON ini
-        'nama_produksi', 'status_produksi', 'tgl_update_produksi',
-        'username', 'username_updated', 'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'date',
+        'plant',
+        'shift',
+        'nama_produk',
+        'kode_produksi',
+        'exp_date',
+        'data_stuffing',
+        'nama_produksi',
+        'status_produksi',
+        'tgl_update_produksi',
+        'username',
+        'username_updated',
+        'nama_spv',
+        'status_spv',
+        'catatan_spv',
+        'tgl_update_spv',
+        'is_audit',
+        'source_uuid',
     ];
 
     // Konversi JSON otomatis menjadi Array PHP bertenaga Eloquent
     protected $casts = [
         'data_stuffing' => 'array',
+        'is_audit' => 'boolean',
     ];
 
     public function mincing()

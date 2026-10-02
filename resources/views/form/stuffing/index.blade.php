@@ -336,8 +336,8 @@
                             </td>
 
                             <td class="text-center">
-    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
-</td>
+                                {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                            </td>
                             <td class="text-center align-middle">
                                 @if ($dep->status_spv == 0)
                                 <span class="fw-bold text-secondary">Created</span>
@@ -375,6 +375,22 @@
                                 @endif
                             </td>
                             <td class="text-center align-middle">
+                                @unless(auth()->user()->hasRole('auditor'))
+                                    <form
+                                        action="{{ route('stuffing.duplicateToAudit', $dep->uuid) }}"
+                                        method="POST"
+                                        class="d-inline"
+                                    >
+                                        @csrf
+                                        <button
+                                            type="submit"
+                                            class="btn btn-dark btn-sm fw-bold shadow-sm mb-1"
+                                            onclick="return confirm('Buka data ini untuk Audit?')"
+                                        >
+                                            <i class="bi bi-files me-1"></i> Edit Data Audit
+                                        </button>
+                                    </form>
+                                @endunless
                                 @can('can access verification button')
                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mb-1"
                                 data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">

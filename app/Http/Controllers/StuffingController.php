@@ -21,6 +21,10 @@ class StuffingController extends Controller
 {
     public function index(Request $request)
     {
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('stuffing.audit');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
@@ -29,6 +33,7 @@ class StuffingController extends Controller
 
         $data = Stuffing::with('mincing')
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $search = strtolower(trim($search));
 
@@ -64,6 +69,75 @@ class StuffingController extends Controller
             'shift',
             'kodeBatch'
         ));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kodeBatch = $request->input('kode_batch');
+        $userPlant = Auth::user()->plant;
+
+        $data = Stuffing::with('mincing')
+            ->where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $search = strtolower(trim($search));
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(username) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(nama_produk) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(data_stuffing) LIKE ?', ["%{$search}%"])
+                        ->orWhereHas('mincing', function ($m) use ($search) {
+                            $m->whereRaw('LOWER(kode_produksi) LIKE ?', ["%{$search}%"]);
+                        });
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($kodeBatch, function ($query) use ($kodeBatch) {
+                $query->whereHas('mincing', function ($q) use ($kodeBatch) {
+                    $q->where('kode_produksi', 'like', "%{$kodeBatch}%");
+                });
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.stuffing.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kodeBatch'
+        ));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $stuffing = Stuffing::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $stuffing->auditVersion;
+
+        if (!$audit) {
+            $audit = $stuffing->copyToAudit();
+        }
+
+        return redirect()->route('stuffing.edit.form', $audit->uuid);
     }
 
     public function exportPdf(Request $request)
