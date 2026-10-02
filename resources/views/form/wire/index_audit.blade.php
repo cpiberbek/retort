@@ -175,9 +175,6 @@
                                 <th>Data Wire</th>
                                 <th>QC</th>
                                 <th>SPV</th>
-                                @can('can access update button')
-                                <th>Aksi</th>
-                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -268,94 +265,6 @@
                                         @else
                                             <span class="fw-bold text-secondary">Created</span>
                                         @endif
-                                    </td>
-                                    <td class="text-center">
-                                        @unless(auth()->user()->hasRole('auditor'))
-                                            <form
-                                                action="{{ route('wire.duplicateToAudit', $dep->uuid) }}"
-                                                method="POST"
-                                                class="d-inline"
-                                            >
-                                                @csrf
-
-                                                <button
-                                                    type="submit"
-                                                    class="btn btn-dark btn-sm me-1 mb-1"
-                                                    onclick="return confirm('Buka data ini untuk Audit?')"
-                                                >
-                                                    <i class="bi bi-files"></i>
-                                                    Edit Data Audit
-                                                </button>
-                                            </form>
-                                        @endunless
-                                        @can('can access verification button')
-                                            <button class="btn btn-primary btn-sm mb-1" data-bs-toggle="modal"
-                                                data-bs-target="#verifyModal{{ $dep->uuid }}"><i
-                                                    class="bi bi-shield-check"></i> Verif</button>
-                                        @endcan
-                                        @can('can access edit button')
-                                            <a href="{{ route('wire.edit.form', $dep->uuid) }}"
-                                                class="btn btn-warning btn-sm mb-1"><i class="bi bi-pencil-square"></i>
-                                                Edit</a>
-                                        @endcan
-                                        @can('can access update button')
-                                            <a href="{{ route('wire.update.form', $dep->uuid) }}"
-                                                class="btn btn-info btn-sm me-1 mb-1">
-                                                <i class="bi bi-pencil"></i> Update
-                                            </a>
-                                        @endcan
-                                        @can('can access delete button')
-                                            <form action="{{ route('wire.destroy', $dep->uuid) }}" method="POST"
-                                                class="d-inline">
-                                                @csrf @method('DELETE')
-                                                <button class="btn btn-danger btn-sm mb-1"
-                                                    onclick="return confirm('Hapus?')"><i class="bi bi-trash"></i>
-                                                    Hapus</button>
-                                            </form>
-                                        @endcan
-
-                                        {{-- Modal Verify --}}
-                                        <div class="modal fade" id="verifyModal{{ $dep->uuid }}" tabindex="-1"
-                                            aria-hidden="true">
-                                            <div class="modal-dialog modal-dialog-centered">
-                                                <form action="{{ route('wire.verification.update', $dep->uuid) }}"
-                                                    method="POST">
-                                                    @csrf @method('PUT')
-                                                    <input type="hidden" name="page"
-                                                        value="{{ request('page', 1) }}">
-                                                    <input type="hidden" name="search"
-                                                        value="{{ request('search') }}">
-                                                    <input type="hidden" name="date" value="{{ request('date') }}">
-                                                    <input type="hidden" name="shift" value="{{ request('shift') }}">
-                                                    <div class="modal-content text-white"
-                                                        style="background: linear-gradient(145deg, #7a1f12, #9E3419);">
-                                                        <div class="modal-header border-bottom border-light-subtle">
-                                                            <h5 class="modal-title">VERIFICATION</h5>
-                                                            <button type="button" class="btn-close btn-close-white"
-                                                                data-bs-dismiss="modal"></button>
-                                                        </div>
-                                                        <div class="modal-body p-4 text-center">
-                                                            <select name="status_spv"
-                                                                class="form-select form-select-lg mb-3 fw-bold text-center text-danger">
-                                                                <option value="1"
-                                                                    {{ $dep->status_spv == 1 ? 'selected' : '' }}>Verified
-                                                                </option>
-                                                                <option value="2"
-                                                                    {{ $dep->status_spv == 2 ? 'selected' : '' }}>Revision
-                                                                </option>
-                                                            </select>
-                                                            <textarea name="catatan_spv" class="form-control" rows="3" placeholder="Catatan...">{{ $dep->catatan_spv }}</textarea>
-                                                        </div>
-                                                        <div class="modal-footer border-top border-light-subtle">
-                                                            <button type="button" class="btn btn-outline-light"
-                                                                data-bs-dismiss="modal">Batal</button>
-                                                            <button type="submit"
-                                                                class="btn btn-warning fw-bold">SUBMIT</button>
-                                                        </div>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
                                     </td>
                                 </tr>
                             @empty

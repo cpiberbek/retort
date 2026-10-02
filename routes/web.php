@@ -605,6 +605,9 @@ Route::middleware('auth')->group(function () {
     // Wire
     Route::get('/wire/export-pdf', [WireController::class, 'exportPdf'])->name('wire.exportPdf');
     Route::get('/wire', [WireController::class, 'index'])->name('wire.index');
+    // audit-wire
+    Route::get('/wire/audit-data', [WireController::class, 'auditIndex'])->name('wire.audit');
+    Route::post('/wire/{uuid}/duplicate-to-audit', [WireController::class, 'duplicateToAudit'])->name('wire.duplicateToAudit');
     Route::get('/wire/create', [WireController::class, 'create'])->name('wire.create');
     Route::post('/wire', [WireController::class, 'store'])->name('wire.store');
     Route::get('/wire/update/{uuid}', [WireController::class, 'update'])->name('wire.update.form');

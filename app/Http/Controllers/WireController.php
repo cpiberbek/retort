@@ -16,13 +16,18 @@ class WireController extends Controller
 {
     public function index(Request $request)
     {
-        $search     = $request->input('search');
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('wire.audit');
+        }
+
+        $search = $request->input('search');
         $date = $request->input('date');
-        $shift     = $request->input('shift');
-        $userPlant  = Auth::user()->plant;
+        $shift = $request->input('shift');
+        $userPlant = Auth::user()->plant;
 
         $data = Wire::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -42,7 +47,69 @@ class WireController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
-        return view('form.wire.index', compact('data', 'search', 'date', 'shift'));
+        return view(
+            'form.wire.index',
+            compact('data', 'search', 'date', 'shift')
+        );
+    }
+
+    public function auditIndex(Request $request)
+    {
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $userPlant = Auth::user()->plant;
+
+        $data = Wire::query()
+            ->where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('data_wire', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view(
+            'form.wire.index_audit',
+            compact('data', 'search', 'date', 'shift')
+        );
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $wire = Wire::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $wire->auditVersion;
+
+        if (!$audit) {
+            $audit = $wire->copyToAudit();
+        }
+
+        return redirect()->route(
+            'wire.edit.form',
+            $audit->uuid
+        );
     }
 
     public function exportPdf(Request $request)
