@@ -762,6 +762,9 @@ Route::middleware('auth')->group(function () {
 
     // PVDC
     Route::get('/pvdc', [PvdcController::class, 'index'])->name('pvdc.index');
+    // PVDC - Audit
+    Route::get('/pvdc/audit-data', [PvdcController::class, 'auditIndex'])->name('pvdc.audit');
+    Route::post('/pvdc/{uuid}/duplicate-to-audit', [PvdcController::class, 'duplicateToAudit'])->name('pvdc.duplicateToAudit');
     Route::get('/pvdc/create', [PvdcController::class, 'create'])->name('pvdc.create');
     Route::post('/pvdc', [PvdcController::class, 'store'])->name('pvdc.store');
     Route::get('/pvdc/update/{uuid}', [PvdcController::class, 'update'])->name('pvdc.update.form');
@@ -769,8 +772,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pvdc/edit/{uuid}', [PvdcController::class, 'edit'])->name('pvdc.edit.form');
     Route::put('/pvdc/edit_spv/{uuid}', [PvdcController::class, 'edit_spv'])->name('pvdc.edit_spv');
     Route::get('/pvdc/verification', [PvdcController::class, 'verification'])->name('pvdc.verification');
-    Route::put('/pvdc/verification/{uuid}', [PvdcController::class, 'updateVerification'])
-        ->name('pvdc.verification.update');
+    Route::put('/pvdc/verification/{uuid}', [PvdcController::class, 'updateVerification'])->name('pvdc.verification.update');
     Route::delete('/pvdc/{uuid}', [PvdcController::class, 'destroy'])->name('pvdc.destroy');
     Route::get('/pvdc/export-pdf', [PvdcController::class, 'exportPdf'])->name('pvdc.exportPdf');
 

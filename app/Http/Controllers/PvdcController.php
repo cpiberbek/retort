@@ -19,14 +19,19 @@ class PvdcController extends Controller
 {
     public function index(Request $request)
     {
-        $search        = $request->input('search');
-        $date          = $request->input('date');
-        $shift         = $request->input('shift');
-        $namaProduk    = $request->input('nama_produk');
-        $userPlant     = Auth::user()->plant;
+        if (auth()->user()->hasRole('auditor')) {
+            return redirect()->route('pvdc.audit');
+        }
+
+        $search     = $request->input('search');
+        $date       = $request->input('date');
+        $shift      = $request->input('shift');
+        $namaProduk = $request->input('nama_produk');
+        $userPlant  = Auth::user()->plant;
 
         // Ambil list produk untuk dropdown
         $produks = Pvdc::where('plant', $userPlant)
+            ->where('is_audit', false)
             ->select('nama_produk')
             ->distinct()
             ->orderBy('nama_produk')
@@ -35,6 +40,7 @@ class PvdcController extends Controller
         // Query utama PVDC
         $data = Pvdc::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
 
             // Filter pencarian bebas
             ->when($search, function ($query) use ($search) {
@@ -68,16 +74,98 @@ class PvdcController extends Controller
 
         $pvdc = Pvdc::first();
 
-        // dd([
-        //     'raw_data_pvdc' => $pvdc->getRawOriginal('data_pvdc'),
-        //     'casted'        => $pvdc->data_pvdc,
-        //     'accessor'      => $pvdc->pvdc_detail,
-        //     'first_mincing' => optional(
-        //         $pvdc->pvdc_detail->first()['detail']->first()
-        //     )['mincing'],
-        // ]);
+        return view(
+            'form.pvdc.index',
+            compact(
+                'data',
+                'produks',
+                'search',
+                'date',
+                'shift',
+                'namaProduk'
+            )
+        );
+    }
 
-        return view('form.pvdc.index', compact('data', 'produks', 'search', 'date', 'shift', 'namaProduk'));
+    public function auditIndex(Request $request)
+    {
+        $search     = $request->input('search');
+        $date       = $request->input('date');
+        $shift      = $request->input('shift');
+        $namaProduk = $request->input('nama_produk');
+        $userPlant  = Auth::user()->plant;
+
+        $produks = Pvdc::where('plant', $userPlant)
+            ->select('nama_produk')
+            ->distinct()
+            ->orderBy('nama_produk')
+            ->get();
+
+        $data = Pvdc::query()
+            ->where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('catatan', 'like', "%{$search}%");
+                });
+            })
+
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+
+            ->when($namaProduk, function ($query) use ($namaProduk) {
+                $query->where('nama_produk', $namaProduk);
+            })
+
+            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view(
+            'form.pvdc.index_audit',
+            compact(
+                'data',
+                'produks',
+                'search',
+                'date',
+                'shift',
+                'namaProduk'
+            )
+        );
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $pvdc = Pvdc::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $pvdc->auditVersion;
+
+        if (!$audit) {
+            $audit = $pvdc->copyToAudit();
+        }
+
+        return redirect()->route(
+            'pvdc.edit.form',
+            $audit->uuid
+        );
     }
 
     public function create()
