@@ -27,56 +27,75 @@
         </a>
     </div>
 
+     @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 1.75rem; margin-right: 1rem;"></i>
+                        <h6 class="mb-0">
+                            <span class="text-primary" style="font-weight: 600;">Mode Audit</span>
+                        </h6>
+                    </div>
+
+                    <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                        onsubmit="return confirm('Kembali ke mode Operasional?')">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-shield-check"></i> Mode Operasional
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endunless
+
     {{-- Filter --}}
     <form
-        id="filterForm"
-        method="GET"
-        action="{{ route('checklistmagnettrap.audit') }}"
-        class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm"
-    >
-        <div class="row w-100">
+    id="filterForm"
+    method="GET"
+    action="{{ route('checklistmagnettrap.audit') }}"
+    class="mb-3 p-3 border rounded bg-white shadow-sm"
+>
+    <div class="row align-items-end">
 
-            <div class="col-md-6">
-                <div class="mb-1">Pilih Tanggal</div>
+        <div class="col-md-5 mb-2 mb-md-0">
+            <div class="mb-1">Pilih Tanggal</div>
 
-                <div class="input-group mb-2">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-calendar-date text-muted"></i>
-                    </span>
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-calendar-date text-muted"></i>
+                </span>
 
-                    <input
-                        type="date"
-                        name="date"
-                        id="filter_date"
-                        class="form-control border-start-0"
-                        value="{{ request('date') }}"
-                        placeholder="Tanggal"
-                    >
-                </div>
+                <input
+                    type="date"
+                    name="date"
+                    id="filter_date"
+                    class="form-control border-start-0"
+                    value="{{ request('date') }}"
+                    placeholder="Tanggal"
+                >
             </div>
-
-            <div class="col-md-6">
-                <div class="mb-1">Cari Nama Varian</div>
-
-                <div class="input-group mb-2">
-                    <span class="input-group-text bg-white border-end-0">
-                        <i class="bi bi-search text-muted"></i>
-                    </span>
-
-                    <input
-                        type="text"
-                        name="search"
-                        id="search"
-                        class="form-control border-start-0"
-                        value="{{ request('search') }}"
-                        placeholder="Cari Nama Produk / Kode Batch..."
-                    >
-                </div>
-            </div>
-
         </div>
 
-        <div class="col-lg-2 col-md-3 mt-2">
+        <div class="col-md-5 mb-2 mb-md-0">
+            <div class="mb-1">Cari Nama Varian</div>
+
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+
+                <input
+                    type="text"
+                    name="search"
+                    id="search"
+                    class="form-control border-start-0"
+                    value="{{ request('search') }}"
+                    placeholder="Cari Nama Produk / Kode Batch..."
+                >
+            </div>
+        </div>
+
+        <div class="col-md-2">
             <a
                 href="{{ route('checklistmagnettrap.audit') }}"
                 class="btn btn-primary w-100"
@@ -84,7 +103,9 @@
                 <i class="bi bi-arrow-counterclockwise"></i> Reset
             </a>
         </div>
-    </form>
+
+    </div>
+</form>
 
     {{-- Card --}}
     <div class="card shadow-sm mb-4">

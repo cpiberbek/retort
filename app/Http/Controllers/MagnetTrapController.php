@@ -29,12 +29,12 @@ class MagnetTrapController extends Controller
      */
     public function index(Request $request)
     {
-        if (Auth::user()->hasRole('auditor')) {
+        if (Auth::user()->isAuditView()) {
             return redirect()->route('checklistmagnettrap.audit');
         }
 
         $query = MagnetTrapModel::query()
-            ->with(['updater', 'mincing', 'produksi', 'engineer'])
+            ->with(['updater', 'mincing', 'produksi', 'engineer', 'auditVersion'])
             ->where('is_audit', false);
 
         if (Auth::check() && !empty(Auth::user()->plant)) {
@@ -67,6 +67,9 @@ class MagnetTrapController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!Auth::user()->isAuditView()) {                       
+            return redirect()->route('checklistmagnettrap.index');
+        }
         $auditSourceUuids = MagnetTrapModel::query()
             ->where('is_audit', true)
             ->whereNotNull('source_uuid')
