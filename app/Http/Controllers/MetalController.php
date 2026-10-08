@@ -21,7 +21,7 @@ class MetalController extends Controller
 {
     public function index(Request $request)
     {
-        if (Auth::user()->hasRole('auditor')) {
+        if (Auth::user()->isAuditView()) {
             return redirect()->route('metal.audit');
         }
 
@@ -31,6 +31,7 @@ class MetalController extends Controller
 
         $data = Metal::query()
             ->where('plant', $userPlant)
+            ->with('auditVersion')
             ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where('username', 'like', "%{$search}%");
@@ -52,6 +53,10 @@ class MetalController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!Auth::user()->isAuditView()) {                
+            return redirect()->route('metal.index');
+        }
+        
         $search = $request->input('search');
         $date = $request->input('date');
         $userPlant = Auth::user()->plant;
@@ -64,6 +69,7 @@ class MetalController extends Controller
 
         $data = Metal::query()
             ->where('plant', $userPlant)
+            ->with('auditVersion')
             ->where(function ($query) use ($auditedSourceUuids) {
                 $query->where('is_audit', true)
                     ->orWhere(function ($subQuery) use ($auditedSourceUuids) {
