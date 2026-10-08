@@ -29,8 +29,7 @@
 
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
         <h2 class="h4">
-            <i class="bi bi-clipboard-check"></i>
-            Audit Data Metal Detector
+            Data Audit Metal Detector
         </h2>
     </div>
 

@@ -18,7 +18,7 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
      */
     public function index(Request $request)
     {
-        if (auth()->user()->hasRole('auditor')) {
+        if (auth()->user()->isAuditView()) {
             return redirect()->route('pemeriksaan-kekuatan-magnet-trap.audit');
         }
 
@@ -34,7 +34,7 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
             ]);
         }
 
-        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater'])
+        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater', 'auditVersion'])
             ->where('plant_uuid', auth()->user()->plant)
             ->where('is_audit', false);
 
@@ -72,6 +72,10 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!auth()->user()->isAuditView()) {                                 
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index');
+        }
+
         $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater'])
             ->where('plant_uuid', auth()->user()->plant)
             ->where(function ($q) {

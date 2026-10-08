@@ -13,7 +13,7 @@
 
         {{-- ===================== HEADER ===================== --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h2 class="h4"><i class="bi bi-shield-lock me-2"></i>Data Audit — Pemeriksaan Mincing - Emulsifying - Aging</h2>
+            <h4></i>Data Audit Pemeriksaan Mincing - Emulsifying - Aging</h4>
         </div>
 
         @unless(auth()->user()->hasRole('auditor'))
