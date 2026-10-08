@@ -16,19 +16,41 @@
             <h2 class="h4"><i class="bi bi-shield-lock me-2"></i>Data Audit — Pemeriksaan Mincing - Emulsifying - Aging</h2>
         </div>
 
+        @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 1.75rem; margin-right: 1rem;"></i>
+                        <h6 class="mb-0">
+                            <span class="text-primary" style="font-weight: 600;">Mode Audit</span>
+                        </h6>
+                    </div>
+
+                    <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                        onsubmit="return confirm('Kembali ke mode Operasional?')">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-shield-check"></i> Mode Operasional
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endunless
+
         {{-- ===================== FILTER ===================== --}}
         <form id="filterForm" method="GET" action="{{ route('mincing.audit') }}"
-            class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
-            <div class="row w-100">
-                <div class="col-md-2">
-                    <div class="mb-1 fw-semibold">Pilih Tanggal</div>
+            class="mb-3 p-3 border rounded bg-white shadow-sm">
+            <div class="row align-items-end">
+
+                <div class="col-md-2 mb-2 mb-md-0">
+                    <label for="filter_date" class="mb-1" style="font-weight: 600;">Pilih Tanggal</label>
                     <input type="date" name="date" id="filter_date" class="form-control"
                         value="{{ request('date') }}">
                 </div>
 
-                <div class="col-md-2">
-                    <div class="mb-1 fw-semibold">Pilih Shift</div>
-                    <select name="shift" id="filter_shift" class="form-select">
+                <div class="col-md-2 mb-2 mb-md-0">
+                    <label for="filter_shift" class="mb-1" style="font-weight: 600;">Pilih Shift</label>
+                    <select name="shift" id="filter_shift" class="form-control">
                         <option value="">Semua Shift</option>
                         <option value="1" {{ request('shift') == '1' ? 'selected' : '' }}>Shift 1</option>
                         <option value="2" {{ request('shift') == '2' ? 'selected' : '' }}>Shift 2</option>
@@ -36,23 +58,24 @@
                     </select>
                 </div>
 
-                <div class="col-md-2">
-                    <div class="mb-1 fw-semibold">Kode Batch</div>
+                <div class="col-md-2 mb-2 mb-md-0">
+                    <label for="filter_kode_batch" class="mb-1" style="font-weight: 600;">Kode Batch</label>
                     <input type="text" name="kode_batch" id="filter_kode_batch" class="form-control"
                         value="{{ request('kode_batch') }}" placeholder="Kode Batch">
                 </div>
 
-                <div class="col-md-2">
-                    <div class="mb-1 fw-semibold">Cari Data</div>
+                <div class="col-md-4 mb-2 mb-md-0">
+                    <label for="search" class="mb-1" style="font-weight: 600;">Cari Data</label>
                     <input type="text" name="search" id="search" class="form-control"
                         value="{{ request('search') }}" placeholder="Cari Nama Produk / Kode Batch...">
                 </div>
 
-                <div class="col-md-2 align-self-end">
-                    <a href="{{ route('mincing.audit') }}" class="btn btn-primary mb-2 w-100">
+                <div class="col-md-2">
+                    <a href="{{ route('mincing.audit') }}" class="btn btn-primary btn-block w-100">
                         <i class="bi bi-arrow-counterclockwise"></i> Reset
                     </a>
                 </div>
+
             </div>
         </form>
 

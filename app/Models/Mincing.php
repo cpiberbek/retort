@@ -97,4 +97,9 @@ class Mincing extends Model
     }
 
     protected $dates = ['deleted_at'];
+
+    public function isAuditView(): bool
+    {
+        return $this->hasRole('auditor') || (bool) $this->mode_audit;
+    }
 }

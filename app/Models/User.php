@@ -22,7 +22,7 @@ class User extends Authenticatable
     protected $fillable = [
         'uuid', 'name', 'username', 'password', 'plant',
         'department', 'type_user', 'photo', 'email',
-        'activation', 'updater', 'plant_active', 'plant_option',
+        'activation', 'updater', 'plant_active', 'plant_option', 'mode_audit'
     ];
 
     protected $hidden = [
@@ -45,6 +45,7 @@ class User extends Authenticatable
 
     protected $casts = [
         'plant_option' => 'array',
+        'mode_audit'   => 'boolean',
     ];
 
 
@@ -59,5 +60,10 @@ class User extends Authenticatable
         6 => 'warehouse',
         7 => 'lab',
     ];
+
+    public function isAuditView(): bool
+    {
+        return $this->hasRole('auditor') || (bool) $this->mode_audit;
+    }
 
 }

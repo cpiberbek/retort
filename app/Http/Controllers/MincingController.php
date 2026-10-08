@@ -26,7 +26,7 @@ class MincingController extends Controller
 {
     public function index(Request $request)
     {
-        if (Auth::user()->hasRole('auditor')) {
+        if (Auth::user()->isAuditView()) {                    
             return redirect()->route('mincing.audit');
         }
 
@@ -38,6 +38,7 @@ class MincingController extends Controller
 
         $data = Mincing::query()
             ->where('plant', $userPlant)
+            ->with('auditVersion')  
             ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -71,6 +72,10 @@ class MincingController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!Auth::user()->isAuditView()) {            
+            return redirect()->route('mincing.index');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
@@ -85,6 +90,7 @@ class MincingController extends Controller
 
         $data = Mincing::query()
             ->where('plant', $userPlant)
+            ->with('auditVersion')  
             ->where(function ($query) use ($auditedSourceUuids) {
                 $query->where('is_audit', true)
                     ->orWhere(function ($subQuery) use ($auditedSourceUuids) {

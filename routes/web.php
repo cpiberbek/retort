@@ -69,7 +69,8 @@ use App\Http\Controllers\{
     MasterPremixController,
     SsoLoginController,
     ProductivityController,
-    IssueComplainController
+    IssueComplainController,
+    AuditModeController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
@@ -119,6 +120,9 @@ Route::middleware('auth')->group(function () {
     // });
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // AUDIT
+    Route::post('/toggle-mode-audit', [AuditModeController::class, 'toggle'])->name('toggle.mode.audit');
 
     Route::get('dashboard/issue-complain/filter', [DashboardController::class, 'issueComplainFilter'])
     ->name('dashboard.issue-complain.filter');
