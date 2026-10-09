@@ -49,7 +49,7 @@
             <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
                 <div class="d-flex align-items-center">
                     <h6 class="mb-0">
-                        <span class="text-primary" style="font-weight: 600;">• Mode Operasional</span>
+                        <span class="text-primary" style="font-weight: 600;"><i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i> Mode Operasional</span>
                     </h6>
                 </div>
 

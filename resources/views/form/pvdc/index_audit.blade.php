@@ -40,6 +40,27 @@
             </div>
         </div>
 
+        @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 1.75rem; margin-right: 1rem;"></i>
+                        <h6 class="mb-0">
+                            <span class="text-primary" style="font-weight: 600;">Mode Audit</span>
+                        </h6>
+                    </div>
+
+                    <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                        onsubmit="return confirm('Kembali ke mode Operasional?')">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-clipboard-check"></i> Mode Operasional
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endunless
+
         {{-- Filter dan Live Search --}}
         <form id="filterForm" method="GET" action="{{ route('pvdc.index') }}"
             class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">

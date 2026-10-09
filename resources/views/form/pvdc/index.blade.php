@@ -40,6 +40,24 @@
             </div>
         </div>
 
+        <div class="card shadow-sm mb-3 w-100">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h6 class="mb-0">
+                        <span class="text-primary" style="font-weight: 600;"><i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i> Mode Operasional</span>
+                    </h6>
+                </div>
+
+                <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                    onsubmit="return confirm('Masuk ke Mode Audit?')">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-shield-check"></i> Mode Audit
+                    </button>
+                </form>
+            </div>
+        </div>
+
         {{-- Filter dan Live Search --}}
         <form id="filterForm" method="GET" action="{{ route('pvdc.index') }}"
             class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
@@ -290,8 +308,8 @@
                                         @endif
                                     </td>
                                     <td class="text-center">
-    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
-</td>
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary">Created</span>
@@ -339,7 +357,8 @@
 
                                                 <button
                                                     type="submit"
-                                                    class="btn btn-dark btn-sm me-1 mb-1"
+                                                    class="btn {{ $dep->auditVersion ? 'btn-success' : 'btn-dark' }} btn-sm me-1 mb-1"
+                                                    title="{{ $dep->auditVersion ? 'Sudah ada data audit' : 'Belum ada data audit' }}"
                                                     onclick="return confirm('Buka data ini untuk Audit?')"
                                                 >
                                                     <i class="bi bi-files"></i>

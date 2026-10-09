@@ -21,8 +21,29 @@
     @endif
 
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Pemeriksaan Stuffing Sosis Retort - Audit</h2>
+        <h2 class="h4">Data Audit Pemeriksaan Stuffing Sosis Retort</h2>
     </div>
+
+    @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-check text-primary" style="font-size: 1.75rem; margin-right: 1rem;"></i>
+                        <h6 class="mb-0">
+                            <span class="text-primary" style="font-weight: 600;">Mode Audit</span>
+                        </h6>
+                    </div>
+
+                    <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                        onsubmit="return confirm('Kembali ke mode Operasional?')">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-clipboard-check"></i> Mode Operasional
+                        </button>
+                    </form>
+                </div>
+            </div>
+    @endunless
 
     {{-- Filter --}}
     <form id="filterForm" method="GET" action="{{ route('stuffing.audit') }}"

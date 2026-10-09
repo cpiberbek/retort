@@ -21,7 +21,7 @@ class StuffingController extends Controller
 {
     public function index(Request $request)
     {
-        if (auth()->user()->hasRole('auditor')) {
+        if (auth()->user()->isAuditView()) {
             return redirect()->route('stuffing.audit');
         }
 
@@ -31,7 +31,7 @@ class StuffingController extends Controller
         $kodeBatch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
-        $data = Stuffing::with('mincing')
+        $data = Stuffing::with(['mincing', 'auditVersion'])
             ->where('plant', $userPlant)
             ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
@@ -73,6 +73,9 @@ class StuffingController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!auth()->user()->isAuditView()) {                   
+            return redirect()->route('stuffing.index');         
+        }
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');

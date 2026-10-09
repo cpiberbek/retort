@@ -93,7 +93,7 @@
                         onsubmit="return confirm('Kembali ke mode Operasional?')">
                         @csrf
                         <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="bi bi-shield-check"></i> Mode Operasional
+                            <i class="bi bi-clipboard-check"></i> Mode Operasional
                         </button>
                     </form>
                 </div>

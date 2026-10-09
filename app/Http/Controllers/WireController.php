@@ -16,7 +16,7 @@ class WireController extends Controller
 {
     public function index(Request $request)
     {
-        if (auth()->user()->hasRole('auditor')) {
+        if (auth()->user()->isAuditView()) {
             return redirect()->route('wire.audit');
         }
 
@@ -28,6 +28,7 @@ class WireController extends Controller
         $data = Wire::query()
             ->where('plant', $userPlant)
             ->where('is_audit', false)
+            ->with('auditVersion')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -55,6 +56,9 @@ class WireController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!auth()->user()->isAuditView()) {                   
+            return redirect()->route('wire.index');
+        }
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
