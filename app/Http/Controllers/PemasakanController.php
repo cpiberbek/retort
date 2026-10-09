@@ -24,7 +24,7 @@ class PemasakanController extends Controller
 
     public function index(Request $request)
     {
-        if (auth()->user()->hasRole('auditor')) {
+        if (auth()->user()->isAuditView()) {
             return redirect()->route('pemasakan.audit');
         }
 
@@ -44,6 +44,7 @@ class PemasakanController extends Controller
 
         $data = Pemasakan::query()
             ->where('plant', $userPlant)
+            ->with('auditVersion')
             ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
@@ -96,6 +97,9 @@ class PemasakanController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!auth()->user()->isAuditView()) {
+            return redirect()->route('pemasakan.index');
+        }
         $search     = $request->input('search');
         $kodeBatch  = $request->input('kode_batch');
         $date       = $request->input('date');

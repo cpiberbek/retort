@@ -14,7 +14,7 @@ class WashingController extends Controller
 
     public function index(Request $request)
     {
-        if (auth()->user()->hasRole('auditor')) {
+        if (auth()->user()->isAuditView()) {
             return redirect()->route('washing.audit');
         }
 
@@ -24,7 +24,7 @@ class WashingController extends Controller
         $kode_batch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
-        $data = Washing::with('mincing')
+        $data = Washing::with(['mincing', 'auditVersion']) 
             ->where('plant', $userPlant)
             ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
@@ -57,6 +57,9 @@ class WashingController extends Controller
 
     public function auditIndex(Request $request)
     {
+        if (!auth()->user()->isAuditView()) {
+            return redirect()->route('washing.index');
+        }
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
