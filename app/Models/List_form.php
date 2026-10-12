@@ -10,5 +10,7 @@ class List_form extends Model
 {
     use HasFactory, HasUuid;
     
-    protected $fillable = ['laporan', 'no_dokumen', 'last_revisi', 'last_updated', 'username', 'plant', 'uuid'];
+    protected $fillable = ['laporan', 'no_dokumen', 'last_revisi', 'last_updated', 'username', 'plant', 'uuid', 'standar_ref'];
+
+    protected $casts = [ 'standar_ref' => 'array' ];
 }

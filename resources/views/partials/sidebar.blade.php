@@ -2,7 +2,12 @@
     $type_user = auth()->user()->type_user;
 @endphp
 
-<ul class="navbar-nav sidebar sidebar-dark accordion" id="accordionSidebar">
+@php
+    $type_user = auth()->user()->type_user;
+    $auditTheme = auth()->user()->isAuditView() || auth()->user()->hasRole('auditor');
+@endphp
+
+<ul class="navbar-nav sidebar sidebar-dark accordion {{ $auditTheme ? 'sidebar-audit' : '' }}" id="accordionSidebar">
 
     <a class="sidebar-brand d-flex align-items-center justify-content-center" href="{{ route('dashboard') }}">
         <div class="sidebar-brand-icon rotate-n-15">
@@ -642,6 +647,25 @@
         color: #d32f2f !important;
         font-weight: bold;
         border-left: 3px solid #d32f2f;
+    }
+
+    #accordionSidebar.sidebar-audit {
+    background: linear-gradient(180deg, #7b1fa2 0%, #4a148c 100%) !important;
+    }
+
+    #accordionSidebar.sidebar-audit .collapse-inner .collapse-item:hover {
+        background-color: #e1bee7 !important;
+        color: #4a148c !important;
+    }
+
+    #accordionSidebar.sidebar-audit .collapse-inner .collapse-item.active {
+        background-color: #f3e5f5 !important;
+        color: #7b1fa2 !important;
+        border-left: 3px solid #7b1fa2;
+    }
+
+    #accordionSidebar.sidebar-audit.minimized .collapse-inner::before {
+        background: #7b1fa2;
     }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>

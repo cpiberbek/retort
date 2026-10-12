@@ -67,35 +67,57 @@ class List_formController extends Controller
 
     public function update(Request $request, $uuid)
     {
-     $request->validate([
-        'laporan' => 'required|string|max:255',
-        'no_dokumen' => 'required|string|max:255'
-    ]);
+        $request->validate([
+            'laporan' => 'required|string|max:255',
+            'no_dokumen' => 'required|string|max:255',
+            'standar_ref' => 'nullable|array',
+        ]);
 
-     $userPlantUuid = Auth::user()->plant;
+        $userPlantUuid = Auth::user()->plant;
 
-     $list_form = List_form::where('uuid', $uuid)
-     ->where('plant', $userPlantUuid)
-     ->firstOrFail();
+        $list_form = List_form::where('uuid', $uuid)
+            ->where('plant', $userPlantUuid)
+            ->firstOrFail();
 
-     $list_form->update([
-       'laporan' => $request->laporan,
-       'no_dokumen' => $request->no_dokumen
-   ]);
+        $dataUpdate = [
+            'laporan' => $request->laporan,
+            'no_dokumen' => $request->no_dokumen,
+        ];
 
-     return redirect()->route('list_form.index')->with('success', 'Laporan berhasil diupdate');
- }
+        if ($request->has('standar_ref')) {
+            $standarRef = $request->input('standar_ref', []);
 
- public function destroy($uuid)
- {
-    $userPlantUuid = Auth::user()->plant;
+            // Checkbox tidak dicentang menjadi null.
+            if (isset($standarRef['non_premix']['sensori'])
+                && $standarRef['non_premix']['sensori'] === '') {
+                $standarRef['non_premix']['sensori'] = null;
+            }
 
-    $list_form = List_form::where('uuid', $uuid)
-    ->where('plant', $userPlantUuid) 
-    ->firstOrFail();
+            if (isset($standarRef['premix']['sensori_premix'])
+                && $standarRef['premix']['sensori_premix'] === '') {
+                $standarRef['premix']['sensori_premix'] = null;
+            }
 
-    $list_form->delete();
+            $dataUpdate['standar_ref'] = $standarRef;
+        }
 
-    return redirect()->route('list_form.index')->with('success', 'Laporan berhasil dihapus');
-}
+        $list_form->update($dataUpdate);
+
+        return redirect()
+            ->route('list_form.index')
+            ->with('success', 'Laporan berhasil diupdate');
+    }
+
+    public function destroy($uuid)
+    {
+        $userPlantUuid = Auth::user()->plant;
+
+        $list_form = List_form::where('uuid', $uuid)
+        ->where('plant', $userPlantUuid) 
+        ->firstOrFail();
+
+        $list_form->delete();
+
+        return redirect()->route('list_form.index')->with('success', 'Laporan berhasil dihapus');
+    }
 }

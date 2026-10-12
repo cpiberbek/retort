@@ -132,86 +132,233 @@
                                     <td class="text-center">{{ $dep->kode_produksi ?? '-' }}</td>
 
                                     <td class="text-center">
-                                        <a href="#" data-bs-toggle="modal"
-                                            data-bs-target="#mincingModal{{ $dep->uuid }}"
-                                            style="font-weight: bold; text-decoration: underline;">
-                                            Result
-                                        </a>
+                                        @if ($dep)
+                                            <a href="#" data-bs-toggle="modal"
+                                                data-bs-target="#mincingModal{{ $dep->uuid }}"
+                                                style="font-weight: bold; text-decoration: underline;">
+                                                Result
+                                            </a>
 
-                                        @php
-                                            $nonPremixItems = $dep->non_premix ?? [];
-                                            $premixItems = $dep->premix ?? [];
-                                            if (is_string($nonPremixItems)) $nonPremixItems = json_decode($nonPremixItems, true);
-                                            if (is_string($premixItems)) $premixItems = json_decode($premixItems, true);
-                                        @endphp
+                                            @php
+                                                $nonPremixItems = $dep->non_premix ?? [];
+                                                $premixItems = $dep->premix ?? [];
 
-                                        <div class="modal fade text-start" id="mincingModal{{ $dep->uuid }}" tabindex="-1">
-                                            <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                                <div class="modal-content">
-                                                    <div class="modal-header bg-warning text-dark">
-                                                        <h5 class="modal-title fw-bold">Detail Pemeriksaan Mincing (Audit)</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body table-responsive">
-                                                        <table class="table table-bordered table-striped table-sm text-center align-middle">
-                                                            <tbody>
-                                                                <tr>
-                                                                    <td class="text-start fw-bold w-25">Kode Batch</td>
-                                                                    <td colspan="5" class="text-start">{{ $dep->kode_produksi ?? '-' }}</td>
-                                                                </tr>
-                                                                <tr>
-                                                                    <td class="text-start fw-bold">Preparation</td>
-                                                                    <td colspan="2">{{ $dep->waktu_mulai ?? '-' }}</td>
-                                                                    <td class="text-center">s/d</td>
-                                                                    <td colspan="2">{{ $dep->waktu_selesai ?? '-' }}</td>
-                                                                </tr>
-                                                                <tr class="section-header bg-light fw-bold text-center">
-                                                                    <td class="text-start">Bahan Baku & Tambahan (Non-Premix)</td>
-                                                                    <td>Kode</td><td>(°C)</td><td>*pH</td><td>Kg</td><td>Sens</td>
-                                                                </tr>
-                                                                @if (!empty($nonPremixItems) && count($nonPremixItems) > 0)
-                                                                    @foreach ($nonPremixItems as $bahan)
+                                                if (is_string($nonPremixItems)) $nonPremixItems = json_decode($nonPremixItems, true);
+                                                if (is_string($premixItems)) $premixItems = json_decode($premixItems, true);
+                                                if (!is_array($nonPremixItems)) $nonPremixItems = [];
+                                                if (!is_array($premixItems)) $premixItems = [];
+
+                                                // rowspan hanya untuk baris nama_bahan yang BERURUTAN
+                                                $nonPremixItems = array_values($nonPremixItems);
+                                                $spans = [];
+                                                $n = count($nonPremixItems);
+                                                for ($i = 0; $i < $n; $i++) {
+                                                    $nama = $nonPremixItems[$i]['nama_bahan'] ?? '-';
+                                                    if ($i > 0 && ($nonPremixItems[$i - 1]['nama_bahan'] ?? '-') === $nama) {
+                                                        $spans[$i] = 0;
+                                                        continue;
+                                                    }
+                                                    $c = 1;
+                                                    while ($i + $c < $n && ($nonPremixItems[$i + $c]['nama_bahan'] ?? '-') === $nama) {
+                                                        $c++;
+                                                    }
+                                                    $spans[$i] = $c;
+                                                }
+
+                                                // suhu sebelum grinding
+                                                $rawSuhu = $dep->suhu_sebelum_grinding;
+                                                if (is_string($rawSuhu)) $rawSuhu = json_decode($rawSuhu, true);
+                                            @endphp
+
+                                            {{-- MODAL DETAIL HASIL --}}
+                                            <div class="modal fade text-start" id="mincingModal{{ $dep->uuid }}"
+                                                tabindex="-1" aria-labelledby="mincingModalLabel{{ $dep->uuid }}"
+                                                aria-hidden="true">
+                                                <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header bg-warning text-dark">
+                                                            <h5 class="modal-title fw-bold" id="mincingModalLabel{{ $dep->uuid }}">
+                                                                Detail Pemeriksaan Mincing
+                                                            </h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+
+                                                        <div class="modal-body table-responsive">
+                                                            <table class="table table-bordered table-striped table-sm text-center align-middle">
+                                                                <tbody>
+                                                                    {{-- KODE BATCH --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold w-25">Kode Batch</td>
+                                                                        <td colspan="5" class="text-start">{{ $dep->kode_produksi ?? '-' }}</td>
+                                                                    </tr>
+
+                                                                    {{-- PREPARATION --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Preparation</td>
+                                                                        <td colspan="2">{{ $dep->waktu_mulai ?? '-' }}</td>
+                                                                        <td class="text-center">s/d</td>
+                                                                        <td colspan="2">{{ $dep->waktu_selesai ?? '-' }}</td>
+                                                                    </tr>
+
+                                                                    {{-- NON-PREMIX --}}
+                                                                    <tr class="section-header bg-light fw-bold text-center">
+                                                                        <td class="text-start">Bahan Baku & Tambahan (Non-Premix)</td>
+                                                                        <td>Kode</td>
+                                                                        <td>(°C)</td>
+                                                                        <td>*pH</td>
+                                                                        <td>Kg</td>
+                                                                        <td>Sens</td>
+                                                                    </tr>
+                                                                    @if (count($nonPremixItems) > 0)
+                                                                        @foreach ($nonPremixItems as $index => $bahan)
+                                                                            <tr>
+                                                                                @if ($spans[$index] > 0)
+                                                                                    <td class="text-start" rowspan="{{ $spans[$index] }}"
+                                                                                        style="text-align: center; vertical-align: middle;">
+                                                                                        {{ $bahan['nama_bahan'] ?? '-' }}
+                                                                                    </td>
+                                                                                @endif
+                                                                                <td>
+                                                                                    {{ \App\Models\InspectionProductDetail::where('uuid', $bahan['inspection_uuid'] ?? null)->value('kode_batch') ?? '-' }}
+                                                                                </td>
+                                                                                <td>{{ $bahan['suhu_bahan'] ?? '-' }}</td>
+                                                                                <td>{{ $bahan['ph_bahan'] ?? '-' }}</td>
+                                                                                <td>{{ $bahan['berat_bahan'] ?? '-' }}</td>
+                                                                                <td>{{ $bahan['sensori'] ?? '-' }}</td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    @else
                                                                         <tr>
-                                                                            <td class="text-start">{{ $bahan['nama_bahan'] ?? '-' }}</td>
-                                                                            <td>{{ \App\Models\InspectionProductDetail::where('uuid', $bahan['inspection_uuid'] ?? null)->value('kode_batch') ?? '-' }}</td>
-                                                                            <td>{{ $bahan['suhu_bahan'] ?? '-' }}</td>
-                                                                            <td>{{ $bahan['ph_bahan'] ?? '-' }}</td>
-                                                                            <td>{{ $bahan['berat_bahan'] ?? '-' }}</td>
-                                                                            <td>{{ $bahan['sensori'] ?? '-' }}</td>
+                                                                            <td colspan="6" class="text-center text-muted">Belum ada data Non-Premix</td>
                                                                         </tr>
-                                                                    @endforeach
-                                                                @else
-                                                                    <tr><td colspan="6" class="text-center text-muted">Belum ada data Non-Premix</td></tr>
-                                                                @endif
-                                                                <tr class="section-header bg-light fw-bold text-center">
-                                                                    <td class="text-start">Premix</td>
-                                                                    <td colspan="2">Kode</td><td colspan="2">Kg</td><td>Sens</td>
-                                                                </tr>
-                                                                @if (!empty($premixItems) && count($premixItems) > 0)
-                                                                    @foreach ($premixItems as $p)
+                                                                    @endif
+
+                                                                    {{-- PREMIX --}}
+                                                                    <tr class="section-header bg-light fw-bold text-center">
+                                                                        <td class="text-start">Premix</td>
+                                                                        <td colspan="2">Kode</td>
+                                                                        <td colspan="2">Kg</td>
+                                                                        <td>Sens</td>
+                                                                    </tr>
+                                                                    @if (count($premixItems) > 0)
+                                                                        @foreach ($premixItems as $p)
+                                                                            <tr>
+                                                                                <td class="text-start">{{ $p['nama_premix'] ?? '-' }}</td>
+                                                                                <td colspan="2">{{ $p['kode_premix'] ?? '-' }}</td>
+                                                                                <td colspan="2">{{ $p['berat_premix'] ?? '-' }}</td>
+                                                                                <td>{{ $p['sensori_premix'] ?? '-' }}</td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    @else
                                                                         <tr>
-                                                                            <td class="text-start">{{ $p['nama_premix'] ?? '-' }}</td>
-                                                                            <td colspan="2">{{ $p['kode_premix'] ?? '-' }}</td>
-                                                                            <td colspan="2">{{ $p['berat_premix'] ?? '-' }}</td>
-                                                                            <td>{{ $p['sensori_premix'] ?? '-' }}</td>
+                                                                            <td colspan="6" class="text-center text-muted">Belum ada data Premix</td>
                                                                         </tr>
-                                                                    @endforeach
-                                                                @else
-                                                                    <tr><td colspan="6" class="text-center text-muted">Belum ada data Premix</td></tr>
-                                                                @endif
-                                                                <tr>
-                                                                    <td class="text-start fw-bold">Catatan</td>
-                                                                    <td colspan="5" class="text-start">{{ $dep->catatan ?? '-' }}</td>
-                                                                </tr>
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                                                    @endif
+
+                                                                    {{-- SUHU SEBELUM GRINDING --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Suhu (Sebelum Grinding)</td>
+                                                                        <td colspan="5" class="text-start">
+                                                                            @if (!empty($rawSuhu) && is_array($rawSuhu))
+                                                                                <div class="d-flex flex-wrap gap-2">
+                                                                                    @foreach ($rawSuhu as $s)
+                                                                                        <span class="badge bg-secondary text-white border">
+                                                                                            {{ $s['daging'] ?? '?' }}: {{ $s['suhu'] ?? '-' }}°C
+                                                                                        </span>
+                                                                                    @endforeach
+                                                                                </div>
+                                                                            @elseif (!empty($dep->daging))
+                                                                                {{-- Fallback Tampilan Lama --}}
+                                                                                {{ $dep->daging }}: {{ $dep->suhu_sebelum_grinding }}°C
+                                                                            @else
+                                                                                -
+                                                                            @endif
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    {{-- WAKTU MIXING PREMIX --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Waktu Mixing Premix</td>
+                                                                        <td colspan="5" class="text-start">
+                                                                            {{ $dep->waktu_mixing_premix_start ? \Carbon\Carbon::parse($dep->waktu_mixing_premix_start)->format('H:i') : '' }}
+                                                                            -
+                                                                            {{ $dep->waktu_mixing_premix_end ? \Carbon\Carbon::parse($dep->waktu_mixing_premix_end)->format('H:i') : '' }}
+                                                                            <span class="text-muted ms-2">({{ $dep->waktu_mixing_premix ?? 0 }} menit)</span>
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    {{-- WAKTU BOWL CUTTER --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Waktu Bowl Cutter</td>
+                                                                        <td colspan="5" class="text-start">
+                                                                            {{ $dep->waktu_bowl_cutter_start ? \Carbon\Carbon::parse($dep->waktu_bowl_cutter_start)->format('H:i') : '' }}
+                                                                            -
+                                                                            {{ $dep->waktu_bowl_cutter_end ? \Carbon\Carbon::parse($dep->waktu_bowl_cutter_end)->format('H:i') : '' }}
+                                                                            <span class="text-muted ms-2">({{ $dep->waktu_bowl_cutter ?? 0 }} menit)</span>
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    {{-- WAKTU AGING EMULSI --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Waktu Aging Emulsi</td>
+                                                                        <td colspan="2">{{ $dep->waktu_aging_emulsi_awal ?? '-' }}</td>
+                                                                        <td class="text-center">s/d</td>
+                                                                        <td colspan="2">{{ $dep->waktu_aging_emulsi_akhir ?? '-' }}</td>
+                                                                    </tr>
+
+                                                                    {{-- SUHU AKHIR EMULSI GEL --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Suhu Akhir Emulsi Gel</td>
+                                                                        <td colspan="5" class="text-start">
+                                                                            {{ $dep->suhu_akhir_emulsi_gel !== null ? rtrim(rtrim($dep->suhu_akhir_emulsi_gel, '0'), '.') : '-' }}
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    {{-- WAKTU MIXING --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Waktu Mixing</td>
+                                                                        <td colspan="5" class="text-start">
+                                                                            {{ $dep->waktu_mixing_start ? \Carbon\Carbon::parse($dep->waktu_mixing_start)->format('H:i') : '' }}
+                                                                            -
+                                                                            {{ $dep->waktu_mixing_end ? \Carbon\Carbon::parse($dep->waktu_mixing_end)->format('H:i') : '' }}
+                                                                            <span class="text-muted ms-2">({{ $dep->waktu_mixing ?? 0 }} menit)</span>
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    {{-- SUHU AKHIR MIXING --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Suhu Akhir Mixing</td>
+                                                                        <td colspan="5" class="text-start">
+                                                                            {{ $dep->suhu_akhir_mixing !== null ? rtrim(rtrim($dep->suhu_akhir_mixing, '0'), '.') : '-' }}
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    {{-- SUHU AKHIR EMULSIFYING --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Suhu Akhir Emulsifying</td>
+                                                                        <td colspan="5" class="text-start">
+                                                                            {{ $dep->suhu_akhir_emulsi !== null ? rtrim(rtrim($dep->suhu_akhir_emulsi, '0'), '.') : '-' }}
+                                                                        </td>
+                                                                    </tr>
+
+                                                                    {{-- CATATAN --}}
+                                                                    <tr>
+                                                                        <td class="text-start fw-bold">Catatan</td>
+                                                                        <td colspan="5" class="text-start">{{ $dep->catatan ?? '-' }}</td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                        @else
+                                            <span>-</span>
+                                        @endif
                                     </td>
 
                                     <td class="text-center">
