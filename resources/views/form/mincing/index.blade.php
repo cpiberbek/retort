@@ -45,188 +45,32 @@
             </div>
         </div>
 
-        <div class="card shadow-sm mb-3 w-100">
-            <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+        {{-- ===================== MODE OPERASIONAL (disembunyikan untuk auditor) ===================== --}}
+        @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
 
-                <div class="d-flex align-items-center">
-                    <h6 class="mb-0">
-                        <span class="text-primary" style="font-weight: 600;">
-                            <i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i>
-                            Mode Operasional
-                        </span>
-                    </h6>
-                </div>
-
-                <div class="d-flex align-items-center gap-2">
-                    <form action="{{ route('toggle.mode.audit') }}" method="POST" class="d-inline"
-                        onsubmit="return confirm('Masuk ke Mode Audit?')">
-                        @csrf
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="bi bi-shield-check"></i> Mode Audit
-                        </button>
-                    </form>
-
-                    @unless(auth()->user()->hasRole('auditor'))
-                        @php
-                            $bulkStd = $masters[auth()->user()->plant]->standar_ref ?? null;
-                            $bulkReady = !empty($bulkStd) && is_array($bulkStd);
-
-                            $bulkDesc = function ($rule) {
-                                if (is_array($rule) && isset($rule['min'], $rule['max'])) return "diacak {$rule['min']} s/d {$rule['max']} (maks 2 desimal)";
-                                if (is_array($rule) && isset($rule['max'])) return "diacak di bawah {$rule['max']} (strictly < {$rule['max']})";
-                                return $rule === 'Oke' ? 'dicentang otomatis' : 'tidak dicentang (uncheck)';
-                            };
-                        @endphp
-
-                        <button type="button" class="btn btn-dark btn-sm"
-                            data-bs-toggle="modal" data-bs-target="#bulkAuditModal"
-                            {{ $bulkReady ? '' : 'disabled' }}
-                            title="{{ $bulkReady ? 'Duplikasi audit massal' : 'Duplikasi audit massal (Terapkan dahulu di Master List Form)' }}">
-                            <i class="bi bi-files"></i> Duplikasi Data audit Massal
-                        </button>
-                    @endunless
-                </div>
-            </div>
-
-            @unless(auth()->user()->hasRole('auditor'))
-                @if ($bulkReady)
-                    <div class="modal fade" id="bulkAuditModal" tabindex="-1">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <form method="POST" action="{{ route('mincing.auditBulk.execute') }}" class="w-100"
-                                onsubmit="return confirm('Data audit akan dibuat dan SEMUA nilai sesuai master akan ditimpa. Lanjutkan?')">
-                                @csrf
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Duplikasi Audit Massal</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <div class="row g-2 mb-3">
-                                            <div class="col-6">
-                                                <label class="form-label">Tanggal awal</label>
-                                                <input type="date" name="start_date" id="bulkStart" class="form-control" required>
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="form-label">Tanggal akhir</label>
-                                                <input type="date" name="end_date" id="bulkEnd" class="form-control" required>
-                                            </div>
-                                        </div>
-
-                                        <div id="bulkPreview" class="alert alert-secondary py-2 small mb-3">
-                                            Pilih tanggal untuk melihat ringkasan.
-                                        </div>
-
-                                        <div class="small">
-                                            <strong>Standar yang akan diterapkan (semua nilai ditimpa):</strong>
-                                            <ul class="mb-0">
-                                                <li>Suhu Akhir Emulsi Gel: {{ $bulkDesc($bulkStd['suhu_akhir_emulsi_gel'] ?? null) }}</li>
-                                                <li>Suhu Akhir Mixing: {{ $bulkDesc($bulkStd['suhu_akhir_mixing'] ?? null) }}</li>
-                                                <li>Suhu Akhir Emulsi: {{ $bulkDesc($bulkStd['suhu_akhir_emulsi'] ?? null) }}</li>
-                                                <li>Suhu Sebelum Grinding: {{ $bulkDesc($bulkStd['suhu_sebelum_grinding'] ?? null) }}</li>
-                                                <li>Non-Premix, Suhu Bahan: {{ $bulkDesc($bulkStd['non_premix']['suhu_bahan'] ?? null) }}</li>
-                                                <li>Non-Premix, pH Bahan: {{ $bulkDesc($bulkStd['non_premix']['ph_bahan'] ?? null) }}</li>
-                                                <li>Non-Premix, Sensori: {{ $bulkDesc($bulkStd['non_premix']['sensori'] ?? null) }}</li>
-                                                <li>Premix, Sensori: {{ $bulkDesc($bulkStd['premix']['sensori_premix'] ?? null) }}</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
-                                        <button type="submit" id="bulkRun" class="btn btn-success btn-sm" disabled>Jalankan</button>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
+                    <div class="d-flex align-items-center">
+                        <h6 class="mb-0">
+                            <span class="text-primary" style="font-weight: 600;">
+                                <i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i>
+                                Mode Operasional
+                            </span>
+                        </h6>
                     </div>
 
-                    <script>
-                        document.addEventListener('DOMContentLoaded', function () {
-                            const s = document.getElementById('bulkStart');
-                            const e = document.getElementById('bulkEnd');
-                            const box = document.getElementById('bulkPreview');
-                            const run = document.getElementById('bulkRun');
-                            const modal = document.getElementById('bulkAuditModal');
-
-                            function show(bg, color, html) {
-                                box.removeAttribute('class');
-                                box.style.cssText = 'display:block;padding:8px 12px;margin-bottom:1rem;border-radius:6px;font-size:.85rem;background:' + bg + ';color:' + color + ';';
-                                box.innerHTML = html;
-                            }
-
-                            function showError(html) {
-                                show('#f8d7da', '#842029', html);
-                            }
-
-                            async function preview() {
-                                run.disabled = true;
-
-                                if (!s.value || !e.value) {
-                                    show('#e9ecef', '#212529', 'Pilih tanggal untuk melihat ringkasan.');
-                                    return;
-                                }
-
-                                if (e.value < s.value) {
-                                    showError('Tanggal akhir tidak boleh sebelum tanggal awal.');
-                                    return;
-                                }
-
-                                show('#e9ecef', '#212529', 'Memuat...');
-
-                                try {
-                                    const res = await fetch(@json(route('mincing.auditBulk.preview')), {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'Accept': 'application/json',
-                                            'X-CSRF-TOKEN': @json(csrf_token()),
-                                        },
-                                        body: JSON.stringify({ start_date: s.value, end_date: e.value }),
-                                    });
-
-                                    if (!res.ok) {
-                                        let msg = 'Gagal memuat ringkasan (HTTP ' + res.status + ').';
-                                        try {
-                                            const err = await res.json();
-                                            if (err.errors) {
-                                                msg = Object.values(err.errors).flat().join('<br>');
-                                            } else if (err.message) {
-                                                msg = err.message;
-                                            }
-                                        } catch (x) {}
-                                        showError(msg);
-                                        return;
-                                    }
-
-                                    const d = await res.json();
-
-                                    if (d.total === 0) {
-                                        show('#fff3cd', '#664d03', 'Tidak ada entry di tanggal ini.');
-                                        return;
-                                    }
-
-                                    show('#cff4fc', '#055160',
-                                        'Total entry: <b>' + d.total + '</b><br>' +
-                                        'Sudah punya audit (dilewati): <b>' + d.sudah_ada + '</b><br>' +
-                                        'Akan diduplikasi dan dikoreksi: <b>' + d.akan_dibuat + '</b>');
-
-                                    run.disabled = d.akan_dibuat === 0;
-                                } catch (err) {
-                                    showError('Error: ' + (err && err.message ? err.message : 'tidak diketahui'));
-                                }
-                            }
-
-                            s.addEventListener('change', function () {
-                                e.min = s.value;
-                                if (e.value && e.value < s.value) e.value = s.value;
-                                preview();
-                            });
-                            e.addEventListener('change', preview);
-                            modal.addEventListener('shown.bs.modal', preview);
-                        });
-                    </script>
-                @endif
-            @endunless
-        </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <form action="{{ route('toggle.mode.audit') }}" method="POST" class="d-inline"
+                            onsubmit="return confirm('Masuk ke Mode Audit?')">
+                            @csrf
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-shield-check"></i> Mode Audit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @endunless
 
         {{-- ===================== FILTER & LIVE SEARCH ===================== --}}
         <form id="filterForm" method="GET" action="{{ route('mincing.index') }}"
@@ -744,50 +588,6 @@
                                     @can('can access update button')
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1 flex-wrap">
-
-                                            {{-- EDIT DATA AUDIT --}}
-                                            @unless(auth()->user()->hasRole('auditor'))
-                                                @php
-                                                    $std = $masters[$dep->plant]->standar_ref ?? null;
-
-                                                    $descRule = function ($rule) {
-                                                        if (is_array($rule) && isset($rule['min'], $rule['max'])) {
-                                                            return "Di-acak antara {$rule['min']} s/d {$rule['max']} (maks 2 desimal)";
-                                                        }
-                                                        if (is_array($rule) && isset($rule['max'])) {
-                                                            return "diacak di bawah {$rule['max']} ( < {$rule['max']}, maks 2 desimal)";
-                                                        }
-                                                        return $rule === 'Oke' ? 'dicentang otomatis' : 'tidak dicentang (uncheck) otomatis';
-                                                    };
-
-                                                    if ($dep->auditVersion) {
-                                                        $msg = "Data audit sudah ada.\nKlik OK untuk membuka dan mengedit data audit.\n(Auto correct tidak dijalankan ulang, edit manual Anda tetap aman.)";
-                                                    } elseif (!empty($std) && is_array($std)) {
-                                                        $msg = "Edit data audit dengan acuan Master (sesuai plant):\n";
-                                                        $msg .= "\n- Suhu Akhir Emulsi Gel: " . $descRule($std['suhu_akhir_emulsi_gel'] ?? null);
-                                                        $msg .= "\n- Suhu Akhir Mixing: " . $descRule($std['suhu_akhir_mixing'] ?? null);
-                                                        $msg .= "\n- Suhu Akhir Emulsi: " . $descRule($std['suhu_akhir_emulsi'] ?? null);
-                                                        $msg .= "\n- Suhu Sebelum Grinding: " . $descRule($std['suhu_sebelum_grinding'] ?? null);
-                                                        $msg .= "\n- Non-Premix, Suhu Bahan: " . $descRule($std['non_premix']['suhu_bahan'] ?? null);
-                                                        $msg .= "\n- Non-Premix, pH Bahan: " . $descRule($std['non_premix']['ph_bahan'] ?? null);
-                                                        $msg .= "\n- Non-Premix, Sensori: " . $descRule($std['non_premix']['sensori'] ?? null);
-                                                        $msg .= "\n- Premix, Sensori: " . $descRule($std['premix']['sensori_premix'] ?? null);
-                                                        $msg .= "\n\nSalinan audit akan dibuat dan nilai di atas diterapkan otomatis. Lanjutkan?";
-                                                    } else {
-                                                        $msg = "Master belum diterapkan untuk plant ini.\nAuto correct tidak dijalankan, salinan memakai data asli untuk edit manual.\nLanjutkan?";
-                                                    }
-                                                @endphp
-
-                                                <form action="{{ route('mincing.duplicateToAudit', $dep->uuid) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    <button type="submit"
-                                                        class="btn {{ $dep->auditVersion ? 'btn-success' : 'btn-dark' }} btn-sm"
-                                                        title="{{ $dep->auditVersion ? 'Sudah ada data audit' : 'Belum ada data audit' }}"
-                                                        onclick="return confirm({{ \Illuminate\Support\Js::from($msg) }})">
-                                                        <i class="bi bi-files"></i> Edit Data Audit
-                                                    </button>
-                                                </form>
-                                            @endunless
 
                                             @can('can access verification button')
                                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"

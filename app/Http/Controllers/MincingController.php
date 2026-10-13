@@ -91,6 +91,10 @@ class MincingController extends Controller
         $kode_batch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
+        $masters = \App\Models\List_form::where('laporan', 'Pemeriksaan Mincing - Emulsifying - Aging')
+            ->get()
+            ->keyBy('plant');
+
         $auditedSourceUuids = Mincing::query()
             ->where('is_audit', true)
             ->whereNotNull('source_uuid')
@@ -136,7 +140,8 @@ class MincingController extends Controller
             'search',
             'date',
             'shift',
-            'kode_batch'
+            'kode_batch',
+            'masters'
         ));
     }
 
