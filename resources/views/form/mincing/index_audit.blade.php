@@ -19,7 +19,7 @@
             if (!$bulkMaster) {
                 $bulkWhy = "tidak ada baris List_form untuk plant '{$userPlant}'";
             } elseif (empty($bulkStd)) {
-                $bulkWhy = 'kolom standar_ref kosong';
+                $bulkWhy = 'Master Audit belum diterapkan untuk plant ini.';
             } else {
                 $bulkWhy = 'standar_ref bertipe ' . gettype($bulkStd) . ' (bukan array, cek $casts di model List_form)';
             }
@@ -691,11 +691,11 @@
                                                         </button>
                                                     </form>
 
-                                                    {{-- TONGKAT SIHIR: duplikasi + autocorrect entry ini saja, lalu reload (tanpa membuka form edit) --}}
                                                     <button type="button" class="btn btn-warning btn-sm"
-                                                        title="Duplikasi &amp; auto correct entry ini saja"
+                                                        title="{{ $bulkReady ? 'Duplikasi & auto correct entry ini saja' : 'Nonaktif: ' . $bulkWhy }}"
                                                         data-url="{{ route('mincing.duplicateToAudit', $dep->uuid) }}"
-                                                        onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msg) }})">
+                                                        onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msg) }})"
+                                                        {{ $bulkReady ? '' : 'disabled' }}>
                                                         <i class="bi bi-magic"></i> Edit Data Audit Otomatis
                                                     </button>
                                                 @endif

@@ -73,10 +73,8 @@ class List_formController extends Controller
             'standar_ref' => 'nullable|array',
         ]);
 
-        $userPlantUuid = Auth::user()->plant;
-
         $list_form = List_form::where('uuid', $uuid)
-            ->where('plant', $userPlantUuid)
+            ->where('plant', Auth::user()->plant)
             ->firstOrFail();
 
         $dataUpdate = [
@@ -87,15 +85,31 @@ class List_formController extends Controller
         if ($request->has('standar_ref')) {
             $standarRef = $request->input('standar_ref', []);
 
-            // Checkbox tidak dicentang menjadi null.
-            if (isset($standarRef['non_premix']['sensori'])
-                && $standarRef['non_premix']['sensori'] === '') {
-                $standarRef['non_premix']['sensori'] = null;
-            }
+            switch ($list_form->laporan) {
+                case 'Pemeriksaan Mincing - Emulsifying - Aging':
+                    if (isset($standarRef['non_premix']['sensori'])
+                        && $standarRef['non_premix']['sensori'] === '') {
+                        $standarRef['non_premix']['sensori'] = null;
+                    }
 
-            if (isset($standarRef['premix']['sensori_premix'])
-                && $standarRef['premix']['sensori_premix'] === '') {
-                $standarRef['premix']['sensori_premix'] = null;
+                    if (isset($standarRef['premix']['sensori_premix'])
+                        && $standarRef['premix']['sensori_premix'] === '') {
+                        $standarRef['premix']['sensori_premix'] = null;
+                    }
+                    break;
+
+                case 'Pemeriksaan Metal Detector':
+                    $metalRef = [];
+
+                    foreach (['fe', 'nfe', 'sus'] as $field) {
+                        if (isset($standarRef[$field])
+                            && in_array($standarRef[$field], ['Terdeteksi', 'Tidak Terdeteksi'], true)) {
+                            $metalRef[$field] = $standarRef[$field];
+                        }
+                    }
+
+                    $standarRef = $metalRef ?: null;
+                    break;
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

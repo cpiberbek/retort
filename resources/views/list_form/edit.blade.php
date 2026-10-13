@@ -198,6 +198,66 @@
                                 </div>
                                 @break
 
+                            @case('Pemeriksaan Metal Detector')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    $metalFields = [
+                                        ['fe',  'Fe (Ferrous)'],
+                                        ['nfe', 'NFe (Non-Ferrous)'],
+                                        ['sus', 'SUS (Stainless Steel)'],
+                                    ];
+
+                                    $metalOptions = ['Terdeteksi', 'Tidak Terdeteksi'];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Pilih hasil yang akan diterapkan otomatis saat membuat data audit.
+                                            Pilih <b>Tidak dirubah</b> jika field tidak ingin diubah (memakai data asli).
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($metalFields as [$key, $label])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            <select
+                                                                name="standar_ref[{{ $key }}]"
+                                                                class="form-select form-control form-control-sm"
+                                                            >
+                                                                <option value="">— Tidak Dirubah —</option>
+                                                                @foreach ($metalOptions as $opt)
+                                                                    <option value="{{ $opt }}" {{ $current === $opt ? 'selected' : '' }}>
+                                                                        {{ $opt }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                @break
+
                         @endswitch
 
                         <div class="d-flex justify-content-between">

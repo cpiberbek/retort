@@ -844,6 +844,9 @@ Route::middleware('auth')->group(function () {
     //audit-metal
     Route::get('/metal/audit-data', [MetalController::class, 'auditIndex'])->name('metal.audit');
     Route::post('/metal/{uuid}/duplicate-to-audit', [MetalController::class, 'duplicateToAudit'])->name('metal.duplicateToAudit');
+    Route::post('/metal/audit-bulk/preview', [MetalController::class, 'auditBulkPreview'])->name('metal.auditBulk.preview');
+    Route::post('/metal/audit-bulk/execute', [MetalController::class, 'auditBulkExecute'])->name('metal.auditBulk.execute');
+
 
     // Pemasakan
     Route::get('/pemasakan/export-pdf', [PemasakanController::class, 'exportPdf'])->name('pemasakan.exportPdf');
