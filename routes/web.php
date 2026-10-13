@@ -239,6 +239,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/magnet-trap/{uuid}/duplicate-to-audit', [MagnetTrapController::class, 'duplicateToAudit'])
         ->name('checklistmagnettrap.duplicateToAudit');
 
+    // Bulk Audit Magnet Trap
+    Route::post('checklistmagnettrap/audit-bulk-preview', [MagnetTrapController::class, 'auditBulkPreview'])
+        ->name('checklistmagnettrap.auditBulkPreview');
+
+    Route::post('checklistmagnettrap/audit-bulk-execute', [MagnetTrapController::class, 'auditBulkExecute'])
+        ->name('checklistmagnettrap.auditBulkExecute');
+
+    Route::post('/magnet-trap/{uuid}/duplicate-to-audit-auto', [MagnetTrapController::class, 'duplicateToAuditAuto'])
+        ->name('checklistmagnettrap.duplicateToAuditAuto');
+
 
     Route::resource('checklistmagnettrap', MagnetTrapController::class);
 

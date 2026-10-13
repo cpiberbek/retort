@@ -110,6 +110,17 @@ class List_formController extends Controller
 
                     $standarRef = $metalRef ?: null;
                     break;
+
+                case 'Checklist Cleaning Magnet Trap':
+                    $magnetRef = [];
+
+                    if (isset($standarRef['status'])
+                        && in_array($standarRef['status'], ['v', 'x'], true)) {
+                        $magnetRef['status'] = $standarRef['status'];
+                    }
+
+                    $standarRef = $magnetRef ?: null;
+                    break;
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

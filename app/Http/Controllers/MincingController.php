@@ -130,8 +130,8 @@ class MincingController extends Controller
             ->when($kode_batch, function ($query) use ($kode_batch) {
                 $query->where('kode_produksi', 'like', "%{$kode_batch}%");
             })
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->orderByDesc('date')
+            ->orderByDesc('created_at')
             ->paginate(10)
             ->appends($request->all());
 

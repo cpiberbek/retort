@@ -196,7 +196,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                @break
+                            @break
 
                             @case('Pemeriksaan Metal Detector')
                                 @php
@@ -256,8 +256,58 @@
                                         </table>
                                     </div>
                                 </div>
-                                @break
+                            @break
 
+                            @case('Checklist Cleaning Magnet Trap')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+                                    $magnetOptions = [
+                                        'v' => 'OK',
+                                        'x' => 'Not OK',
+                                    ];
+                                    $current = old('standar_ref.status', data_get($std, 'status', 'v'));
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Pilih status yang akan diterapkan otomatis saat membuat data audit.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="align-middle">Status Cleaning Magnet Trap</td>
+                                                    <td class="align-middle">
+                                                        <select
+                                                            name="standar_ref[status]"
+                                                            class="form-select form-control form-control-sm"
+                                                        >
+                                                            @foreach ($magnetOptions as $value => $label)
+                                                                <option value="{{ $value }}"
+                                                                    {{ $current === $value ? 'selected' : '' }}>
+                                                                    {{ $label }}
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+                        
                         @endswitch
 
                         <div class="d-flex justify-content-between">

@@ -91,7 +91,7 @@ class MetalController extends Controller
                 $query->whereDate('date', $date);
             })
             ->orderByDesc('date')
-            ->orderByDesc('created_at')
+            ->orderByDesc('pukul')
             ->paginate(10)
             ->appends($request->all());
 

@@ -220,26 +220,6 @@
                                         </td>
                                         <td class="text-center align-middle">
                                             <div class="d-flex justify-content-center align-items-center">
-                                                {{-- Audit --}}
-                                                @unless(auth()->user()->hasRole('auditor'))
-                                                    <form
-                                                        action="{{ route('checklistmagnettrap.duplicateToAudit', $item->uuid) }}"
-                                                        method="POST"
-                                                        class="d-inline"
-                                                    >
-                                                        @csrf
-
-                                                        <button
-                                                            type="submit"
-                                                            class="btn {{ $item->auditVersion ? 'btn-success' : 'btn-dark' }} btn-sm mx-1"
-                                                            title="{{ $item->auditVersion ? 'Sudah ada data audit' : 'Belum ada data audit' }}"
-                                                            onclick="return confirm('Buka data ini untuk Audit?')"
-                                                        >
-                                                            <i class="bi bi-files"></i>
-                                                            Edit Data Audit
-                                                        </button>
-                                                    </form>
-                                                @endunless
 
                                                 @can('can access verification button')
                                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1"
