@@ -307,6 +307,99 @@
                                     </div>
                                 </div>
                             @break
+
+                            @case('Pemeriksaan Kekuatan Magnet Trap')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $currentParameter = old(
+                                        'standar_ref.parameter_sesuai',
+                                        data_get($std, 'parameter_sesuai')
+                                    );
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan isian jika field tidak ingin dipaksa saat membuat data audit.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for ($i = 1; $i <= 6; $i++)
+                                                    @php
+                                                        $key = 'kekuatan_median_' . $i;
+                                                        $currentMin = old("standar_ref.$key.min", data_get($std, "$key.min"));
+                                                        $currentMax = old("standar_ref.$key.max", data_get($std, "$key.max"));
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">
+                                                            Kekuatan Magnet {{ $i }}
+                                                        </td>
+                                                        <td class="align-middle">
+                                                            <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    name="standar_ref[{{ $key }}][min]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Min"
+                                                                    value="{{ $currentMin }}"
+                                                                >
+
+                                                                <span class="text-muted" style="margin: 0 0.5rem;">s/d</span>
+
+                                                                <input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    name="standar_ref[{{ $key }}][max]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Max"
+                                                                    value="{{ $currentMax }}"
+                                                                >
+                                                                <span class="text-muted" style="margin: 0 0.5rem;">Gauss</span>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endfor
+
+                                                <tr>
+                                                    <td class="align-middle">Parameter Sesuai</td>
+                                                    <td class="align-middle">
+                                                        <select
+                                                            name="standar_ref[parameter_sesuai]"
+                                                            class="form-control form-control-sm"
+                                                        >
+                                                            <option value="">— Tidak Diubah —</option>
+                                                            <option value="1" {{ (string) $currentParameter === '1' ? 'selected' : '' }}>
+                                                                Sesuai (√)
+                                                            </option>
+                                                            <option value="0" {{ (string) $currentParameter === '0' ? 'selected' : '' }}>
+                                                                Tidak Sesuai (X)
+                                                            </option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
                         
                         @endswitch
 
@@ -322,4 +415,69 @@
         </div>
     </div>
 </div>
+
+    {{-- rule submit standards --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.querySelector('form[action*="list_form"]');
+
+            if (!form) return;
+
+            const magnetFields = [];
+
+            for (let i = 1; i <= 6; i++) {
+                const key = `kekuatan_median_${i}`;
+
+                magnetFields.push({
+                    min: form.querySelector(`[name="standar_ref[${key}][min]"]`),
+                    max: form.querySelector(`[name="standar_ref[${key}][max]"]`)
+                });
+            }
+
+            magnetFields.forEach(function (field) {
+                if (!field.min || !field.max) return;
+
+                function validatePair() {
+                    const minFilled = field.min.value.trim() !== '';
+                    const maxFilled = field.max.value.trim() !== '';
+
+                    field.min.setCustomValidity('');
+                    field.max.setCustomValidity('');
+
+                    if (minFilled && !maxFilled) {
+                        field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
+                    } else if (!minFilled && maxFilled) {
+                        field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
+                    }
+                }
+
+                field.min.addEventListener('input', validatePair);
+                field.max.addEventListener('input', validatePair);
+            });
+
+            form.addEventListener('submit', function (event) {
+                magnetFields.forEach(function (field) {
+                    if (!field.min || !field.max) return;
+
+                    const minFilled = field.min.value.trim() !== '';
+                    const maxFilled = field.max.value.trim() !== '';
+
+                    field.min.setCustomValidity('');
+                    field.max.setCustomValidity('');
+
+                    if (minFilled && !maxFilled) {
+                        field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
+                    } else if (!minFilled && maxFilled) {
+                        field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
+                    }
+                });
+
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    form.reportValidity();
+                }
+            });
+        });
+    </script>
+
 @endsection

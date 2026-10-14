@@ -121,6 +121,32 @@ class List_formController extends Controller
 
                     $standarRef = $magnetRef ?: null;
                     break;
+
+                case 'Pemeriksaan Kekuatan Magnet Trap':
+                    $magnetRef = [];
+
+                    for ($i = 1; $i <= 6; $i++) {
+                        $field = 'kekuatan_median_' . $i;
+
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $magnetRef[$field] = [
+                            'min' => $min !== '' ? $min : null,
+                            'max' => $max !== '' ? $max : null,
+                        ];
+                    }
+
+                    $parameterSesuai = $standarRef['parameter_sesuai'] ?? null;
+
+                    $magnetRef['parameter_sesuai'] = in_array(
+                        (string) $parameterSesuai,
+                        ['0', '1'],
+                        true
+                    ) ? (int) $parameterSesuai : null;
+
+                    $standarRef = $magnetRef;
+                    break;
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

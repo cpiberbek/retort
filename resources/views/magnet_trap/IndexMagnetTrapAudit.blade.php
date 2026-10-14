@@ -27,13 +27,9 @@
             }
         }
 
-        /*
-         * Master Magnet Trap menggunakan key status.
-         * v    = Terdeteksi
-         * x    = Tidak Terdeteksi
-         * null = tidak menerapkan perubahan status otomatis
-         */
-        $masterStatus = $bulkStd['status'] ?? null;
+        $masterStatus = is_array($bulkStd)
+            ? ($bulkStd['status'] ?? null)
+            : null;
 
         $masterStatusDesc = match ($masterStatus) {
             'v' => 'ditandai Terdeteksi (OK)',
@@ -45,13 +41,16 @@
             . "Klik OK untuk membuka dan mengedit data audit.\n"
             . "(Penerapan Master tidak dijalankan ulang; edit manual tetap aman.)";
 
-        $msgManual = "Salinan data audit Magnet Trap akan dibuat dari data asli.\n\n"
-            . "- Status Magnet Trap: {$masterStatusDesc}\n\n"
-            . "Lanjutkan?";
-
-        $msgAuto = "Edit data audit dengan acuan Master Magnet Trap:\n\n"
-            . "- Status Magnet Trap: {$masterStatusDesc}\n\n"
-            . "Salinan audit akan dibuat dan nilai di atas diterapkan otomatis. Lanjutkan?";
+        if ($bulkReady) {
+            $msg = "Edit data audit dengan acuan Master Magnet Trap:\n\n"
+                . "- Status Magnet Trap: {$masterStatusDesc}\n\n"
+                . "Lanjutkan?";
+        } else {
+            $msg = "Master Audit belum diterapkan untuk plant ini.\n"
+                . "Auto correct tidak dijalankan.\n"
+                . "Salinan audit menggunakan data asli untuk diedit manual.\n\n"
+                . "Lanjutkan?";
+        }
     @endphp
 
     <div class="container-fluid py-0">
@@ -89,10 +88,6 @@
         {{-- ===================== HEADER ===================== --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
             <h2 class="h4">Data Audit Magnet Trap</h2>
-
-            <a href="{{ route('checklistmagnettrap.index') }}" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Kembali
-            </a>
         </div>
 
         {{-- ===================== MODE AUDIT ===================== --}}
@@ -591,9 +586,7 @@
                                     @if ($showAksi)
                                         <td class="text-center align-middle">
                                             <div class="audit-action-group">
-
                                                 @if ($item->is_audit)
-                                                    {{-- DATA AUDIT SUDAH ADA: EDIT MANUAL --}}
                                                     <a
                                                         href="{{ route('checklistmagnettrap.edit', $item->id) }}"
                                                         class="btn btn-success btn-sm"
@@ -604,32 +597,29 @@
                                                         Edit Data Audit Manual
                                                     </a>
                                                 @else
-                                                    {{-- EDIT MANUAL: SALIN DATA TANPA AUTOCORRECT --}}
                                                     <form
                                                         action="{{ route('checklistmagnettrap.duplicateToAudit', $item->uuid) }}"
                                                         method="POST"
                                                         class="d-inline"
                                                     >
                                                         @csrf
-
                                                         <button
                                                             type="submit"
                                                             class="btn btn-dark btn-sm"
                                                             title="Buat salinan untuk diedit manual"
-                                                            onclick="return confirm({{ \Illuminate\Support\Js::from($msgManual) }})"
+                                                            onclick="return confirm({{ \Illuminate\Support\Js::from($msg) }})"
                                                         >
                                                             <i class="bi bi-files"></i>
                                                             Edit Data Audit Manual
                                                         </button>
                                                     </form>
 
-                                                    {{-- EDIT OTOMATIS: MENGGUNAKAN MASTER MAGNET TRAP --}}
                                                     <button
                                                         type="button"
                                                         class="btn btn-warning btn-sm"
                                                         title="{{ $bulkReady ? 'Buat salinan audit dengan acuan Master Magnet Trap' : 'Nonaktif: ' . $bulkWhy }}"
                                                         data-url="{{ route('checklistmagnettrap.duplicateToAuditAuto', $item->uuid) }}"
-                                                        onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msgAuto) }})"
+                                                        onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msg) }})"
                                                         {{ $bulkReady ? '' : 'disabled' }}
                                                     >
                                                         <i class="bi bi-magic"></i>

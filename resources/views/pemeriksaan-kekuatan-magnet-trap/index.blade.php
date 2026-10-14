@@ -171,13 +171,14 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                 <table class="table table-hover">
                     <thead class="table-secondary text-center">
                         <tr>
-                            <th style="width: 5%;">No</th>
-                            <th style="width: 10%;">Tanggal</th>
-                            <th style="width: 20%;">Kondisi Visual</th>
-                            <th style="width: 15%;">Petugas QC</th>
-                            <th style="width: 12%;">Parameter</th>
-                            <th style="width: 12%;">Status SPV</th>
-                            <th style="width: 25%;">Aksi</th>
+                            <th style="width: 4%;">No</th>
+                            <th style="width: 9%;">Tanggal</th>
+                            <th style="width: 14%;">Kondisi Visual</th>
+                            <th style="width: 11%;">Petugas QC</th>
+                            <th style="width: 9%;">Parameter</th>
+                            <th style="width: 9%;">Status SPV</th>
+                            <th style="width: 15%;">Hasil Pemeriksaan</th>
+                            <th style="width: 29%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -212,29 +213,16 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                 @endif
                             </td>
 
+                            {{-- Detail --}}
+                            <td class="text-center">
+                                <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.show', $item->id) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
+                                    <i class="bi bi-eye me-1"></i> Detail
+                                </a>
+                            </td>
+
                             {{-- Aksi dengan Layout Text-Nowrap + MX-1 --}}
                             <td class="text-center align-middle text-nowrap">
                                 <div class="d-flex justify-content-center align-items-center">
-
-                                    @unless(auth()->user()->hasRole('auditor'))
-                                        <form
-                                            action="{{ route('pemeriksaan-kekuatan-magnet-trap.duplicateToAudit', $item->uuid) }}"
-                                            method="POST"
-                                            class="d-inline"
-                                        >
-                                            @csrf
-
-                                            <button
-                                                type="submit"
-                                                class="btn {{ $item->auditVersion ? 'btn-success' : 'btn-dark' }} btn-sm mx-1"
-                                                title="{{ $item->auditVersion ? 'Sudah ada data audit' : 'Belum ada data audit' }}"
-                                                onclick="return confirm('Buka data ini untuk Audit?')"
-                                            >
-                                                <i class="bi bi-files me-1"></i> Edit Data Audit
-                                            </button>
-                                        </form>
-                                    @endunless
-                                    
                                     @can('can access verification button')
                                     {{-- 0. Tombol Verifikasi (Memicu Modal) --}}
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" 
@@ -245,26 +233,21 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                     </button>
                                     @endcan
 
-                                {{-- 1. Detail --}}
-                                <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.show', $item->id) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
-                                    <i class="bi bi-eye me-1"></i> Detail
-                                </a>
-
-                                {{-- 2. Edit --}}
+                                {{-- Edit --}}
                                 @can('can access edit button')
                                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.edit', $item->id) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
                                     <i class="bi bi-pencil-square me-1"></i> Edit
                                 </a>
                                 @endcan
 
-                                {{-- 3. Update Form --}}
+                                {{-- Update Form --}}
                                 @can('can access update button')
                                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.update_form', $item->id) }}" class="btn btn-info btn-sm mx-1 text-white" title="Update / Lengkapi Data">
                                     <i class="bi bi-pencil me-1"></i> Update
                                 </a>
                                 @endcan
 
-                                {{-- 4. Hapus --}}
+                                {{-- Hapus --}}
                                 @can('can access delete button')
                                 <form action="{{ route('pemeriksaan-kekuatan-magnet-trap.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
                                     @csrf
