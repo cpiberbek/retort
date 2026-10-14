@@ -143,12 +143,6 @@
             cursor: not-allowed;
         }
 
-        .audit-modal-label {
-            font-size: .85rem;
-            font-weight: 600;
-            margin-bottom: .4rem;
-        }
-
         .audit-preview-summary {
             border-radius: .65rem;
             padding: 1rem;
@@ -215,23 +209,6 @@
             $bulkWhy = 'Master Audit belum diterapkan untuk plant ini.';
         }
     }
-
-    $msgExisting = "Data audit sudah ada.\nKlik OK untuk membuka dan mengedit data audit.\nAuto correct tidak dijalankan ulang, sehingga perubahan manual tetap aman.";
-
-    $descRule = function ($key, $rule) {
-        if (!is_array($rule)) {
-            return 'tidak diatur';
-        }
-
-        $min = $rule['min'] ?? null;
-        $max = $rule['max'] ?? null;
-
-        if ($min !== null && $min !== '' && $max !== null && $max !== '') {
-            return "nilai tengah {$key}: " . number_format(((float) $min + (float) $max) / 2, 2, '.', '');
-        }
-
-        return 'tidak diubah';
-    };
 
     $bulkDesc = function ($rule) {
         if (is_array($rule)) {
@@ -485,9 +462,10 @@
                             <th style="width: 9%;">Parameter</th>
                             <th style="width: 9%;">Status SPV</th>
                             <th style="width: 19%;">Hasil Pemeriksaan</th>
-                            @can('can access update button')
+
+                            @if($showAksi)
                                 <th style="width: 25%;">Aksi</th>
-                            @endcan
+                            @endif
                         </tr>
                     </thead>
 
@@ -546,98 +524,75 @@
                                     </a>
                                 </td>
 
-                                @can('can access update button')
+                                @if($showAksi)
                                     <td class="text-center">
                                         <div class="d-flex justify-content-center gap-1 flex-wrap">
-                                            @if($showAksi)
-                                                @if($item->is_audit)
-                                                    <a
-                                                        href="{{ route('pemeriksaan-kekuatan-magnet-trap.edit', $item->id) }}"
-                                                        class="btn btn-success btn-sm"
-                                                        title="Data audit sudah ada"
-                                                        onclick="return confirm({{ \Illuminate\Support\Js::from($msgExisting) }})"
-                                                    >
-                                                        <i class="bi bi-files"></i> Edit Data Audit Manual
-                                                    </a>
-                                                @else
-                                                    @php
-                                                        if ($bulkReady) {
-                                                            $msgAuto = "Salinan data audit Magnet Trap akan dibuat dari data asli.\n\n";
+                                            @if($item->is_audit)
+                                                <a
+                                                    href="{{ route('pemeriksaan-kekuatan-magnet-trap.edit', $item->id) }}"
+                                                    class="btn btn-success btn-sm"
+                                                    title="Data audit sudah tersedia"
+                                                >
+                                                    <i class="bi bi-pencil"></i> Edit Data Audit Manual
+                                                </a>
+                                            @else
+                                                @php
+                                                    if ($bulkReady) {
+                                                        $msgAuto = "Salinan data audit Magnet Trap akan dibuat dari data asli.\n\n";
 
-                                                            for ($i = 1; $i <= 6; $i++) {
-                                                                $key = 'kekuatan_median_' . $i;
-                                                                $rule = $bulkStd[$key] ?? null;
-                                                                $min = data_get($rule, 'min');
-                                                                $max = data_get($rule, 'max');
+                                                        for ($i = 1; $i <= 6; $i++) {
+                                                            $key = 'kekuatan_median_' . $i;
+                                                            $rule = $bulkStd[$key] ?? null;
+                                                            $min = data_get($rule, 'min');
+                                                            $max = data_get($rule, 'max');
 
-                                                                if (
-                                                                    $min !== null && $min !== '' &&
-                                                                    $max !== null && $max !== '' &&
-                                                                    is_numeric($min) &&
-                                                                    is_numeric($max) &&
-                                                                    (float) $min <= (float) $max
-                                                                ) {
-                                                                    $msgAuto .= "- Kekuatan Magnet {$i}: Nilai diacak dari {$min} sampai {$max} Gauss\n";
-                                                                } else {
-                                                                    $msgAuto .= "- Kekuatan Magnet {$i}: Tidak diubah\n";
-                                                                }
-                                                            }
-
-                                                            $parameterRule = $bulkStd['parameter_sesuai'] ?? null;
-
-                                                            if (in_array((string) $parameterRule, ['0', '1'], true)) {
-                                                                $msgAuto .= "- Parameter Settingan: " . (
-                                                                    (string) $parameterRule === '1'
-                                                                        ? 'Sesuai (√)'
-                                                                        : 'Tidak Sesuai (X)'
-                                                                ) . "\n";
+                                                            if (
+                                                                $min !== null && $min !== '' &&
+                                                                $max !== null && $max !== '' &&
+                                                                is_numeric($min) &&
+                                                                is_numeric($max) &&
+                                                                (float) $min <= (float) $max
+                                                            ) {
+                                                                $msgAuto .= "- Kekuatan Magnet {$i}: Nilai diacak dari {$min} sampai {$max} Gauss\n";
                                                             } else {
-                                                                $msgAuto .= "- Parameter Settingan: Tidak diubah\n";
+                                                                $msgAuto .= "- Kekuatan Magnet {$i}: Tidak diubah\n";
                                                             }
-
-                                                            $msgAuto .= "\nLanjutkan?";
-                                                            $msgManual = $msgAuto;
-                                                        } else {
-                                                            $msgManual = "Master belum diterapkan untuk plant ini.\nAuto correct tidak dijalankan, salinan memakai data asli untuk edit manual.\n\nLanjutkan?";
-                                                            $msgAuto = $msgManual;
                                                         }
-                                                    @endphp
 
-                                                    <form
-                                                        action="{{ route('pemeriksaan-kekuatan-magnet-trap.duplicateToAudit', $item->uuid) }}"
-                                                        method="POST"
-                                                        class="d-inline"
-                                                    >
-                                                        @csrf
-                                                        <button
-                                                            type="submit"
-                                                            class="btn btn-dark btn-sm"
-                                                            title="Buat salinan audit manual"
-                                                            onclick="return confirm({{ \Illuminate\Support\Js::from($msgManual) }})"
-                                                        >
-                                                            <i class="bi bi-files"></i> Edit Data Audit Manual
-                                                        </button>
-                                                    </form>
+                                                        $parameterRule = $bulkStd['parameter_sesuai'] ?? null;
 
-                                                    <button
-                                                        type="button"
-                                                        class="btn btn-warning btn-sm"
-                                                        title="{{ $bulkReady ? 'Buat salinan dan terapkan standar master secara acak' : 'Nonaktif: ' . $bulkWhy }}"
-                                                        data-url="{{ route('pemeriksaan-kekuatan-magnet-trap.duplicateToAuditAuto', $item->uuid) }}"
-                                                        onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msgAuto) }})"
-                                                        {{ $bulkReady ? '' : 'disabled' }}
-                                                    >
-                                                        <i class="bi bi-magic"></i> Edit Data Audit Otomatis
-                                                    </button>
-                                                @endif
+                                                        if (in_array((string) $parameterRule, ['0', '1'], true)) {
+                                                            $msgAuto .= "- Parameter Settingan: " . (
+                                                                (string) $parameterRule === '1'
+                                                                    ? 'Sesuai (√)'
+                                                                    : 'Tidak Sesuai (X)'
+                                                            ) . "\n";
+                                                        } else {
+                                                            $msgAuto .= "- Parameter Settingan: Tidak diubah\n";
+                                                        }
+                                                    } else {
+                                                        $msgAuto = "Master belum diterapkan untuk plant ini.\nSalinan audit akan dibuat tanpa auto correct.\n";
+                                                    }
+                                                @endphp
+
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-warning btn-sm"
+                                                    title="{{ $bulkReady ? 'Duplikasi audit dengan koreksi standar master' : 'Duplikasi audit tanpa koreksi master: ' . $bulkWhy }}"
+                                                    data-url="{{ route('pemeriksaan-kekuatan-magnet-trap.duplicateToAuditAuto', $item->uuid) }}"
+                                                    onclick="magicDuplicate(this)"
+                                                    {{ $bulkReady ? '' : 'disabled' }}
+                                                >
+                                                    <i class="bi bi-magic"></i> Edit Data Audit Otomatis
+                                                </button>
                                             @endif
                                         </div>
                                     </td>
-                                @endcan
+                                @endif
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-5 text-muted">
+                                <td colspan="{{ $showAksi ? 8 : 7 }}" class="text-center py-5 text-muted">
                                     <div class="mb-2">
                                         <i class="bi bi-clipboard-x display-4 text-secondary opacity-50"></i>
                                     </div>
@@ -793,14 +748,10 @@
     });
 
     @if($showAksi)
-        async function magicDuplicate(btn, msg) {
-            if (!confirm(msg)) {
-                return;
-            }
-
+        async function magicDuplicate(btn) {
             const original = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Memproses...';
 
             try {
                 const res = await fetch(btn.dataset.url, {

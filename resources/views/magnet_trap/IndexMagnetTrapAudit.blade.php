@@ -12,7 +12,12 @@
             ->first();
 
         $bulkStd = $bulkMaster?->standar_ref;
-        $bulkReady = !empty($bulkStd) && is_array($bulkStd);
+
+        if (is_string($bulkStd)) {
+            $bulkStd = json_decode($bulkStd, true);
+        }
+
+        $bulkReady = is_array($bulkStd) && !empty($bulkStd);
 
         $bulkWhy = null;
 
@@ -42,20 +47,19 @@
             . "(Penerapan Master tidak dijalankan ulang; edit manual tetap aman.)";
 
         if ($bulkReady) {
-            $msg = "Edit data audit dengan acuan Master Magnet Trap:\n\n"
+            $msgAuto = "Salinan data audit Checklist Cleaning Magnet Trap akan dibuat dari data asli.\n\n"
                 . "- Status Magnet Trap: {$masterStatusDesc}\n\n"
                 . "Lanjutkan?";
         } else {
-            $msg = "Master Audit belum diterapkan untuk plant ini.\n"
+            $msgAuto = "Master Audit belum diterapkan untuk plant ini.\n"
                 . "Auto correct tidak dijalankan.\n"
-                . "Salinan audit menggunakan data asli untuk diedit manual.\n\n"
+                . "Salinan audit menggunakan data asli.\n\n"
                 . "Lanjutkan?";
         }
     @endphp
 
     <div class="container-fluid py-0">
 
-        {{-- ===================== ALERTS ===================== --}}
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="bi bi-check-circle me-2"></i>
@@ -85,12 +89,10 @@
             </div>
         @endif
 
-        {{-- ===================== HEADER ===================== --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
             <h2 class="h4">Data Audit Magnet Trap</h2>
         </div>
 
-        {{-- ===================== MODE AUDIT ===================== --}}
         @unless ($isAuditor)
             <style>
                 .audit-banner {
@@ -173,6 +175,7 @@
                 }
 
                 .audit-pill:hover:not(:disabled) {
+                    color: #fff;
                     background: rgba(255, 255, 255, .24);
                 }
 
@@ -244,11 +247,14 @@
                 </div>
             </div>
 
-            {{-- ===================== MODAL DUPLIKASI MASSAL ===================== --}}
             @if ($bulkReady)
-                <div class="modal fade" id="bulkAuditModal" tabindex="-1"
-                    aria-labelledby="bulkAuditModalLabel" aria-hidden="true">
-
+                <div
+                    class="modal fade"
+                    id="bulkAuditModal"
+                    tabindex="-1"
+                    aria-labelledby="bulkAuditModalLabel"
+                    aria-hidden="true"
+                >
                     <div class="modal-dialog modal-dialog-centered">
                         <form
                             method="POST"
@@ -264,8 +270,11 @@
                                         Duplikasi Audit Massal Magnet Trap
                                     </h5>
 
-                                    <button type="button" class="btn-close"
-                                        data-bs-dismiss="modal"></button>
+                                    <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="modal"
+                                    ></button>
                                 </div>
 
                                 <div class="modal-body">
@@ -275,8 +284,13 @@
                                                 Tanggal awal
                                             </label>
 
-                                            <input type="date" name="start_date"
-                                                id="bulkStart" class="form-control" required>
+                                            <input
+                                                type="date"
+                                                name="start_date"
+                                                id="bulkStart"
+                                                class="form-control"
+                                                required
+                                            >
                                         </div>
 
                                         <div class="col-6">
@@ -284,13 +298,17 @@
                                                 Tanggal akhir
                                             </label>
 
-                                            <input type="date" name="end_date"
-                                                id="bulkEnd" class="form-control" required>
+                                            <input
+                                                type="date"
+                                                name="end_date"
+                                                id="bulkEnd"
+                                                class="form-control"
+                                                required
+                                            >
                                         </div>
                                     </div>
 
-                                    <div id="bulkPreview"
-                                        class="alert alert-secondary py-2 small mb-3">
+                                    <div id="bulkPreview" class="alert alert-secondary py-2 small mb-3">
                                         Pilih tanggal untuk melihat ringkasan.
                                     </div>
 
@@ -304,13 +322,20 @@
                                 </div>
 
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary btn-sm"
-                                        data-bs-dismiss="modal">
+                                    <button
+                                        type="button"
+                                        class="btn btn-secondary btn-sm"
+                                        data-bs-dismiss="modal"
+                                    >
                                         Batal
                                     </button>
 
-                                    <button type="submit" id="bulkRun"
-                                        class="btn btn-success btn-sm" disabled>
+                                    <button
+                                        type="submit"
+                                        id="bulkRun"
+                                        class="btn btn-success btn-sm"
+                                        disabled
+                                    >
                                         Jalankan
                                     </button>
                                 </div>
@@ -400,12 +425,15 @@
                                     return;
                                 }
 
-                                show('#cff4fc', '#055160',
+                                show(
+                                    '#cff4fc',
+                                    '#055160',
                                     'Total entry: <b>' + data.total + '</b><br>' +
                                     'Sudah punya audit (dilewati): <b>' +
                                     data.sudah_ada + '</b><br>' +
                                     'Akan diduplikasi dan disesuaikan: <b>' +
-                                    data.akan_dibuat + '</b>');
+                                    data.akan_dibuat + '</b>'
+                                );
 
                                 run.disabled = data.akan_dibuat === 0;
                             } catch (error) {
@@ -431,7 +459,6 @@
             @endif
         @endunless
 
-        {{-- ===================== FILTER ===================== --}}
         <form
             id="filterForm"
             method="GET"
@@ -477,15 +504,16 @@
                 </div>
 
                 <div class="col-md-2">
-                    <a href="{{ route('checklistmagnettrap.audit') }}"
-                        class="btn btn-primary w-100">
+                    <a
+                        href="{{ route('checklistmagnettrap.audit') }}"
+                        class="btn btn-primary w-100"
+                    >
                         <i class="bi bi-arrow-counterclockwise"></i> Reset
                     </a>
                 </div>
             </div>
         </form>
 
-        {{-- ===================== TABEL DATA ===================== --}}
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="table-responsive">
@@ -582,7 +610,6 @@
                                         @endif
                                     </td>
 
-                                    {{-- ===================== KOLOM AKSI ===================== --}}
                                     @if ($showAksi)
                                         <td class="text-center align-middle">
                                             <div class="audit-action-group">
@@ -590,36 +617,18 @@
                                                     <a
                                                         href="{{ route('checklistmagnettrap.edit', $item->id) }}"
                                                         class="btn btn-success btn-sm"
-                                                        title="Edit data audit manual"
-                                                        onclick="return confirm({{ \Illuminate\Support\Js::from($msgExisting) }})"
+                                                        title="Data audit sudah tersedia"
                                                     >
-                                                        <i class="bi bi-pencil-square"></i>
-                                                        Edit Data Audit Manual
+                                                        <i class="bi bi-pencil"></i>
+                                                        Edit Data Audit
                                                     </a>
                                                 @else
-                                                    <form
-                                                        action="{{ route('checklistmagnettrap.duplicateToAudit', $item->uuid) }}"
-                                                        method="POST"
-                                                        class="d-inline"
-                                                    >
-                                                        @csrf
-                                                        <button
-                                                            type="submit"
-                                                            class="btn btn-dark btn-sm"
-                                                            title="Buat salinan untuk diedit manual"
-                                                            onclick="return confirm({{ \Illuminate\Support\Js::from($msg) }})"
-                                                        >
-                                                            <i class="bi bi-files"></i>
-                                                            Edit Data Audit Manual
-                                                        </button>
-                                                    </form>
-
                                                     <button
                                                         type="button"
                                                         class="btn btn-warning btn-sm"
-                                                        title="{{ $bulkReady ? 'Buat salinan audit dengan acuan Master Magnet Trap' : 'Nonaktif: ' . $bulkWhy }}"
+                                                        title="{{ $bulkReady ? 'Duplikasi audit dengan acuan Master Magnet Trap' : 'Nonaktif: ' . $bulkWhy }}"
                                                         data-url="{{ route('checklistmagnettrap.duplicateToAuditAuto', $item->uuid) }}"
-                                                        onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msg) }})"
+                                                        onclick="magicDuplicate(this)"
                                                         {{ $bulkReady ? '' : 'disabled' }}
                                                     >
                                                         <i class="bi bi-magic"></i>
@@ -632,8 +641,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $showAksi ? 11 : 10 }}"
-                                        class="text-center py-4">
+                                    <td colspan="{{ $showAksi ? 11 : 10 }}" class="text-center py-4">
                                         Belum ada data audit magnet trap.
                                     </td>
                                 </tr>
@@ -642,7 +650,6 @@
                     </table>
                 </div>
 
-                {{-- ===================== PAGINATION ===================== --}}
                 <div class="mt-3">
                     {{ $data->withQueryString()->links('pagination::bootstrap-5') }}
                 </div>
@@ -650,19 +657,14 @@
         </div>
     </div>
 
-    {{-- ===================== DUPLIKASI OTOMATIS ===================== --}}
     @if ($showAksi)
         <script>
-            async function magicDuplicate(btn, msg) {
-                if (!confirm(msg)) {
-                    return;
-                }
-
+            async function magicDuplicate(btn) {
                 const original = btn.innerHTML;
 
                 btn.disabled = true;
                 btn.innerHTML =
-                    '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                    '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span> Memproses...';
 
                 try {
                     const response = await fetch(btn.dataset.url, {
@@ -670,7 +672,7 @@
                         redirect: 'manual',
                         headers: {
                             'X-CSRF-TOKEN': @json(csrf_token()),
-                            'Accept': 'application/json',
+                            'Accept': 'text/html',
                         },
                     });
 
@@ -693,46 +695,112 @@
         </script>
     @endif
 
-    {{-- ===================== AUTO SUBMIT FILTER ===================== --}}
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const search = document.getElementById('search');
-            const date = document.getElementById('filter_date');
-            const form = document.getElementById('filterForm');
+        document.addEventListener('DOMContentLoaded', function () {
+            const start = document.getElementById('bulkStart');
+            const end = document.getElementById('bulkEnd');
+            const box = document.getElementById('bulkPreview');
+            const run = document.getElementById('bulkRun');
+            const modal = document.getElementById('bulkAuditModal');
 
-            let timer;
+            let requestId = 0;
 
-            if (search) {
-                search.addEventListener('input', () => {
-                    clearTimeout(timer);
-
-                    timer = setTimeout(() => {
-                        form.submit();
-                    }, 500);
-                });
+            function show(message, type = 'secondary') {
+                box.className = `alert alert-${type} py-2 small mb-3`;
+                box.innerHTML = message;
             }
 
-            if (date) {
-                date.addEventListener('change', () => {
-                    form.submit();
-                });
+            async function preview() {
+                const currentRequest = ++requestId;
+
+                run.disabled = true;
+
+                if (!start.value || !end.value) {
+                    show('Pilih tanggal awal dan tanggal akhir untuk melihat ringkasan.');
+                    return;
+                }
+
+                if (end.value < start.value) {
+                    show('Tanggal akhir tidak boleh sebelum tanggal awal.', 'danger');
+                    return;
+                }
+
+                show('Memuat ringkasan data...', 'secondary');
+
+                try {
+                    const response = await fetch(
+                        @json(route('checklistmagnettrap.auditBulkPreview')),
+                        {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': @json(csrf_token()),
+                            },
+                            body: JSON.stringify({
+                                start_date: start.value,
+                                end_date: end.value
+                            })
+                        }
+                    );
+
+                    const data = await response.json();
+
+                    // Abaikan respons dari pilihan tanggal yang sudah berubah.
+                    if (currentRequest !== requestId) return;
+
+                    if (!response.ok) {
+                        let message = data.message || 'Gagal memuat ringkasan data.';
+
+                        if (data.errors) {
+                            message = Object.values(data.errors).flat().join('<br>');
+                        }
+
+                        show(message, 'danger');
+                        return;
+                    }
+
+                    const total = Number(data.total) || 0;
+                    const skipped = Number(data.sudah_ada) || 0;
+                    const created = Number(data.akan_dibuat) || 0;
+
+                    if (total === 0) {
+                        show('Tidak ada entry pada rentang tanggal yang dipilih.', 'warning');
+                        return;
+                    }
+
+                    show(
+                        `<div class="mb-1">Total entry: <strong>${total}</strong></div>` +
+                        `<div class="mb-1">Sudah punya audit (dilewati): <strong>${skipped}</strong></div>` +
+                        `<div>Akan diduplikasi dan disesuaikan: <strong>${created}</strong></div>`,
+                        'info'
+                    );
+
+                    run.disabled = created === 0;
+
+                } catch (error) {
+                    if (currentRequest !== requestId) return;
+
+                    show('Gagal memuat ringkasan. Periksa koneksi atau log aplikasi.', 'danger');
+                }
             }
+
+            start.addEventListener('change', function () {
+                end.min = start.value;
+
+                if (end.value && end.value < start.value) {
+                    end.value = start.value;
+                }
+
+                preview();
+            });
+
+            end.addEventListener('change', preview);
+            modal.addEventListener('shown.bs.modal', preview);
         });
     </script>
 
-    {{-- ===================== AUTO-HIDE ALERT ===================== --}}
-    <script>
-        setTimeout(() => {
-            document.querySelectorAll('.alert').forEach(alert => {
-                alert.classList.remove('show');
-                alert.classList.add('fade');
-
-                setTimeout(() => alert.remove(), 500);
-            });
-        }, 3000);
-    </script>
-
-    {{-- ===================== STYLE ===================== --}}
     <style>
         .table td,
         .table th {

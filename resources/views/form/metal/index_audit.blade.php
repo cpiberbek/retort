@@ -40,19 +40,12 @@
                 ? 'ditandai Terdeteksi'
                 : 'mengikuti master: ' . ($rule ?? '-');
         };
-
-        $msgExisting = "Data audit sudah ada.\n"
-            . "Klik OK untuk membuka dan mengedit data audit.\n"
-            . "(Auto correct tidak dijalankan ulang, edit manual Anda tetap aman.)";
     @endphp
 
     <div class="container-fluid py-0">
-
-        {{-- ALERTS --}}
         @if (session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i class="bi bi-check-circle me-2"></i>
-                {{ trim(session('success')) }}
+                <i class="bi bi-check-circle me-2"></i> {{ trim(session('success')) }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         @endif
@@ -78,12 +71,10 @@
             </div>
         @endif
 
-        {{-- HEADER --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
             <h4>Data Audit Metal Detector</h4>
         </div>
 
-        {{-- MODE AUDIT --}}
         @unless($isAuditor)
             <style>
                 .audit-banner {
@@ -224,7 +215,6 @@
                 </div>
             </div>
 
-            {{-- MODAL DUPLIKASI AUDIT MASSAL --}}
             @if ($bulkReady)
                 <div class="modal fade" id="bulkAuditModal" tabindex="-1">
                     <div class="modal-dialog modal-dialog-centered">
@@ -246,24 +236,12 @@
                                     <div class="row g-2 mb-3">
                                         <div class="col-6">
                                             <label for="bulkStart" class="form-label">Tanggal awal</label>
-                                            <input
-                                                type="date"
-                                                name="start_date"
-                                                id="bulkStart"
-                                                class="form-control"
-                                                required
-                                            >
+                                            <input type="date" name="start_date" id="bulkStart" class="form-control" required>
                                         </div>
 
                                         <div class="col-6">
                                             <label for="bulkEnd" class="form-label">Tanggal akhir</label>
-                                            <input
-                                                type="date"
-                                                name="end_date"
-                                                id="bulkEnd"
-                                                class="form-control"
-                                                required
-                                            >
+                                            <input type="date" name="end_date" id="bulkEnd" class="form-control" required>
                                         </div>
                                     </div>
 
@@ -273,7 +251,6 @@
 
                                     <div class="small">
                                         <strong>Standar yang akan diterapkan (semua nilai ditimpa):</strong>
-
                                         <ul class="mb-0">
                                             <li>FE 1.0 mm: {{ $bulkDesc($bulkStd['fe'] ?? null) }}</li>
                                             <li>NFE 1.5 mm: {{ $bulkDesc($bulkStd['nfe'] ?? null) }}</li>
@@ -283,11 +260,7 @@
                                 </div>
 
                                 <div class="modal-footer">
-                                    <button
-                                        type="button"
-                                        class="btn btn-secondary btn-sm"
-                                        data-bs-dismiss="modal"
-                                    >
+                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">
                                         Batal
                                     </button>
 
@@ -406,7 +379,6 @@
             @endif
         @endunless
 
-        {{-- FILTER --}}
         <form
             id="filterForm"
             method="GET"
@@ -451,7 +423,6 @@
             </div>
         </form>
 
-        {{-- FILTER SCRIPTS --}}
         <script>
             document.addEventListener('DOMContentLoaded', () => {
                 const search = document.getElementById('search');
@@ -473,7 +444,6 @@
             });
         </script>
 
-        {{-- MAIN TABLE --}}
         <div class="card shadow-sm mb-4">
             <div class="card-body">
                 <div class="table-responsive">
@@ -580,7 +550,6 @@
                                         @endif
                                     </td>
 
-                                    {{-- AKSI --}}
                                     @if ($showAksi)
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-1 flex-wrap">
@@ -588,10 +557,9 @@
                                                     <a
                                                         href="{{ route('metal.edit.form', $dep->uuid) }}"
                                                         class="btn btn-success btn-sm"
-                                                        title="Sudah ada data audit"
-                                                        onclick="return confirm({{ \Illuminate\Support\Js::from($msgExisting) }})"
+                                                        title="Data audit sudah tersedia"
                                                     >
-                                                        <i class="bi bi-files"></i> Edit Data Audit Manual
+                                                        <i class="bi bi-pencil"></i> Edit Data Audit Manual
                                                     </a>
                                                 @else
                                                     @php
@@ -611,28 +579,12 @@
                                                         }
                                                     @endphp
 
-                                                    <form
-                                                        action="{{ route('metal.duplicateToAudit', $dep->uuid) }}"
-                                                        method="POST"
-                                                        class="d-inline"
-                                                    >
-                                                        @csrf
-                                                        <button
-                                                            type="submit"
-                                                            class="btn btn-dark btn-sm"
-                                                            title="Belum ada data audit"
-                                                            onclick="return confirm({{ \Illuminate\Support\Js::from($msg) }})"
-                                                        >
-                                                            <i class="bi bi-files"></i> Edit Data Audit Manual
-                                                        </button>
-                                                    </form>
-
                                                     <button
                                                         type="button"
-                                                        class="btn btn-warning btn-sm"
-                                                        title="{{ $masterValid ? 'Duplikasi & auto correct entry ini saja' : 'Nonaktif: Master Audit belum diterapkan untuk plant ini.' }}"
+                                                        class="btn btn-warning btn-sm text-dark"
+                                                        title="{{ $masterValid ? 'Duplikasi & auto correct entry ini saja' : 'Nonaktif: ' . $bulkWhy }}"
                                                         data-url="{{ route('metal.duplicateToAudit', $dep->uuid) }}"
-                                                        onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msg) }})"
+                                                        onclick="magicDuplicate(this)"
                                                         {{ $masterValid ? '' : 'disabled' }}
                                                     >
                                                         <i class="bi bi-magic"></i> Edit Data Audit Otomatis
@@ -664,9 +616,7 @@
 
     @if ($showAksi)
         <script>
-            async function magicDuplicate(btn, msg) {
-                if (!confirm(msg)) return;
-
+            async function magicDuplicate(btn) {
                 const original = btn.innerHTML;
                 btn.disabled = true;
                 btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
@@ -697,5 +647,4 @@
             }
         </script>
     @endif
-
 @endsection

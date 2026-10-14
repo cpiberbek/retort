@@ -652,21 +652,18 @@
                                     @if ($showAksi)
                                         <td class="text-center">
                                             <div class="d-flex justify-content-center gap-1 flex-wrap">
-
                                                 @if ($dep->is_audit)
-                                                    {{-- HIJAU: baris sudah berupa salinan audit -> langsung buka edit salinan --}}
                                                     <a href="{{ route('mincing.edit.form', $dep->uuid) }}"
                                                         class="btn btn-success btn-sm"
-                                                        title="Sudah ada data audit"
-                                                        onclick="return confirm({{ \Illuminate\Support\Js::from($msgExisting) }})">
-                                                        <i class="bi bi-files"></i> Edit Data Audit Manual
+                                                        title="Data audit sudah tersedia">
+                                                        <i class="bi bi-pencil"></i> Edit Data Audit Manual
                                                     </a>
                                                 @else
-                                                    {{-- HITAM: data asli belum pernah diedit -> buat salinan + autocorrect master --}}
                                                     @php
-                                                        $std = $bulkStd; // baris sudah difilter per plant user di controller
+                                                        $std = $bulkStd;
 
-                                                        if (!empty($std) && is_array($std)) {
+                                                        if 
+                                                        (!empty($std) && is_array($std)) {
                                                             $msg = "Edit data audit dengan acuan Master (sesuai plant):\n";
                                                             $msg .= "\n- Suhu Akhir Emulsi Gel: " . $descRule($std['suhu_akhir_emulsi_gel'] ?? null);
                                                             $msg .= "\n- Suhu Akhir Mixing: " . $descRule($std['suhu_akhir_mixing'] ?? null);
@@ -682,16 +679,8 @@
                                                         }
                                                     @endphp
 
-                                                    <form action="{{ route('mincing.duplicateToAudit', $dep->uuid) }}" method="POST" class="d-inline">
-                                                        @csrf
-                                                        <button type="submit" class="btn btn-dark btn-sm"
-                                                            title="Belum ada data audit"
-                                                            onclick="return confirm({{ \Illuminate\Support\Js::from($msg) }})">
-                                                            <i class="bi bi-files"></i> Edit Data Audit Manual
-                                                        </button>
-                                                    </form>
-
-                                                    <button type="button" class="btn btn-warning btn-sm"
+                                                    <button type="button"
+                                                        class="btn btn-warning btn-sm text-dark"
                                                         title="{{ $bulkReady ? 'Duplikasi & auto correct entry ini saja' : 'Nonaktif: ' . $bulkWhy }}"
                                                         data-url="{{ route('mincing.duplicateToAudit', $dep->uuid) }}"
                                                         onclick="magicDuplicate(this, {{ \Illuminate\Support\Js::from($msg) }})"
@@ -699,8 +688,6 @@
                                                         <i class="bi bi-magic"></i> Edit Data Audit Otomatis
                                                     </button>
                                                 @endif
-
-                                                {{-- Aksi lain menyusul di sini --}}
                                             </div>
                                         </td>
                                     @endif
@@ -726,7 +713,8 @@
     @if ($showAksi)
         <script>
             async function magicDuplicate(btn, msg) {
-                if (!confirm(msg)) return;
+                // no confirm
+                // if (!confirm(msg)) return;
 
                 const original = btn.innerHTML;
                 btn.disabled = true;
