@@ -455,55 +455,55 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         )->name('verify.spv');
     });
 
-Route::get(
-    'pemeriksaan-kekuatan-magnet-trap/recycle-bin',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'recyclebin']
-)->name('pemeriksaan-kekuatan-magnet-trap.recyclebin');
+    Route::get(
+        'pemeriksaan-kekuatan-magnet-trap/recycle-bin',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'recyclebin']
+    )->name('pemeriksaan-kekuatan-magnet-trap.recyclebin');
 
-Route::post(
-    'pemeriksaan-kekuatan-magnet-trap/recycle-bin/{uuid}/restore',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'restore']
-)->name('pemeriksaan-kekuatan-magnet-trap.restore');
+    Route::post(
+        'pemeriksaan-kekuatan-magnet-trap/recycle-bin/{uuid}/restore',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'restore']
+    )->name('pemeriksaan-kekuatan-magnet-trap.restore');
 
-Route::delete(
-    'pemeriksaan-kekuatan-magnet-trap/recycle-bin/{uuid}/force-delete',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'deletePermanent']
-)->name('pemeriksaan-kekuatan-magnet-trap.deletePermanent');
+    Route::delete(
+        'pemeriksaan-kekuatan-magnet-trap/recycle-bin/{uuid}/force-delete',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'deletePermanent']
+    )->name('pemeriksaan-kekuatan-magnet-trap.deletePermanent');
 
-Route::get(
-    '/pemeriksaan-kekuatan-magnet-trap/audit-data',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'auditIndex']
-)->name('pemeriksaan-kekuatan-magnet-trap.audit');
+    Route::get(
+        '/pemeriksaan-kekuatan-magnet-trap/audit-data',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'auditIndex']
+    )->name('pemeriksaan-kekuatan-magnet-trap.audit');
 
-Route::post(
-    '/pemeriksaan-kekuatan-magnet-trap/audit-bulk/preview',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'auditBulkPreview']
-)->name('pemeriksaan-kekuatan-magnet-trap.auditBulk.preview');
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/audit-bulk/preview',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'auditBulkPreview']
+    )->name('pemeriksaan-kekuatan-magnet-trap.auditBulk.preview');
 
-Route::post(
-    '/pemeriksaan-kekuatan-magnet-trap/audit-bulk/execute',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'auditBulkExecute']
-)->name('pemeriksaan-kekuatan-magnet-trap.auditBulk.execute');
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/audit-bulk/execute',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'auditBulkExecute']
+    )->name('pemeriksaan-kekuatan-magnet-trap.auditBulk.execute');
 
-Route::post(
-    '/pemeriksaan-kekuatan-magnet-trap/{uuid}/duplicate-to-audit-auto',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'duplicateToAuditAuto']
-)->name('pemeriksaan-kekuatan-magnet-trap.duplicateToAuditAuto');
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/{uuid}/duplicate-to-audit-auto',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'duplicateToAuditAuto']
+    )->name('pemeriksaan-kekuatan-magnet-trap.duplicateToAuditAuto');
 
-Route::post(
-    '/pemeriksaan-kekuatan-magnet-trap/{uuid}/duplicate-to-audit',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'duplicateToAudit']
-)->name('pemeriksaan-kekuatan-magnet-trap.duplicateToAudit');
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/{uuid}/duplicate-to-audit',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'duplicateToAudit']
+    )->name('pemeriksaan-kekuatan-magnet-trap.duplicateToAudit');
 
-Route::resource(
-    'pemeriksaan-kekuatan-magnet-trap',
-    PemeriksaanKekuatanMagnetTrapController::class
-)->names('pemeriksaan-kekuatan-magnet-trap');
+    Route::resource(
+        'pemeriksaan-kekuatan-magnet-trap',
+        PemeriksaanKekuatanMagnetTrapController::class
+    )->names('pemeriksaan-kekuatan-magnet-trap');
 
-Route::get(
-    'checkingpowermagnettrap/export-pdf',
-    [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf']
-)->name('checkingpowermagnettrap.exportPdf');
+    Route::get(
+        'checkingpowermagnettrap/export-pdf',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf']
+    )->name('checkingpowermagnettrap.exportPdf');
 
 
     Route::get('checkingpowermagnettrap/export-pdf', [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf'])->name('checkingpowermagnettrap.exportPdf');    
