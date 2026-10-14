@@ -57,9 +57,12 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
             });
         }
 
-        $pemeriksaanKekuatanMagnetTraps = $query->latest()
-            ->paginate(15)
-            ->withQueryString();
+        $pemeriksaanKekuatanMagnetTraps = $query
+            ->orderByDesc('tanggal')
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->appends($request->all());
+
 
         return view(
             'pemeriksaan-kekuatan-magnet-trap.index',

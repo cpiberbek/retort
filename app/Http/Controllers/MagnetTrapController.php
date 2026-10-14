@@ -58,7 +58,11 @@ class MagnetTrapController extends Controller
             });
         }
 
-        $data = $query->latest()->paginate(10)->withQueryString();
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('pukul', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('magnet_trap.IndexMagnetTrap', compact('data'));
     }
