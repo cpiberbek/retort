@@ -39,27 +39,6 @@
         {{-- HEADER --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
             <h2 class="h4"> Pengecekan Pemasakan</h2>
-            <div class="btn-group">
-                @can('can access add button')
-                    <a href="{{ route('pemasakan.create') }}" class="btn btn-success">
-                        <i class="bi bi-plus-circle"></i> Tambah
-                    </a>
-                @endcan
-                @can('can access export')
-                    <button type="button" class="btn btn-danger" id="exportPdfBtn">
-                        <i class="bi bi-file-earmark-pdf"></i> Export PDF
-                    </button>
-                    <button type="button" class="btn btn-success" id="exportExcelBtn">
-                        <i class="bi bi-file-earmark-excel"></i> Export Excel
-                    </button>
-                    {{-- start from here --}}
-                @endcan
-                @can('can access recycle')
-                    <a href="{{ route('pemasakan.recyclebin') }}" class="btn btn-secondary">
-                        <i class="bi bi-trash"></i> Recycle Bin
-                    </a>
-                @endcan
-            </div>
         </div>
 
         @unless(auth()->user()->hasRole('auditor'))

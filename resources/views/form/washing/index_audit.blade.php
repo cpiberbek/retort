@@ -23,24 +23,6 @@
         {{-- HEADER: Menggunakan Versi Anda (Ada Export PDF) --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
             <h2 class="h4"> Pemeriksaan Washing - Drying</h2>
-            <div class="btn-group">
-                @can('can access add button')
-                    <a href="{{ route('washing.create') }}" class="btn btn-success">
-                        <i class="bi bi-plus-circle"></i> Tambah
-                    </a>
-                @endcan
-                @can('can access export')
-                    {{-- Tombol Export PDF --}}
-                    <button type="button" class="btn btn-danger" id="exportPdfBtn">
-                        <i class="bi bi-file-earmark-pdf"></i> Export PDF
-                    </button>
-                @endcan
-                @can('can access recycle')
-                    <a href="{{ route('washing.recyclebin') }}" class="btn btn-secondary">
-                        <i class="bi bi-trash"></i> Recycle Bin
-                    </a>
-                @endcan
-            </div>
         </div>
 
         <div class="modal fade" id="warningModal" tabindex="-1">
