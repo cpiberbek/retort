@@ -393,7 +393,7 @@
                                 @endif
                             </td>
                             <td class="text-center align-middle">
-                                @unless(auth()->user()->hasRole('auditor'))
+                                {{-- @unless(auth()->user()->hasRole('auditor'))
                                     <form
                                         action="{{ route('stuffing.duplicateToAudit', $dep->uuid) }}"
                                         method="POST"
@@ -409,7 +409,7 @@
                                             <i class="bi bi-files me-1"></i> Edit Data Audit
                                         </button>
                                     </form>
-                                @endunless
+                                @endunless --}}
                                 @can('can access verification button')
                                 <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mb-1"
                                 data-bs-toggle="modal" data-bs-target="#verifyModal{{ $dep->uuid }}">

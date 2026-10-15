@@ -96,7 +96,7 @@ class List_formController extends Controller
                         && $standarRef['premix']['sensori_premix'] === '') {
                         $standarRef['premix']['sensori_premix'] = null;
                     }
-                    break;
+                break;
 
                 case 'Pemeriksaan Metal Detector':
                     $metalRef = [];
@@ -109,7 +109,7 @@ class List_formController extends Controller
                     }
 
                     $standarRef = $metalRef ?: null;
-                    break;
+                break;
 
                 case 'Checklist Cleaning Magnet Trap':
                     $magnetRef = [];
@@ -120,7 +120,7 @@ class List_formController extends Controller
                     }
 
                     $standarRef = $magnetRef ?: null;
-                    break;
+                break;
 
                 case 'Pemeriksaan Kekuatan Magnet Trap':
                     $magnetRef = [];
@@ -146,7 +146,44 @@ class List_formController extends Controller
                     ) ? (int) $parameterSesuai : null;
 
                     $standarRef = $magnetRef;
-                    break;
+                break;
+               
+                case 'Pemeriksaan Stuffing Sosis Retort':
+                    $stuffingRef = [];
+
+                    $rangeFields = [
+                        'suhu',
+                        'kecepatan_stuffing',
+                        'panjang_pcs',
+                        'berat_pcs',
+                        'diameter_klip',
+                        'lebar_cassing',
+                    ];
+
+                    foreach ($rangeFields as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $stuffingRef[$field] = [
+                            'min' => $min !== '' ? $min : null,
+                            'max' => $max !== '' ? $max : null,
+                        ];
+                    }
+
+                    foreach (['sensori', 'kebersihan_seal', 'kekuatan_seal', 'print_kode'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $stuffingRef[$field] = in_array($value, ['OK', 'Tidak OK'], true)
+                            ? $value
+                            : null;
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $stuffingRef['catatan'] = $catatan !== '' ? $catatan : null;
+
+                    $standarRef = $stuffingRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

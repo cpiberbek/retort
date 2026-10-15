@@ -400,7 +400,114 @@
                                     </div>
                                 </div>
                             @break
-                        
+
+                            @case('Pemeriksaan Stuffing Sosis Retort')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $stuffingFields = [
+                                        ['suhu', 'Suhu (°C)', 'range'],
+                                        ['sensori', 'Sensori', 'select'],
+                                        ['kecepatan_stuffing', 'Kecepatan Stuffing (/mnt)', 'range'],
+                                        ['panjang_pcs', 'Panjang per PCS (cm)', 'range'],
+                                        ['berat_pcs', 'Berat per PCS (gr)', 'range'],
+                                        ['diameter_klip', 'Diameter Klip (mm)', 'range'],
+                                        ['lebar_cassing', 'Lebar Cassing (mm)', 'range'],
+                                        ['kebersihan_seal', 'Kebersihan Ujung Seal', 'select'],
+                                        ['kekuatan_seal', 'Kekuatan Seal', 'select'],
+                                        ['print_kode', 'Print Kode Production', 'select'],
+                                        ['catatan', 'Catatan', 'text'],
+                                    ];
+
+                                    $stuffingOptions = ['OK', 'Tidak OK'];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Standar diterapkan ke semua mesin.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($stuffingFields as [$key, $label, $type])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'range')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @elseif ($type === 'text')
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan apabila tidak ingin diubah untuk semua mesin"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @else
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    @foreach ($stuffingOptions as $option)
+                                                                        <option
+                                                                            value="{{ $option }}"
+                                                                            {{ $current === $option ? 'selected' : '' }}
+                                                                        >
+                                                                            {{ $option }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break                
+
                         @endswitch
 
                         <div class="d-flex justify-content-between">

@@ -632,7 +632,9 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     // audit-stuffing
     Route::get('/stuffing/audit-data', [StuffingController::class, 'auditIndex'])->name('stuffing.audit');
     Route::post('/stuffing/{uuid}/duplicate-to-audit', [StuffingController::class, 'duplicateToAudit'])->name('stuffing.duplicateToAudit');
-    
+    Route::post('/stuffing/audit-bulk/preview', [StuffingController::class, 'auditBulkPreview'])->name('stuffing.auditBulk.preview');
+    Route::post('/stuffing/audit-bulk/execute', [StuffingController::class, 'auditBulkExecute'])->name('stuffing.auditBulk.execute');
+
     Route::get('/stuffing/create', [StuffingController::class, 'create'])->name('stuffing.create');
     Route::post('/stuffing', [StuffingController::class, 'store'])->name('stuffing.store');
     Route::get('/stuffing/update/{uuid}', [StuffingController::class, 'update'])->name('stuffing.update.form');
