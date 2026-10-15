@@ -927,6 +927,9 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     // washing-audit
     Route::get('/washing/audit-data', [WashingController::class, 'auditIndex'])->name('washing.audit');
     Route::post('/washing/{uuid}/duplicate-to-audit', [WashingController::class, 'duplicateToAudit'])->name('washing.duplicateToAudit');
+    Route::post('/washing/audit-bulk/preview', [WashingController::class, 'auditBulkPreview'])->name('washing.auditBulk.preview');
+    Route::post('/washing/audit-bulk/execute', [WashingController::class, 'auditBulkExecute'])
+    ->name('washing.auditBulk.execute');
     Route::get('/washing/create', [WashingController::class, 'create'])->name('washing.create');
     Route::post('/washing', [WashingController::class, 'store'])->name('washing.store');
     Route::get('/washing/update/{uuid}', [WashingController::class, 'update'])->name('washing.update.form');

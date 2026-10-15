@@ -433,8 +433,7 @@
 
                                     <div class="card-body">
                                         <p class="text-muted mb-3" style="font-size: 0.85rem;">
-                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
-                                            Standar diterapkan ke semua mesin.
+                                            Kosongkan standar jika field tidak ingin diseragamkan
                                         </p>
 
                                         <table class="table table-bordered table-sm mb-0">
@@ -507,6 +506,129 @@
                                     </div>
                                 </div>
                             @break                
+
+                            @case('Pemeriksaan Washing - Drying')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $washingFields = [
+                                        ['panjang_produk', 'Panjang Produk (cm)', 'range'],
+                                        ['diameter_produk', 'Diameter Produk (mm)', 'range'],
+                                        ['airtrap', 'Air Trap', 'ada'],
+                                        ['lengket', 'Lengket', 'ada'],
+                                        ['sisa_adonan', 'Sisa Adonan', 'ada'],
+                                        ['kebocoran', 'Kebocoran', 'ada'],
+                                        ['kekuatan_seal', 'Kekuatan Seal', 'ok'],
+                                        ['print_kode', 'Print Kode', 'ok'],
+                                        ['konsentrasi_pckleer', 'Konsentrasi Pckleer', 'range'],
+                                        ['suhu_pckleer_1', 'Suhu Pckleer 1 (°C)', 'range'],
+                                        ['suhu_pckleer_2', 'Suhu Pckleer 2 (°C)', 'range'],
+                                        ['ph_pckleer', 'pH Pckleer', 'range'],
+                                        ['kondisi_air_pckleer', 'Kondisi Air Pckleer', 'ok'],
+                                        ['konsentrasi_pottasium', 'Konsentrasi Pottasium', 'range'],
+                                        ['suhu_pottasium', 'Suhu Pottasium (°C)', 'range'],
+                                        ['ph_pottasium', 'pH Pottasium', 'range'],
+                                        ['kondisi_pottasium', 'Kondisi Pottasium', 'ok'],
+                                        ['suhu_heater', 'Suhu Heater (°C)', 'range'],
+                                        ['speed_1', 'Speed 1', 'range'],
+                                        ['speed_2', 'Speed 2', 'range'],
+                                        ['speed_3', 'Speed 3', 'range'],
+                                        ['speed_4', 'Speed 4', 'range'],
+                                        ['catatan', 'Catatan', 'text'],
+                                    ];
+
+                                    $washingOptions = [
+                                        'ada' => ['Ada', 'Tidak Ada'],
+                                        'ok' => ['OK', 'Tidak OK'],
+                                    ];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field numerik menggunakan rentang min–max, sedangkan field pilihan menggunakan nilai yang ditentukan.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($washingFields as [$key, $label, $type])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'text')
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan standar jika field tidak ingin diseragamkan"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @elseif ($type === 'range')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @else
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+
+                                                                    @foreach ($washingOptions[$type] as $option)
+                                                                        <option
+                                                                            value="{{ $option }}"
+                                                                            {{ $current === $option ? 'selected' : '' }}
+                                                                        >
+                                                                            {{ $option }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
 
                         @endswitch
 

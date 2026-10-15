@@ -183,6 +183,70 @@ class List_formController extends Controller
 
                     $standarRef = $stuffingRef;
                 break;
+     
+                case 'Pemeriksaan Washing - Drying':
+                    $washingRef = [];
+
+                    $rangeFields = [
+                        'panjang_produk',
+                        'diameter_produk',
+                        'konsentrasi_pckleer',
+                        'suhu_pckleer_1',
+                        'suhu_pckleer_2',
+                        'ph_pckleer',
+                        'konsentrasi_pottasium',
+                        'suhu_pottasium',
+                        'ph_pottasium',
+                        'suhu_heater',
+                        'speed_1',
+                        'speed_2',
+                        'speed_3',
+                        'speed_4',
+                    ];
+
+                    foreach ($rangeFields as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $washingRef[$field] = [
+                            'min' => $min !== '' ? $min : null,
+                            'max' => $max !== '' ? $max : null,
+                        ];
+                    }
+
+                    foreach ([
+                        'airtrap',
+                        'lengket',
+                        'sisa_adonan',
+                        'kebocoran',
+                    ] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $washingRef[$field] = in_array($value, ['Ada', 'Tidak Ada'], true)
+                            ? $value
+                            : null;
+                    }
+
+                    foreach ([
+                        'kekuatan_seal',
+                        'print_kode',
+                        'kondisi_air_pckleer',
+                        'kondisi_pottasium',
+                    ] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $washingRef[$field] = in_array($value, ['OK', 'Tidak OK'], true)
+                            ? $value
+                            : null;
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $washingRef['catatan'] = is_string($catatan) && trim($catatan) !== ''
+                        ? trim($catatan)
+                        : null;
+
+                    $standarRef = $washingRef;
+                break;
 
             }
 

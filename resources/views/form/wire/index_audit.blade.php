@@ -413,7 +413,7 @@
                                                         title="Data Audit Sudah Tersedia : Duplikasi entry ini saja"
                                                     @endif
                                                     onclick="return confirm('Edit data ini sebagai data Audit?')">
-                                                    <i class="bi bi-pencil-square"></i>
+                                                    <i class="bi bi-pencil"></i>
                                                     Edit Data Audit
                                                 </button>
                                             </form>

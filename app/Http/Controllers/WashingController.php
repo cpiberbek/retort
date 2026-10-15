@@ -7,14 +7,18 @@ use App\Models\Produk;
 use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use TCPDF;
 
 class WashingController extends Controller
 {
 
+    private const LAPORAN_WASHING = 'Pemeriksaan Washing - Drying';
+
     public function index(Request $request)
     {
-        if (auth()->user()->isAuditView()) {
+        if (Auth::user()->isAuditView()) {
             return redirect()->route('washing.audit');
         }
 
@@ -24,7 +28,7 @@ class WashingController extends Controller
         $kode_batch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
-        $data = Washing::with(['mincing', 'auditVersion']) 
+        $data = Washing::with(['mincing', 'auditVersion'])
             ->where('plant', $userPlant)
             ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
@@ -52,21 +56,28 @@ class WashingController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
-        return view('form.washing.index', compact('data', 'search', 'date', 'shift', 'kode_batch'));
+        return view('form.washing.index', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kode_batch'
+        ));
     }
 
     public function auditIndex(Request $request)
     {
-        if (!auth()->user()->isAuditView()) {
+        if (!Auth::user()->isAuditView()) {
             return redirect()->route('washing.index');
         }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
         $kode_batch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
-        $data = Washing::with('mincing')
+        $data = Washing::with(['mincing', 'auditVersion'])
             ->where('plant', $userPlant)
             ->where(function ($query) {
                 $query->where('is_audit', true)
@@ -95,39 +106,215 @@ class WashingController extends Controller
                     $q->where('kode_produksi', 'like', "%{$kode_batch}%");
                 });
             })
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw('COALESCE((SELECT original.date FROM washings AS original WHERE original.uuid = washings.source_uuid LIMIT 1), washings.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM washings AS original WHERE original.uuid = washings.source_uuid LIMIT 1), washings.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM washings AS original WHERE original.uuid = washings.source_uuid LIMIT 1), washings.created_at) DESC')
             ->paginate(10)
             ->appends($request->all());
 
-        return view(
-            'form.washing.index_audit',
-            compact(
-                'data',
-                'search',
-                'date',
-                'shift',
-                'kode_batch'
-            )
-        );
+        return view('form.washing.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kode_batch'
+        ));
     }
 
-    public function duplicateToAudit($uuid)
+    public function duplicateToAudit(string $uuid)
     {
         $washing = Washing::where('uuid', $uuid)
             ->where('is_audit', false)
             ->firstOrFail();
 
-        $audit = $washing->auditVersion;
-
-        if (!$audit) {
-            $audit = $washing->copyToAudit();
+        if ($existing = $washing->auditVersion) {
+            return redirect()->route('washing.edit.form', $existing->uuid);
         }
 
-        return redirect()->route(
-            'washing.edit.form',
-            $audit->uuid
+        $clone = $this->createCorrectedAudit($washing);
+
+        return redirect()->route('washing.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Washing $washing): Washing
+    {
+        return DB::transaction(function () use ($washing) {
+            $clone = $washing->copyToAudit();
+
+            $this->autoCorrectFromMaster(
+                $clone,
+                self::LAPORAN_WASHING
+            );
+
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end = Carbon::parse($request->end_date)->startOfDay();
+
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_WASHING)
+            ->first();
+
+        abort_if(
+            empty($master?->standar_ref),
+            422,
+            'Master auto correct belum diterapkan untuk plant ini.'
         );
+
+        $base = Washing::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString());
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total' => $total,
+            'sudah_ada' => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
+            return redirect()->route('washing.index')
+                ->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed = 0;
+
+        foreach ($targets as $washing) {
+            try {
+                $this->createCorrectedAudit($washing);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('washing.index')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+
+        if ($failed) {
+            $msg .= " {$failed} gagal diproses (cek log).";
+        }
+
+        return redirect()
+            ->route('washing.index')
+            ->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster($model, string $laporan): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', $laporan)
+            ->first();
+
+        $std = $master?->standar_ref;
+
+        if (!is_array($std) || empty($std)) {
+            return;
+        }
+
+        foreach ($std as $col => $rule) {
+            if (!is_string($col) || !array_key_exists($col, $model->getAttributes())) {
+                continue;
+            }
+
+            [$apply, $value] = $this->acResolve($rule);
+
+            if ($apply) {
+                $model->$col = $value;
+            }
+        }
+
+        $model->save();
+    }
+
+    private function acResolve($rule): array
+    {
+        if ($this->acIsRange($rule)) {
+            $value = $this->acRandomize($rule);
+
+            return [$value !== null, $value];
+        }
+
+        if (
+            is_array($rule)
+            || $rule === null
+            || (is_string($rule) && trim($rule) === '')
+        ) {
+            return [false, null];
+        }
+
+        return [true, $rule];
+    }
+
+    private function acIsRange($rule): bool
+    {
+        return is_array($rule)
+            && (
+                array_key_exists('min', $rule)
+                || array_key_exists('max', $rule)
+            );
+    }
+
+    private function acRandomize(array $range): ?float
+    {
+        if (
+            !isset($range['min'], $range['max'])
+            || $range['min'] === ''
+            || $range['max'] === ''
+        ) {
+            return null;
+        }
+
+        $min = (int) round((float) $range['min'] * 100);
+        $max = (int) round((float) $range['max'] * 100);
+
+        if ($min > $max) {
+            return null;
+        }
+
+        return round(mt_rand($min, $max) / 100, 2);
     }
 
     public function exportPdf(Request $request)
