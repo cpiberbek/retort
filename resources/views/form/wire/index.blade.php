@@ -288,30 +288,11 @@
                                             <span class="fw-bold text-secondary">Created</span>
                                         @endif
                                     </td>
-                                    <td class="text-center">
-                                        @unless(auth()->user()->hasRole('auditor'))
-                                            <form
-                                                action="{{ route('wire.duplicateToAudit', $dep->uuid) }}"
-                                                method="POST"
-                                                class="d-inline"
-                                            >
-                                                @csrf
-
-                                                <button
-                                                    type="submit"
-                                                    class="btn {{ $dep->auditVersion ? 'btn-success' : 'btn-dark' }} btn-sm me-1 mb-1"
-                                                    title="{{ $dep->auditVersion ? 'Sudah ada data audit' : 'Belum ada data audit' }}"
-                                                    onclick="return confirm('Buka data ini untuk Audit?')"
-                                                >
-                                                    <i class="bi bi-files"></i>
-                                                    Edit Data Audit
-                                                </button>
-                                            </form>
-                                        @endunless
+                                    <td class="text-center"> 
                                         @can('can access verification button')
                                             <button class="btn btn-primary btn-sm mb-1" data-bs-toggle="modal"
                                                 data-bs-target="#verifyModal{{ $dep->uuid }}"><i
-                                                    class="bi bi-shield-check"></i> Verif</button>
+                                                    class="bi bi-shield-check"></i> Verifikasi</button>
                                         @endcan
                                         @can('can access edit button')
                                             <a href="{{ route('wire.edit.form', $dep->uuid) }}"

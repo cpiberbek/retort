@@ -135,9 +135,9 @@ class PvdcController extends Controller
             ->when($namaProduk, function ($query) use ($namaProduk) {
                 $query->where('nama_produk', $namaProduk);
             })
-
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw('COALESCE((SELECT original.date FROM pvdcs AS original WHERE original.uuid = pvdcs.source_uuid LIMIT 1), pvdcs.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM pvdcs AS original WHERE original.uuid = pvdcs.source_uuid LIMIT 1), pvdcs.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM pvdcs AS original WHERE original.uuid = pvdcs.source_uuid LIMIT 1), pvdcs.created_at) DESC')
             ->paginate(10)
             ->appends($request->all());
 

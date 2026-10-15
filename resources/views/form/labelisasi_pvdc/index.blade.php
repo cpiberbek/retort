@@ -235,26 +235,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
                                 {{-- Action & Verification --}}
                                 <td class="text-center">
-                                    {{-- Edit Data Audit --}}
-                                    @unless(auth()->user()->hasRole('auditor'))
-                                        <form
-                                            action="{{ route('labelisasi_pvdc.duplicateToAudit', $dep->uuid) }}"
-                                            method="POST"
-                                            class="d-inline"
-                                        >
-                                            @csrf
-
-                                            <button
-                                                type="submit"
-                                                class="btn {{ $dep->auditVersion ? 'btn-success' : 'btn-dark' }} btn-sm me-1 mb-1"
-                                                title="{{ $dep->auditVersion ? 'Sudah ada data audit' : 'Belum ada data audit' }}"
-                                                onclick="return confirm('Buka data ini untuk Audit?')"
-                                            >
-                                                <i class="bi bi-files"></i>
-                                                Edit Data Audit
-                                            </button>
-                                        </form>
-                                    @endunless
                                     @can('can access verification button')
                                         <button
                                             class="btn btn-primary btn-sm fw-bold shadow-sm mb-1"

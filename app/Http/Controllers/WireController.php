@@ -87,8 +87,9 @@ class WireController extends Controller
             ->when($shift, function ($query) use ($shift) {
                 $query->where('shift', $shift);
             })
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw('COALESCE((SELECT original.date FROM wires AS original WHERE original.uuid = wires.source_uuid LIMIT 1), wires.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM wires AS original WHERE original.uuid = wires.source_uuid LIMIT 1), wires.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM wires AS original WHERE original.uuid = wires.source_uuid LIMIT 1), wires.created_at) DESC')
             ->paginate(10)
             ->appends($request->all());
 
