@@ -72,7 +72,7 @@
         @endif
 
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h4>Data Audit Metal Detector</h4>
+            <h4>Data Metal Detector</h4>
         </div>
 
         @unless($isAuditor)

@@ -73,7 +73,7 @@
 
         {{-- HEADER --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h4>Data Audit Verifikasi Timer Chamber</h4>
+            <h4>Data Verifikasi Timer Chamber</h4>
         </div>
 
         {{-- MODE AUDIT --}}

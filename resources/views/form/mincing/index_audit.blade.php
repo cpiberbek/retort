@@ -77,7 +77,7 @@
 
         {{-- ===================== HEADER ===================== --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h4>Data Audit Pemeriksaan Mincing - Emulsifying - Aging</h4>
+            <h4>Data Pemeriksaan Mincing - Emulsifying - Aging</h4>
         </div>
 
         {{-- ===================== MODE AUDIT (disembunyikan untuk auditor) ===================== --}}

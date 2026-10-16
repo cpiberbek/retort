@@ -25,7 +25,7 @@
 
     {{-- Header --}}
     <div class="d-sm-flex justify-content-between align-items-center mb-4">
-        <h2 class="h4">Data Audit Kontrol Labelisasi PVDC</h2>
+        <h2 class="h4">Data Kontrol Labelisasi PVDC</h2>
     </div>
 
     {{-- ===================== MODE AUDIT ===================== --}}

@@ -85,7 +85,7 @@
         @endif
 
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h4>Data Audit Pemeriksaan Stuffing Sosis Retort</h4>
+            <h4>Data Pemeriksaan Stuffing Sosis Retort</h4>
         </div>
 
         @unless ($isAuditor)

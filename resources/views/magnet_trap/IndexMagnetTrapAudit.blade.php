@@ -90,7 +90,7 @@
         @endif
 
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h2 class="h4">Data Audit Magnet Trap</h2>
+            <h2 class="h4">Data Magnet Trap</h2>
         </div>
 
         @unless ($isAuditor)

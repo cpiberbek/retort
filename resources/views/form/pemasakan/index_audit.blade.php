@@ -81,7 +81,7 @@
 
         {{-- HEADER --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h4>Data Audit Pengecekan Pemasakan</h4>
+            <h4>Data Pengecekan Pemasakan</h4>
         </div>
 
         {{-- MODE AUDIT --}}
