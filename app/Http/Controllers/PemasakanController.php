@@ -16,11 +16,14 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use TCPDF;
 use Carbon\Carbon;
 
 class PemasakanController extends Controller
 {
+
+    private const LAPORAN_PEMASAKAN = 'Pemeriksaan Pemasakan';
 
     public function index(Request $request)
     {
@@ -100,6 +103,7 @@ class PemasakanController extends Controller
         if (!auth()->user()->isAuditView()) {
             return redirect()->route('pemasakan.index');
         }
+
         $search     = $request->input('search');
         $kodeBatch  = $request->input('kode_batch');
         $date       = $request->input('date');
@@ -142,8 +146,9 @@ class PemasakanController extends Controller
             ->when($shift, function ($query) use ($shift) {
                 $query->where('shift', $shift);
             })
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw('COALESCE((SELECT original.date FROM pemasakans AS original WHERE original.uuid = pemasakans.source_uuid LIMIT 1), pemasakans.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM pemasakans AS original WHERE original.uuid = pemasakans.source_uuid LIMIT 1), pemasakans.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM pemasakans AS original WHERE original.uuid = pemasakans.source_uuid LIMIT 1), pemasakans.created_at) DESC')
             ->paginate(10)
             ->appends($request->all());
 
@@ -178,16 +183,306 @@ class PemasakanController extends Controller
             ->where('is_audit', false)
             ->firstOrFail();
 
-        $audit = $pemasakan->auditVersion;
-
-        if (!$audit) {
-            $audit = $pemasakan->copyToAudit();
+        if ($audit = $pemasakan->auditVersion) {
+            return redirect()->route('pemasakan.edit.form', $audit->uuid);
         }
 
-        return redirect()->route(
-            'pemasakan.edit.form',
-            $audit->uuid
+        $audit = $this->createCorrectedAudit($pemasakan);
+
+        return redirect()->route('pemasakan.edit.form', $audit->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Pemasakan $pemasakan): Pemasakan
+    {
+        return DB::transaction(function () use ($pemasakan) {
+            $clone = $pemasakan->copyToAudit();
+
+            $this->autoCorrectFromMaster(
+                $clone,
+                self::LAPORAN_PEMASAKAN
+            );
+
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end = Carbon::parse($request->end_date)->startOfDay();
+
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_PEMASAKAN)
+            ->first();
+
+        abort_if(
+            empty($master?->standar_ref),
+            422,
+            'Master auto correct belum diterapkan untuk plant ini.'
         );
+
+        $base = Pemasakan::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString());
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total' => $total,
+            'sudah_ada' => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
+            return redirect()->route('pemasakan.index')
+                ->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed = 0;
+
+        foreach ($targets as $pemasakan) {
+            try {
+                $this->createCorrectedAudit($pemasakan);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('pemasakan.index')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+
+        if ($failed) {
+            $msg .= " {$failed} gagal diproses (cek log).";
+        }
+
+        return redirect()
+            ->route('pemasakan.index')
+            ->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster($model, string $laporan): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', $laporan)
+            ->first();
+
+        $std = $master?->standar_ref;
+
+        if (!is_array($std) || empty($std)) {
+            return;
+        }
+
+        foreach ($std as $col => $rule) {
+            if (!is_string($col)) {
+                continue;
+            }
+
+            if (in_array($col, ['catatan'], true)) {
+                $this->applyScalarRule($model, $col, $rule);
+                continue;
+            }
+
+            if ($col === 'berat_produk' || $col === 'suhu_produk') {
+                $this->applyScalarRule($model, $col, $rule);
+                continue;
+            }
+
+            if ($col === 'jumlah_tray' || $col === 'total_reject') {
+                $target = $model->$col;
+                $this->applyArrayRule($target, $rule, $col);
+                $model->$col = $target;
+                continue;
+            }
+
+            if ($col === 'cooking') {
+                $cooking = $model->cooking;
+
+                if (is_string($cooking)) {
+                    $cooking = json_decode($cooking, true) ?? [];
+                }
+
+                if (!is_array($cooking)) {
+                    continue;
+                }
+
+                foreach ($rule as $field => $fieldRule) {
+                    if (!array_key_exists($field, $cooking)) {
+                        continue;
+                    }
+
+                    if (is_array($cooking[$field])) {
+                        $cooking[$field] = $this->resolveArrayValues($cooking[$field], $fieldRule, $field);
+                    } else {
+                        [$apply, $value] = $this->acResolve($fieldRule, $field);
+                        if ($apply) {
+                            $cooking[$field] = $value;
+                        }
+                    }
+                }
+
+                $model->cooking = $cooking;
+            }
+        }
+
+        $model->save();
+    }
+
+    private function applyScalarRule($model, string $field, $rule): void
+    {
+        if (!array_key_exists($field, $model->getAttributes())) {
+            return;
+        }
+
+        [$apply, $value] = $this->acResolve($rule, $field);
+
+        if ($apply) {
+            $model->$field = $value;
+        }
+    }
+
+    private function applyArrayRule(&$target, $rule, string $field): void
+    {
+        if (is_string($target)) {
+            $target = json_decode($target, true);
+        }
+
+        if (!is_array($target)) {
+            return;
+        }
+
+        foreach ($target as $index => $item) {
+            [$apply, $value] = $this->acResolve($rule, $field);
+
+            if ($apply) {
+                $target[$index] = $value;
+            }
+        }
+    }
+
+    private function resolveArrayValues(array $values, $rule, string $field): array
+    {
+        foreach ($values as $index => $originalValue) {
+            [$apply, $value] = $this->acResolve($rule, $field);
+
+            if ($apply) {
+                $values[$index] = $value;
+            }
+        }
+
+        return $values;
+    }
+
+    private function acResolve($rule, string $field = ''): array
+    {
+        if (in_array($field, ['rasa', 'warna', 'aroma', 'texture'], true)) {
+            if (
+                !is_numeric($rule) ||
+                (float) $rule != (int) $rule ||
+                (int) $rule < 1 ||
+                (int) $rule > 3
+            ) {
+                return [false, null];
+            }
+
+            return [true, (int) $rule];
+        }
+
+        if ($this->acIsRange($rule)) {
+            return [
+                true,
+                $this->acRandomize(
+                    $rule,
+                    $field === 'jumlah_tray'
+                ),
+            ];
+        }
+
+        if (is_array($rule) || $rule === null || $rule === '') {
+            return [false, null];
+        }
+
+        return [true, $rule];
+    }
+
+    private function acIsRange($rule): bool
+    {
+        return is_array($rule)
+            && (
+                array_key_exists('min', $rule)
+                || array_key_exists('max', $rule)
+            );
+    }
+
+    private function acRandomize(array $range, bool $integer = false): int|float|null
+    {
+        if (
+            !isset($range['min'], $range['max'])
+            || $range['min'] === ''
+            || $range['max'] === ''
+        ) {
+            return null;
+        }
+
+        $minValue = (float) $range['min'];
+        $maxValue = (float) $range['max'];
+
+        if ($minValue > $maxValue) {
+            return null;
+        }
+
+        if ($integer) {
+            $min = (int) ceil($minValue);
+            $max = (int) floor($maxValue);
+
+            if ($min > $max) {
+                return null;
+            }
+
+            return mt_rand($min, $max);
+        }
+
+        $min = (int) round($minValue * 100);
+        $max = (int) round($maxValue * 100);
+
+        return round(mt_rand($min, $max) / 100, 2);
     }
 
     /**

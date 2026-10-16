@@ -248,6 +248,76 @@ class List_formController extends Controller
                     $standarRef = $washingRef;
                 break;
 
+                case 'Pemeriksaan Pemasakan':
+                    $pemasakanRef = [];
+
+                    $rangeFields = [
+                        'berat_produk',
+                        'suhu_produk',
+                        'jumlah_tray',
+                        'cooking.tekanan_angin',
+                        'cooking.tekanan_steam',
+                        'cooking.tekanan_air',
+                        'cooking.suhu_air_awal',
+                        'cooking.tekanan_awal',
+                        'cooking.suhu_air_proses',
+                        'cooking.tekanan_proses',
+                        'cooking.suhu_air_sterilisasi',
+                        'cooking.thermometer_retort',
+                        'cooking.tekanan_sterilisasi',
+                        'cooking.suhu_air_pendinginan_awal',
+                        'cooking.tekanan_pendinginan_awal',
+                        'cooking.suhu_air_pendinginan',
+                        'cooking.tekanan_pendinginan',
+                        'cooking.suhu_air_akhir',
+                        'cooking.tekanan_akhir',
+                        'cooking.suhu_produk_akhir',
+                        'cooking.panjang',
+                        'cooking.diameter',
+                    ];
+
+                    foreach ($rangeFields as $field) {
+                        $value = data_get($standarRef, $field, []);
+                        $min = $value['min'] ?? null;
+                        $max = $value['max'] ?? null;
+
+                        data_set($pemasakanRef, $field, [
+                            'min' => $min !== '' ? $min : null,
+                            'max' => $max !== '' ? $max : null,
+                        ]);
+                    }
+
+                    foreach ([
+                        'total_reject',
+                        'cooking.texture',
+                        'cooking.sobek_seal',
+                    ] as $field) {
+                        $value = data_get($standarRef, $field);
+                        data_set($pemasakanRef, $field, $value !== '' ? $value : null);
+                    }
+
+                    foreach ([
+                        'cooking.rasa',
+                        'cooking.warna',
+                        'cooking.aroma',
+                    ] as $field) {
+                        $value = data_get($standarRef, $field);
+
+                        data_set(
+                            $pemasakanRef,
+                            $field,
+                            in_array((string) $value, ['1', '2', '3'], true) ? (int) $value : null
+                        );
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $pemasakanRef['catatan'] = is_string($catatan) && trim($catatan) !== ''
+                        ? trim($catatan)
+                        : null;
+
+                    $standarRef = $pemasakanRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

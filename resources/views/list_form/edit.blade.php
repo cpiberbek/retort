@@ -555,7 +555,7 @@
                                     <div class="card-body">
                                         <p class="text-muted mb-3" style="font-size: 0.85rem;">
                                             Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
-                                            Field numerik menggunakan rentang min–max, sedangkan field pilihan menggunakan nilai yang ditentukan.
+                                            Field numerik menggunakan rentang min–max, hasil yang diharapkan akan diacak sesuai rentang sedangkan field pilihan menggunakan nilai yang ditentukan.
                                         </p>
 
                                         <table class="table table-bordered table-sm mb-0">
@@ -629,6 +629,153 @@
                                     </div>
                                 </div>
                             @break
+                            
+                            
+                            @case('Pemeriksaan Pemasakan')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $pemasakanFields = [
+                                        ['berat_produk', 'Berat Produk', 'range'],
+                                        ['suhu_produk', 'Suhu Produk (°C)', 'range'],
+                                        ['jumlah_tray', 'Jumlah Tray', 'range_integer'],
+                                        ['total_reject', 'Total Reject', 'number_integer'],
+
+                                        ['cooking.tekanan_angin', 'Tekanan Angin', 'range'],
+                                        ['cooking.tekanan_steam', 'Tekanan Steam', 'range'],
+                                        ['cooking.tekanan_air', 'Tekanan Air', 'range'],
+                                        ['cooking.suhu_air_awal', 'Suhu Air Awal (°C)', 'range'],
+                                        ['cooking.tekanan_awal', 'Tekanan Awal', 'range'],
+                                        ['cooking.suhu_air_proses', 'Suhu Air Proses (°C)', 'range'],
+                                        ['cooking.tekanan_proses', 'Tekanan Proses', 'range'],
+                                        ['cooking.suhu_air_sterilisasi', 'Suhu Air Sterilisasi (°C)', 'range_array'],
+                                        ['cooking.thermometer_retort', 'Thermometer Retort (°C)', 'range_array'],
+                                        ['cooking.tekanan_sterilisasi', 'Tekanan Sterilisasi', 'range_array'],
+                                        ['cooking.suhu_air_pendinginan_awal', 'Suhu Air Pendinginan Awal (°C)', 'range'],
+                                        ['cooking.tekanan_pendinginan_awal', 'Tekanan Pendinginan Awal', 'range'],
+                                        ['cooking.suhu_air_pendinginan', 'Suhu Air Pendinginan (°C)', 'range'],
+                                        ['cooking.tekanan_pendinginan', 'Tekanan Pendinginan', 'range'],
+                                        ['cooking.suhu_air_akhir', 'Suhu Air Akhir (°C)', 'range'],
+                                        ['cooking.tekanan_akhir', 'Tekanan Akhir', 'range'],
+                                        ['cooking.suhu_produk_akhir', 'Suhu Produk Akhir (°C)', 'range'],
+                                        ['cooking.panjang', 'Panjang Produk', 'range'],
+                                        ['cooking.diameter', 'Diameter Produk', 'range'],
+                                        ['cooking.rasa', 'Rasa', 'rating'],
+                                        ['cooking.warna', 'Warna', 'rating'],
+                                        ['cooking.aroma', 'Aroma', 'rating'],
+                                        ['cooking.texture', 'Texture', 'rating'],
+                                        ['cooking.sobek_seal', 'Sobek Seal', 'number_integer'],
+
+                                        ['catatan', 'Catatan', 'text'],
+                                    ];
+
+                                    $pemasakanOptions = [];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan jika tidak ingin mengubah nilai saat audit. Untuk rentang, isi nilai minimum dan maksimum yang nantinya akan diacak tapi sesuai rentang. Untuk field yang kemungkinan memiliki banyak item seperti Jumlah Tray / Total Reject, standar akan diterapkan ke setiap item tanpa mengubah jumlahnya.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($pemasakanFields as [$key, $label, $type])
+                                                    @php
+                                                        $nameKey = 'standar_ref[' . str_replace('.', '][', $key) . ']';
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if (in_array($type, ['range', 'range_array', 'range_integer']))
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="{{ $type === 'range_integer' ? '1' : 'any' }}"
+                                                                        @if ($type === 'range_integer') min="0" @endif
+                                                                        name="{{ $nameKey }}[min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="{{ $type === 'range_integer' ? '1' : 'any' }}"
+                                                                        @if ($type === 'range_integer') min="0" @endif
+                                                                        name="{{ $nameKey }}[max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @elseif ($type === 'rating')
+                                                                <input
+                                                                    type="number"
+                                                                    min="1"
+                                                                    max="3"
+                                                                    step="1"
+                                                                    name="{{ $nameKey }}"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="1 - 3"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @elseif ($type === 'number_integer')
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    min="0"
+                                                                    name="{{ $nameKey }}"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Nilai tetap (bilangan bulat)"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @elseif ($type === 'number')
+                                                                <input
+                                                                    type="number"
+                                                                    step="any"
+                                                                    name="{{ $nameKey }}"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Nilai tetap"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @else
+                                                                <input
+                                                                    type="text"
+                                                                    name="{{ $nameKey }}"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+
 
                         @endswitch
 

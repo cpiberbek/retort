@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -221,7 +222,7 @@
                                 <th>QC</th>
                                 <th>SPV</th>
                                 @can('can access update button')
-                                <th>Aksi</th>
+                                    <th>Aksi</th>
                                 @endcan
                             </tr>
                         </thead>
@@ -285,11 +286,10 @@
                                             <div class="modal fade" id="cookingModal{{ $dep->uuid }}" tabindex="-1"
                                                 aria-hidden="true">
                                                 <div class="modal-dialog modal-xl modal-dialog-scrollable">
-                                                    <div
-                                                        class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+                                                    <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
                                                         <div class="modal-header bg-primary bg-gradient text-white">
-                                                            <h5 class="modal-title fw-semibold"><i
-                                                                    class="bi bi-fire me-2"></i> Detail Proses Pemasakan
+                                                            <h5 class="modal-title fw-semibold">
+                                                                <i class="bi bi-fire me-2"></i> Detail Proses Pemasakan
                                                             </h5>
                                                             <button type="button" class="btn-close btn-close-white"
                                                                 data-bs-dismiss="modal"></button>
@@ -315,8 +315,7 @@
                                                                         'Waktu Selesai' => 'waktu_selesai_proses',
                                                                     ],
                                                                     '5. Sterilisasi' => [
-                                                                        'Suhu Air Sterilisasi' =>
-                                                                            'suhu_air_sterilisasi',
+                                                                        'Suhu Air Sterilisasi' => 'suhu_air_sterilisasi',
                                                                         'Thermometer Retort' => 'thermometer_retort',
                                                                         'Tekanan Sterilisasi' => 'tekanan_sterilisasi',
                                                                     ],
@@ -331,21 +330,58 @@
                                                                 ];
                                                             @endphp
 
+                                                            <div class="mt-3">
+                                                                <div class="table-responsive shadow-sm rounded">
+                                                                    <table class="table table-bordered table-sm align-middle text-center mb-0 bg-white">
+                                                                        <tbody>
+                                                                            <tr>
+                                                                                <td class="fw-semibold text-start ps-3 w-50">Kode Produksi</td>
+                                                                                <td class="text-start ps-3">
+                                                                                    @if (is_array($dep->kode_produksi))
+                                                                                        @foreach ($dep->kode_produksi as $uuid)
+                                                                                            {{ $stuffingData[$uuid]->kode_produksi ?? 'Tidak ditemukan' }}
+                                                                                            <br>
+                                                                                        @endforeach
+                                                                                    @else
+                                                                                        -
+                                                                                    @endif
+                                                                                </td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="fw-semibold text-start ps-3">Nama Produk</td>
+                                                                                <td class="text-start ps-3">{{ $dep->nama_produk ?? '-' }}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="fw-semibold text-start ps-3">No. Chamber</td>
+                                                                                <td class="text-start ps-3">{{ $dep->no_chamber ?? '-' }}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="fw-semibold text-start ps-3">Berat Produk</td>
+                                                                                <td class="text-start ps-3">{{ $dep->berat_produk ?? '-' }}</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td class="fw-semibold text-start ps-3">Suhu Produk</td>
+                                                                                <td class="text-start ps-3">{{ $dep->suhu_produk ?? '-' }}</td>
+                                                                            </tr>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div><br>
+
                                                             @foreach ($sections as $title => $rows)
                                                                 <div class="mb-3">
-                                                                    <h6 class="fw-bold text-primary">{{ $title }}
-                                                                    </h6>
+                                                                    <h6 class="fw-bold text-primary">{{ $title }}</h6>
                                                                     <div class="table-responsive shadow-sm rounded">
-                                                                        <table
-                                                                            class="table table-bordered table-sm align-middle text-center mb-0 bg-white">
+                                                                        <table class="table table-bordered table-sm align-middle text-center mb-0 bg-white">
                                                                             <tbody>
                                                                                 @foreach ($rows as $label => $key)
                                                                                     <tr>
-                                                                                        <td
-                                                                                            class="fw-semibold text-start ps-3 w-50">
-                                                                                            {{ $label }}</td>
+                                                                                        <td class="fw-semibold text-start ps-3 w-50">
+                                                                                            {{ $label }}
+                                                                                        </td>
                                                                                         <td class="text-start ps-3">
-                                                                                            {!! showValue($cooking[$key] ?? '-') !!}</td>
+                                                                                            {!! showValue($cooking[$key] ?? '-') !!}
+                                                                                        </td>
                                                                                     </tr>
                                                                                 @endforeach
                                                                             </tbody>
@@ -353,6 +389,11 @@
                                                                     </div>
                                                                 </div>
                                                             @endforeach
+
+                                                            <div class="mt-3 p-3 bg-white border rounded text-start">
+                                                                <strong>Catatan:</strong>
+                                                                {{ $cooking['catatan'] ?? '-' }}
+                                                            </div>
                                                         </div>
                                                         <div class="modal-footer">
                                                             <button type="button" class="btn btn-secondary btn-sm"
@@ -380,25 +421,6 @@
                                     </td>
 
                                     <td class="text-center align-middle">
-                                        @unless(auth()->user()->hasRole('auditor'))
-                                            <form
-                                                action="{{ route('pemasakan.duplicateToAudit', $dep->uuid) }}"
-                                                method="POST"
-                                                class="d-inline"
-                                            >
-                                                @csrf
-
-                                                <button
-                                                    type="submit"
-                                                    class="btn {{ $dep->auditVersion ? 'btn-success' : 'btn-dark' }} btn-sm me-1 mb-1"
-                                                    title="{{ $dep->auditVersion ? 'Sudah ada data audit' : 'Belum ada data audit' }}"
-                                                    onclick="return confirm('Buka data ini untuk Audit?')"
-                                                >
-                                                    <i class="bi bi-files"></i>
-                                                    Edit Data Audit
-                                                </button>
-                                            </form>
-                                        @endunless
                                         @can('can access verification button')
                                             <button class="btn btn-primary btn-sm mb-1" data-bs-toggle="modal"
                                                 data-bs-target="#verifyModal{{ $dep->uuid }}"><i
@@ -434,10 +456,8 @@
                                                     @csrf
                                                     @method('PUT')
 
-                                                    <input type="hidden" name="page"
-                                                        value="{{ request('page', 1) }}">
-                                                    <input type="hidden" name="search"
-                                                        value="{{ request('search') }}">
+                                                    <input type="hidden" name="page" value="{{ request('page', 1) }}">
+                                                    <input type="hidden" name="search" value="{{ request('search') }}">
                                                     <input type="hidden" name="date" value="{{ request('date') }}">
                                                     <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden text-white"
                                                         style="background: linear-gradient(145deg, #7a1f12, #9E3419);">

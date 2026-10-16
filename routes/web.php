@@ -895,6 +895,8 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     // audit-pemasakan
     Route::get('/pemasakan/audit-data', [PemasakanController::class, 'auditIndex'])->name('pemasakan.audit');
     Route::post('/pemasakan/{uuid}/duplicate-to-audit', [PemasakanController::class, 'duplicateToAudit'])->name('pemasakan.duplicateToAudit');
+    Route::post('/pemasakan/audit-bulk/preview', [PemasakanController::class, 'auditBulkPreview'])->name('pemasakan.auditBulk.preview');
+    Route::post('/pemasakan/audit-bulk/execute', [PemasakanController::class, 'auditBulkExecute'])->name('pemasakan.auditBulk.execute');
     Route::get('/pemasakan/create', [PemasakanController::class, 'create'])->name('pemasakan.create');
     Route::post('/pemasakan', [PemasakanController::class, 'store'])->name('pemasakan.store');
     Route::get('/pemasakan/update/{uuid}', [PemasakanController::class, 'update'])->name('pemasakan.update.form');
