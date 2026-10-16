@@ -9,11 +9,14 @@ use App\Models\Mesin;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use App\Models\List_form;
 use TCPDF;
 
 class ChamberController extends Controller
 {
+
+    private const LAPORAN_CHAMBER = 'Verifikasi Timer Chamber';
 
     public function index(Request $request)
     {
@@ -76,9 +79,10 @@ class ChamberController extends Controller
 
     public function auditIndex(Request $request)
     {
-        if (!auth()->user()->isAuditView()) {                   
+        if (!auth()->user()->isAuditView()) {
             return redirect()->route('chamber.index');
         }
+
         $search    = $request->input('search');
         $month     = $request->input('month');
         $date      = $request->input('date');
@@ -120,8 +124,9 @@ class ChamberController extends Controller
             ->when($shift, function ($query) use ($shift) {
                 $query->where('shift', $shift);
             })
-            ->orderBy('date', 'desc')
-            ->orderBy('created_at', 'desc')
+            ->orderByRaw('COALESCE((SELECT original.date FROM chambers AS original WHERE original.uuid = chambers.source_uuid LIMIT 1), chambers.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM chambers AS original WHERE original.uuid = chambers.source_uuid LIMIT 1), chambers.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM chambers AS original WHERE original.uuid = chambers.source_uuid LIMIT 1), chambers.created_at) DESC')
             ->paginate(10)
             ->appends($request->all());
 
@@ -143,16 +148,267 @@ class ChamberController extends Controller
             ->where('is_audit', false)
             ->firstOrFail();
 
-        $audit = $chamber->auditVersion;
-
-        if (!$audit) {
-            $audit = $chamber->copyToAudit();
+        if ($audit = $chamber->auditVersion) {
+            return redirect()->route('chamber.edit.form', $audit->uuid);
         }
 
-        return redirect()->route(
-            'chamber.edit.form',
-            $audit->uuid
+        $audit = $this->createCorrectedAudit($chamber);
+
+        return redirect()->route('chamber.edit.form', $audit->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Chamber $chamber): Chamber
+    {
+        return DB::transaction(function () use ($chamber) {
+            $clone = $chamber->copyToAudit();
+
+            $this->autoCorrectFromMaster(
+                $clone,
+                self::LAPORAN_CHAMBER
+            );
+
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end = Carbon::parse($request->end_date)->startOfDay();
+
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_CHAMBER)
+            ->first();
+
+        abort_if(
+            empty($master?->standar_ref),
+            422,
+            'Master auto correct belum diterapkan untuk plant ini.'
         );
+
+        $base = Chamber::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString());
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total' => $total,
+            'sudah_ada' => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
+            return redirect()->route('chamber.index')
+                ->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed = 0;
+
+        foreach ($targets as $chamber) {
+            try {
+                $this->createCorrectedAudit($chamber);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('chamber.index')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+
+        if ($failed) {
+            $msg .= " {$failed} gagal diproses (cek log).";
+        }
+
+        return redirect()
+            ->route('chamber.index')
+            ->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    
+    private function autoCorrectFromMaster($model, string $laporan): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', $laporan)
+            ->first();
+
+        $std = $master?->standar_ref;
+
+        if (is_string($std)) {
+            $std = json_decode($std, true) ?? [];
+        }
+
+        if (!is_array($std) || empty($std)) {
+            return;
+        }
+
+        $verifikasi = $model->verifikasi;
+
+        if (is_string($verifikasi)) {
+            $verifikasi = json_decode($verifikasi, true) ?? [];
+        }
+
+        if (!is_array($verifikasi)) {
+            return;
+        }
+
+        $durasi = [5, 10, 20, 30, 60];
+
+        $fields = [
+            'plc_menit',
+            'plc_detik',
+            'stopwatch_menit',
+            'stopwatch_detik',
+            'faktor_koreksi',
+        ];
+
+        foreach ($durasi as $menit) {
+            foreach ($fields as $field) {
+                $key = $field . '_' . $menit;
+
+                if (!array_key_exists($key, $std)) {
+                    continue;
+                }
+
+                [$apply, $value] = $this->acResolve($std[$key], $key);
+
+                if (!$apply) {
+                    continue;
+                }
+
+                foreach ($verifikasi as $index => $row) {
+                    if (is_array($row)) {
+                        $verifikasi[$index][$key] = $value;
+                    }
+                }
+            }
+        }
+
+        // Terapkan catatan ke setiap baris verifikasi.
+        $catatan = $std['catatan'] ?? null;
+
+        if ($catatan !== null && $catatan !== '') {
+            foreach ($verifikasi as $index => $row) {
+                if (is_array($row)) {
+                    $verifikasi[$index]['catatan'] = $catatan;
+                }
+            }
+        }
+
+        $model->verifikasi = $verifikasi;
+
+        // Jika tabel chambers juga memiliki kolom catatan,
+        // terapkan nilai master ke kolom tersebut.
+        if (
+            $catatan !== null &&
+            $catatan !== '' &&
+            array_key_exists('catatan', $model->getAttributes())
+        ) {
+            $model->catatan = $catatan;
+        }
+
+        $model->save();
+    }
+
+
+    private function acResolve($rule, string $field = ''): array
+    {
+        if ($this->acIsRange($rule)) {
+            return [
+                true,
+                $this->acRandomize(
+                    $rule,
+                    str_contains($field, 'menit') || str_contains($field, 'detik')
+                ),
+            ];
+        }
+
+        if (is_array($rule) || $rule === null || $rule === '') {
+            return [false, null];
+        }
+
+        return [true, $rule];
+    }
+
+    private function acIsRange($rule): bool
+    {
+        return is_array($rule)
+            && (
+                array_key_exists('min', $rule)
+                || array_key_exists('max', $rule)
+            );
+    }
+
+    private function acRandomize(array $range, bool $integer = false): int|float|null
+    {
+        if (
+            !isset($range['min'], $range['max'])
+            || $range['min'] === ''
+            || $range['max'] === ''
+        ) {
+            return null;
+        }
+
+        $minValue = (float) $range['min'];
+        $maxValue = (float) $range['max'];
+
+        if ($minValue > $maxValue) {
+            return null;
+        }
+
+        if ($integer) {
+            $min = (int) ceil($minValue);
+            $max = (int) floor($maxValue);
+
+            if ($min > $max) {
+                return null;
+            }
+
+            return mt_rand($min, $max);
+        }
+
+        $min = (int) round($minValue * 100);
+        $max = (int) round($maxValue * 100);
+
+        return round(mt_rand($min, $max) / 100, 2);
     }
 
     public function exportPdf(Request $request)
@@ -335,7 +591,11 @@ class ChamberController extends Controller
             ->orderBy('nama_karyawan')
             ->get();
 
-        $chamberData = !empty($chamber->verifikasi) ? json_decode($chamber->verifikasi, true) : [];
+        $chamberData = !empty($chamber->verifikasi)
+            ? (is_string($chamber->verifikasi)
+                ? json_decode($chamber->verifikasi, true)
+                : $chamber->verifikasi)
+            : [];
 
         return view('form.chamber.edit', compact('chamber', 'produks', 'chamberData', 'list_chambers', 'operators'));
     }

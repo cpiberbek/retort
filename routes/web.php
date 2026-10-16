@@ -686,6 +686,8 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     // audit-chamber
     Route::get('/chamber/audit-data', [ChamberController::class, 'auditIndex'])->name('chamber.audit');
     Route::post('/chamber/{uuid}/duplicate-to-audit', [ChamberController::class, 'duplicateToAudit'])->name('chamber.duplicateToAudit');
+    Route::post('/chamber/audit-bulk/preview', [ChamberController::class, 'auditBulkPreview'])->name('chamber.auditBulk.preview');
+    Route::post('/chamber/audit-bulk/execute', [ChamberController::class, 'auditBulkExecute'])->name('chamber.auditBulk.execute');
     Route::get('/chamber/create', [ChamberController::class, 'create'])->name('chamber.create');
     Route::post('/chamber', [ChamberController::class, 'store'])->name('chamber.store');
     Route::get('/chamber/update/{uuid}', [ChamberController::class, 'update'])->name('chamber.update.form');

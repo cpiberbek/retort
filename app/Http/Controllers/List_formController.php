@@ -318,6 +318,57 @@ class List_formController extends Controller
                     $standarRef = $pemasakanRef;
                 break;
 
+                
+                case 'Verifikasi Timer Chamber':
+                    $timerRef = [];
+
+                    foreach ([5, 10, 20, 30, 60] as $menit) {
+                        foreach ([
+                            'plc_menit',
+                            'plc_detik',
+                            'stopwatch_menit',
+                            'stopwatch_detik',
+                            'faktor_koreksi',
+                        ] as $field) {
+                            $key = $field . '_' . $menit;
+                            $value = $standarRef[$key] ?? null;
+
+                            if (in_array($field, [
+                                'plc_menit',
+                                'plc_detik',
+                                'stopwatch_menit',
+                                'stopwatch_detik',
+                            ])) {
+                                $min = $value['min'] ?? null;
+                                $max = $value['max'] ?? null;
+
+                                $timerRef[$key] = (
+                                    $min !== null && $min !== '' &&
+                                    $max !== null && $max !== ''
+                                ) ? [
+                                    'min' => (int) $min,
+                                    'max' => (int) $max,
+                                ] : null;
+                            } else {
+                                $timerRef[$key] = (
+                                    $value !== null && $value !== ''
+                                ) ? $value : null;
+                            }
+                        }
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $timerRef['catatan'] = (
+                        $catatan !== null && $catatan !== ''
+                    ) ? $catatan : null;
+
+                    $standarRef = collect($timerRef)->filter(
+                        fn ($value) => $value !== null
+                    )->isNotEmpty() ? $timerRef : null;
+
+                break;
+
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

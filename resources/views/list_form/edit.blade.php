@@ -479,7 +479,7 @@
                                                                     type="text"
                                                                     name="standar_ref[{{ $key }}]"
                                                                     class="form-control form-control-sm"
-                                                                    placeholder="Kosongkan apabila tidak ingin diubah untuk semua mesin"
+                                                                    placeholder="Catatan untuk semua mesin"
                                                                     value="{{ $current }}"
                                                                 >
                                                             @else
@@ -579,7 +579,7 @@
                                                                     type="text"
                                                                     name="standar_ref[{{ $key }}]"
                                                                     class="form-control form-control-sm"
-                                                                    placeholder="Kosongkan standar jika field tidak ingin diseragamkan"
+                                                                    placeholder="Catatan Pemeriksaan"
                                                                     value="{{ $current }}"
                                                                 >
                                                             @elseif ($type === 'range')
@@ -629,7 +629,6 @@
                                     </div>
                                 </div>
                             @break
-                            
                             
                             @case('Pemeriksaan Pemasakan')
                                 @php
@@ -774,8 +773,142 @@
                                     </div>
                                 </div>
                             @break
+                 
+                            @case('Verifikasi Timer Chamber')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
 
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
 
+                                    $timerFields = [];
+
+                                    foreach ([5, 10, 20, 30, 60] as $menit) {
+                                        $timerFields[] = [
+                                            "plc_menit_{$menit}",
+                                            "PLC Menit ({$menit} Menit)",
+                                            'integer_range',
+                                        ];
+
+                                        $timerFields[] = [
+                                            "plc_detik_{$menit}",
+                                            "PLC Detik ({$menit} Menit)",
+                                            'integer_range',
+                                        ];
+
+                                        $timerFields[] = [
+                                            "stopwatch_menit_{$menit}",
+                                            "Stopwatch Menit ({$menit} Menit)",
+                                            'integer_range',
+                                        ];
+
+                                        $timerFields[] = [
+                                            "stopwatch_detik_{$menit}",
+                                            "Stopwatch Detik ({$menit} Menit)",
+                                            'integer_range',
+                                        ];
+
+                                        $timerFields[] = [
+                                            "faktor_koreksi_{$menit}",
+                                            "Faktor Koreksi ({$menit} Menit)",
+                                            'text',
+                                        ];
+                                    }
+
+                                    $timerFields[] = [
+                                        'catatan',
+                                        'Catatan',
+                                        'text',
+                                    ];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field menit dan detik menggunakan rentang bilangan bulat dan hasil akan diacak
+                                            berdasarkan rentang yang ditetapkan, sedangkan faktor koreksi dan catatan
+                                            menggunakan nilai tetap.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach ($timerFields as [$key, $label, $type])
+                                                    @php
+                                                        $current = old(
+                                                            'standar_ref.' . $key,
+                                                            data_get($std, $key)
+                                                        );
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">
+                                                            {{ $label }}
+                                                        </td>
+
+                                                        <td class="align-middle">
+                                                            @if ($type === 'integer_range')
+                                                                <div
+                                                                    class="d-flex align-items-center"
+                                                                    style="white-space: nowrap;"
+                                                                >
+                                                                    <input
+                                                                        type="number"
+                                                                        step="1"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old(
+                                                                            'standar_ref.' . $key . '.min',
+                                                                            data_get($std, $key . '.min')
+                                                                        ) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="1"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old(
+                                                                            'standar_ref.' . $key . '.max',
+                                                                            data_get($std, $key . '.max')
+                                                                        ) }}"
+                                                                    >
+                                                                </div>
+                                                            @else
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Masukkan {{ $label }}"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
 
                         @endswitch
 
