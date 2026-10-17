@@ -638,41 +638,62 @@
                                         $std = json_decode($std, true) ?? [];
                                     }
 
+                                    // [key, label, type, grup]  -> grup mengikuti section di form create pemasakan
                                     $pemasakanFields = [
-                                        ['berat_produk', 'Berat Produk', 'range'],
-                                        ['suhu_produk', 'Suhu Produk (°C)', 'range'],
-                                        ['jumlah_tray', 'Jumlah Tray', 'range_integer'],
-                                        ['total_reject', 'Total Reject', 'number_integer'],
+                                        // IDENTIFIKASI
+                                        ['jumlah_tray', 'Jumlah Tray', 'range_integer', 'IDENTIFIKASI'],
+                                        ['suhu_produk', 'Suhu Produk (°C)', 'range', 'IDENTIFIKASI'],
+                                        ['berat_produk', 'Berat Produk', 'range', 'IDENTIFIKASI'],
 
-                                        ['cooking.tekanan_angin', 'Tekanan Angin', 'range'],
-                                        ['cooking.tekanan_steam', 'Tekanan Steam', 'range'],
-                                        ['cooking.tekanan_air', 'Tekanan Air', 'range'],
-                                        ['cooking.suhu_air_awal', 'Suhu Air Awal (°C)', 'range'],
-                                        ['cooking.tekanan_awal', 'Tekanan Awal', 'range'],
-                                        ['cooking.suhu_air_proses', 'Suhu Air Proses (°C)', 'range'],
-                                        ['cooking.tekanan_proses', 'Tekanan Proses', 'range'],
-                                        ['cooking.suhu_air_sterilisasi', 'Suhu Air Sterilisasi (°C)', 'range_array'],
-                                        ['cooking.thermometer_retort', 'Thermometer Retort (°C)', 'range_array'],
-                                        ['cooking.tekanan_sterilisasi', 'Tekanan Sterilisasi', 'range_array'],
-                                        ['cooking.suhu_air_pendinginan_awal', 'Suhu Air Pendinginan Awal (°C)', 'range'],
-                                        ['cooking.tekanan_pendinginan_awal', 'Tekanan Pendinginan Awal', 'range'],
-                                        ['cooking.suhu_air_pendinginan', 'Suhu Air Pendinginan (°C)', 'range'],
-                                        ['cooking.tekanan_pendinginan', 'Tekanan Pendinginan', 'range'],
-                                        ['cooking.suhu_air_akhir', 'Suhu Air Akhir (°C)', 'range'],
-                                        ['cooking.tekanan_akhir', 'Tekanan Akhir', 'range'],
-                                        ['cooking.suhu_produk_akhir', 'Suhu Produk Akhir (°C)', 'range'],
-                                        ['cooking.panjang', 'Panjang Produk', 'range'],
-                                        ['cooking.diameter', 'Diameter Produk', 'range'],
-                                        ['cooking.rasa', 'Rasa', 'rating'],
-                                        ['cooking.warna', 'Warna', 'rating'],
-                                        ['cooking.aroma', 'Aroma', 'rating'],
-                                        ['cooking.texture', 'Texture', 'rating'],
-                                        ['cooking.sobek_seal', 'Sobek Seal', 'number_integer'],
+                                        // PERSIAPAN
+                                        ['cooking.tekanan_angin', 'Tekanan Angin', 'range', 'PERSIAPAN'],
+                                        ['cooking.tekanan_steam', 'Tekanan Steam', 'range', 'PERSIAPAN'],
+                                        ['cooking.tekanan_air', 'Tekanan Air', 'range', 'PERSIAPAN'],
 
-                                        ['catatan', 'Catatan', 'text'],
+                                        // PEMANASAN AWAL
+                                        ['cooking.suhu_air_awal', 'Suhu Air Awal (°C)', 'range', 'PEMANASAN AWAL'],
+                                        ['cooking.tekanan_awal', 'Tekanan Awal', 'range', 'PEMANASAN AWAL'],
+
+                                        // PROSES PEMANASAN
+                                        ['cooking.suhu_air_proses', 'Suhu Air Proses (°C)', 'range', 'PROSES PEMANASAN'],
+                                        ['cooking.tekanan_proses', 'Tekanan Proses', 'range', 'PROSES PEMANASAN'],
+
+                                        // STERILISASI
+                                        ['cooking.suhu_air_sterilisasi', 'Suhu Air Sterilisasi (°C)', 'range_array', 'STERILISASI'],
+                                        ['cooking.thermometer_retort', 'Thermometer Retort (°C)', 'range_array', 'STERILISASI'],
+                                        ['cooking.tekanan_sterilisasi', 'Tekanan Sterilisasi', 'range_array', 'STERILISASI'],
+
+                                        // PENDINGINAN AWAL
+                                        ['cooking.suhu_air_pendinginan_awal', 'Suhu Air Pendinginan Awal (°C)', 'range', 'PENDINGINAN AWAL'],
+                                        ['cooking.tekanan_pendinginan_awal', 'Tekanan Pendinginan Awal', 'range', 'PENDINGINAN AWAL'],
+
+                                        // PENDINGINAN
+                                        ['cooking.suhu_air_pendinginan', 'Suhu Air Pendinginan (°C)', 'range', 'PENDINGINAN'],
+                                        ['cooking.tekanan_pendinginan', 'Tekanan Pendinginan', 'range', 'PENDINGINAN'],
+
+                                        // PROSES AKHIR
+                                        ['cooking.suhu_air_akhir', 'Suhu Air Akhir (°C)', 'range', 'PROSES AKHIR'],
+                                        ['cooking.tekanan_akhir', 'Tekanan Akhir', 'range', 'PROSES AKHIR'],
+
+                                        // HASIL PEMASAKAN
+                                        ['cooking.suhu_produk_akhir', 'Suhu Produk Akhir (°C)', 'range', 'HASIL PEMASAKAN'],
+                                        ['cooking.panjang', 'Panjang Produk', 'range', 'HASIL PEMASAKAN'],
+                                        ['cooking.diameter', 'Diameter Produk', 'range', 'HASIL PEMASAKAN'],
+                                        ['cooking.rasa', 'Rasa', 'rating', 'HASIL PEMASAKAN'],
+                                        ['cooking.warna', 'Warna', 'rating', 'HASIL PEMASAKAN'],
+                                        ['cooking.aroma', 'Aroma', 'rating', 'HASIL PEMASAKAN'],
+                                        ['cooking.texture', 'Texture', 'rating', 'HASIL PEMASAKAN'],
+                                        ['cooking.sobek_seal', 'Sobek Seal', 'number_integer', 'HASIL PEMASAKAN'],
+
+                                        // TOTAL REJECT
+                                        ['total_reject', 'Total Reject', 'number_integer', 'TOTAL REJECT'],
+
+                                        // CATATAN
+                                        ['catatan', 'Catatan', 'text', 'CATATAN'],
                                     ];
 
                                     $pemasakanOptions = [];
+                                    $lastGroup = null;
                                 @endphp
 
                                 <div class="card mb-3 border">
@@ -693,14 +714,24 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach ($pemasakanFields as [$key, $label, $type])
+                                                @foreach ($pemasakanFields as [$key, $label, $type, $group])
                                                     @php
                                                         $nameKey = 'standar_ref[' . str_replace('.', '][', $key) . ']';
                                                         $current = old('standar_ref.' . $key, data_get($std, $key));
                                                     @endphp
 
+                                                    {{-- Header section: tampil sekali setiap grup berganti --}}
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
                                                     <tr>
-                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle pl-4" style="padding-left: 1.5rem;">{{ $label }}</td>
                                                         <td class="align-middle">
                                                             @if (in_array($type, ['range', 'range_array', 'range_integer']))
                                                                 <div class="d-flex align-items-center" style="white-space: nowrap;">
@@ -773,7 +804,7 @@
                                     </div>
                                 </div>
                             @break
-                 
+                                            
                             @case('Verifikasi Timer Chamber')
                                 @php
                                     $std = $list_form->standar_ref ?? [];
