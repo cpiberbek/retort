@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use TCPDF;
 
@@ -135,6 +136,101 @@ class Labelisasi_pvdcController extends Controller
             'labelisasi_pvdc.edit.form',
             $audit->uuid
         );
+    }
+
+    public function autoDuplicateToAudit($uuid)
+    {
+        $created = false;
+ 
+        DB::transaction(function () use ($uuid, &$created) {
+            $labelisasi = Labelisasi_pvdc::where('uuid', $uuid)
+                ->where('plant', Auth::user()->plant)
+                ->where('is_audit', false)
+                ->lockForUpdate()
+                ->firstOrFail();
+ 
+            if (!$labelisasi->auditVersion) {
+                $labelisasi->copyToAudit();
+                $created = true;
+            }
+        });
+ 
+        return back()->with(
+            'success',
+            $created
+                ? 'Data berhasil diduplikasi menjadi data Audit.'
+                : 'Data Audit sudah tersedia, tidak diduplikasi ulang.'
+        );
+    }
+ 
+    private function bulkAuditBaseQuery(string $start, string $end)
+    {
+        return Labelisasi_pvdc::query()
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+    }
+ 
+    public function auditBulkPreview(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+ 
+        $base = fn () => $this->bulkAuditBaseQuery($request->start_date, $request->end_date);
+ 
+        $total    = $base()->count();
+        $sudahAda = $base()->whereHas('auditVersion')->count();
+ 
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudahAda,
+            'akan_dibuat' => $total - $sudahAda,
+        ]);
+    }
+ 
+    public function auditBulkExecute(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+ 
+        $rows = $this->bulkAuditBaseQuery($request->start_date, $request->end_date)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+ 
+        if ($rows->isEmpty()) {
+            return back()->with('info', 'Tidak ada data yang perlu diduplikasi.');
+        }
+ 
+        $created = 0;
+        $failed  = 0;
+ 
+        foreach ($rows as $row) {
+            try {
+                DB::transaction(function () use ($row, &$created) {
+                    // Cek ulang di dalam transaksi supaya tidak dobel
+                    $fresh = Labelisasi_pvdc::where('uuid', $row->uuid)->lockForUpdate()->first();
+ 
+                    if ($fresh && !$fresh->auditVersion()->exists()) {
+                        $fresh->copyToAudit();
+                        $created++;
+                    }
+                });
+            } catch (\Throwable $e) {
+                report($e);
+                $failed++;
+            }
+        }
+ 
+        if ($failed > 0) {
+            return back()->with('warning', "{$created} data berhasil diduplikasi, {$failed} gagal (cek log).");
+        }
+ 
+        return back()->with('success', "{$created} data berhasil diduplikasi menjadi data Audit.");
     }
 
     //modal new function supaya ringan

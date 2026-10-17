@@ -652,6 +652,9 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     // audit-wire
     Route::get('/wire/audit-data', [WireController::class, 'auditIndex'])->name('wire.audit');
     Route::post('/wire/{uuid}/duplicate-to-audit', [WireController::class, 'duplicateToAudit'])->name('wire.duplicateToAudit');
+    Route::post('/wire/{uuid}/auto-duplicate-to-audit', [WireController::class, 'autoDuplicateToAudit'])->name('wire.autoDuplicateToAudit')->middleware('can:can access update button');
+    Route::post('/wire/audit-bulk/preview', [WireController::class, 'auditBulkPreview'])->name('wire.auditBulk.preview')->middleware('can:can access update button');
+    Route::post('/wire/audit-bulk/execute', [WireController::class, 'auditBulkExecute'])->name('wire.auditBulk.execute')->middleware('can:can access update button');
     Route::get('/wire/create', [WireController::class, 'create'])->name('wire.create');
     Route::post('/wire', [WireController::class, 'store'])->name('wire.store');
     Route::get('/wire/update/{uuid}', [WireController::class, 'update'])->name('wire.update.form');
@@ -817,6 +820,10 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     // PVDC - Audit
     Route::get('/pvdc/audit-data', [PvdcController::class, 'auditIndex'])->name('pvdc.audit');
     Route::post('/pvdc/{uuid}/duplicate-to-audit', [PvdcController::class, 'duplicateToAudit'])->name('pvdc.duplicateToAudit');
+    Route::post('/pvdc/{uuid}/auto-duplicate-to-audit', [PvdcController::class, 'autoDuplicateToAudit'])->name('pvdc.autoDuplicateToAudit');
+    Route::post('/pvdc/audit-bulk/preview', [PvdcController::class, 'auditBulkPreview'])->name('pvdc.auditBulk.preview');
+    Route::post('/pvdc/audit-bulk/execute', [PvdcController::class, 'auditBulkExecute'])->name('pvdc.auditBulk.execute');
+    Route::post('/pvdc/bulk-duplicate-to-audit', [PvdcController::class, 'bulkDuplicateToAudit'])->name('pvdc.bulkDuplicateToAudit');
     Route::get('/pvdc/create', [PvdcController::class, 'create'])->name('pvdc.create');
     Route::post('/pvdc', [PvdcController::class, 'store'])->name('pvdc.store');
     Route::get('/pvdc/update/{uuid}', [PvdcController::class, 'update'])->name('pvdc.update.form');
@@ -835,8 +842,10 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::post('/labelisasi_pvdc', [Labelisasi_pvdcController::class, 'store'])->name('labelisasi_pvdc.store');
     // labelisasi PVDC-audit
     Route::get('/labelisasi_pvdc/audit-data', [Labelisasi_pvdcController::class, 'auditIndex'])->name('labelisasi_pvdc.audit');
-    Route::post('/labelisasi_pvdc/{uuid}/duplicate-to-audit', [Labelisasi_pvdcController::class, 'duplicateToAudit'])
-    ->name('labelisasi_pvdc.duplicateToAudit');
+    Route::post('/labelisasi_pvdc/{uuid}/duplicate-to-audit', [Labelisasi_pvdcController::class, 'duplicateToAudit'])->name('labelisasi_pvdc.duplicateToAudit');
+    Route::post('/labelisasi_pvdc/{uuid}/auto-duplicate-to-audit', [Labelisasi_pvdcController::class, 'autoDuplicateToAudit'])->name('labelisasi_pvdc.autoDuplicateToAudit')->middleware('can:can access update button');
+    Route::post('/labelisasi_pvdc/audit-bulk/preview', [Labelisasi_pvdcController::class, 'auditBulkPreview'])->name('labelisasi_pvdc.auditBulk.preview')->middleware('can:can access update button');
+    Route::post('/labelisasi_pvdc/audit-bulk/execute', [Labelisasi_pvdcController::class, 'auditBulkExecute'])->name('labelisasi_pvdc.auditBulk.execute')->middleware('can:can access update button');
     Route::get('/labelisasi_pvdc/update/{uuid}', [Labelisasi_pvdcController::class, 'update'])->name('labelisasi_pvdc.update.form');
     Route::put('/labelisasi_pvdc/update_qc/{uuid}', [Labelisasi_pvdcController::class, 'update_qc'])->name('labelisasi_pvdc.update_qc');
     Route::get('/labelisasi_pvdc/edit/{uuid}', [Labelisasi_pvdcController::class, 'edit'])->name('labelisasi_pvdc.edit.form');

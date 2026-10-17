@@ -15,6 +15,22 @@
         </div>
     @endif
 
+    {{-- Alert warning --}}
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            {{ session('warning') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    {{-- Alert info --}}
+    @if (session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ session('info') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
     {{-- Alert error --}}
     @if (session('error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -140,6 +156,12 @@
             </div>
 
             <div class="audit-banner__actions">
+                @if($showAksi)
+                    <button type="button" class="audit-pill" data-bs-toggle="modal" data-bs-target="#bulkAuditModal">
+                        <i class="bi bi-files"></i> Duplikasi Data Audit Massal
+                    </button>
+                @endif
+
                 <form action="{{ route('toggle.mode.audit') }}" method="POST" class="d-inline"
                     onsubmit="return confirm('Kembali ke mode Operasional?')">
                     @csrf
@@ -149,10 +171,141 @@
                 </form>
             </div>
         </div>
+
+        {{-- MODAL DUPLIKASI AUDIT MASSAL --}}
+        @if($showAksi)
+            <div class="modal fade" id="bulkAuditModal" tabindex="-1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <form method="POST" action="{{ route('wire.auditBulk.execute') }}" class="w-100"
+                        onsubmit="return confirm('Salinan data audit akan dibuat untuk semua data pada rentang tanggal ini. Lanjutkan?')">
+                        @csrf
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Duplikasi Audit Massal</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+
+                            <div class="modal-body">
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label">Tanggal awal</label>
+                                        <input type="date" name="start_date" id="bulkStart" class="form-control" required>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Tanggal akhir</label>
+                                        <input type="date" name="end_date" id="bulkEnd" class="form-control" required>
+                                    </div>
+                                </div>
+
+                                <div id="bulkPreview" class="alert alert-secondary py-2 small mb-3">
+                                    Pilih tanggal untuk melihat ringkasan.
+                                </div>
+
+                                <div class="small text-muted">
+                                    Data disalin apa adanya, tanpa penyesuaian nilai.
+                                    Entry yang sudah punya salinan audit dilewati.
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                                <button type="submit" id="bulkRun" class="btn btn-success btn-sm" disabled>Jalankan</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const s = document.getElementById('bulkStart');
+                    const e = document.getElementById('bulkEnd');
+                    const box = document.getElementById('bulkPreview');
+                    const run = document.getElementById('bulkRun');
+                    const modal = document.getElementById('bulkAuditModal');
+
+                    function show(bg, color, html) {
+                        box.removeAttribute('class');
+                        box.style.cssText = 'display:block;padding:8px 12px;margin-bottom:1rem;border-radius:6px;font-size:.85rem;background:' + bg + ';color:' + color + ';';
+                        box.innerHTML = html;
+                    }
+
+                    function showError(html) {
+                        show('#f8d7da', '#842029', html);
+                    }
+
+                    async function preview() {
+                        run.disabled = true;
+
+                        if (!s.value || !e.value) {
+                            show('#e9ecef', '#212529', 'Pilih tanggal untuk melihat ringkasan.');
+                            return;
+                        }
+
+                        if (e.value < s.value) {
+                            showError('Tanggal akhir tidak boleh sebelum tanggal awal.');
+                            return;
+                        }
+
+                        show('#e9ecef', '#212529', 'Memuat...');
+
+                        try {
+                            const res = await fetch(@json(route('wire.auditBulk.preview')), {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': @json(csrf_token()),
+                                },
+                                body: JSON.stringify({ start_date: s.value, end_date: e.value }),
+                            });
+
+                            if (!res.ok) {
+                                let msg = 'Gagal memuat ringkasan (HTTP ' + res.status + ').';
+                                try {
+                                    const err = await res.json();
+                                    if (err.errors) {
+                                        msg = Object.values(err.errors).flat().join('<br>');
+                                    } else if (err.message) {
+                                        msg = err.message;
+                                    }
+                                } catch (x) {}
+                                showError(msg);
+                                return;
+                            }
+
+                            const d = await res.json();
+
+                            if (d.total === 0) {
+                                show('#fff3cd', '#664d03', 'Tidak ada entry di tanggal ini.');
+                                return;
+                            }
+
+                            show('#cff4fc', '#055160',
+                                'Total entry: <b>' + d.total + '</b><br>' +
+                                'Sudah punya audit (dilewati): <b>' + d.sudah_ada + '</b><br>' +
+                                'Akan diduplikasi: <b>' + d.akan_dibuat + '</b>');
+
+                            run.disabled = d.akan_dibuat === 0;
+                        } catch (err) {
+                            showError('Error: ' + (err && err.message ? err.message : 'tidak diketahui'));
+                        }
+                    }
+
+                    s.addEventListener('change', function () {
+                        e.min = s.value;
+                        if (e.value && e.value < s.value) e.value = s.value;
+                        preview();
+                    });
+                    e.addEventListener('change', preview);
+                    modal.addEventListener('shown.bs.modal', preview);
+                });
+            </script>
+        @endif
     @endunless
 
     {{-- Filter Form --}}
-    <form id="filterForm" method="GET" action="{{ route('wire.index') }}"
+    <form id="filterForm" method="GET" action="{{ route('wire.audit') }}"
         class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
         <div class="row w-100">
             <div class="col-md-3">
@@ -203,7 +356,7 @@
             </div>
 
             <div class="col-md-3 align-self-end">
-                <a href="{{ route('wire.index') }}" class="btn btn-primary mb-2">
+                <a href="{{ route('wire.audit') }}" class="btn btn-primary mb-2">
                     <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </a>
             </div>
@@ -403,21 +556,25 @@
 
                                 @if($showAksi)
                                     <td class="text-center align-middle">
-                                        @unless($isAuditor)
-                                            <form action="{{ route('wire.duplicateToAudit', $dep->uuid) }}"
-                                                method="POST" class="d-inline">
+                                        @if($dep->is_audit)
+                                            {{-- Ini salinan audit: edit manual --}}
+                                            <a href="{{ route('wire.edit.form', $dep->uuid) }}"
+                                                class="btn btn-success btn-sm me-1 mb-1"
+                                                title="Edit manual data Audit">
+                                                <i class="bi bi-pencil"></i> Edit Data Audit Manual
+                                            </a>
+                                        @else
+                                            {{-- Data asli yang belum punya salinan: duplikat otomatis --}}
+                                            <form action="{{ route('wire.autoDuplicateToAudit', $dep->uuid) }}"
+                                                method="POST" class="d-inline"
+                                                onsubmit="return confirm('Duplikat data ini menjadi data Audit?')">
                                                 @csrf
-                                                <button type="submit"
-                                                    class="btn {{ $dep->is_audit ? 'btn-success' : 'btn-warning' }} btn-sm me-1 mb-1"
-                                                    @if($dep->is_audit)
-                                                        title="Data Audit Sudah Tersedia : Duplikasi entry ini saja"
-                                                    @endif
-                                                    onclick="return confirm('Edit data ini sebagai data Audit?')">
-                                                    <i class="bi bi-pencil"></i>
-                                                    Edit Data Audit
+                                                <button type="submit" class="btn btn-warning btn-sm me-1 mb-1"
+                                                    title="Duplikat otomatis menjadi data Audit">
+                                                    <i class="bi bi-magic text-dark"></i> <span class="text-dark">Duplikat Data Audit Otomatis</span>
                                                 </button>
                                             </form>
-                                        @endunless
+                                        @endif
                                     </td>
                                 @endif
                             </tr>
