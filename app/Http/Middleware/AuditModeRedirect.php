@@ -19,6 +19,7 @@ class AuditModeRedirect
         'washing',
         'pemasakan',
         'chamber',
+        'sampling_fg',
     ];
 
     public function handle(Request $request, Closure $next)

@@ -681,6 +681,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/sampling_fg/verification/{uuid}', [Sampling_fgController::class, 'updateVerification'])
         ->name('sampling_fg.verification.update');
     Route::delete('/sampling_fg/{uuid}', [Sampling_fgController::class, 'destroy'])->name('sampling_fg.destroy');
+    // audit-sampling_fg
+    Route::get('/sampling_fg/audit-data', [Sampling_fgController::class, 'auditIndex'])->name('sampling_fg.audit');
+    Route::post('/sampling_fg/{uuid}/duplicate-to-audit', [Sampling_fgController::class, 'duplicateToAudit'])->name('sampling_fg.duplicateToAudit');
+    Route::post('/sampling_fg/audit-bulk/preview', [Sampling_fgController::class, 'auditBulkPreview'])->name('sampling_fg.auditBulk.preview');
+    Route::post('/sampling_fg/audit-bulk/execute', [Sampling_fgController::class, 'auditBulkExecute'])->name('sampling_fg.auditBulk.execute');
 
 
     // Chamber

@@ -368,6 +368,51 @@ class List_formController extends Controller
 
                 break;
 
+                case 'Pemeriksaan Proses Sampling Finish Good':
+                    $samplingRef = [];
+
+                    foreach (['berat_produk', 'release', 'reject', 'hold'] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                            ]);
+                        }
+
+                        if ($minFilled && (int) $min > (int) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min tidak boleh lebih besar dari Max.',
+                            ]);
+                        }
+
+                        $samplingRef[$field] = [
+                            'min' => $minFilled ? (int) $min : null,
+                            'max' => $maxFilled ? (int) $max : null,
+                        ];
+                    }
+
+                    $kalibrasi = $standarRef['kalibrasi'] ?? null;
+                    $samplingRef['kalibrasi'] = in_array($kalibrasi, ['Sesuai', 'Tidak Sesuai'], true)
+                        ? $kalibrasi
+                        : null;
+
+                    foreach (['item_mutu', 'keterangan', 'catatan'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $samplingRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $standarRef = $samplingRef;
+                break;
 
             }
 

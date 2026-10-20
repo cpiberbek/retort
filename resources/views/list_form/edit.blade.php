@@ -941,6 +941,121 @@
                                 </div>
                             @break
 
+                            @case('Pemeriksaan Proses Sampling Finish Good')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    // [key, label, type, keterangan]
+                                    $samplingFields = [
+                                        ['kalibrasi', 'Kalibrasi', 'select', null],
+                                        ['berat_produk', 'Berat Produk', 'range_integer', null],
+                                        ['release', 'Release', 'range_integer', 'pair'],
+                                        ['reject', 'Reject', 'range_integer', 'pair'],
+                                        ['hold', 'Hold', 'range_integer', 'pair'],
+                                        ['item_mutu', 'Item Mutu', 'text', null],
+                                        ['keterangan', 'Keterangan', 'text', null],
+                                        ['catatan', 'Catatan', 'text', null],
+                                    ];
+
+                                    $kalibrasiOptions = ['Sesuai', 'Tidak Sesuai'];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang akan diacak berdasarkan rentang bilangan bulat yang ditetapkan,
+                                            sedangkan field teks menggunakan nilai tetap.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($samplingFields as [$key, $label, $type, $note])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'range_integer')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="1"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="1"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+
+                                                                @if ($note === 'pair')
+                                                                    <small class="text-muted d-block mt-1">
+                                                                        Min &amp; Max harus diisi keduanya. Kosongkan keduanya jika tidak ingin diubah.
+                                                                        Untuk nilai tepat 0, isi <b>0 s/d 0</b>.
+                                                                    </small>
+                                                                @endif
+                                                            @elseif ($type === 'text')
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @else
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    @foreach ($kalibrasiOptions as $option)
+                                                                        <option
+                                                                            value="{{ $option }}"
+                                                                            {{ $current === $option ? 'selected' : '' }}
+                                                                        >
+                                                                            {{ $option }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
                         @endswitch
 
                         <div class="d-flex justify-content-between">
@@ -963,54 +1078,46 @@
 
             if (!form) return;
 
-            const magnetFields = [];
+            const pairKeys = [];
 
             for (let i = 1; i <= 6; i++) {
-                const key = `kekuatan_median_${i}`;
-
-                magnetFields.push({
-                    min: form.querySelector(`[name="standar_ref[${key}][min]"]`),
-                    max: form.querySelector(`[name="standar_ref[${key}][max]"]`)
-                });
+                pairKeys.push(`kekuatan_median_${i}`);
             }
 
-            magnetFields.forEach(function (field) {
-                if (!field.min || !field.max) return;
+            pairKeys.push('release', 'reject', 'hold');
 
-                function validatePair() {
-                    const minFilled = field.min.value.trim() !== '';
-                    const maxFilled = field.max.value.trim() !== '';
+            const pairFields = pairKeys
+                .map(function (key) {
+                    return {
+                        min: form.querySelector(`[name="standar_ref[${key}][min]"]`),
+                        max: form.querySelector(`[name="standar_ref[${key}][max]"]`)
+                    };
+                })
+                .filter(function (field) {
+                    return field.min && field.max;
+                });
 
-                    field.min.setCustomValidity('');
-                    field.max.setCustomValidity('');
+            function validatePair(field) {
+                const minFilled = field.min.value.trim() !== '';
+                const maxFilled = field.max.value.trim() !== '';
 
-                    if (minFilled && !maxFilled) {
-                        field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
-                    } else if (!minFilled && maxFilled) {
-                        field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
-                    }
+                field.min.setCustomValidity('');
+                field.max.setCustomValidity('');
+
+                if (minFilled && !maxFilled) {
+                    field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
+                } else if (!minFilled && maxFilled) {
+                    field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
                 }
+            }
 
-                field.min.addEventListener('input', validatePair);
-                field.max.addEventListener('input', validatePair);
+            pairFields.forEach(function (field) {
+                field.min.addEventListener('input', function () { validatePair(field); });
+                field.max.addEventListener('input', function () { validatePair(field); });
             });
 
             form.addEventListener('submit', function (event) {
-                magnetFields.forEach(function (field) {
-                    if (!field.min || !field.max) return;
-
-                    const minFilled = field.min.value.trim() !== '';
-                    const maxFilled = field.max.value.trim() !== '';
-
-                    field.min.setCustomValidity('');
-                    field.max.setCustomValidity('');
-
-                    if (minFilled && !maxFilled) {
-                        field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
-                    } else if (!minFilled && maxFilled) {
-                        field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
-                    }
-                });
+                pairFields.forEach(validatePair);
 
                 if (!form.checkValidity()) {
                     event.preventDefault();

@@ -41,6 +41,26 @@
             </div>
         </div>
 
+        @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h6 class="mb-0">
+                        <span class="text-primary" style="font-weight: 600;">
+                            <i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i>
+                            Mode Operasional
+                        </span>
+                    </h6>
+                    <form action="{{ route('toggle.mode.audit') }}" method="POST" class="d-inline"
+                        onsubmit="return confirm('Masuk ke Mode Audit?')">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-shield-check"></i> Mode Audit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endunless
+
         {{-- FILTER: Menggunakan Versi Anda (Ada Shift) --}}
         <form id="filterForm" method="GET" action="{{ route('sampling_fg.index') }}"
             class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
