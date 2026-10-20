@@ -763,6 +763,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/sampling/export-pdf', [SamplingController::class, 'exportPdf'])->name('sampling.exportPdf');
     Route::get('/sampling/export-excel', [SamplingController::class, 'exportExcel'])->name('sampling.exportExcel');
     Route::delete('/sampling/{uuid}', [SamplingController::class, 'destroy'])->name('sampling.destroy');
+    // audit-sampling
+    Route::get('/sampling/audit-data', [SamplingController::class, 'auditIndex'])->name('sampling.audit');
+    Route::post('/sampling/{uuid}/duplicate-to-audit', [SamplingController::class, 'duplicateToAudit'])->name('sampling.duplicateToAudit');
+    Route::post('/sampling/audit-bulk/preview', [SamplingController::class, 'auditBulkPreview'])->name('sampling.auditBulk.preview');
+    Route::post('/sampling/audit-bulk/execute', [SamplingController::class, 'auditBulkExecute'])->name('sampling.auditBulk.execute');
 
     // Packing
     Route::get('/packing', [PackingController::class, 'index'])->name('packing.index');

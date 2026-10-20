@@ -317,7 +317,6 @@ class List_formController extends Controller
 
                     $standarRef = $pemasakanRef;
                 break;
-
                 
                 case 'Verifikasi Timer Chamber':
                     $timerRef = [];
@@ -412,6 +411,48 @@ class List_formController extends Controller
                     }
 
                     $standarRef = $samplingRef;
+                break;
+
+                case 'Data Sampling Produk':
+                    $samplingsRef = [];
+
+                    foreach ([
+                        'jamur', 'lendir', 'klip_tajam', 'pin_hole', 'air_trap_pvdc', 'air_trap_produk',
+                        'keriput', 'bengkok', 'non_kode', 'over_lap', 'kecil', 'terjepit',
+                        'double_klip', 'seal_halus', 'basah', 'dll',
+                    ] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                            ]);
+                        }
+
+                        if ($minFilled && (int) $min > (int) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min tidak boleh lebih besar dari Max.',
+                            ]);
+                        }
+
+                        $samplingsRef[$field] = [
+                            'min' => $minFilled ? (int) $min : null,
+                            'max' => $maxFilled ? (int) $max : null,
+                        ];
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $samplingsRef['catatan'] = is_string($catatan) && trim($catatan) !== ''
+                        ? trim($catatan)
+                        : null;
+
+                    $standarRef = $samplingsRef;
                 break;
 
             }

@@ -36,10 +36,10 @@ class Sampling_fg extends Model
 
     public function copyToAudit(): self
     {
-        $clone = $this->replicate(['id']);   // kecualikan id auto increment
+        $clone = $this->replicate(['id']);
         $clone->is_audit    = true;
         $clone->source_uuid = $this->uuid;
-        $clone->save();                      // HasUuids membuat uuid baru, id dibuat DB
+        $clone->save();  
 
         return $clone;
     }
