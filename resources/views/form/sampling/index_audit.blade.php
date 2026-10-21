@@ -65,7 +65,7 @@
 
         {{-- ===================== HEADER ===================== --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h4>Data Audit Sampling Produk</h4>
+            <h4>Data Sampling Produk</h4>
         </div>
 
         {{-- ===================== MODE AUDIT (disembunyikan untuk auditor) ===================== --}}

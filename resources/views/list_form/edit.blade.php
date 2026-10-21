@@ -1153,6 +1153,83 @@
                                 </div>
                             @break
 
+                            @case('Data Release Packing')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Release diacak berdasarkan rentang bilangan bulat. Min &amp; Max harus diisi keduanya,
+                                            atau kosongkan keduanya jika tidak ingin diubah. Untuk nilai tepat tertentu, isi Min dan Max
+                                            dengan angka yang sama.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="align-middle">Release</td>
+                                                    <td class="align-middle">
+                                                        <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[release][min]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Min"
+                                                                value="{{ old('standar_ref.release.min', data_get($std, 'release.min')) }}"
+                                                            >
+
+                                                            <span class="text-muted mx-2">s/d</span>
+
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[release][max]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Max"
+                                                                value="{{ old('standar_ref.release.max', data_get($std, 'release.max')) }}"
+                                                            >
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td class="align-middle">Keterangan</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan', data_get($std, 'keterangan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
                         @endswitch
 
                         <div class="d-flex justify-content-between">

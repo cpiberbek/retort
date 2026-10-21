@@ -990,8 +990,13 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/release_packing/verification/{uuid}', [Release_packingController::class, 'updateVerification'])
         ->name('release_packing.verification.update');
     Route::get('/release_packing/export-pdf', [Release_packingController::class, 'exportPdf'])->name('release_packing.exportPdf');
+    // audit-release_packing
+    Route::get('/release_packing/audit-data', [Release_packingController::class, 'auditIndex'])->name('release_packing.audit');
+    Route::post('/release_packing/{uuid}/duplicate-to-audit', [Release_packingController::class, 'duplicateToAudit'])->name('release_packing.duplicateToAudit');
+    Route::post('/release_packing/audit-bulk/preview', [Release_packingController::class, 'auditBulkPreview'])->name('release_packing.auditBulk.preview');
+    Route::post('/release_packing/audit-bulk/execute', [Release_packingController::class, 'auditBulkExecute'])->name('release_packing.auditBulk.execute');
     Route::delete('/release_packing/{uuid}', [Release_packingController::class, 'destroy'])->name('release_packing.destroy');
-
+    
     /*FORM RTE CIKANDE*/
     // Retain RTE
     Route::get('/retain_rte', [Retain_rteController::class, 'index'])->name('retain_rte.index');
