@@ -489,6 +489,55 @@ class List_formController extends Controller
                     $standarRef = $releaseRef;
                 break;
 
+                case 'Pemeriksaan Proses Packing':
+                    $packingRef = [];
+
+                    foreach (['suhu', 'speed', 'berat_pcs', 'berat_pack'] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.{$field}" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                            ]);
+                        }
+
+                        if ($minFilled && (float) $min > (float) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.{$field}" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min tidak boleh lebih besar dari Max.',
+                            ]);
+                        }
+
+                        $packingRef[$field] = [
+                            'min' => $minFilled ? (float) $min : null,
+                            'max' => $maxFilled ? (float) $max : null,
+                        ];
+                    }
+
+                    foreach ([
+                        'kalibrasi' => ['Oke', 'Tidak Oke'],
+                        'kondisi_segel' => ['OKE', 'TIDAK OKE'],
+                    ] as $field => $allowedValues) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $packingRef[$field] = in_array($value, $allowedValues, true)
+                            ? $value
+                            : null;
+                    }
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $packingRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $packingRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

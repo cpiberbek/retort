@@ -12,20 +12,33 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use TCPDF;
 
 class PackingController extends Controller
 {
+
+    private const LAPORAN_PACKING = 'Pemeriksaan Proses Packing';   // <-- sesuaikan dengan List_form
+
+    private const AC_RANGE = ['suhu', 'speed', 'berat_pcs', 'berat_pack'];
+    private const AC_TEXT  = ['kalibrasi', 'kondisi_segel', 'keterangan'];
+
     public function index(Request $request)
     {
-        $search     = $request->input('search');
-        $date       = $request->input('date');
-        $shift      = $request->input('shift');
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('packing.audit');
+        }
+
+        $search      = $request->input('search');
+        $date        = $request->input('date');
+        $shift       = $request->input('shift');
         $nama_produk = $request->input('nama_produk');
-        $userPlant  = Auth::user()->plant;
+        $userPlant   = Auth::user()->plant;
 
         $data = Packing::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -47,6 +60,233 @@ class PackingController extends Controller
             ->appends($request->all());
 
         return view('form.packing.index', compact('data', 'search', 'date', 'shift', 'nama_produk'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('packing.index');
+        }
+
+        $search      = $request->input('search');
+        $date        = $request->input('date');
+        $shift       = $request->input('shift');
+        $nama_produk = $request->input('nama_produk');
+
+        $auditedSourceUuids = Packing::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Packing::query()
+            ->where('plant', Auth::user()->plant)
+            ->with('auditVersion')
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, fn ($q) => $q->whereDate('date', $date))
+            ->when($shift, fn ($q) => $q->where('shift', $shift))
+            ->when($nama_produk, fn ($q) => $q->where('nama_produk', $nama_produk))
+            ->orderByRaw('COALESCE((SELECT original.date FROM packings AS original WHERE original.uuid = packings.source_uuid LIMIT 1), packings.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM packings AS original WHERE original.uuid = packings.source_uuid LIMIT 1), packings.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM packings AS original WHERE original.uuid = packings.source_uuid LIMIT 1), packings.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.packing.index_audit', compact('data', 'search', 'date', 'shift', 'nama_produk'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = Packing::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('packing.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('packing.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Packing $row): Packing
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_PACKING)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = Packing::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('packing.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('packing.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('packing.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster(Packing $model): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', self::LAPORAN_PACKING)
+            ->first();
+
+        $std = $master?->standar_ref;
+
+        if (is_string($std)) {
+            $std = json_decode($std, true);
+        }
+
+        if (!is_array($std) || empty($std)) {
+            return;
+        }
+
+        foreach (self::AC_RANGE as $col) {
+            $rule = $std[$col] ?? null;
+
+            if (!is_array($rule)) {
+                continue;
+            }
+
+            $min = $rule['min'] ?? null;
+            $max = $rule['max'] ?? null;
+
+            if (
+                $min === null || $min === '' ||
+                $max === null || $max === ''
+            ) {
+                continue;
+            }
+
+            $min = (float) $min;
+            $max = (float) $max;
+
+            if ($min > $max) {
+                continue;
+            }
+
+            $rand = fn () => round(
+                mt_rand(
+                    (int) round($min * 100),
+                    (int) round($max * 100)
+                ) / 100,
+                2
+            );
+
+            if ($col === 'suhu') {
+                $current = $model->suhu;
+
+                if (is_string($current)) {
+                    $current = json_decode($current, true);
+                }
+
+                if (is_array($current) && count($current) > 0) {
+                    $model->suhu = array_map(
+                        fn () => (string) $rand(),
+                        $current
+                    );
+                }
+            } else {
+                $model->$col = $rand();
+            }
+        }
+
+        foreach (self::AC_TEXT as $col) {
+            $rule = $std[$col] ?? null;
+
+            if (is_string($rule) && trim($rule) !== '') {
+                $model->$col = $rule;
+            }
+        }
+
+        $model->save();
     }
 
     public function create()

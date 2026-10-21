@@ -781,6 +781,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/packing/verification/{uuid}', [PackingController::class, 'updateVerification'])
         ->name('packing.verification.update');
     Route::get('/packing/export-pdf', [PackingController::class, 'exportPdf'])->name('packing.exportPdf');
+    // audit-packing
+    Route::get('/packing/audit-data', [PackingController::class, 'auditIndex'])->name('packing.audit');
+    Route::post('/packing/{uuid}/duplicate-to-audit', [PackingController::class, 'duplicateToAudit'])->name('packing.duplicateToAudit');
+    Route::post('/packing/audit-bulk/preview', [PackingController::class, 'auditBulkPreview'])->name('packing.auditBulk.preview');
+    Route::post('/packing/audit-bulk/execute', [PackingController::class, 'auditBulkExecute'])->name('packing.auditBulk.execute');
     Route::delete('/packing/{uuid}', [PackingController::class, 'destroy'])->name('packing.destroy');
 
     // Pengecekan Klorin

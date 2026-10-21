@@ -12,24 +12,40 @@ class Packing extends Model
     use HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'packings';
-    protected $primaryKey = 'uuid';  
+    protected $primaryKey = 'uuid';
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'shift', 'nama_produk', 'waktu', 'kalibrasi', 'qrcode', 'kode_printing', 
-        'kode_toples', 'suhu', 'speed', 'kondisi_segel', 
-        'jumlah_produk', 'berat_pcs', 'berat_pack', 
-        'data_kemasan', 'keterangan', 
+        'date', 'plant', 'shift', 'nama_produk', 'waktu', 'kalibrasi', 'qrcode', 'kode_printing',
+        'kode_toples', 'suhu', 'speed', 'kondisi_segel',
+        'jumlah_produk', 'berat_pcs', 'berat_pack',
+        'data_kemasan', 'keterangan',
         'nama_produksi', 'status_produksi', 'tgl_update_produksi',
-        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'username', 'username_updated', 'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv',
+        'is_audit', 'source_uuid',
     ];
 
     protected $dates = ['deleted_at'];
 
     protected $casts = [
-    'suhu' => 'array',
-    'data_kemasan' => 'array',
-];
-    
+        'suhu'         => 'array',
+        'data_kemasan' => 'array',
+        'is_audit'     => 'boolean',
+    ];
+
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();
+
+        return $clone;
+    }
 }

@@ -1229,7 +1229,119 @@
                                     </div>
                                 </div>
                             @break
+                            
+                            @case('Pemeriksaan Proses Packing')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
 
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Min dan Max harus diisi keduanya, atau kosongkan keduanya jika tidak ingin diubah.
+                                            Untuk nilai tepat tertentu, isi Min dan Max dengan angka yang sama.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ([
+                                                    'suhu' => 'Suhu',
+                                                    'speed' => 'Speed',
+                                                    'berat_pcs' => 'Berat PCS',
+                                                    'berat_pack' => 'Berat Pack',
+                                                ] as $key => $label)
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                <input
+                                                                    type="number"
+                                                                    step="any"
+                                                                    name="standar_ref[{{ $key }}][min]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Min"
+                                                                    value="{{ old("standar_ref.{$key}.min", data_get($std, "{$key}.min")) }}"
+                                                                >
+
+                                                                <span class="text-muted mx-2">s/d</span>
+
+                                                                <input
+                                                                    type="number"
+                                                                    step="any"
+                                                                    name="standar_ref[{{ $key }}][max]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Max"
+                                                                    value="{{ old("standar_ref.{$key}.max", data_get($std, "{$key}.max")) }}"
+                                                                >
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+
+                                                @foreach ([
+                                                    'kalibrasi' => [
+                                                        'label' => 'Kalibrasi',
+                                                        'options' => ['Oke', 'Tidak Oke'],
+                                                    ],
+                                                    'kondisi_segel' => [
+                                                        'label' => 'Kondisi Segel',
+                                                        'options' => ['OKE', 'TIDAK OKE'],
+                                                    ],
+                                                ] as $key => $field)
+                                                    <tr>
+                                                        <td class="align-middle">{{ $field['label'] }}</td>
+                                                        <td class="align-middle">
+                                                            <select
+                                                                name="standar_ref[{{ $key }}]"
+                                                                class="form-control form-control-sm"
+                                                            >
+                                                                <option value="">-- Pilih Standar --</option>
+                                                                @foreach ($field['options'] as $option)
+                                                                    <option
+                                                                        value="{{ $option }}"
+                                                                        {{ old("standar_ref.{$key}", data_get($std, $key)) === $option ? 'selected' : '' }}
+                                                                    >
+                                                                        {{ $option }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+
+                                                <tr>
+                                                    <td class="align-middle">Keterangan</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan', data_get($std, 'keterangan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+                                                
                         @endswitch
 
                         <div class="d-flex justify-content-between">
