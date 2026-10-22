@@ -819,6 +819,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/organoleptik/verification/{uuid}', [OrganoleptikController::class, 'updateVerification'])
         ->name('organoleptik.verification.update');
     Route::get('/organoleptik/export-pdf', [OrganoleptikController::class, 'exportPdf'])->name('organoleptik.exportPdf');
+    // audit-organoleptik
+    Route::get('/organoleptik/audit-data', [OrganoleptikController::class, 'auditIndex'])->name('organoleptik.audit');
+    Route::post('/organoleptik/{uuid}/duplicate-to-audit', [OrganoleptikController::class, 'duplicateToAudit'])->name('organoleptik.duplicateToAudit');
+    Route::post('/organoleptik/audit-bulk/preview', [OrganoleptikController::class, 'auditBulkPreview'])->name('organoleptik.auditBulk.preview');
+    Route::post('/organoleptik/audit-bulk/execute', [OrganoleptikController::class, 'auditBulkExecute'])->name('organoleptik.auditBulk.execute');
     Route::delete('/organoleptik/{uuid}', [OrganoleptikController::class, 'destroy'])->name('organoleptik.destroy');
 
     // Sampel

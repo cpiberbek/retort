@@ -572,6 +572,44 @@ class List_formController extends Controller
                     $standarRef = $cartooningRef;
                 break;
 
+                case 'Pemeriksaan Organoleptik':
+                    $organoRef = [];
+
+                    foreach ([
+                        'penampilan', 'aroma', 'kekenyalan', 'rasa_asin',
+                        'rasa_gurih', 'rasa_manis', 'rasa_daging', 'rasa_keseluruhan',
+                    ] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled) {
+                            if ((int) $min < 1 || (int) $max > 3 || (int) $min > (int) $max) {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "standar_ref.$field" => "{$label}: Skor harus 1 sampai 3 dan Min tidak boleh lebih besar dari Max.",
+                                ]);
+                            }
+                        }
+
+                        $organoRef[$field] = [
+                            'min' => $minFilled ? (int) $min : null,
+                            'max' => $maxFilled ? (int) $max : null,
+                        ];
+                    }
+
+                    $standarRef = $organoRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

@@ -1416,6 +1416,85 @@
                                     </div>
                                 </div>
                             @break
+
+                            @case('Pemeriksaan Organoleptik')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $organoFields = [
+                                        ['penampilan', 'Penampilan'],
+                                        ['aroma', 'Aroma'],
+                                        ['kekenyalan', 'Kekenyalan'],
+                                        ['rasa_asin', 'Rasa Asin'],
+                                        ['rasa_gurih', 'Rasa Gurih'],
+                                        ['rasa_manis', 'Rasa Manis'],
+                                        ['rasa_daging', 'Rasa Daging / Ayam / BBQ / Ikan'],
+                                        ['rasa_keseluruhan', 'Rasa Keseluruhan'],
+                                    ];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika parameter tidak ingin diubah saat membuat data audit.
+                                            Skor 1 sampai 3 (bilangan bulat) dan diacak per baris kode produksi di dalam rentang.
+                                            Min dan Max harus diisi keduanya. Untuk nilai pasti, isi Min dan Max dengan angka yang sama.
+                                            Rata-rata skor dan hasil Release / Tidak Release tetap dihitung ulang otomatis di form.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Parameter</th>
+                                                    <th style="width: 50%;">Standar Skor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($organoFields as [$key, $label])
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    min="1"
+                                                                    max="3"
+                                                                    name="standar_ref[{{ $key }}][min]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Min (1-3)"
+                                                                    value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                >
+
+                                                                <span class="text-muted mx-2">s/d</span>
+
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    min="1"
+                                                                    max="3"
+                                                                    name="standar_ref[{{ $key }}][max]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Max (1-3)"
+                                                                    value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                >
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
                                                 
                         @endswitch
 
@@ -1445,11 +1524,17 @@
                 pairKeys.push(`kekuatan_median_${i}`);
             }
 
-            // Samplings (cacat)
+            // Samplings
             pairKeys.push(
                 'jamur', 'lendir', 'klip_tajam', 'pin_hole', 'air_trap_pvdc', 'air_trap_produk',
                 'keriput', 'bengkok', 'non_kode', 'over_lap', 'kecil', 'terjepit',
                 'double_klip', 'seal_halus', 'basah', 'dll'
+            );
+
+            // Organoleptik
+            pairKeys.push(
+                'penampilan', 'aroma', 'kekenyalan', 'rasa_asin',
+                'rasa_gurih', 'rasa_manis', 'rasa_daging', 'rasa_keseluruhan'
             );
 
             pairKeys.push('release', 'reject', 'hold');
