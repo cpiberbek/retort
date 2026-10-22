@@ -747,6 +747,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/karton/verification/{uuid}', [KartonController::class, 'updateVerification'])
         ->name('karton.verification.update');
     Route::get('/karton/export-pdf', [KartonController::class, 'exportPdf'])->name('karton.exportPdf');
+    // audit-karton
+    Route::get('/karton/audit-data', [KartonController::class, 'auditIndex'])->name('karton.audit');
+    Route::post('/karton/{uuid}/duplicate-to-audit', [KartonController::class, 'duplicateToAudit'])->name('karton.duplicateToAudit');
+    Route::post('/karton/audit-bulk/preview', [KartonController::class, 'auditBulkPreview'])->name('karton.auditBulk.preview');
+    Route::post('/karton/audit-bulk/execute', [KartonController::class, 'auditBulkExecute'])->name('karton.auditBulk.execute');
     Route::delete('/karton/{uuid}', [KartonController::class, 'destroy'])->name('karton.destroy');
 
     // Sampling

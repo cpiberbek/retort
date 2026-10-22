@@ -538,6 +538,40 @@ class List_formController extends Controller
                     $standarRef = $packingRef;
                 break;
 
+                case 'Kontrol Labelisasi Cartooning':
+                    $cartooningRef = [];
+
+                    $min = $standarRef['jumlah']['min'] ?? null;
+                    $max = $standarRef['jumlah']['max'] ?? null;
+
+                    $minFilled = $min !== null && $min !== '';
+                    $maxFilled = $max !== null && $max !== '';
+
+                    if ($minFilled xor $maxFilled) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                        ]);
+                    }
+
+                    if ($minFilled && (int) $min > (int) $max) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min tidak boleh lebih besar dari Max.',
+                        ]);
+                    }
+
+                    $cartooningRef['jumlah'] = [
+                        'min' => $minFilled ? (int) $min : null,
+                        'max' => $maxFilled ? (int) $max : null,
+                    ];
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $cartooningRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $cartooningRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;
