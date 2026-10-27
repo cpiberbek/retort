@@ -20,13 +20,14 @@ class Prepacking extends Model
 
     protected $fillable = [
         'date', 'plant', 'nama_produk', 'kode_produksi', 'conveyor', 'berat_produk', 'suhu_produk', 'kondisi_produk', 'catatan', 
-        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv', 'is_audit', 'source_uuid'
     ];
 
     protected $casts = [
         'suhu_produk'  => 'array',
         'kondisi_produk'  => 'array',
         'berat_produk'  => 'array',
+        'is_audit' => 'boolean',
     ];
     
     protected $dates = ['deleted_at'];
@@ -34,5 +35,20 @@ class Prepacking extends Model
     public function mincing()
     {
         return $this->belongsTo(Mincing::class, 'kode_produksi', 'uuid');
+    }
+
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();
+
+        return $clone;
     }
 }

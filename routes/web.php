@@ -967,6 +967,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         ->name('prepacking.verification.update');
     Route::get('/prepacking/export-pdf', [PrepackingController::class, 'exportPdf'])->name('prepacking.exportPdf');
     Route::get('/prepacking/export-excel', [PrepackingController::class, 'exportExcel'])->name('prepacking.exportExcel');
+    // audit-prepacking
+    Route::get('/prepacking/audit-data', [PrepackingController::class, 'auditIndex'])->name('prepacking.audit');
+    Route::post('/prepacking/{uuid}/duplicate-to-audit', [PrepackingController::class, 'duplicateToAudit'])->name('prepacking.duplicateToAudit');
+    Route::post('/prepacking/audit-bulk/preview', [PrepackingController::class, 'auditBulkPreview'])->name('prepacking.auditBulk.preview');
+    Route::post('/prepacking/audit-bulk/execute', [PrepackingController::class, 'auditBulkExecute'])->name('prepacking.auditBulk.execute');
     Route::delete('/prepacking/{uuid}', [PrepackingController::class, 'destroy'])->name('prepacking.destroy');
 
     // Washing

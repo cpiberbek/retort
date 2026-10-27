@@ -679,6 +679,48 @@ class List_formController extends Controller
                     $standarRef = $retainRef;
                 break;
 
+                case 'Pemeriksaan Pre Packing':
+                    $prepackingRef = [];
+
+                    foreach ([
+                        'suhu_prepacking', 'pcs', 'toples',
+                        'basah_air_ujung', 'basah_air_seal', 'kering_air_ujung', 'kering_air_seal',
+                        'basah_minyak_ujung', 'basah_minyak_seal', 'kering_minyak_ujung', 'kering_minyak_seal',
+                    ] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled && (float) $min > (float) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min tidak boleh lebih besar dari Max.",
+                            ]);
+                        }
+
+                        $prepackingRef[$field] = [
+                            'min' => $minFilled ? (float) $min : null,
+                            'max' => $maxFilled ? (float) $max : null,
+                        ];
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $prepackingRef['catatan'] = is_string($catatan) && trim($catatan) !== ''
+                        ? trim($catatan)
+                        : null;
+
+                    $standarRef = $prepackingRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

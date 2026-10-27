@@ -1623,6 +1623,113 @@
                                     </div>
                                 </div>
                             @break
+
+                            @case('Pemeriksaan Pre Packing')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $prepackingFields = [
+                                        ['suhu_prepacking', 'Suhu Varian (°C) - berlaku untuk Suhu 1, 2, 3', 'range', 'SUHU VARIAN'],
+
+                                        ['pcs', 'Berat per Pcs - berlaku untuk Pcs 1, 2, 3', 'range', 'BERAT VARIAN'],
+                                        ['toples', 'Berat per Toples (berat kotor) - berlaku untuk Toples 1, 2, 3', 'range', 'BERAT VARIAN'],
+
+                                        ['basah_air_ujung', 'Basah - Air Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['basah_air_seal', 'Basah - Air Seal (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_air_ujung', 'Kering - Air Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_air_seal', 'Kering - Air Seal (%)', 'range', 'KONDISI PRODUK'],
+                                        ['basah_minyak_ujung', 'Basah - Minyak Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['basah_minyak_seal', 'Basah - Minyak Seal (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_minyak_ujung', 'Kering - Minyak Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_minyak_seal', 'Kering - Minyak Seal (%)', 'range', 'KONDISI PRODUK'],
+
+                                        ['catatan', 'Catatan', 'text', 'CATATAN'],
+                                    ];
+
+                                    $lastGroup = null;
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang diacak sesuai rentang min-max, tiap titik ukur diacak sendiri.
+                                            Min &amp; Max harus diisi keduanya. Untuk nilai pasti, isi Min dan Max dengan angka yang sama.
+                                            Total Air / Minyak pada kondisi produk dihitung ulang otomatis.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($prepackingFields as [$key, $label, $type, $group])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
+                                                    <tr>
+                                                        <td class="align-middle" style="padding-left: 1.5rem;">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'range')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @else
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
                                                 
                         @endswitch
 
@@ -1670,6 +1777,13 @@
                 'panjang', 'diameter',
                 'sensori_rasa', 'sensori_warna', 'sensori_aroma', 'sensori_texture',
                 'lab_garam', 'lab_air', 'lab_mikro'
+            );
+
+            // Pre Packing
+            pairKeys.push(
+                'suhu_prepacking', 'pcs', 'toples',
+                'basah_air_ujung', 'basah_air_seal', 'kering_air_ujung', 'kering_air_seal',
+                'basah_minyak_ujung', 'basah_minyak_seal', 'kering_minyak_ujung', 'kering_minyak_seal'
             );
 
             pairKeys.push('release', 'reject', 'hold');
