@@ -73,7 +73,7 @@
 
         {{-- ===================== HEADER ===================== --}}
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
-            <h4>Data Audit Pemeriksaan Pre Packing</h4>
+            <h4>Data Pemeriksaan Pre Packing</h4>
         </div>
 
         {{-- ===================== MODE AUDIT (disembunyikan untuk auditor) ===================== --}}
