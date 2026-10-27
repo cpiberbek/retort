@@ -29,6 +29,13 @@ class PemeriksaanRetain extends Model
         'catatan_spv',    
         'verified_by',    
         'verified_at',    
+
+        'is_audit',
+        'source_uuid',
+    ];
+
+    protected $casts = [
+        'is_audit' => 'boolean',
     ];
 
     /**
@@ -79,6 +86,27 @@ class PemeriksaanRetain extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PemeriksaanRetainItem::class, 'pemeriksaan_retain_id');
+    }
+
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id', 'uuid']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();
+
+        foreach ($this->items as $item) {
+            $copy = $item->replicate(['id', 'uuid']);
+            $copy->pemeriksaan_retain_id = $clone->id;
+            $copy->save();
+        }
+
+        return $clone;
     }
 
     /**

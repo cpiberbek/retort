@@ -322,6 +322,16 @@ Route::middleware('auth')->group(function () {
         [PemeriksaanRetainController::class, 'deletePermanent']
     )->name('pemeriksaan_retain.deletePermanent');
 
+    // audit-pemeriksaan_retain
+    Route::get('pemeriksaan-retain/audit-data', [PemeriksaanRetainController::class, 'auditIndex'])
+        ->name('pemeriksaan_retain.audit');
+    Route::post('pemeriksaan-retain/{uuid}/duplicate-to-audit', [PemeriksaanRetainController::class, 'duplicateToAudit'])
+        ->name('pemeriksaan_retain.duplicateToAudit');
+    Route::post('pemeriksaan-retain/audit-bulk/preview', [PemeriksaanRetainController::class, 'auditBulkPreview'])
+        ->name('pemeriksaan_retain.auditBulk.preview');
+    Route::post('pemeriksaan-retain/audit-bulk/execute', [PemeriksaanRetainController::class, 'auditBulkExecute'])
+        ->name('pemeriksaan_retain.auditBulk.execute');
+
     Route::resource('pemeriksaan_retain', PemeriksaanRetainController::class)
         ->names('pemeriksaan_retain');
 

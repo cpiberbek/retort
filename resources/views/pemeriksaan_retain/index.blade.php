@@ -129,6 +129,20 @@
             </div>
         @endif
 
+        @if (session('warning'))
+            <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                {{ session('warning') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
+        @if (session('info'))
+            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                {{ session('info') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        @endif
+
         <div class="d-sm-flex justify-content-between align-items-center mb-4">
             <h2 class="h4">Data Pemeriksaan Retain</h2>
             <div class="btn-group" role="group">
@@ -153,6 +167,26 @@
                 @endcan
             </div>
         </div>
+
+        @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h6 class="mb-0">
+                        <span class="text-primary" style="font-weight: 600;">
+                            <i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i>
+                            Mode Operasional
+                        </span>
+                    </h6>
+                    <form action="{{ route('toggle.mode.audit') }}" method="POST" class="d-inline"
+                        onsubmit="return confirm('Masuk ke Mode Audit?')">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-shield-check"></i> Mode Audit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endunless
 
         {{-- Filter dan Live Search --}}
         <form id="filterForm" method="GET" action="{{ route('pemeriksaan_retain.index') }}"

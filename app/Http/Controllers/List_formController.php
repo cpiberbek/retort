@@ -610,6 +610,75 @@ class List_formController extends Controller
                     $standarRef = $organoRef;
                 break;
 
+                case 'Pemeriksaan Sampel Retain':
+                    $retainRef = [];
+
+                    $rangeRules = [
+                        'panjang'         => false,
+                        'diameter'        => false,
+                        'lab_garam'       => false,
+                        'lab_air'         => false,
+                        'lab_mikro'       => false,
+                        'sensori_rasa'    => true,
+                        'sensori_warna'   => true,
+                        'sensori_aroma'   => true,
+                        'sensori_texture' => true,
+                    ];
+
+                    foreach ($rangeRules as $field => $isScore) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled) {
+                            if ((float) $min > (float) $max) {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "standar_ref.$field" => "{$label}: Min tidak boleh lebih besar dari Max.",
+                                ]);
+                            }
+
+                            if ($isScore && ((int) $min < 1 || (int) $max > 3)) {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "standar_ref.$field" => "{$label}: Skor harus bernilai 1 sampai 3.",
+                                ]);
+                            }
+                        }
+
+                        $retainRef[$field] = [
+                            'min' => $minFilled ? ($isScore ? (int) $min : (float) $min) : null,
+                            'max' => $maxFilled ? ($isScore ? (int) $max : (float) $max) : null,
+                        ];
+                    }
+
+                    foreach ([
+                        'temuan_jamur', 'temuan_lendir', 'temuan_pinehole',
+                        'temuan_kejepit', 'temuan_seal',
+                    ] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $retainRef[$field] = in_array((string) $value, ['0', '1'], true)
+                            ? (int) $value
+                            : null;
+                    }
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $retainRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $retainRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;
