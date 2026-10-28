@@ -252,6 +252,11 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('checklistmagnettrap', MagnetTrapController::class);
 
+    Route::get('/inspections/audit-data', [RawMaterialInspectionController::class, 'auditIndex'])->name('inspections.audit');
+    Route::post('/inspections/{uuid}/duplicate-to-audit', [RawMaterialInspectionController::class, 'duplicateToAudit'])->name('inspections.duplicateToAudit');
+    Route::post('/inspections/audit-bulk/preview', [RawMaterialInspectionController::class, 'auditBulkPreview'])->name('inspections.auditBulk.preview');
+    Route::post('/inspections/audit-bulk/execute', [RawMaterialInspectionController::class, 'auditBulkExecute'])->name('inspections.auditBulk.execute');
+
 
     Route::get('/inspections/{inspection}/form-update', [RawMaterialInspectionController::class, 'showUpdateForm'])
         ->name('inspections.form_update');

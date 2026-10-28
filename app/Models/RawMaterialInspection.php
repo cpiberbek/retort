@@ -28,6 +28,7 @@ class RawMaterialInspection extends Model
         'suhu_daging' => 'decimal:2',
         'analisa_logo_halal' => 'boolean',
         'dokumen_halal_berlaku' => 'boolean',
+        'is_audit' => 'boolean',
     ];
 
     protected static function booted(): void
@@ -71,5 +72,26 @@ class RawMaterialInspection extends Model
     public function details()
     {
         return $this->hasMany(InspectionProductDetail::class, 'raw_material_inspection_uuid', 'uuid');
+    }
+
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id', 'uuid']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();
+
+        foreach ($this->productDetails as $detail) {
+            $copy = $detail->replicate(['id', 'uuid']);
+            $copy->raw_material_inspection_uuid = $clone->uuid;
+            $copy->save();
+        }
+
+        return $clone;
     }
 }

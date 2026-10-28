@@ -1730,7 +1730,156 @@
                                     </div>
                                 </div>
                             @break
-                                                
+
+                            @case('Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    // [key, label, type, grup]
+                                    $rawFields = [
+                                        ['suhu_mobil', 'Suhu Mobil (°C)', 'range', 'KONDISI MOBIL'],
+                                        ['mobil_check_warna', 'Cek Warna', 'check', 'KONDISI MOBIL'],
+                                        ['mobil_check_kotoran', 'Cek Kotoran', 'check', 'KONDISI MOBIL'],
+                                        ['mobil_check_aroma', 'Cek Aroma', 'check', 'KONDISI MOBIL'],
+                                        ['mobil_check_kemasan', 'Cek Kemasan', 'check', 'KONDISI MOBIL'],
+                                        ['kondisi_mobil', 'Kondisi Mobil', 'checklist', 'KONDISI MOBIL'],
+
+                                        ['suhu_daging', 'Suhu Bahan (°C)', 'range', 'BAHAN'],
+
+                                        ['analisa_ka_ffa', 'Analisa KA / FFA', 'range', 'ANALISA'],
+                                        ['analisa_logo_halal', 'Logo Halal', 'check', 'ANALISA'],
+                                        ['dokumen_halal_berlaku', 'Dokumen Halal Berlaku', 'check', 'ANALISA'],
+
+                                        ['jumlah_sampel', 'Jumlah Sampel (tiap item produk)', 'range', 'DETAIL PRODUK'],
+                                        ['jumlah_reject', 'Jumlah Reject (tiap item produk)', 'range', 'DETAIL PRODUK'],
+
+                                        ['keterangan', 'Keterangan', 'text', 'KETERANGAN'],
+                                    ];
+
+                                    $kondisiOptions = [
+                                        'Bersih',
+                                        'Kering',
+                                        'Tidak Bocor',
+                                        'Tidak Berdebu',
+                                        'Tidak Basah',
+                                        'Bebas Hama',
+                                        'Bebas Noda (Karat, cat, tinta)',
+                                        'Bebas Bekas oli di lantai/dinding',
+                                        'Tidak ada produk non halal',
+                                    ];
+
+                                    $lastGroup = null;
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang diacak di dalam rentang min-max (Min &amp; Max harus diisi keduanya,
+                                            isi angka yang sama untuk nilai pasti). Jumlah Sampel dan Jumlah Reject diterapkan ke
+                                            setiap item produk tanpa mengubah jumlah itemnya. Kondisi Mobil: jika ada yang dicentang,
+                                            semua data audit memakai pilihan itu; jika tidak ada yang dicentang, tidak diubah.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($rawFields as [$key, $label, $type, $group])
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
+                                                    <tr>
+                                                        <td class="align-middle" style="padding-left: 1.5rem;">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'range')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @elseif ($type === 'check')
+                                                                @php $current = old('standar_ref.' . $key, data_get($std, $key)); @endphp
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    <option value="1" {{ (string) $current === '1' ? 'selected' : '' }}>OK</option>
+                                                                    <option value="0" {{ (string) $current === '0' ? 'selected' : '' }}>Tidak OK</option>
+                                                                </select>
+                                                            @elseif ($type === 'checklist')
+                                                                @php
+                                                                    $selected = old('standar_ref.kondisi_mobil', data_get($std, 'kondisi_mobil'));
+                                                                    $selected = is_array($selected) ? $selected : [];
+                                                                @endphp
+                                                                @foreach ($kondisiOptions as $i => $opt)
+                                                                    <div class="custom-control custom-checkbox">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            class="custom-control-input"
+                                                                            id="kondisi_mobil_{{ $i }}"
+                                                                            name="standar_ref[kondisi_mobil][]"
+                                                                            value="{{ $opt }}"
+                                                                            {{ in_array($opt, $selected, true) ? 'checked' : '' }}
+                                                                        >
+                                                                        <label class="custom-control-label" for="kondisi_mobil_{{ $i }}">
+                                                                            {{ $opt }}
+                                                                        </label>
+                                                                    </div>
+                                                                @endforeach
+                                                            @else
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ old('standar_ref.' . $key, data_get($std, $key)) }}"
+                                                                >
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+                                                                            
                         @endswitch
 
                         <div class="d-flex justify-content-between">
@@ -1785,6 +1934,9 @@
                 'basah_air_ujung', 'basah_air_seal', 'kering_air_ujung', 'kering_air_seal',
                 'basah_minyak_ujung', 'basah_minyak_seal', 'kering_minyak_ujung', 'kering_minyak_seal'
             );
+
+            // Kedatangan Bahan Baku
+            pairKeys.push('suhu_mobil', 'suhu_daging', 'analisa_ka_ffa', 'jumlah_sampel', 'jumlah_reject');
 
             pairKeys.push('release', 'reject', 'hold');
 
