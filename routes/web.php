@@ -282,6 +282,16 @@ Route::middleware('auth')->group(function () {
     Route::get('packaging-inspections/verification', [PackagingInspectionController::class, 'showVerificationList'])
         ->name('packaging-inspections.verification');
 
+    // audit-packaging-inspections
+    Route::get('/packaging-inspections/audit-data', [PackagingInspectionController::class, 'auditIndex'])
+        ->name('packaging-inspections.audit');
+    Route::post('/packaging-inspections/{uuid}/duplicate-to-audit', [PackagingInspectionController::class, 'duplicateToAudit'])
+        ->name('packaging-inspections.duplicateToAudit');
+    Route::post('/packaging-inspections/audit-bulk/preview', [PackagingInspectionController::class, 'auditBulkPreview'])
+        ->name('packaging-inspections.auditBulk.preview');
+    Route::post('/packaging-inspections/audit-bulk/execute', [PackagingInspectionController::class, 'auditBulkExecute'])
+        ->name('packaging-inspections.auditBulk.execute');
+
     // RUTE BARU: Memproses modal verifikasi Packaging
     Route::put('packaging-inspections/verify/{inspection}', [PackagingInspectionController::class, 'verify'])->name('packaging-inspections.verify');
     // Route::resource('packaging-inspections', PackagingInspectionController::class);

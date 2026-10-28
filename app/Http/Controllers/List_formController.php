@@ -789,6 +789,71 @@ class List_formController extends Controller
                     $standarRef = $rawRef;
                 break;
 
+                case 'Pemeriksaan Kedatangan Bahan Kemas':
+                    $packagingRef = [];
+
+                    foreach ([
+                        'condition_weight'  => false,
+                        'quantity_goods'    => true,
+                        'quantity_sample'   => true,
+                        'quantity_reject'   => true,
+                    ] as $field => $isInt) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled && (float) $min > (float) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min tidak boleh lebih besar dari Max.",
+                            ]);
+                        }
+
+                        $packagingRef[$field] = [
+                            'min' => $minFilled ? ($isInt ? (int) $min : (float) $min) : null,
+                            'max' => $maxFilled ? ($isInt ? (int) $max : (float) $max) : null,
+                        ];
+                    }
+
+                    foreach (['condition_design', 'condition_sealing', 'condition_color'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $packagingRef[$field] = in_array($value, ['OK', 'Not OK'], true)
+                            ? $value
+                            : null;
+                    }
+
+                    $accept = $standarRef['acceptance_status'] ?? null;
+                    $packagingRef['acceptance_status'] = in_array($accept, ['OK', 'Tolak'], true)
+                        ? $accept
+                        : null;
+
+                    foreach (['condition_dimension', 'notes'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $packagingRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $vehicleOrder = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
+                    $vehicleInput = array_filter((array) ($standarRef['vehicle_condition'] ?? []), fn ($v) => $v !== '' && $v !== null);
+
+                    $vehicleSelected = array_values(array_intersect($vehicleOrder, $vehicleInput));
+                    $packagingRef['vehicle_condition'] = !empty($vehicleSelected) ? $vehicleSelected : null;
+
+                    $standarRef = $packagingRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

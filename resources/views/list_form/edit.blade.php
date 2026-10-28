@@ -1879,6 +1879,156 @@
                                     </div>
                                 </div>
                             @break
+
+                            @case('Pemeriksaan Kedatangan Bahan Kemas')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $packagingFields = [
+                                        ['condition_design', 'Kondisi Design', 'ok', 'KONDISI'],
+                                        ['condition_sealing', 'Kondisi Sealing', 'ok', 'KONDISI'],
+                                        ['condition_color', 'Kondisi Warna', 'ok', 'KONDISI'],
+                                        ['condition_dimension', 'Dimensi', 'text', 'KONDISI'],
+                                        ['condition_weight', 'Berat', 'range', 'KONDISI'],
+
+                                        ['quantity_goods', 'Qty Barang', 'range_integer', 'KUANTITAS'],
+                                        ['quantity_sample', 'Qty Sampel', 'range_integer', 'KUANTITAS'],
+                                        ['quantity_reject', 'Qty Reject', 'range_integer', 'KUANTITAS'],
+
+                                        ['acceptance_status', 'Penerimaan', 'accept', 'PENERIMAAN'],
+                                        ['vehicle_condition', 'Kondisi Kendaraan', 'checklist', 'KENDARAAN'],
+                                        ['notes', 'Keterangan', 'text', 'KETERANGAN'],
+                                    ];
+
+                                    $packagingOptions = [
+                                        'ok' => ['OK', 'Not OK'],
+                                        'accept' => ['OK', 'Tolak'],
+                                    ];
+
+                                    $vehicleOptions = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
+                                    $vehicleCurrent = old('standar_ref.vehicle_condition', data_get($std, 'vehicle_condition', []));
+                                    if (!is_array($vehicleCurrent)) {
+                                        $vehicleCurrent = [];
+                                    }
+
+                                    $lastGroup = null;
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang diacak per item. Min &amp; Max harus diisi keduanya.
+                                            Untuk nilai pasti, isi Min dan Max dengan angka yang sama (0 s/d 0 untuk tepat 0).
+                                            Standar diterapkan ke setiap item tanpa mengubah jumlah item.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($packagingFields as [$key, $label, $type, $group])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
+                                                    <tr>
+                                                        <td class="align-middle" style="padding-left: 1.5rem;">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if (in_array($type, ['range', 'range_integer']))
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="{{ $type === 'range_integer' ? '1' : 'any' }}"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="{{ $type === 'range_integer' ? '1' : 'any' }}"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @elseif ($type === 'checklist')
+                                                                <input type="hidden" name="standar_ref[{{ $key }}][]" value="">
+                                                                <div class="d-flex flex-wrap">
+                                                                    @foreach ($vehicleOptions as $i => $opt)
+                                                                        <div class="custom-control custom-checkbox mr-3">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                class="custom-control-input"
+                                                                                id="vehicle_std_{{ $i }}"
+                                                                                name="standar_ref[{{ $key }}][]"
+                                                                                value="{{ $opt }}"
+                                                                                {{ in_array($opt, $vehicleCurrent, true) ? 'checked' : '' }}
+                                                                            >
+                                                                            <label class="custom-control-label" for="vehicle_std_{{ $i }}">{{ $opt }}</label>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            @elseif ($type === 'text')
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @else
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    @foreach ($packagingOptions[$type] as $option)
+                                                                        <option
+                                                                            value="{{ $option }}"
+                                                                            {{ $current === $option ? 'selected' : '' }}
+                                                                        >
+                                                                            {{ $option }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
                                                                             
                         @endswitch
 
@@ -1939,6 +2089,9 @@
             pairKeys.push('suhu_mobil', 'suhu_daging', 'analisa_ka_ffa', 'jumlah_sampel', 'jumlah_reject');
 
             pairKeys.push('release', 'reject', 'hold');
+
+            // Packaging
+            pairKeys.push('condition_weight', 'quantity_goods', 'quantity_sample', 'quantity_reject');
 
             const pairFields = pairKeys
                 .map(function (key) {
