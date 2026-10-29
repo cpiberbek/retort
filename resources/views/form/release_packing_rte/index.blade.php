@@ -117,7 +117,9 @@
                                 <th rowspan="2">Keterangan</th>
                                 <th rowspan="2">QC</th>
                                 <th rowspan="2">SPV</th>
+                                @can('can access update button')
                                 <th rowspan="2">Verification</th>
+                                @endcan
                             </tr>
                             <tr>
                                 <th>Reject</th>
@@ -140,7 +142,9 @@
                                     <td class="text-center align-middle">{{ $dep->reject }}</td>
                                     <td class="text-center align-middle">{{ $dep->release }}</td>
                                     <td class="text-center align-middle">{{ $dep->keterangan }}</td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary">Created</span>
@@ -180,6 +184,7 @@
                                             </div>
                                         @endif
                                     </td>
+                                    @can('can access update button')
                                     <td class="text-center align-middle">
                                         @can('can access verification button')
                                             <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm"
@@ -311,6 +316,7 @@
                                             </div>
                                         </div>
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>

@@ -69,7 +69,8 @@ use App\Http\Controllers\{
     MasterPremixController,
     SsoLoginController,
     ProductivityController,
-    IssueComplainController
+    IssueComplainController,
+    AuditModeController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
@@ -119,6 +120,9 @@ Route::middleware('auth')->group(function () {
     // });
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    // AUDIT
+    Route::post('/toggle-mode-audit', [AuditModeController::class, 'toggle'])->name('toggle.mode.audit');
 
     Route::get('dashboard/issue-complain/filter', [DashboardController::class, 'issueComplainFilter'])
     ->name('dashboard.issue-complain.filter');
@@ -228,6 +232,22 @@ Route::middleware('auth')->group(function () {
         'checklistmagnettrap/recycle-bin/{uuid}/force-delete',
         [MagnetTrapController::class, 'deletePermanent']
     )->name('checklistmagnettrap.deletePermanent');
+    // audit-magnettrap
+    Route::get('/magnet-trap/audit-data', [MagnetTrapController::class, 'auditIndex'])
+        ->name('checklistmagnettrap.audit');
+
+    Route::post('/magnet-trap/{uuid}/duplicate-to-audit', [MagnetTrapController::class, 'duplicateToAudit'])
+        ->name('checklistmagnettrap.duplicateToAudit');
+
+    // Bulk Audit Magnet Trap
+    Route::post('checklistmagnettrap/audit-bulk-preview', [MagnetTrapController::class, 'auditBulkPreview'])
+        ->name('checklistmagnettrap.auditBulkPreview');
+
+    Route::post('checklistmagnettrap/audit-bulk-execute', [MagnetTrapController::class, 'auditBulkExecute'])
+        ->name('checklistmagnettrap.auditBulkExecute');
+
+    Route::post('/magnet-trap/{uuid}/duplicate-to-audit-auto', [MagnetTrapController::class, 'duplicateToAuditAuto'])
+        ->name('checklistmagnettrap.duplicateToAuditAuto');
 
 
     Route::resource('checklistmagnettrap', MagnetTrapController::class);
@@ -415,19 +435,26 @@ Route::middleware('auth')->group(function () {
         ->names('berita-acara');
 
 
-    Route::get(
-        '/pemeriksaan-kekuatan-magnet-trap/{pemeriksaanKekuatanMagnetTrap}/update-form',
-        [PemeriksaanKekuatanMagnetTrapController::class, 'showUpdateForm']
-    )
-        ->name('pemeriksaan-kekuatan-magnet-trap.update_form');
-    Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')->name('pemeriksaan-kekuatan-magnet-trap.')->group(function () {
-        Route::get('spv', [PemeriksaanKekuatanMagnetTrapController::class, 'verificationSpv'])
-            ->name('verification.spv');
 
-        // {pemeriksaanKekuatanMagnetTrap} harus cocok dengan variabel di method controller
-        Route::post('{pemeriksaanKekuatanMagnetTrap}/verify-spv', [PemeriksaanKekuatanMagnetTrapController::class, 'verifySpv'])
-            ->name('verify.spv');
+Route::get(
+    '/pemeriksaan-kekuatan-magnet-trap/{pemeriksaanKekuatanMagnetTrap}/update-form',
+    [PemeriksaanKekuatanMagnetTrapController::class, 'showUpdateForm']
+)->name('pemeriksaan-kekuatan-magnet-trap.update_form');
+
+Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
+    ->name('pemeriksaan-kekuatan-magnet-trap.')
+    ->group(function () {
+        Route::get(
+            'spv',
+            [PemeriksaanKekuatanMagnetTrapController::class, 'verificationSpv']
+        )->name('verification.spv');
+
+        Route::post(
+            '{pemeriksaanKekuatanMagnetTrap}/verify-spv',
+            [PemeriksaanKekuatanMagnetTrapController::class, 'verifySpv']
+        )->name('verify.spv');
     });
+
     Route::get(
         'pemeriksaan-kekuatan-magnet-trap/recycle-bin',
         [PemeriksaanKekuatanMagnetTrapController::class, 'recyclebin']
@@ -443,11 +470,44 @@ Route::middleware('auth')->group(function () {
         [PemeriksaanKekuatanMagnetTrapController::class, 'deletePermanent']
     )->name('pemeriksaan-kekuatan-magnet-trap.deletePermanent');
 
-    Route::resource('pemeriksaan-kekuatan-magnet-trap', PemeriksaanKekuatanMagnetTrapController::class)
-        ->names('pemeriksaan-kekuatan-magnet-trap');
+    Route::get(
+        '/pemeriksaan-kekuatan-magnet-trap/audit-data',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'auditIndex']
+    )->name('pemeriksaan-kekuatan-magnet-trap.audit');
 
-    Route::get('checkingpowermagnettrap/export-pdf', [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf'])->name('checkingpowermagnettrap.exportPdf');
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/audit-bulk/preview',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'auditBulkPreview']
+    )->name('pemeriksaan-kekuatan-magnet-trap.auditBulk.preview');
 
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/audit-bulk/execute',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'auditBulkExecute']
+    )->name('pemeriksaan-kekuatan-magnet-trap.auditBulk.execute');
+
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/{uuid}/duplicate-to-audit-auto',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'duplicateToAuditAuto']
+    )->name('pemeriksaan-kekuatan-magnet-trap.duplicateToAuditAuto');
+
+    Route::post(
+        '/pemeriksaan-kekuatan-magnet-trap/{uuid}/duplicate-to-audit',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'duplicateToAudit']
+    )->name('pemeriksaan-kekuatan-magnet-trap.duplicateToAudit');
+
+    Route::resource(
+        'pemeriksaan-kekuatan-magnet-trap',
+        PemeriksaanKekuatanMagnetTrapController::class
+    )->names('pemeriksaan-kekuatan-magnet-trap');
+
+    Route::get(
+        'checkingpowermagnettrap/export-pdf',
+        [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf']
+    )->name('checkingpowermagnettrap.exportPdf');
+
+
+    Route::get('checkingpowermagnettrap/export-pdf', [PemeriksaanKekuatanMagnetTrapController::class, 'exportPdf'])->name('checkingpowermagnettrap.exportPdf');    
+    
     Route::get(
         '/penyimpangan-kualitas/{penyimpanganKualitas}/update-form',
         [PenyimpanganKualitasController::class, 'showUpdateForm']
@@ -569,6 +629,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/stuffing/export-pdf', [App\Http\Controllers\StuffingController::class, 'exportPdf'])->name('stuffing.exportPdf');
     Route::get('/stuffing/export-excel', [App\Http\Controllers\StuffingController::class, 'exportExcel'])->name('stuffing.exportExcel');
     Route::get('/stuffing', [StuffingController::class, 'index'])->name('stuffing.index');
+    // audit-stuffing
+    Route::get('/stuffing/audit-data', [StuffingController::class, 'auditIndex'])->name('stuffing.audit');
+    Route::post('/stuffing/{uuid}/duplicate-to-audit', [StuffingController::class, 'duplicateToAudit'])->name('stuffing.duplicateToAudit');
+    Route::post('/stuffing/audit-bulk/preview', [StuffingController::class, 'auditBulkPreview'])->name('stuffing.auditBulk.preview');
+    Route::post('/stuffing/audit-bulk/execute', [StuffingController::class, 'auditBulkExecute'])->name('stuffing.auditBulk.execute');
+
     Route::get('/stuffing/create', [StuffingController::class, 'create'])->name('stuffing.create');
     Route::post('/stuffing', [StuffingController::class, 'store'])->name('stuffing.store');
     Route::get('/stuffing/update/{uuid}', [StuffingController::class, 'update'])->name('stuffing.update.form');
@@ -583,6 +649,12 @@ Route::middleware('auth')->group(function () {
     // Wire
     Route::get('/wire/export-pdf', [WireController::class, 'exportPdf'])->name('wire.exportPdf');
     Route::get('/wire', [WireController::class, 'index'])->name('wire.index');
+    // audit-wire
+    Route::get('/wire/audit-data', [WireController::class, 'auditIndex'])->name('wire.audit');
+    Route::post('/wire/{uuid}/duplicate-to-audit', [WireController::class, 'duplicateToAudit'])->name('wire.duplicateToAudit');
+    Route::post('/wire/{uuid}/auto-duplicate-to-audit', [WireController::class, 'autoDuplicateToAudit'])->name('wire.autoDuplicateToAudit')->middleware('can:can access update button');
+    Route::post('/wire/audit-bulk/preview', [WireController::class, 'auditBulkPreview'])->name('wire.auditBulk.preview')->middleware('can:can access update button');
+    Route::post('/wire/audit-bulk/execute', [WireController::class, 'auditBulkExecute'])->name('wire.auditBulk.execute')->middleware('can:can access update button');
     Route::get('/wire/create', [WireController::class, 'create'])->name('wire.create');
     Route::post('/wire', [WireController::class, 'store'])->name('wire.store');
     Route::get('/wire/update/{uuid}', [WireController::class, 'update'])->name('wire.update.form');
@@ -614,6 +686,11 @@ Route::middleware('auth')->group(function () {
     // Chamber
     Route::get('/chamber/export-pdf', [ChamberController::class, 'exportPdf'])->name('chamber.exportPdf');
     Route::get('/chamber', [ChamberController::class, 'index'])->name('chamber.index');
+    // audit-chamber
+    Route::get('/chamber/audit-data', [ChamberController::class, 'auditIndex'])->name('chamber.audit');
+    Route::post('/chamber/{uuid}/duplicate-to-audit', [ChamberController::class, 'duplicateToAudit'])->name('chamber.duplicateToAudit');
+    Route::post('/chamber/audit-bulk/preview', [ChamberController::class, 'auditBulkPreview'])->name('chamber.auditBulk.preview');
+    Route::post('/chamber/audit-bulk/execute', [ChamberController::class, 'auditBulkExecute'])->name('chamber.auditBulk.execute');
     Route::get('/chamber/create', [ChamberController::class, 'create'])->name('chamber.create');
     Route::post('/chamber', [ChamberController::class, 'store'])->name('chamber.store');
     Route::get('/chamber/update/{uuid}', [ChamberController::class, 'update'])->name('chamber.update.form');
@@ -740,6 +817,13 @@ Route::middleware('auth')->group(function () {
 
     // PVDC
     Route::get('/pvdc', [PvdcController::class, 'index'])->name('pvdc.index');
+    // PVDC - Audit
+    Route::get('/pvdc/audit-data', [PvdcController::class, 'auditIndex'])->name('pvdc.audit');
+    Route::post('/pvdc/{uuid}/duplicate-to-audit', [PvdcController::class, 'duplicateToAudit'])->name('pvdc.duplicateToAudit');
+    Route::post('/pvdc/{uuid}/auto-duplicate-to-audit', [PvdcController::class, 'autoDuplicateToAudit'])->name('pvdc.autoDuplicateToAudit');
+    Route::post('/pvdc/audit-bulk/preview', [PvdcController::class, 'auditBulkPreview'])->name('pvdc.auditBulk.preview');
+    Route::post('/pvdc/audit-bulk/execute', [PvdcController::class, 'auditBulkExecute'])->name('pvdc.auditBulk.execute');
+    Route::post('/pvdc/bulk-duplicate-to-audit', [PvdcController::class, 'bulkDuplicateToAudit'])->name('pvdc.bulkDuplicateToAudit');
     Route::get('/pvdc/create', [PvdcController::class, 'create'])->name('pvdc.create');
     Route::post('/pvdc', [PvdcController::class, 'store'])->name('pvdc.store');
     Route::get('/pvdc/update/{uuid}', [PvdcController::class, 'update'])->name('pvdc.update.form');
@@ -747,8 +831,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/pvdc/edit/{uuid}', [PvdcController::class, 'edit'])->name('pvdc.edit.form');
     Route::put('/pvdc/edit_spv/{uuid}', [PvdcController::class, 'edit_spv'])->name('pvdc.edit_spv');
     Route::get('/pvdc/verification', [PvdcController::class, 'verification'])->name('pvdc.verification');
-    Route::put('/pvdc/verification/{uuid}', [PvdcController::class, 'updateVerification'])
-        ->name('pvdc.verification.update');
+    Route::put('/pvdc/verification/{uuid}', [PvdcController::class, 'updateVerification'])->name('pvdc.verification.update');
     Route::delete('/pvdc/{uuid}', [PvdcController::class, 'destroy'])->name('pvdc.destroy');
     Route::get('/pvdc/export-pdf', [PvdcController::class, 'exportPdf'])->name('pvdc.exportPdf');
 
@@ -757,6 +840,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/labelisasi-pvdc/{uuid}/result', [Labelisasi_pvdcController::class, 'result'])->name('labelisasi_pvdc.result');
     Route::get('/labelisasi_pvdc/create', [Labelisasi_pvdcController::class, 'create'])->name('labelisasi_pvdc.create');
     Route::post('/labelisasi_pvdc', [Labelisasi_pvdcController::class, 'store'])->name('labelisasi_pvdc.store');
+    // labelisasi PVDC-audit
+    Route::get('/labelisasi_pvdc/audit-data', [Labelisasi_pvdcController::class, 'auditIndex'])->name('labelisasi_pvdc.audit');
+    Route::post('/labelisasi_pvdc/{uuid}/duplicate-to-audit', [Labelisasi_pvdcController::class, 'duplicateToAudit'])->name('labelisasi_pvdc.duplicateToAudit');
+    Route::post('/labelisasi_pvdc/{uuid}/auto-duplicate-to-audit', [Labelisasi_pvdcController::class, 'autoDuplicateToAudit'])->name('labelisasi_pvdc.autoDuplicateToAudit')->middleware('can:can access update button');
+    Route::post('/labelisasi_pvdc/audit-bulk/preview', [Labelisasi_pvdcController::class, 'auditBulkPreview'])->name('labelisasi_pvdc.auditBulk.preview')->middleware('can:can access update button');
+    Route::post('/labelisasi_pvdc/audit-bulk/execute', [Labelisasi_pvdcController::class, 'auditBulkExecute'])->name('labelisasi_pvdc.auditBulk.execute')->middleware('can:can access update button');
     Route::get('/labelisasi_pvdc/update/{uuid}', [Labelisasi_pvdcController::class, 'update'])->name('labelisasi_pvdc.update.form');
     Route::put('/labelisasi_pvdc/update_qc/{uuid}', [Labelisasi_pvdcController::class, 'update_qc'])->name('labelisasi_pvdc.update_qc');
     Route::get('/labelisasi_pvdc/edit/{uuid}', [Labelisasi_pvdcController::class, 'edit'])->name('labelisasi_pvdc.edit.form');
@@ -784,6 +873,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/mincing/export-pdf', [MincingController::class, 'exportPdf'])->name('mincing.exportPdf');
     Route::get('/mincing/export-excel', [MincingController::class, 'exportExcel'])->name('mincing.exportExcel');
     Route::delete('/mincing/{uuid}', [MincingController::class, 'destroy'])->name('mincing.destroy');
+    // audit-mincing
+    Route::get('/mincing/audit-data', [MincingController::class, 'auditIndex'])->name('mincing.audit');
+    Route::post('/mincing/{uuid}/duplicate-to-audit', [MincingController::class, 'duplicateToAudit'])->name('mincing.duplicateToAudit');
+    Route::post('/mincing/audit-bulk/preview', [MincingController::class, 'auditBulkPreview'])->name('mincing.auditBulk.preview');
+    Route::post('/mincing/audit-bulk/execute', [MincingController::class, 'auditBulkExecute'])->name('mincing.auditBulk.execute');
 
     // Metal
     Route::get('/metal', [MetalController::class, 'index'])->name('metal.index');
@@ -798,11 +892,22 @@ Route::middleware('auth')->group(function () {
         ->name('metal.verification.update');
     Route::get('/metal/export-pdf', [MetalController::class, 'exportPdf'])->name('metal.exportPdf');
     Route::delete('/metal/{uuid}', [MetalController::class, 'destroy'])->name('metal.destroy');
+    //audit-metal
+    Route::get('/metal/audit-data', [MetalController::class, 'auditIndex'])->name('metal.audit');
+    Route::post('/metal/{uuid}/duplicate-to-audit', [MetalController::class, 'duplicateToAudit'])->name('metal.duplicateToAudit');
+    Route::post('/metal/audit-bulk/preview', [MetalController::class, 'auditBulkPreview'])->name('metal.auditBulk.preview');
+    Route::post('/metal/audit-bulk/execute', [MetalController::class, 'auditBulkExecute'])->name('metal.auditBulk.execute');
+
 
     // Pemasakan
     Route::get('/pemasakan/export-pdf', [PemasakanController::class, 'exportPdf'])->name('pemasakan.exportPdf');
     Route::get('/pemasakan/export-excel', [PemasakanController::class, 'exportExcel'])->name('pemasakan.exportExcel');
     Route::get('/pemasakan', [PemasakanController::class, 'index'])->name('pemasakan.index');
+    // audit-pemasakan
+    Route::get('/pemasakan/audit-data', [PemasakanController::class, 'auditIndex'])->name('pemasakan.audit');
+    Route::post('/pemasakan/{uuid}/duplicate-to-audit', [PemasakanController::class, 'duplicateToAudit'])->name('pemasakan.duplicateToAudit');
+    Route::post('/pemasakan/audit-bulk/preview', [PemasakanController::class, 'auditBulkPreview'])->name('pemasakan.auditBulk.preview');
+    Route::post('/pemasakan/audit-bulk/execute', [PemasakanController::class, 'auditBulkExecute'])->name('pemasakan.auditBulk.execute');
     Route::get('/pemasakan/create', [PemasakanController::class, 'create'])->name('pemasakan.create');
     Route::post('/pemasakan', [PemasakanController::class, 'store'])->name('pemasakan.store');
     Route::get('/pemasakan/update/{uuid}', [PemasakanController::class, 'update'])->name('pemasakan.update.form');
@@ -832,6 +937,12 @@ Route::middleware('auth')->group(function () {
     // Washing
     Route::get('/washing/export-pdf', [WashingController::class, 'exportPdf'])->name('washing.exportPdf');
     Route::get('/washing', [WashingController::class, 'index'])->name('washing.index');
+    // washing-audit
+    Route::get('/washing/audit-data', [WashingController::class, 'auditIndex'])->name('washing.audit');
+    Route::post('/washing/{uuid}/duplicate-to-audit', [WashingController::class, 'duplicateToAudit'])->name('washing.duplicateToAudit');
+    Route::post('/washing/audit-bulk/preview', [WashingController::class, 'auditBulkPreview'])->name('washing.auditBulk.preview');
+    Route::post('/washing/audit-bulk/execute', [WashingController::class, 'auditBulkExecute'])
+    ->name('washing.auditBulk.execute');
     Route::get('/washing/create', [WashingController::class, 'create'])->name('washing.create');
     Route::post('/washing', [WashingController::class, 'store'])->name('washing.store');
     Route::get('/washing/update/{uuid}', [WashingController::class, 'update'])->name('washing.update.form');

@@ -10,19 +10,26 @@ use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use TCPDF;
 
 class WireController extends Controller
 {
     public function index(Request $request)
     {
-        $search     = $request->input('search');
+        if (auth()->user()->isAuditView()) {
+            return redirect()->route('wire.audit');
+        }
+
+        $search = $request->input('search');
         $date = $request->input('date');
-        $shift     = $request->input('shift');
-        $userPlant  = Auth::user()->plant;
+        $shift = $request->input('shift');
+        $userPlant = Auth::user()->plant;
 
         $data = Wire::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
+            ->with('auditVersion')
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -42,7 +49,168 @@ class WireController extends Controller
             ->paginate(10)
             ->appends($request->all());
 
-        return view('form.wire.index', compact('data', 'search', 'date', 'shift'));
+        return view(
+            'form.wire.index',
+            compact('data', 'search', 'date', 'shift')
+        );
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!auth()->user()->isAuditView()) {                   
+            return redirect()->route('wire.index');
+        }
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $userPlant = Auth::user()->plant;
+
+        $data = Wire::query()
+            ->where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('data_wire', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderByRaw('COALESCE((SELECT original.date FROM wires AS original WHERE original.uuid = wires.source_uuid LIMIT 1), wires.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM wires AS original WHERE original.uuid = wires.source_uuid LIMIT 1), wires.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM wires AS original WHERE original.uuid = wires.source_uuid LIMIT 1), wires.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view(
+            'form.wire.index_audit',
+            compact('data', 'search', 'date', 'shift')
+        );
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $wire = Wire::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $wire->auditVersion;
+
+        if (!$audit) {
+            $audit = $wire->copyToAudit();
+        }
+
+        return redirect()->route(
+            'wire.edit.form',
+            $audit->uuid
+        );
+    }
+
+    public function autoDuplicateToAudit($uuid)
+    {
+        $created = false;
+ 
+        DB::transaction(function () use ($uuid, &$created) {
+            $wire = Wire::where('uuid', $uuid)
+                ->where('plant', Auth::user()->plant)
+                ->where('is_audit', false)
+                ->lockForUpdate()
+                ->firstOrFail();
+ 
+            if (!$wire->auditVersion) {
+                $wire->copyToAudit();
+                $created = true;
+            }
+        });
+ 
+        return back()->with(
+            'success',
+            $created
+                ? 'Data berhasil diduplikasi menjadi data Audit.'
+                : 'Data Audit sudah tersedia, tidak diduplikasi ulang.'
+        );
+    }
+ 
+    private function bulkAuditBaseQuery(string $start, string $end)
+    {
+        return Wire::query()
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+    }
+ 
+    public function auditBulkPreview(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+ 
+        $base = fn () => $this->bulkAuditBaseQuery($request->start_date, $request->end_date);
+ 
+        $total    = $base()->count();
+        $sudahAda = $base()->whereHas('auditVersion')->count();
+ 
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudahAda,
+            'akan_dibuat' => $total - $sudahAda,
+        ]);
+    }
+ 
+    public function auditBulkExecute(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+ 
+        $rows = $this->bulkAuditBaseQuery($request->start_date, $request->end_date)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+ 
+        if ($rows->isEmpty()) {
+            return back()->with('info', 'Tidak ada data yang perlu diduplikasi.');
+        }
+ 
+        $created = 0;
+        $failed  = 0;
+ 
+        foreach ($rows as $row) {
+            try {
+                DB::transaction(function () use ($row, &$created) {
+                    // Cek ulang di dalam transaksi supaya tidak dobel
+                    $fresh = Wire::where('uuid', $row->uuid)->lockForUpdate()->first();
+ 
+                    if ($fresh && !$fresh->auditVersion()->exists()) {
+                        $fresh->copyToAudit();
+                        $created++;
+                    }
+                });
+            } catch (\Throwable $e) {
+                report($e);
+                $failed++;
+            }
+        }
+ 
+        if ($failed > 0) {
+            return back()->with('warning', "{$created} data berhasil diduplikasi, {$failed} gagal (cek log).");
+        }
+ 
+        return back()->with('success', "{$created} data berhasil diduplikasi menjadi data Audit.");
     }
 
     public function exportPdf(Request $request)

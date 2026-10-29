@@ -124,7 +124,9 @@
 							<td class="text-center align-middle">{{ $pcsText }}</td>
 							<td class="text-center align-middle">{{ $toplesText }}</td>
 							<td class="text-center align-middle">{{ $dep->catatan }}</td>
-							<td class="text-center align-middle">{{ $dep->username }}</td>						<td class="text-center align-middle">
+							<td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>						<td class="text-center align-middle">
 								@if ($dep->status_spv == 0)
 								<span class="fw-bold text-secondary">Created</span>
 								@elseif ($dep->status_spv == 1)

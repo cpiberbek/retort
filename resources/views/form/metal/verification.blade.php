@@ -75,7 +75,9 @@
                             <th>Produksi</th>
                             <th>Engineer</th>
                             <th>SPV</th>
-                            <th>Verification</th>
+                            @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                         </tr>
                     </thead>
                     <tbody>
@@ -102,7 +104,9 @@
                                 : '<span class="text-danger fw-bold">x</span>' !!}
                             </td>
 
-                            <td class="text-center align-middle">{{ $dep->username }}</td>
+                            <td class="text-center">
+                                {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                            </td>
                             <td class="text-center align-middle">{{ $dep->nama_produksi }}</td>
                             <td class="text-center align-middle">{{ $dep->nama_engineer }}</td>
                             <td class="text-center align-middle">

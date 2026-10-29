@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use TCPDF;
+use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -19,16 +20,23 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 
 class StuffingController extends Controller
 {
+    private const LAPORAN_STUFFING = 'Pemeriksaan Stuffing Sosis Retort';
+
     public function index(Request $request)
     {
+        if (auth()->user()->isAuditView()) {
+            return redirect()->route('stuffing.audit');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
         $kodeBatch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
-        $data = Stuffing::with('mincing')
+        $data = Stuffing::with(['mincing', 'auditVersion'])
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $search = strtolower(trim($search));
 
@@ -64,6 +72,312 @@ class StuffingController extends Controller
             'shift',
             'kodeBatch'
         ));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!auth()->user()->isAuditView()) {
+            return redirect()->route('stuffing.index');
+        }
+
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kodeBatch = $request->input('kode_batch');
+        $userPlant = Auth::user()->plant;
+
+        $data = Stuffing::query()
+            ->with('mincing')
+            ->where('stuffings.plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('stuffings.is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('stuffings.is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $search = strtolower(trim($search));
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(stuffings.username) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(stuffings.nama_produk) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(stuffings.data_stuffing) LIKE ?', ["%{$search}%"])
+                        ->orWhereHas('mincing', function ($m) use ($search) {
+                            $m->whereRaw('LOWER(kode_produksi) LIKE ?', ["%{$search}%"]);
+                        });
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('stuffings.date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('stuffings.shift', $shift);
+            })
+            ->when($kodeBatch, function ($query) use ($kodeBatch) {
+                $query->whereHas('mincing', function ($q) use ($kodeBatch) {
+                    $q->where('kode_produksi', 'like', "%{$kodeBatch}%");
+                });
+            })
+            ->orderByRaw('COALESCE((SELECT original.date FROM stuffings AS original WHERE original.uuid = stuffings.source_uuid LIMIT 1), stuffings.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM stuffings AS original WHERE original.uuid = stuffings.source_uuid LIMIT 1), stuffings.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM stuffings AS original WHERE original.uuid = stuffings.source_uuid LIMIT 1), stuffings.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.stuffing.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kodeBatch'
+        ));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $stuffing = Stuffing::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $stuffing->auditVersion) {
+            return redirect()->route('stuffing.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($stuffing);
+
+        return redirect()->route('stuffing.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Stuffing $stuffing): Stuffing
+    {
+        return DB::transaction(function () use ($stuffing) {
+            $clone = $stuffing->copyToAudit();
+
+            $this->autoCorrectFromMaster(
+                $clone,
+                self::LAPORAN_STUFFING
+            );
+
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end = Carbon::parse($request->end_date)->startOfDay();
+
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_STUFFING)
+            ->first();
+
+        abort_if(
+            empty($master?->standar_ref),
+            422,
+            'Master auto correct belum diterapkan untuk plant ini.'
+        );
+
+        $base = Stuffing::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString());
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total' => $total,
+            'sudah_ada' => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
+            return redirect()->route('stuffing.index')
+                ->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed = 0;
+
+        foreach ($targets as $stuffing) {
+            try {
+                $this->createCorrectedAudit($stuffing);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('stuffing.index')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+
+        if ($failed) {
+            $msg .= " {$failed} gagal diproses (cek log).";
+        }
+
+        return redirect()->route('stuffing.index')
+            ->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster($model, string $laporan): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', $laporan)
+            ->first();
+
+        $std = $master?->standar_ref;
+
+        if (is_string($std)) {
+            $std = json_decode($std, true);
+        }
+
+        if (!is_array($std) || empty($std)) {
+            return;
+        }
+
+        $current = $model->data_stuffing;
+
+        $rows = is_array($current)
+            ? $current
+            : (is_string($current) ? json_decode($current, true) : null);
+
+        if (!is_array($rows)) {
+            return;
+        }
+
+        $rangeFields = [
+            'suhu',
+            'kecepatan_stuffing',
+            'panjang_pcs',
+            'berat_pcs',
+            'diameter_klip',
+            'lebar_cassing',
+        ];
+
+        $selectFields = [
+            'sensori',
+            'kebersihan_seal',
+            'kekuatan_seal',
+            'print_kode',
+        ];
+
+        foreach ($rows as &$row) {
+            foreach ($rangeFields as $field) {
+                $rule = $std[$field] ?? null;
+
+                if (!$this->acIsRange($rule)) {
+                    continue;
+                }
+
+                if (($row[$field] ?? null) === null || ($row[$field] ?? '') === '') {
+                    continue;
+                }
+
+                $value = $this->acRandomize($rule);
+
+                if ($value !== null) {
+                    $row[$field] = $value;
+                }
+            }
+
+            foreach ($selectFields as $field) {
+                $value = $std[$field] ?? null;
+
+                if (in_array($value, ['OK', 'Tidak OK'], true)) {
+                    $row[$field] = $value;
+                }
+            }
+
+            $catatan = $std['catatan'] ?? null;
+
+            if ($catatan !== null && trim((string) $catatan) !== '') {
+                $row['catatan'] = $catatan;
+            }
+        }
+
+        unset($row);
+
+        $model->data_stuffing = is_array($current)
+            ? $rows
+            : json_encode($rows, JSON_UNESCAPED_UNICODE);
+
+        $model->save();
+    }
+
+    private function acIsRange($rule): bool
+    {
+        return is_array($rule)
+            && (array_key_exists('min', $rule) || array_key_exists('max', $rule));
+    }
+
+    private function acRandomize(array $rule): ?float
+    {
+        $min = $rule['min'] ?? null;
+        $max = $rule['max'] ?? null;
+
+        if ($min === '' || $min === null) {
+            $min = null;
+        }
+
+        if ($max === '' || $max === null) {
+            $max = null;
+        }
+
+        if ($min === null && $max === null) {
+            return null;
+        }
+
+        if ($max !== null) {
+            $maxInt = (int) round((float) $max * 100);
+
+            if ($min !== null) {
+                $minInt = (int) round((float) $min * 100);
+
+                if ($minInt > $maxInt) {
+                    return null;
+                }
+
+                return round(mt_rand($minInt, $maxInt) / 100, 2);
+            }
+
+            return round(mt_rand($maxInt - 100, $maxInt - 1) / 100, 2);
+        }
+
+        $minInt = (int) round((float) $min * 100);
+
+        return round(mt_rand($minInt + 1, $minInt + 100) / 100, 2);
     }
 
     public function exportPdf(Request $request)

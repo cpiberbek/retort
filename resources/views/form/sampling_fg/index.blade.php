@@ -177,7 +177,9 @@
                                 <th rowspan="2" style="width: 4%;">QC</th>
                                 <th rowspan="2" style="width: 4%;">Koord</th>
                                 <th rowspan="2" style="width: 4%;">SPV</th>
+                                @can('can access update button')
                                 <th rowspan="2" style="width: 5%;">Action</th>
+                                @endcan
                             </tr>
                             <tr>
                                 <th style="width: 4%;">Jam</th>
@@ -222,7 +224,9 @@
                                     <td class="text-center">{{ $dep->hold }}</td>
                                     <td class="text-center small">{{ $dep->item_mutu }}</td>
                                     <td class="text-start small">{{ $dep->catatan }}</td>
-                                    <td class="text-center">{{ $dep->username }}</td>
+                                    <td class="text-center">
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
                                     <td class="text-center">{{ $dep->nama_koordinator }}</td>
 
                                     {{-- STATUS SPV --}}
@@ -236,6 +240,7 @@
                                         @endif
                                     </td>
 
+                                    @can('can access update button')
                                     {{-- ACTION BUTTONS --}}
                                     <td class="text-center align-middle">
                                         @can('can access verification button')
@@ -315,6 +320,7 @@
                                         </div>
                                         {{-- END MODAL --}}
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>

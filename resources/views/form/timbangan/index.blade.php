@@ -116,7 +116,9 @@
                                 <th>Hasil Peneraan</th>
                                 <th>QC</th>
                                 <th>SPV</th>
-                                <th>Verification</th> {{-- Changed from Action to Verification --}}
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan {{-- Changed from Action to Verification --}}
                             </tr>
                         </thead>
                         <tbody>
@@ -203,7 +205,9 @@
                                         @endif
                                     </td>
 
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary">Created</span>

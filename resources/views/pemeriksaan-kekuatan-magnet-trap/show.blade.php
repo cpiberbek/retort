@@ -149,8 +149,10 @@
                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.index') }}" class="btn-custom btn-secondary"><i
                         class="bi bi-arrow-left"></i> Kembali</a>
                 {{-- Route name & variabel diubah --}}
+                @can('can access edit button')
                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.edit', $pemeriksaanKekuatanMagnetTrap->id) }}"
                     class="btn-custom btn-warning"><i class="bi bi-pencil"></i> Edit Data</a>
+                @endcan
             </div>
         </div>
 

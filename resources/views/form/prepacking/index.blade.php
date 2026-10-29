@@ -112,7 +112,9 @@
                                 <th rowspan="2">Catatan</th>
                                 <th rowspan="2">QC</th>
                                 <th rowspan="2">SPV</th>
+                                @can('can access update button')
                                 <th rowspan="2">Verification</th>
+                                @endcan
                             </tr>
                             <tr>
                                 <th>Basah</th>
@@ -183,7 +185,9 @@
                                     <td class="text-center align-middle">{{ $pcsText }}</td>
                                     <td class="text-center align-middle">{{ $toplesText }}</td>
                                     <td class="text-center align-middle">{{ $dep->catatan }}</td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary">Created</span>

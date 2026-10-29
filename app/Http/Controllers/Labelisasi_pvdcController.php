@@ -15,6 +15,7 @@ use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use TCPDF;
 
@@ -39,6 +40,10 @@ class Labelisasi_pvdcController extends Controller
 
     public function index(Request $request)
     {
+        if (auth()->user()->isAuditView()) {
+            return redirect()->route('labelisasi_pvdc.audit');
+        }
+
         $search    = $request->input('search');
         $date      = $request->input('date');
         $shift     = $request->input('shift');
@@ -46,6 +51,8 @@ class Labelisasi_pvdcController extends Controller
 
         $data = Labelisasi_pvdc::query()
         ->where('plant', $userPlant)
+        ->with('auditVersion')
+        ->where('is_audit', false)
         ->when($search, function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('username', 'like', "%{$search}%")
@@ -64,6 +71,166 @@ class Labelisasi_pvdcController extends Controller
         ->paginate(10)
         ->appends($request->all());
         return view('form.labelisasi_pvdc.index', compact('data', 'search', 'date', 'shift'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!auth()->user()->isAuditView()) {                   
+            return redirect()->route('labelisasi_pvdc.index');
+        }
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+
+        $userPlant = Auth::user()->plant;
+
+        $data = Labelisasi_pvdc::where('plant', $userPlant)
+            ->where(function ($query) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $search = strtolower(trim($search));
+
+                $query->where(function ($q) use ($search) {
+                    $q->whereRaw('LOWER(username) LIKE ?', ["%{$search}%"])
+                        ->orWhereRaw('LOWER(nama_produk) LIKE ?', ["%{$search}%"]);
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->orderByRaw('COALESCE((SELECT original.date FROM labelisasi_pvdcs AS original WHERE original.uuid = labelisasi_pvdcs.source_uuid LIMIT 1), labelisasi_pvdcs.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM labelisasi_pvdcs AS original WHERE original.uuid = labelisasi_pvdcs.source_uuid LIMIT 1), labelisasi_pvdcs.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM labelisasi_pvdcs AS original WHERE original.uuid = labelisasi_pvdcs.source_uuid LIMIT 1), labelisasi_pvdcs.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.labelisasi_pvdc.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'shift'
+        ));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $labelisasi = Labelisasi_pvdc::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $labelisasi->auditVersion;
+
+        if (!$audit) {
+            $audit = $labelisasi->copyToAudit();
+        }
+
+        return redirect()->route(
+            'labelisasi_pvdc.edit.form',
+            $audit->uuid
+        );
+    }
+
+    public function autoDuplicateToAudit($uuid)
+    {
+        $created = false;
+ 
+        DB::transaction(function () use ($uuid, &$created) {
+            $labelisasi = Labelisasi_pvdc::where('uuid', $uuid)
+                ->where('plant', Auth::user()->plant)
+                ->where('is_audit', false)
+                ->lockForUpdate()
+                ->firstOrFail();
+ 
+            if (!$labelisasi->auditVersion) {
+                $labelisasi->copyToAudit();
+                $created = true;
+            }
+        });
+ 
+        return back()->with(
+            'success',
+            $created
+                ? 'Data berhasil diduplikasi menjadi data Audit.'
+                : 'Data Audit sudah tersedia, tidak diduplikasi ulang.'
+        );
+    }
+ 
+    private function bulkAuditBaseQuery(string $start, string $end)
+    {
+        return Labelisasi_pvdc::query()
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+    }
+ 
+    public function auditBulkPreview(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+ 
+        $base = fn () => $this->bulkAuditBaseQuery($request->start_date, $request->end_date);
+ 
+        $total    = $base()->count();
+        $sudahAda = $base()->whereHas('auditVersion')->count();
+ 
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudahAda,
+            'akan_dibuat' => $total - $sudahAda,
+        ]);
+    }
+ 
+    public function auditBulkExecute(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+ 
+        $rows = $this->bulkAuditBaseQuery($request->start_date, $request->end_date)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+ 
+        if ($rows->isEmpty()) {
+            return back()->with('info', 'Tidak ada data yang perlu diduplikasi.');
+        }
+ 
+        $created = 0;
+        $failed  = 0;
+ 
+        foreach ($rows as $row) {
+            try {
+                DB::transaction(function () use ($row, &$created) {
+                    // Cek ulang di dalam transaksi supaya tidak dobel
+                    $fresh = Labelisasi_pvdc::where('uuid', $row->uuid)->lockForUpdate()->first();
+ 
+                    if ($fresh && !$fresh->auditVersion()->exists()) {
+                        $fresh->copyToAudit();
+                        $created++;
+                    }
+                });
+            } catch (\Throwable $e) {
+                report($e);
+                $failed++;
+            }
+        }
+ 
+        if ($failed > 0) {
+            return back()->with('warning', "{$created} data berhasil diduplikasi, {$failed} gagal (cek log).");
+        }
+ 
+        return back()->with('success', "{$created} data berhasil diduplikasi menjadi data Audit.");
     }
 
     //modal new function supaya ringan

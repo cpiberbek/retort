@@ -22,14 +22,18 @@ use TCPDF;
 
 class MagnetTrapController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
+    
+    private const LAPORAN_MAGNET_TRAP = 'Checklist Cleaning Magnet Trap';
+
     public function index(Request $request)
     {
-        $query = MagnetTrapModel::query()->with(['updater', 'mincing', 'produksi', 'engineer']);
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('checklistmagnettrap.audit');
+        }
+
+        $query = MagnetTrapModel::query()
+            ->with(['updater', 'mincing', 'produksi', 'engineer', 'auditVersion'])
+            ->where('is_audit', false);
 
         if (Auth::check() && !empty(Auth::user()->plant)) {
             $query->where('plant_uuid', Auth::user()->plant);
@@ -54,28 +58,234 @@ class MagnetTrapController extends Controller
             });
         }
 
-        $data = $query->latest()->paginate(10)->withQueryString();
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('pukul', 'desc')
+            ->paginate(10)
+            ->withQueryString();
 
         return view('magnet_trap.IndexMagnetTrap', compact('data'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-   //  public function create()
-   //  {
-   //     $userPlant = Auth::user()->plant;
-   //     $produks = Produk::where('plant', $userPlant)->get();
-   //     $produks = Produk::orderBy('nama_produk', 'asc')->get();
-   //     $operators = Operator::where('bagian', 'Operator')
-   //     ->orderBy('nama_karyawan', 'asc')
-   //     ->get();
-   //     $engineers = Operator::where('bagian', 'Engineer')
-   //     ->orderBy('nama_karyawan', 'asc')->get();
-   //     return view('magnet_trap.CreateMagnetTrap ', compact('produks', 'operators', 'engineers'));
-   // }
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('checklistmagnettrap.index');
+        }
+
+        $auditSourceUuids = MagnetTrapModel::query()
+            ->where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid');
+
+        $query = MagnetTrapModel::query()
+            ->with(['updater', 'mincing', 'produksi', 'engineer'])
+            ->where(function ($q) use ($auditSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($q) use ($auditSourceUuids) {
+                        $q->where('is_audit', false)
+                            ->whereNotIn('uuid', $auditSourceUuids);
+                    });
+            });
+
+        if (Auth::check() && !empty(Auth::user()->plant)) {
+            $query->where('plant_uuid', Auth::user()->plant);
+        }
+
+        $query->when($request->search, function ($q, $search) {
+            return $q->where(function ($q) use ($search) {
+                $q->where('nama_produk', 'like', "%{$search}%")
+                    ->orWhere('kode_batch', 'like', "%{$search}%");
+            });
+        });
+
+        if ($request->filled('date')) {
+            $date = $request->input('date');
+
+            $query->where(function ($q) use ($date) {
+                $q->whereDate('tanggal', $date)
+                    ->orWhere(function ($q) use ($date) {
+                        $q->whereNull('tanggal')
+                            ->whereDate('created_at', $date);
+                    });
+            });
+        }
+
+        $data = $query
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('pukul', 'desc')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('magnet_trap.IndexMagnetTrapAudit', compact('data'));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        $magnetTrap = MagnetTrapModel::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $magnetTrap->auditVersion;
+
+        if (!$audit) {
+            $audit = $magnetTrap->copyToAudit();
+        }
+
+        $this->autoCorrectFromMaster($audit);
+
+        return redirect()->route('checklistmagnettrap.edit', $audit->id);
+    }
+
+    public function duplicateToAuditAuto($uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $magnetTrap = MagnetTrapModel::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $magnetTrap->auditVersion;
+
+        if ($audit) {
+            $this->autoCorrectFromMaster($audit);
+
+            return redirect()
+                ->route('checklistmagnettrap.edit', $audit->id)
+                ->with('success', 'Status audit berhasil disesuaikan dengan master.');
+        }
+
+        $audit = $this->createCorrectedAudit($magnetTrap);
+
+        return redirect()
+            ->route('checklistmagnettrap.edit', $audit->id)
+            ->with('success', 'Data audit berhasil dibuat dan disesuaikan dengan master.');
+    }
+
+    private function createCorrectedAudit(MagnetTrapModel $magnetTrap): MagnetTrapModel
+    {
+        return DB::transaction(function () use ($magnetTrap) {
+            $clone = $magnetTrap->copyToAudit();
+
+            $this->autoCorrectFromMaster($clone);
+
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_MAGNET_TRAP)
+            ->first();
+
+        abort_if(
+            empty($master?->standar_ref),
+            422,
+            'Master auto correct belum diterapkan untuk plant ini.'
+        );
+
+        $base = MagnetTrapModel::where('plant_uuid', $plant)
+            ->where('is_audit', false)
+            ->whereDate('tanggal', '>=', $request->start_date)
+            ->whereDate('tanggal', '<=', $request->end_date);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total' => $total,
+            'sudah_ada' => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
+            return redirect()
+                ->route('checklistmagnettrap.index')
+                ->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed = 0;
+
+        foreach ($targets as $magnetTrap) {
+            try {
+                $this->createCorrectedAudit($magnetTrap);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()
+                ->route('checklistmagnettrap.index')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $message = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+
+        if ($failed > 0) {
+            $message .= " {$failed} gagal diproses (cek log).";
+        }
+
+        return redirect()
+            ->route('checklistmagnettrap.index')
+            ->with($failed ? 'warning' : 'success', $message);
+    }
+
+    private function autoCorrectFromMaster(MagnetTrapModel $model): void
+    {
+        $master = List_form::where('plant', $model->plant_uuid)
+            ->where('laporan', self::LAPORAN_MAGNET_TRAP)
+            ->first();
+
+        $standarRef = $master?->standar_ref;
+
+        if (is_string($standarRef)) {
+            $standarRef = json_decode($standarRef, true);
+        }
+
+        if (!is_array($standarRef)) {
+            return;
+        }
+
+        $status = $standarRef['status'] ?? null;
+
+        if (in_array($status, ['v', 'x'], true)) {
+            $model->status = $status;
+            $model->save();
+        }
+    }
 
     public function create()
     {

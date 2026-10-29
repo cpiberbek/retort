@@ -1,41 +1,42 @@
-<nav class="navbar navbar-expand navbar-light topbar mb-4 static-top" style="background: linear-gradient(90deg, #A60000 0%, #850000 100%); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+@php
+    $user = auth()->user();
+    $auditTheme = $user->isAuditView() || $user->hasRole('auditor');
+
+    $plantAkun = \App\Models\Plant::where(
+        'uuid',
+        $user->getRawOriginal('plant')
+    )->value('plant');
+
+    $plantActive = \App\Models\Plant::where(
+        'uuid',
+        $user->plant_active
+    )->value('plant') ?? $plantAkun;
+
+    $roleAkun = ucfirst(
+        \Spatie\Permission\Models\Role::whereIn('id', function ($query) use ($user) {
+            $query->select('role_id')
+                ->from('model_has_roles')
+                ->where('model_id', $user->uuid);
+        })->value('name') ?? '-'
+    );
+
+    $plantOpsiRaw = \Illuminate\Support\Facades\DB::table('users')
+        ->where('uuid', $user->uuid)
+        ->value('plant_option');
+
+    $plantOpsi = json_decode($plantOpsiRaw, true) ?? [];
+
+    // Plant yang sedang aktif & Banyumas tidak ditampilkan sebagai opsi pindah
+    $plants = \App\Models\Plant::whereIn('uuid', $plantOpsi)
+        ->where('uuid', '!=', $user->plant_active)
+        ->where('plant', '!=', 'Banyumas')
+        ->get();
+@endphp
+
+<nav class="navbar navbar-expand navbar-light topbar mb-4 static-top {{ $auditTheme ? 'topbar-audit' : '' }}" style="background: linear-gradient(90deg, #A60000 0%, #850000 100%); box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
     <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3 text-white">
         <i class="fa fa-bars"></i>
     </button>
-
-    @php
-        $user = auth()->user();
-
-        $plantAkun = \App\Models\Plant::where(
-            'uuid',
-            $user->getRawOriginal('plant')
-        )->value('plant');
-
-        $plantActive = \App\Models\Plant::where(
-            'uuid',
-            $user->plant_active
-        )->value('plant') ?? $plantAkun;
-
-        $roleAkun = ucfirst(
-            \Spatie\Permission\Models\Role::whereIn('id', function ($query) use ($user) {
-                $query->select('role_id')
-                    ->from('model_has_roles')
-                    ->where('model_id', $user->uuid);
-            })->value('name') ?? '-'
-        );
-
-        $plantOpsiRaw = \Illuminate\Support\Facades\DB::table('users')
-            ->where('uuid', $user->uuid)
-            ->value('plant_option');
-
-        $plantOpsi = json_decode($plantOpsiRaw, true) ?? [];
-
-        // Plant yang sedang aktif & Banyumas tidak ditampilkan sebagai opsi pindah
-        $plants = \App\Models\Plant::whereIn('uuid', $plantOpsi)
-            ->where('uuid', '!=', $user->plant_active)
-            ->where('plant', '!=', 'Banyumas')
-            ->get();
-    @endphp
 
     <div class="card border-0 shadow-sm mb-2 mt-2 w-60 plant-info-card" style="border-radius: 12px;">
         <div class="card-body py-2 px-4">
@@ -409,5 +410,18 @@
         .sidebar-dark .nav-item .nav-link {
             width: 100%;
         }
+    }
+
+    .topbar.topbar-audit {
+        background: #7b1fa2 !important;
+    }
+
+    .topbar.topbar-audit .dropdown-menu .dropdown-item:hover {
+        background-color: #f3e5f5 !important;
+        color: #7b1fa2 !important;
+    }
+
+    .topbar.topbar-audit .dropdown-menu .dropdown-item:hover i {
+        color: #7b1fa2 !important;
     }
 </style>

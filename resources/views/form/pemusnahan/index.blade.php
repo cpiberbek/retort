@@ -119,7 +119,9 @@
                                 <th>Keterangan</th>
                                 <th>QC</th>
                                 <th>SPV</th>
-                                <th>Verification</th>
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -137,7 +139,9 @@
                                         {{ \Carbon\Carbon::parse($dep->expired_date)->format('d-m-Y') }}</td>
                                     <td class="text-center align-middle">{{ $dep->analisa }}</td>
                                     <td class="text-center align-middle">{{ $dep->keterangan }}</td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary">Created</span>

@@ -92,7 +92,9 @@
                                 <th>Pembuat</th>
                                 <th>SPV</th>
                                 <th>Manager</th>
-                                <th>Action</th>
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -178,7 +180,9 @@
                                             <span>-</span>
                                         @endif
                                     </td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary"><b>Created</b></span>

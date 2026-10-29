@@ -44,6 +44,25 @@
                     </div>
                 </div>
 
+                <div class="card shadow-sm mb-3 w-100">
+                    <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <h6 class="mb-0">
+                                <span class="text-primary" style="font-weight: 600;"><i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i> Mode Operasional</span>
+                            </h6>
+                        </div>
+
+                        <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                            onsubmit="return confirm('Masuk ke Mode Audit?')">
+                            @csrf
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class="bi bi-shield-check"></i> Mode Audit
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+
                 {{-- FILTER: Style Washing (Compact & Ada Shift) --}}
                 <form id="filterForm" method="GET" action="{{ route('chamber.index') }}"
                     class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
@@ -196,7 +215,9 @@
                                 <th>QC (User)</th>
                                 <th>Operator</th>
                                 <th>Status SPV</th>
-                                <th>Action</th> {{-- Ubah Header jadi Action agar konsisten --}}
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan {{-- Ubah Header jadi Action agar konsisten --}}
                             </tr>
                         </thead>
                         <tbody>
@@ -317,7 +338,9 @@
                                         @endif
                                     </td>
 
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
                                     <td class="text-center align-middle">{{ $dep->nama_operator }}</td>
 
                                     {{-- STATUS SPV (Sama dengan Washing) --}}

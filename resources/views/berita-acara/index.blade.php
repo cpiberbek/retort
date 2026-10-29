@@ -203,7 +203,9 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                 <th>Nama Barang</th>
                                 <th style="width: 10%;">Status PPIC</th>
                                 <th style="width: 10%;">Status SPV</th>
+                                @can('can access update button')
                                 <th style="width: 25%;">Aksi</th> {{-- Lebar kolom aksi disesuaikan --}}
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -257,6 +259,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                         @endif
                                     </td>
 
+                                    @can('can access update button')
                                     {{-- Aksi (Gaya Tombol Rapi & Lurus) --}}
                                     <td class="text-center align-middle text-nowrap">
                                         <div class="d-flex justify-content-center align-items-center">
@@ -310,6 +313,7 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
 
                                         </div>
                                     </td>
+                                    @endcan
                                 </tr>
                             @empty
                                 <tr>
