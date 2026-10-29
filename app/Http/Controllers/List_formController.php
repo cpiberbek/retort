@@ -899,6 +899,52 @@ class List_formController extends Controller
                     $standarRef = $loadingRef;
                 break;
 
+                case 'Pemeriksaan Suhu dan RH Ruangan':
+                    $suhuRef = [];
+
+                    foreach (['suhu_area', 'rh_area'] as $field) {
+                        $areaRules = $standarRef[$field] ?? [];
+
+                        $normalizedRules = [];
+
+                        if (is_array($areaRules)) {
+                            foreach ($areaRules as $areaName => $rule) {
+                                if (!is_array($rule)) {
+                                    continue;
+                                }
+
+                                $min = $rule['min'] ?? null;
+                                $max = $rule['max'] ?? null;
+
+                                if (
+                                    ($min === null || $min === '') &&
+                                    ($max === null || $max === '')
+                                ) {
+                                    continue;
+                                }
+
+                                $normalizedRules[] = [
+                                    'area' => (string) $areaName,
+                                    'min' => is_numeric($min) ? (float) $min : null,
+                                    'max' => is_numeric($max) ? (float) $max : null,
+                                ];
+                            }
+                        }
+
+                        $suhuRef[$field] = $normalizedRules;
+                    }
+
+                    foreach (['keterangan', 'catatan'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $suhuRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $standarRef = $suhuRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

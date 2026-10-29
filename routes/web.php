@@ -1116,6 +1116,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         ->name('suhu.verification.update');
     Route::get('/suhu/export-pdf', [SuhuController::class, 'exportPdf'])->name('suhu.exportPdf');
     Route::get('/suhu/export-excel', [SuhuController::class, 'exportExcel'])->name('suhu.exportExcel');
+    // audit-suhu
+    Route::get('/suhu/audit-data', [SuhuController::class, 'auditIndex'])->name('suhu.audit');
+    Route::post('/suhu/{uuid}/duplicate-to-audit', [SuhuController::class, 'duplicateToAudit'])->name('suhu.duplicateToAudit');
+    Route::post('/suhu/audit-bulk/preview', [SuhuController::class, 'auditBulkPreview'])->name('suhu.auditBulk.preview');
+    Route::post('/suhu/audit-bulk/execute', [SuhuController::class, 'auditBulkExecute'])->name('suhu.auditBulk.execute');
     Route::delete('/suhu/{uuid}', [SuhuController::class, 'destroy'])->name('suhu.destroy');
 
     // Kontrol Sanitasi

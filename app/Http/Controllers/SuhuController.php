@@ -9,11 +9,20 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Exports\SuhuExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Models\List_form;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class SuhuController extends Controller
 {
+    private const LAPORAN_SUHU = 'Pemeriksaan Suhu dan RH Ruangan';
+
     public function index(Request $request)
     {
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('suhu.audit');
+        }
+
         $search    = $request->input('search');
         $date      = $request->input('date');
         $shift     = $request->input('shift');
@@ -22,6 +31,7 @@ class SuhuController extends Controller
 
         $data = Suhu::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%");
@@ -39,6 +49,229 @@ class SuhuController extends Controller
             ->appends($request->all());
 
         return view('form.suhu.index', compact('data', 'search', 'date', 'shift', 'area_suhus'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('suhu.index');
+        }
+
+        $date       = $request->input('date');
+        $shift      = $request->input('shift');
+        $userPlant  = Auth::user()->plant;
+        $area_suhus = Area_suhu::where('plant', $userPlant)->get();
+
+        $auditedSourceUuids = Suhu::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Suhu::query()
+            ->where('plant', $userPlant)
+            ->with('auditVersion')
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($date, fn ($q) => $q->whereDate('date', $date))
+            ->when($shift, fn ($q) => $q->where('shift', $shift))
+            ->orderByRaw('COALESCE((SELECT original.date FROM suhus AS original WHERE original.uuid = suhus.source_uuid LIMIT 1), suhus.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM suhus AS original WHERE original.uuid = suhus.source_uuid LIMIT 1), suhus.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM suhus AS original WHERE original.uuid = suhus.source_uuid LIMIT 1), suhus.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.suhu.index_audit', compact('data', 'date', 'shift', 'area_suhus'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = Suhu::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('suhu.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('suhu.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Suhu $row): Suhu
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_SUHU)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = Suhu::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('suhu.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('suhu.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('suhu.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function decodeRows($value): array
+    {
+        $guard = 0;
+        while (is_string($value) && $guard++ < 3) {
+            $value = json_decode($value, true);
+        }
+
+        return is_array($value) ? array_values($value) : [];
+    }
+
+    private function autoCorrectFromMaster(Suhu $model): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', self::LAPORAN_SUHU)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        $norm = fn ($s) => preg_replace('/[^a-z0-9]/', '', mb_strtolower((string) $s));
+
+        $buildRules = function (string $group) use ($std, $norm) {
+            $rules = [];
+
+            foreach ((array) ($std[$group] ?? []) as $r) {
+                $min = $r['min'] ?? null;
+                $max = $r['max'] ?? null;
+                if (empty($r['area']) || $min === null || $min === '' || $max === null || $max === '') continue;
+
+                $rules[$norm($r['area'])] = [(float) $min, (float) $max];
+            }
+
+            return $rules;
+        };
+
+        $suhuRules = $buildRules('suhu_area');
+        $rhRules   = $buildRules('rh_area');
+
+        if (!empty($suhuRules) || !empty($rhRules)) {
+            $original = $model->hasil_suhu;
+            $rows     = $this->decodeRows($original);
+
+            $filled = fn ($v) => $v !== null && $v !== '' && $v !== '-';
+
+            $rand = function (array $r) {
+                $lo = min($r[0], $r[1]);
+                $hi = max($r[0], $r[1]);
+
+                return round(mt_rand((int) round($lo * 10), (int) round($hi * 10)) / 10, 1);
+            };
+
+            foreach ($rows as &$row) {
+                $key = $norm($row['area'] ?? '');
+
+                if (isset($suhuRules[$key]) && $filled($row['suhu'] ?? null)) {
+                    $row['suhu'] = $rand($suhuRules[$key]);
+                }
+
+                if (isset($rhRules[$key]) && $filled($row['rh'] ?? null)) {
+                    $row['rh'] = $rand($rhRules[$key]);
+                }
+            }
+            unset($row);
+
+            $model->hasil_suhu = is_array($original)
+                ? $rows
+                : json_encode($rows, JSON_UNESCAPED_UNICODE);
+        }
+
+        foreach (['keterangan', 'catatan'] as $col) {
+            $v = $std[$col] ?? null;
+            if (is_string($v) && trim($v) !== '') {
+                $model->$col = trim($v);
+            }
+        }
+
+        $model->save();
     }
 
     public function create(Request $request)

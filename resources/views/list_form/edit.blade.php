@@ -2180,7 +2180,114 @@
                                 </div>
                             @break
 
-                            {{-- kurang keterangan yg satunya lagi --}}
+                            @case('Pemeriksaan Suhu dan RH Ruangan')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $suhuAreas = \App\Models\Area_suhu::where('plant', $list_form->plant)
+                                        ->orderBy('area')
+                                        ->get();
+
+                                    $suhuRules = collect(data_get($std, 'suhu_area', []))->keyBy('area');
+                                    $rhRules = collect(data_get($std, 'rh_area', []))->keyBy('area');
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <h6>Pencatatan Suhu Ruangan</h6>
+
+                                        <table class="table table-bordered table-sm mb-4">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Area</th>
+                                                    <th style="width: 20%;">Suhu Minimum (°C)</th>
+                                                    <th style="width: 20%;">Suhu Maksimum (°C)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($suhuAreas as $area)
+                                                    @php
+                                                        $rule = $suhuRules->get($area->area, []);
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="align-middle">{{ $area->area }}</td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[suhu_area][{{ $area->area }}][min]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.suhu_area.' . $area->area . '.min', data_get($rule, 'min')) }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[suhu_area][{{ $area->area }}][max]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.suhu_area.' . $area->area . '.max', data_get($rule, 'max')) }}">
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+
+                                        <h6>Pencatatan RH</h6>
+
+                                        <table class="table table-bordered table-sm mb-4">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Area</th>
+                                                    <th style="width: 20%;">RH Minimum (%)</th>
+                                                    <th style="width: 20%;">RH Maksimum (%)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($suhuAreas->filter(fn ($area) => !is_null($area->rh_min ?? null) || !is_null($area->rh_max ?? null)) as $area)
+                                                    @php
+                                                        $rule = $rhRules->get($area->area, []);
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="align-middle">{{ $area->area }}</td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[rh_area][{{ $area->area }}][min]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.rh_area.' . $area->area . '.min', data_get($rule, 'min')) }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[rh_area][{{ $area->area }}][max]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.rh_area.' . $area->area . '.max', data_get($rule, 'max')) }}">
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+
+                                        <div class="form-group">
+                                            <label>Keterangan</label>
+                                            <input type="text" name="standar_ref[keterangan]"
+                                                class="form-control form-control-sm"
+                                                placeholder="Kosongkan jika tidak ingin diubah"
+                                                value="{{ old('standar_ref.keterangan', data_get($std, 'keterangan')) }}">
+                                        </div>
+
+                                        <div class="form-group mb-0">
+                                            <label>Catatan</label>
+                                            <input type="text" name="standar_ref[catatan]"
+                                                class="form-control form-control-sm"
+                                                placeholder="Kosongkan jika tidak ingin diubah"
+                                                value="{{ old('standar_ref.catatan', data_get($std, 'catatan')) }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            @break
                                                                             
                         @endswitch
 
@@ -2197,6 +2304,7 @@
     </div>
 </div>
 
+    
     {{-- rule submit standards --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -2258,6 +2366,27 @@
                     return field.min && field.max;
                 });
 
+            // Pemeriksaan Suhu dan RH Ruangan
+            const areaPairs = {};
+
+            form.querySelectorAll(
+                '[name^="standar_ref[suhu_area]"], [name^="standar_ref[rh_area]"]'
+            ).forEach(function (input) {
+                const match = input.name.match(
+                    /^standar_ref\[(suhu_area|rh_area)\]\[(.+)\]\[(min|max)\]$/
+                );
+
+                if (!match) return;
+
+                const key = `${match[1]}_${match[2]}`;
+
+                if (!areaPairs[key]) {
+                    areaPairs[key] = {};
+                }
+
+                areaPairs[key][match[3]] = input;
+            });
+
             function validatePair(field) {
                 const minFilled = field.min.value.trim() !== '';
                 const maxFilled = field.max.value.trim() !== '';
@@ -2277,8 +2406,26 @@
                 field.max.addEventListener('input', function () { validatePair(field); });
             });
 
+            Object.values(areaPairs).forEach(function (field) {
+                if (!field.min || !field.max) return;
+
+                field.min.addEventListener('input', function () {
+                    validatePair(field);
+                });
+
+                field.max.addEventListener('input', function () {
+                    validatePair(field);
+                });
+            });
+
             form.addEventListener('submit', function (event) {
                 pairFields.forEach(validatePair);
+
+                Object.values(areaPairs).forEach(function (field) {
+                    if (field.min && field.max) {
+                        validatePair(field);
+                    }
+                });
 
                 if (!form.checkValidity()) {
                     event.preventDefault();
