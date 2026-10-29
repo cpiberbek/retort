@@ -343,8 +343,24 @@ $(function () {
             <div class="row g-3">
                 <div class="col-12 section-title">Data Packaging</div>
 
-                ${field('col-md-6', 'Jenis Packaging', true,
-                    textInput(`items[${i}][packaging_type]`, 'text', v('packaging_type'), true))}
+                ${field('col-md-6', 'Jenis Packaging', true, `
+                    <select
+                        name="items[${i}][packaging_type]"
+                        class="form-select packaging-select"
+                        data-req
+                        required
+                    >
+                        <option value="">-- Pilih Jenis Packaging --</option>
+                        @foreach (\App\Models\MasterPackaging::where('plant_uuid', auth()->user()->plant_active)->orderBy('nama_packaging')->get() as $packaging)
+                            <option
+                                value="{{ $packaging->nama_packaging }}"
+                                ${v('packaging_type') === @json($packaging->nama_packaging) ? 'selected' : ''}
+                            >
+                                {{ $packaging->nama_packaging }}
+                            </option>
+                        @endforeach
+                    </select>
+                `, 'Jenis packaging wajib dipilih')}
 
                 ${field('col-md-6', 'Supplier', true, `
                     <select
@@ -429,6 +445,13 @@ $(function () {
         $(card).find('.supplier-select').select2({
             theme: 'bootstrap-5',
             placeholder: '-- Pilih Supplier --',
+            allowClear: true,
+            width: '100%'
+        });
+
+        $(card).find('.packaging-select').select2({
+            theme: 'bootstrap-5',
+            placeholder: '-- Pilih Jenis Packaging --',
             allowClear: true,
             width: '100%'
         });

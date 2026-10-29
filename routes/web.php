@@ -70,7 +70,8 @@ use App\Http\Controllers\{
     SsoLoginController,
     ProductivityController,
     IssueComplainController,
-    AuditModeController
+    AuditModeController,
+    PackagingMasterController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
@@ -176,6 +177,19 @@ Route::middleware('auth')->group(function () {
     Route::resource('supplier', SupplierController::class)->parameters([
         'supplier' => 'uuid'
     ]);
+
+    Route::resource('packmaster', PackagingMasterController::class)->parameters([
+        'packmaster' => 'uuid'
+    ]);
+
+    Route::get('/packmaster', [PackagingMasterController::class, 'index'])
+        ->name('packmaster.index');
+
+    Route::post('/packmaster', [PackagingMasterController::class, 'store'])
+        ->name('packmaster.store');
+
+    Route::put('/packmaster/{uuid}', [PackagingMasterController::class, 'update'])
+        ->name('packmaster.update');
 
     // Area
     // Route::resource('area_hygiene', Area_hygieneController::class)->parameters([
