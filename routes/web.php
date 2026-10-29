@@ -351,55 +351,48 @@ Route::middleware('auth')->group(function () {
         ->names('pemeriksaan_retain');
 
 
+    Route::get('loading-produks/verification', [LoadingProdukController::class, 'showVerification'])
+    ->name('loading-produks.verification');
+
+    Route::get('loading-produks/export-pdf', [LoadingProdukController::class, 'exportPdf'])
+        ->name('loading-produks.exportPdf');
+
+    Route::get('loading-produks/recycle-bin', [LoadingProdukController::class, 'recyclebin'])
+        ->name('loading-produks.recyclebin');
+
+    Route::post('loading-produks/recycle-bin/{uuid}/restore', [LoadingProdukController::class, 'restore'])
+        ->name('loading-produks.restore');
+
+    Route::delete('loading-produks/recycle-bin/{uuid}/force-delete', [LoadingProdukController::class, 'deletePermanent'])
+        ->name('loading-produks.deletePermanent');
+
+    // audit-loading-produks
+    Route::get('loading-produks/audit-data', [LoadingProdukController::class, 'auditIndex'])
+        ->name('loading-produks.audit');
+
+    Route::post('loading-produks/audit-bulk/preview', [LoadingProdukController::class, 'auditBulkPreview'])
+        ->name('loading-produks.auditBulk.preview');
+
+    Route::post('loading-produks/audit-bulk/execute', [LoadingProdukController::class, 'auditBulkExecute'])
+        ->name('loading-produks.auditBulk.execute');
+
+    Route::post('loading-produks/{uuid}/duplicate-to-audit', [LoadingProdukController::class, 'duplicateToAudit'])
+        ->name('loading-produks.duplicateToAudit');
+
     Route::get('loading-produks/{loadingProduk}/update', [LoadingProdukController::class, 'updateDetails'])
         ->name('loading-produks.edit-details');
 
     Route::put('loading-produks/{loadingProduk}/update', [LoadingProdukController::class, 'update'])
         ->name('loading-produks.update-custom');
-    Route::get('loading-produks/verification', [LoadingProdukController::class, 'showVerification'])
-        ->name('loading-produks.verification');
+
     Route::put('loading-produks/{uuid}/verify', [LoadingProdukController::class, 'verify'])
         ->name('loading-produks.verify');
-    Route::get('loading-produks/export-pdf', [LoadingProdukController::class, 'exportPdf'])->name('loading-produks.exportPdf');
-    Route::get(
-        'loading-produks/recycle-bin',
-        [LoadingProdukController::class, 'recyclebin']
-    )->name('loading-produks.recyclebin');
 
-    Route::post(
-        'loading-produks/recycle-bin/{uuid}/restore',
-        [LoadingProdukController::class, 'restore']
-    )->name('loading-produks.restore');
-
-    Route::delete(
-        'loading-produks/recycle-bin/{uuid}/force-delete',
-        [LoadingProdukController::class, 'deletePermanent']
-    )->name('loading-produks.deletePermanent');
-    // Route::resource('loading-produks', LoadingProdukController::class)
-    // ->names('loading-produks');
-
-    Route::get(
-        'loading-produks/recycle-bin',
-        [LoadingProdukController::class, 'recyclebin']
-    )->name('loading-produks.recyclebin');
-
-    Route::post(
-        'loading-produks/recycle-bin/{uuid}/restore',
-        [LoadingProdukController::class, 'restore']
-    )->name('loading-produks.restore');
-
-    Route::delete(
-        'loading-produks/recycle-bin/{uuid}/force-delete',
-        [LoadingProdukController::class, 'deletePermanent']
-    )->name('loading-produks.deletePermanent');
+    Route::get('loading-produks/{loadingProduk}/kode-produksi', [LoadingProdukController::class, 'kodeProduksi'])
+        ->name('loading-produks.kode-produksi');
 
     Route::resource('loading-produks', LoadingProdukController::class)
         ->names('loading-produks');
-
-    Route::get('/loading-produks/{loadingProduk}/kode-produksi', [LoadingProdukController::class, 'kodeProduksi'])
-        ->name('loading-produks.kode-produksi');
-
-    // Route::resource('loading-produks', LoadingProdukController::class);
 
     Route::get('/dispositions/{disposition}/update-form', [DispositionController::class, 'showUpdateForm'])
         ->name('dispositions.update_form');

@@ -854,6 +854,51 @@ class List_formController extends Controller
                     $standarRef = $packagingRef;
                 break;
 
+                case 'Pemeriksaan Loading-Unloading Produk':
+                    $loadingRef = [];
+
+                    $min = $standarRef['jumlah']['min'] ?? null;
+                    $max = $standarRef['jumlah']['max'] ?? null;
+
+                    $minFilled = $min !== null && $min !== '';
+                    $maxFilled = $max !== null && $max !== '';
+
+                    if ($minFilled xor $maxFilled) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                        ]);
+                    }
+
+                    if ($minFilled && (int) $min > (int) $max) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min tidak boleh lebih besar dari Max.',
+                        ]);
+                    }
+
+                    $loadingRef['jumlah'] = [
+                        'min' => $minFilled ? (int) $min : null,
+                        'max' => $maxFilled ? (int) $max : null,
+                    ];
+
+                    $kondisiOrder = [
+                        'bersih', 'kering', 'tidak_bocor', 'tidak_berdebu', 'tidak_basah',
+                        'bebas_hama', 'bebas_noda', 'bebas_bekas_oli', 'tidak_ada_produk_non_halal',
+                    ];
+                    $kondisiInput = array_filter((array) ($standarRef['kondisi_mobil'] ?? []), fn ($v) => $v !== '' && $v !== null);
+                    $kondisiSelected = array_values(array_intersect($kondisiOrder, $kondisiInput));
+                    $loadingRef['kondisi_mobil'] = !empty($kondisiSelected) ? $kondisiSelected : null;
+
+                    foreach (['item_keterangan', 'keterangan_total', 'keterangan_umum'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $loadingRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $standarRef = $loadingRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

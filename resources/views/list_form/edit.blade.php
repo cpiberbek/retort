@@ -2029,6 +2029,158 @@
                                     </div>
                                 </div>
                             @break
+
+                            @case('Pemeriksaan Loading-Unloading Produk')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $kondisiOptions = [
+                                        'bersih' => 'Bersih',
+                                        'kering' => 'Kering',
+                                        'tidak_bocor' => 'Tidak Bocor',
+                                        'tidak_berdebu' => 'Tidak Berdebu',
+                                        'tidak_basah' => 'Tidak Basah',
+                                        'bebas_hama' => 'Bebas Hama',
+                                        'bebas_noda' => 'Bebas Noda (Karat, cat, tinta)',
+                                        'bebas_bekas_oli' => 'Bebas Bekas oli di lantai/dinding',
+                                        'tidak_ada_produk_non_halal' => 'Tidak ada produk non halal',
+                                    ];
+
+                                    $kondisiCurrent = old('standar_ref.kondisi_mobil', data_get($std, 'kondisi_mobil', []));
+                                    if (!is_array($kondisiCurrent)) {
+                                        $kondisiCurrent = [];
+                                    }
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Jumlah diacak per baris produk di dalam rentang. Min &amp; Max harus diisi keduanya.
+                                            Untuk nilai pasti, isi Min dan Max dengan angka yang sama.
+                                            Standar diterapkan ke setiap baris produk tanpa mengubah jumlah barisnya.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr class="table-secondary">
+                                                    <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">KENDARAAN</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Kondisi Mobil</td>
+                                                    <td class="align-middle">
+                                                        <input type="hidden" name="standar_ref[kondisi_mobil][]" value="">
+                                                        <div class="d-flex flex-column">
+                                                            @foreach ($kondisiOptions as $slug => $label)
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        class="custom-control-input"
+                                                                        id="kondisi_std_{{ $slug }}"
+                                                                        name="standar_ref[kondisi_mobil][]"
+                                                                        value="{{ $slug }}"
+                                                                        {{ in_array($slug, $kondisiCurrent, true) ? 'checked' : '' }}
+                                                                    >
+                                                                    <label class="custom-control-label" for="kondisi_std_{{ $slug }}">{{ $label }}</label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="table-secondary">
+                                                    <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">DETAIL PRODUK</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Jumlah</td>
+                                                    <td class="align-middle">
+                                                        <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[jumlah][min]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Min"
+                                                                value="{{ old('standar_ref.jumlah.min', data_get($std, 'jumlah.min')) }}"
+                                                            >
+
+                                                            <span class="text-muted mx-2">s/d</span>
+
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[jumlah][max]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Max"
+                                                                value="{{ old('standar_ref.jumlah.max', data_get($std, 'jumlah.max')) }}"
+                                                            >
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Keterangan (per baris produk)</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[item_keterangan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.item_keterangan', data_get($std, 'item_keterangan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="table-secondary">
+                                                    <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">KETERANGAN</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Keterangan Total (Varian &amp; Jumlah)</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan_total]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan_total', data_get($std, 'keterangan_total')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                                
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Keterangan Umum</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan_umum]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan_umum', data_get($std, 'keterangan_umum')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            {{-- kurang keterangan yg satunya lagi --}}
                                                                             
                         @endswitch
 
@@ -2092,6 +2244,8 @@
 
             // Packaging
             pairKeys.push('condition_weight', 'quantity_goods', 'quantity_sample', 'quantity_reject');
+
+            pairKeys.push('jumlah');
 
             const pairFields = pairKeys
                 .map(function (key) {
