@@ -6,34 +6,132 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
 
 <style>
-    body { background-color: #f8f9fa; font-family: 'Inter', sans-serif; }
-    .form-label { font-weight: 600; color: #495057; }
-    .form-control, .form-select { border-radius: 8px; }
+    body {
+        background-color: #f8f9fa;
+        font-family: 'Inter', sans-serif;
+    }
 
-    .select2-container { width: 100% !important; }
+    .form-label {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: .35rem;
+    }
 
-    .select2-container .select2-selection--single {
-        height: calc(2.25rem + 2px);
-        padding: .375rem .75rem;
-        border: 1px solid #ced4da;
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        min-height: 44px;
+    }
+
+    .select2-container {
+        width: 100% !important;
     }
 
     .select2-container--bootstrap-5 .select2-selection {
         border-radius: 8px !important;
-    }
-
-    .btn-check-group .btn {
+        min-height: 44px;
         display: flex;
         align-items: center;
-        justify-content: center;
-        gap: 0.5rem;
-        font-weight: 500;
-        transition: all 0.2s;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__rendered {
+        padding-left: 0;
+        line-height: normal;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
+        height: 42px;
     }
 
     .dynamic-item-card {
-        background-color: #fdfdfd;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        background-color: #fff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+        border-radius: 12px !important;
+    }
+
+    .item-header {
+        padding-bottom: .75rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .section-title {
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #6c757d;
+        padding-bottom: .35rem;
+        border-bottom: 1px dashed #dee2e6;
+        margin-top: 1.25rem;
+    }
+
+    .section-title:first-child {
+        margin-top: 0;
+    }
+
+    .btn-check-group .btn {
+        min-height: 44px;
+        white-space: nowrap;
+        padding: .4rem .5rem;
+        font-weight: 500;
+        transition: all .2s;
+    }
+
+    .btn-check-group .btn.disabled {
+        opacity: .6;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .vehicle-condition-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .vehicle-condition-group .form-check {
+        margin: 0;
+        padding: .5rem .75rem .5rem 2rem;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+
+    .vehicle-condition-group .form-check-input {
+        cursor: pointer;
+    }
+
+    .vehicle-condition-group .form-check-label {
+        cursor: pointer;
+    }
+
+    .inspection-section-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e9ecef;
+        background-color: #fff;
+    }
+
+    .inspection-section-header strong {
+        color: #343a40;
+    }
+
+    .inspection-section-header.bg-primary strong {
+        color: #fff;
+    }
+
+    @media (max-width: 767.98px) {
+        .card-body {
+            padding: 1rem !important;
+        }
+
+        .inspection-section-header {
+            padding: .875rem 1rem;
+        }
+
+        .inspection-section-header .btn {
+            white-space: nowrap;
+        }
     }
 </style>
 @endpush
@@ -41,20 +139,27 @@
 @section('content')
 <div class="container-fluid py-0">
     <div class="card shadow-sm border-0">
-        <div class="card-body p-4 p-md-5">
+        <div class="card-body p-3 p-md-4 p-lg-5">
 
-            <h4 class="mb-1">
-                <i class="bi bi-pencil-square"></i>
-                Edit Pemeriksaan Packaging #{{ $packagingInspection->id }}
-            </h4>
+            <div class="mb-4">
+                <h4 class="mb-1">
+                    <i class="bi bi-pencil-square"></i>
+                    Edit Pemeriksaan Packaging #{{ $packagingInspection->id }}
+                </h4>
 
-            <p class="text-muted mb-4">
-                Perbarui detail formulir pemeriksaan packaging di bawah ini.
-            </p>
+                <p class="text-muted mb-0">
+                    Perbarui detail formulir pemeriksaan packaging di bawah ini.
+                </p>
+            </div>
 
             @if ($errors->any())
                 <div class="alert alert-danger">
-                    <ul>
+                    <div class="fw-semibold mb-2">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        Terdapat kesalahan pada formulir.
+                    </div>
+
+                    <ul class="mb-0">
                         @foreach ($errors->all() as $error)
                             <li>{{ $error }}</li>
                         @endforeach
@@ -66,15 +171,15 @@
                 @csrf
                 @method('PUT')
 
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header inspection-section-header bg-primary text-white">
                         <strong>
-                            <i class="bi bi-info-circle-fill"></i>
+                            <i class="bi bi-info-circle-fill me-1"></i>
                             Informasi Inspeksi
                         </strong>
                     </div>
 
-                    <div class="card-body">
+                    <div class="card-body p-3 p-md-4">
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="inspection_date" class="form-label">
@@ -109,33 +214,33 @@
                     </div>
                 </div>
 
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <div class="d-flex justify-content-between align-items-center">
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header inspection-section-header">
+                        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
                             <strong>
-                                <i class="bi bi-list-nested"></i>
+                                <i class="bi bi-list-nested me-1"></i>
                                 Detail Item Packaging
                             </strong>
 
                             <button
                                 type="button"
                                 id="add-detail-btn"
-                                class="btn btn-secondary btn-sm"
+                                class="btn btn-secondary"
                             >
-                                <i class="bi bi-plus-lg"></i>
+                                <i class="bi bi-plus-lg me-1"></i>
                                 Tambah Item
                             </button>
                         </div>
                     </div>
 
-                    <div class="card-body">
+                    <div class="card-body p-3 p-md-4 bg-light">
                         <div id="details-container"></div>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between mt-4">
+                <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mt-4">
                     <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="bi bi-save"></i>
+                        <i class="bi bi-save me-1"></i>
                         Update Inspeksi
                     </button>
 
@@ -143,7 +248,7 @@
                         href="{{ route('packaging-inspections.index') }}"
                         class="btn btn-secondary btn-lg"
                     >
-                        <i class="bi bi-arrow-left"></i>
+                        <i class="bi bi-arrow-left me-1"></i>
                         Kembali
                     </a>
                 </div>
@@ -352,14 +457,14 @@
                 'dynamic-item-card',
                 'border',
                 'p-3',
-                'mb-3',
-                'rounded',
-                'shadow-sm'
+                'p-md-4',
+                'mb-4',
+                'rounded'
             );
 
             newDetail.innerHTML = `
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="mb-0">
+                <div class="item-header d-flex justify-content-between align-items-center gap-2 flex-wrap">
+                    <h5 class="mb-0 fw-semibold">
                         Item #${i + 1}
                     </h5>
 
@@ -367,12 +472,16 @@
                         type="button"
                         class="btn btn-danger btn-sm remove-detail-btn"
                     >
-                        <i class="bi bi-trash"></i>
+                        <i class="bi bi-trash me-1"></i>
                         Hapus
                     </button>
                 </div>
 
                 <div class="row g-3">
+
+                    <div class="col-12">
+                        <div class="section-title">Data Packaging</div>
+                    </div>
 
                     <div class="col-md-4">
                         <label class="form-label">
@@ -395,7 +504,7 @@
 
                         <select
                             name="items[${i}][supplier]"
-                            class="form-control supplier-select"
+                            class="form-select supplier-select"
                             required
                         >
                             <option value="">-- Pilih Supplier --</option>
@@ -423,6 +532,10 @@
                             value="${lot_batch}"
                             required
                         >
+                    </div>
+
+                    <div class="col-12">
+                        <div class="section-title">Kondisi Packaging</div>
                     </div>
 
                     ${checksHtml}
@@ -455,7 +568,11 @@
                         >
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-12">
+                        <div class="section-title">Jumlah</div>
+                    </div>
+
+                    <div class="col-md-4">
                         <label class="form-label">
                             Qty Barang
                         </label>
@@ -470,7 +587,7 @@
                         >
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <label class="form-label">
                             Qty Sampel
                         </label>
@@ -485,7 +602,7 @@
                         >
                     </div>
 
-                    <div class="col-md-2">
+                    <div class="col-md-4">
                         <label class="form-label">
                             Qty Reject
                         </label>
@@ -498,6 +615,10 @@
                             min="0"
                             required
                         >
+                    </div>
+
+                    <div class="col-12">
+                        <div class="section-title">Kendaraan & Penerimaan</div>
                     </div>
 
                     <div class="col-md-6">
@@ -534,19 +655,32 @@
                         >
                     </div>
 
-                    <div class="col-md-5">
+                    <div class="col-md-3">
+                        <label class="form-label">
+                            DO/PO/OP
+                        </label>
+
+                        <input
+                            type="text"
+                            name="items[${i}][pbb_op]"
+                            class="form-control"
+                            value="${pbb_op}"
+                        >
+                    </div>
+
+                    <div class="col-12">
                         <label class="form-label d-block">
                             Kondisi Kendaraan
                         </label>
 
-                        <div class="form-check">
+                        <div class="vehicle-condition-group">
                             ${vehicleConditions.map((c, index) => {
                                 const isChecked = vehicle_cond?.split(',').includes(c)
                                     ? 'checked'
                                     : '';
 
                                 return `
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check">
                                         <input
                                             class="form-check-input"
                                             type="checkbox"
@@ -566,19 +700,6 @@
                                 `;
                             }).join('')}
                         </div>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label">
-                            DO/PO/OP
-                        </label>
-
-                        <input
-                            type="text"
-                            name="items[${i}][pbb_op]"
-                            class="form-control"
-                            value="${pbb_op}"
-                        >
                     </div>
 
                     <div class="col-12">
