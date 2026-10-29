@@ -1,12 +1,32 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $currentBatch = $sampel->kode_produksi
+        ? \App\Models\Mincing::where('uuid', $sampel->kode_produksi)->first(['uuid', 'kode_produksi'])
+        : null;
+
+    $jenisOptions = ['Retain QC', 'Lab Internal', 'Lab Eksternal', 'RND'];
+
+    $backRoute = auth()->user()->isAuditView() ? route('sampel.audit') : route('sampel.index');
+@endphp
+
 <div class="container-fluid py-4">
     <div class="card shadow-sm">
         <div class="card-body">
             <h4 class="mb-4">
                 <i class="bi bi-pencil-square"></i> Edit Data Pengambilan Sampel
             </h4>
+
+            @if ($errors->any())
+                <div class="alert alert-danger">
+                    <ul class="mb-0">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
 
             <form id="editForm" action="{{ route('sampel.edit_spv', $sampel->uuid) }}" method="POST">
                 @csrf
@@ -18,64 +38,62 @@
                         <strong>Identitas Data Sampel</strong>
                     </div>
                     <div class="card-body">
-
                         <div class="row mb-3">
                             <div class="col-md-6">
-                                <label class="form-label">Tanggal</label>
-                                <input type="date" name="date" id="dateInput" 
-                                class="form-control" 
-                                value="{{ old('date', $sampel->date) }}" required>
+                                <label class="form-label" for="dateInput">Tanggal</label>
+                                <input type="date" name="date" id="dateInput" class="form-control"
+                                    value="{{ old('date', \Carbon\Carbon::parse($sampel->date)->format('Y-m-d')) }}" required>
                             </div>
 
                             <div class="col-md-6">
-                                <label class="form-label">Jenis Sampel</label>
-                                <select name="jenis_sampel" id="jenis_sampel" 
-                                class="form-control selectpicker" data-live-search="true" required>
-                                <option value="">-- Pilih Sampel --</option>
-                                <option value="Retain QC" {{ old('jenis_sampel', $sampel->jenis_sampel ?? '') == 'Retain QC' ? 'selected' : '' }}>Retain QC</option>
-                                <option value="Lab Internal" {{ old('jenis_sampel', $sampel->jenis_sampel ?? '') == 'Lab Internal' ? 'selected' : '' }}>Lab Internal</option>
-                                <option value="Lab Eksternal" {{ old('jenis_sampel', $sampel->jenis_sampel ?? '') == 'Lab Eksternal' ? 'selected' : '' }}>Lab Eksternal</option>
-                                <option value="RND" {{ old('jenis_sampel', $sampel->jenis_sampel ?? '') == 'RND' ? 'selected' : '' }}>RND</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                           <div class="col-md-6">
-                                <label class="form-label">Nama Varian</label>
-                                <select name="nama_produk" id="nama_produk" class="form-control selectpicker" data-live-search="true" required>
-                                    <option value="">-- Pilih Varian --</option>
-                                    @foreach($produks as $produk)
-                                    <option value="{{ $produk->nama_produk }}" {{ old('nama_produk', $sampel->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
-                                        {{ $produk->nama_produk }}
-                                    </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            @php
-                                $batches = collect();
-                            @endphp
-
-                            <div class="col-md-6">
-                                <label class="form-label">Kode Batch</label>
-                                <select name="kode_produksi" class="form-control" id="kode_batch" required>
-                                    @foreach($batches as $batch)
-                                        <option value="{{ $batch->uuid }}" {{ $sampel->kode_produksi == $batch->uuid ? 'selected' : '' }}>
-                                            {{ $batch->kode_produksi }}
+                                <label class="form-label" for="jenis_sampel">Jenis Sampel</label>
+                                <select name="jenis_sampel" id="jenis_sampel" class="form-control" required>
+                                    <option value="">-- Pilih Sampel --</option>
+                                    @foreach ($jenisOptions as $opt)
+                                        <option value="{{ $opt }}"
+                                            {{ old('jenis_sampel', $sampel->jenis_sampel) == $opt ? 'selected' : '' }}>
+                                            {{ $opt }}
                                         </option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3 mb-md-0">
+                                <label class="form-label" for="nama_produk">Nama Varian</label>
+                                <select name="nama_produk" id="nama_produk" class="form-control" required>
+                                    <option value="">-- Pilih Varian --</option>
+                                    @foreach ($produks as $produk)
+                                        <option value="{{ $produk->nama_produk }}"
+                                            {{ old('nama_produk', $sampel->nama_produk) == $produk->nama_produk ? 'selected' : '' }}>
+                                            {{ $produk->nama_produk }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="kode_batch">Kode Batch</label>
+                                <select name="kode_produksi" id="kode_batch" class="form-control" required>
+                                    <option value="">-- Pilih Batch --</option>
+                                    @if ($currentBatch)
+                                        <option value="{{ $currentBatch->uuid }}" selected>
+                                            {{ $currentBatch->kode_produksi }}
+                                        </option>
+                                    @endif
+                                </select>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- ===================== CATATAN ===================== --}}
+                {{-- ===================== KETERANGAN ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-light"><strong>Keterangan</strong></div>
                     <div class="card-body">
                         <textarea name="keterangan" class="form-control" rows="3"
-                        placeholder="Tambahkan keterangan bila ada">{{ old('keterangan', $sampel->keterangan) }}</textarea>
+                            placeholder="Tambahkan keterangan bila ada">{{ old('keterangan', $sampel->keterangan) }}</textarea>
                     </div>
                 </div>
 
@@ -84,7 +102,7 @@
                     <button type="submit" class="btn btn-primary">
                         <i class="bi bi-save"></i> Update
                     </button>
-                    <a href="{{ route('sampel.index') }}" class="btn btn-secondary">
+                    <a href="{{ $backRoute }}" class="btn btn-secondary">
                         <i class="bi bi-arrow-left"></i> Batal
                     </a>
                 </div>
@@ -92,106 +110,67 @@
         </div>
     </div>
 </div>
+@endsection
 
-{{-- ===================== SCRIPT ===================== --}}
+@push('scripts')
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
-<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
-    $(document).ready(function() {
-        $('#nama_produk').select2({
-            tags: true, 
-            placeholder: "Ketik atau pilih nama varian...",
-            allowClear: true
-        });
-    });
-</script>
-
-{{-- ===================== VALIDASI KODE PRODUKSI ===================== --}}
-<script>
-    const kodeInput = document.getElementById('kode_produksi');
-    const kodeError = document.getElementById('kodeError');
-
-    kodeInput.addEventListener('input', function() {
-        let value = this.value.toUpperCase().replace(/\s+/g, '');
-        this.value = value;
-        kodeError.textContent = '';
-        kodeError.classList.add('d-none');
-
-        if (value.length !== 10) {
-            kodeError.textContent = "Kode batch harus terdiri dari 10 karakter.";
-            kodeError.classList.remove('d-none');
-            return false;
-        }
-
-        const format = /^[A-Z0-9]+$/;
-        if (!format.test(value)) {
-            kodeError.textContent = "Kode batch hanya boleh huruf besar dan angka.";
-            kodeError.classList.remove('d-none');
-            return false;
-        }
-
-        const bulanChar = value.charAt(1);
-        const validBulan = /^[A-L]$/;
-        if (!validBulan.test(bulanChar)) {
-            kodeError.textContent = "Karakter ke-2 harus huruf bulan (A–L).";
-            kodeError.classList.remove('d-none');
-            return false;
-        }
-
-        const hariStr = value.substr(2, 2);
-        const hari = parseInt(hariStr, 10);
-        if (isNaN(hari) || hari < 1 || hari > 31) {
-            kodeError.textContent = "Karakter ke-3 dan ke-4 harus tanggal valid (01–31).";
-            kodeError.classList.remove('d-none');
-            return false;
-        }
-
-        // Semua valid
-        kodeError.textContent = "✔ Kode batch valid.";
-        kodeError.classList.remove('text-danger');
-        kodeError.classList.add('text-success');
-        kodeError.classList.remove('d-none');
-    });
-</script>
-
-    <script>
 $(function () {
+    const produkSelect = $('#nama_produk');
+    const batchSelect  = $('#kode_batch');
 
-    const batchSelect = $('#kode_batch');
+    const lookupTemplate = @json(route('lookup.batch', ['nama_produk' => '__NAMA__']));
+    const current = @json($currentBatch ? ['uuid' => $currentBatch->uuid, 'kode' => $currentBatch->kode_produksi] : null);
 
-    function loadBatch(namaProduk, selected = null) {
+    const select2Opts = { theme: 'bootstrap-5', width: '100%' };
+
+    produkSelect.select2({ ...select2Opts, placeholder: 'Ketik atau pilih nama varian...', allowClear: true });
+    batchSelect.select2({ ...select2Opts, placeholder: 'Pilih kode batch...' });
+
+    function fillBatch(items, selected) {
+        batchSelect.empty().append(new Option('-- Pilih Batch --', '', false, false));
+
+        items.forEach(function (item) {
+            batchSelect.append(new Option(item.kode_produksi, item.uuid, false, item.uuid === selected));
+        });
+
+        // batch tersimpan tetap dipertahankan walau tidak ada di hasil lookup
+        if (selected && current && current.uuid === selected && !items.some(i => i.uuid === selected)) {
+            batchSelect.append(new Option(current.kode, current.uuid, true, true));
+        }
+
+        batchSelect.val(selected || '').trigger('change');
+    }
+
+    function loadBatch(namaProduk, selected) {
+        if (!namaProduk) {
+            fillBatch([], null);
+            return;
+        }
 
         batchSelect.prop('disabled', true);
-        batchSelect.html('<option value="">-- Pilih Batch --</option>');
 
-        if (!namaProduk) return;
+        const url = lookupTemplate.replace('__NAMA__', encodeURIComponent(namaProduk));
 
-        let url = "{{ route('lookup.batch', ['nama_produk' => ':nama']) }}".replace(':nama', namaProduk);
-
-        $.get(url, function (data) {
-
-            data.forEach(function (item) {
-                batchSelect.append(
-                    `<option value="${item.uuid}" ${selected == item.uuid ? 'selected' : ''}>${item.kode_produksi}</option>`
-                );
-            });
-
-            batchSelect.prop('disabled', false);
-        });
+        $.getJSON(url)
+            .done(function (data) { fillBatch(Array.isArray(data) ? data : [], selected); })
+            .fail(function () { fillBatch([], selected); })
+            .always(function () { batchSelect.prop('disabled', false); });
     }
 
-    $('#nama_produk').on('change', function () {
-        loadBatch($(this).val());
+    // ganti varian -> pilihan batch di-reset
+    produkSelect.on('change', function () {
+        loadBatch($(this).val(), null);
     });
 
-    let initialProduk = $('#nama_produk').val();
-    let initialBatch = "{{ $sampel->kode_produksi ?? '' }}";
-
-    if (initialProduk) {
-        loadBatch(initialProduk, initialBatch);
+    // muat awal: pertahankan batch yang tersimpan
+    if (produkSelect.val()) {
+        loadBatch(produkSelect.val(), current ? current.uuid : null);
     }
-
 });
 </script>
-@endsection
+@endpush

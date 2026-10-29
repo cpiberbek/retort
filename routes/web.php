@@ -856,6 +856,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/sampel/verification/{uuid}', [SampelController::class, 'updateVerification'])
         ->name('sampel.verification.update');
     Route::get('/sampel/export-pdf', [SampelController::class, 'exportPdf'])->name('sampel.exportPdf');
+    // audit-sampel
+    Route::get('/sampel/audit-data', [SampelController::class, 'auditIndex'])->name('sampel.audit');
+    Route::post('/sampel/{uuid}/duplicate-to-audit', [SampelController::class, 'duplicateToAudit'])->name('sampel.duplicateToAudit');
+    Route::post('/sampel/audit-bulk/preview', [SampelController::class, 'auditBulkPreview'])->name('sampel.auditBulk.preview');
+    Route::post('/sampel/audit-bulk/execute', [SampelController::class, 'auditBulkExecute'])->name('sampel.auditBulk.execute');
     Route::delete('/sampel/{uuid}', [SampelController::class, 'destroy'])->name('sampel.destroy');
 
     // PVDC
