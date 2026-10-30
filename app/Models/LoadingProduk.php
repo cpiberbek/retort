@@ -17,6 +17,7 @@ class LoadingProduk extends Model
 
     protected $casts = [
         'kondisi_mobil' => 'array',
+        'is_audit' => 'boolean',
     ];
 
     /**
@@ -85,5 +86,27 @@ class LoadingProduk extends Model
     public function getJamSelesaiAttribute($value)
     {
         return $value ? \Carbon\Carbon::parse($value)->format('H:i') : null;
+    }
+
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id', 'uuid']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();
+
+        foreach ($this->details as $detail) {
+            $copy = $detail->replicate(['id', 'uuid']);
+            $copy->uuid = (string) \Illuminate\Support\Str::uuid();
+            $copy->loading_check_id = $clone->id;
+            $copy->save();
+        }
+
+        return $clone;
     }
 }

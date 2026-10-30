@@ -721,6 +721,230 @@ class List_formController extends Controller
                     $standarRef = $prepackingRef;
                 break;
 
+                case 'Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia':
+                    $rawRef = [];
+
+                    foreach (['suhu_mobil', 'suhu_daging', 'analisa_ka_ffa', 'jumlah_sampel', 'jumlah_reject'] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled && (float) $min > (float) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min tidak boleh lebih besar dari Max.",
+                            ]);
+                        }
+
+                        $rawRef[$field] = [
+                            'min' => $minFilled ? (float) $min : null,
+                            'max' => $maxFilled ? (float) $max : null,
+                        ];
+                    }
+
+                    foreach ([
+                        'mobil_check_warna', 'mobil_check_kotoran', 'mobil_check_aroma',
+                        'mobil_check_kemasan', 'analisa_logo_halal', 'dokumen_halal_berlaku',
+                    ] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $rawRef[$field] = in_array((string) $value, ['0', '1'], true)
+                            ? (int) $value
+                            : null;
+                    }
+
+                    $kondisiOpsi = [
+                        'Bersih',
+                        'Kering',
+                        'Tidak Bocor',
+                        'Tidak Berdebu',
+                        'Tidak Basah',
+                        'Bebas Hama',
+                        'Bebas Noda (Karat, cat, tinta)',
+                        'Bebas Bekas oli di lantai/dinding',
+                        'Tidak ada produk non halal',
+                    ];
+
+                    $picked = $standarRef['kondisi_mobil'] ?? [];
+                    $picked = is_array($picked)
+                        ? array_values(array_filter($kondisiOpsi, fn ($o) => in_array($o, $picked, true)))
+                        : [];
+
+                    $rawRef['kondisi_mobil'] = !empty($picked) ? $picked : null;
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $rawRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $rawRef;
+                break;
+
+                case 'Pemeriksaan Kedatangan Bahan Kemas':
+                    $packagingRef = [];
+
+                    foreach ([
+                        'condition_weight'  => false,
+                        'quantity_goods'    => true,
+                        'quantity_sample'   => true,
+                        'quantity_reject'   => true,
+                    ] as $field => $isInt) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled && (float) $min > (float) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min tidak boleh lebih besar dari Max.",
+                            ]);
+                        }
+
+                        $packagingRef[$field] = [
+                            'min' => $minFilled ? ($isInt ? (int) $min : (float) $min) : null,
+                            'max' => $maxFilled ? ($isInt ? (int) $max : (float) $max) : null,
+                        ];
+                    }
+
+                    foreach (['condition_design', 'condition_sealing', 'condition_color'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $packagingRef[$field] = in_array($value, ['OK', 'Not OK'], true)
+                            ? $value
+                            : null;
+                    }
+
+                    $accept = $standarRef['acceptance_status'] ?? null;
+                    $packagingRef['acceptance_status'] = in_array($accept, ['OK', 'Tolak'], true)
+                        ? $accept
+                        : null;
+
+                    foreach (['condition_dimension', 'notes'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $packagingRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $vehicleOrder = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
+                    $vehicleInput = array_filter((array) ($standarRef['vehicle_condition'] ?? []), fn ($v) => $v !== '' && $v !== null);
+
+                    $vehicleSelected = array_values(array_intersect($vehicleOrder, $vehicleInput));
+                    $packagingRef['vehicle_condition'] = !empty($vehicleSelected) ? $vehicleSelected : null;
+
+                    $standarRef = $packagingRef;
+                break;
+
+                case 'Pemeriksaan Loading-Unloading Produk':
+                    $loadingRef = [];
+
+                    $min = $standarRef['jumlah']['min'] ?? null;
+                    $max = $standarRef['jumlah']['max'] ?? null;
+
+                    $minFilled = $min !== null && $min !== '';
+                    $maxFilled = $max !== null && $max !== '';
+
+                    if ($minFilled xor $maxFilled) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                        ]);
+                    }
+
+                    if ($minFilled && (int) $min > (int) $max) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min tidak boleh lebih besar dari Max.',
+                        ]);
+                    }
+
+                    $loadingRef['jumlah'] = [
+                        'min' => $minFilled ? (int) $min : null,
+                        'max' => $maxFilled ? (int) $max : null,
+                    ];
+
+                    $kondisiOrder = [
+                        'bersih', 'kering', 'tidak_bocor', 'tidak_berdebu', 'tidak_basah',
+                        'bebas_hama', 'bebas_noda', 'bebas_bekas_oli', 'tidak_ada_produk_non_halal',
+                    ];
+                    $kondisiInput = array_filter((array) ($standarRef['kondisi_mobil'] ?? []), fn ($v) => $v !== '' && $v !== null);
+                    $kondisiSelected = array_values(array_intersect($kondisiOrder, $kondisiInput));
+                    $loadingRef['kondisi_mobil'] = !empty($kondisiSelected) ? $kondisiSelected : null;
+
+                    foreach (['item_keterangan', 'keterangan_total', 'keterangan_umum'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $loadingRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $standarRef = $loadingRef;
+                break;
+
+                case 'Pemeriksaan Suhu dan RH Ruangan':
+                    $suhuRef = [];
+
+                    foreach (['suhu_area', 'rh_area'] as $field) {
+                        $areaRules = $standarRef[$field] ?? [];
+
+                        $normalizedRules = [];
+
+                        if (is_array($areaRules)) {
+                            foreach ($areaRules as $areaName => $rule) {
+                                if (!is_array($rule)) {
+                                    continue;
+                                }
+
+                                $min = $rule['min'] ?? null;
+                                $max = $rule['max'] ?? null;
+
+                                if (
+                                    ($min === null || $min === '') &&
+                                    ($max === null || $max === '')
+                                ) {
+                                    continue;
+                                }
+
+                                $normalizedRules[] = [
+                                    'area' => (string) $areaName,
+                                    'min' => is_numeric($min) ? (float) $min : null,
+                                    'max' => is_numeric($max) ? (float) $max : null,
+                                ];
+                            }
+                        }
+
+                        $suhuRef[$field] = $normalizedRules;
+                    }
+
+                    foreach (['keterangan', 'catatan'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $suhuRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $standarRef = $suhuRef;
+                break;
+
             }
 
             $dataUpdate['standar_ref'] = $standarRef;

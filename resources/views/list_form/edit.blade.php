@@ -1730,7 +1730,565 @@
                                     </div>
                                 </div>
                             @break
+
+                            @case('Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    // [key, label, type, grup]
+                                    $rawFields = [
+                                        ['suhu_mobil', 'Suhu Mobil (°C)', 'range', 'KONDISI MOBIL'],
+                                        ['mobil_check_warna', 'Cek Warna', 'check', 'KONDISI MOBIL'],
+                                        ['mobil_check_kotoran', 'Cek Kotoran', 'check', 'KONDISI MOBIL'],
+                                        ['mobil_check_aroma', 'Cek Aroma', 'check', 'KONDISI MOBIL'],
+                                        ['mobil_check_kemasan', 'Cek Kemasan', 'check', 'KONDISI MOBIL'],
+                                        ['kondisi_mobil', 'Kondisi Mobil', 'checklist', 'KONDISI MOBIL'],
+
+                                        ['suhu_daging', 'Suhu Bahan (°C)', 'range', 'BAHAN'],
+
+                                        ['analisa_ka_ffa', 'Analisa KA / FFA', 'range', 'ANALISA'],
+                                        ['analisa_logo_halal', 'Logo Halal', 'check', 'ANALISA'],
+                                        ['dokumen_halal_berlaku', 'Dokumen Halal Berlaku', 'check', 'ANALISA'],
+
+                                        ['jumlah_sampel', 'Jumlah Sampel (tiap item produk)', 'range', 'DETAIL PRODUK'],
+                                        ['jumlah_reject', 'Jumlah Reject (tiap item produk)', 'range', 'DETAIL PRODUK'],
+
+                                        ['keterangan', 'Keterangan', 'text', 'KETERANGAN'],
+                                    ];
+
+                                    $kondisiOptions = [
+                                        'Bersih',
+                                        'Kering',
+                                        'Tidak Bocor',
+                                        'Tidak Berdebu',
+                                        'Tidak Basah',
+                                        'Bebas Hama',
+                                        'Bebas Noda (Karat, cat, tinta)',
+                                        'Bebas Bekas oli di lantai/dinding',
+                                        'Tidak ada produk non halal',
+                                    ];
+
+                                    $lastGroup = null;
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang diacak di dalam rentang min-max (Min &amp; Max harus diisi keduanya,
+                                            isi angka yang sama untuk nilai pasti). Jumlah Sampel dan Jumlah Reject diterapkan ke
+                                            setiap item produk tanpa mengubah jumlah itemnya. Kondisi Mobil: jika ada yang dicentang,
+                                            semua data audit memakai pilihan itu; jika tidak ada yang dicentang, tidak diubah.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($rawFields as [$key, $label, $type, $group])
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
+                                                    <tr>
+                                                        <td class="align-middle" style="padding-left: 1.5rem;">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'range')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @elseif ($type === 'check')
+                                                                @php $current = old('standar_ref.' . $key, data_get($std, $key)); @endphp
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    <option value="1" {{ (string) $current === '1' ? 'selected' : '' }}>OK</option>
+                                                                    <option value="0" {{ (string) $current === '0' ? 'selected' : '' }}>Tidak OK</option>
+                                                                </select>
+                                                            @elseif ($type === 'checklist')
+                                                                @php
+                                                                    $selected = old('standar_ref.kondisi_mobil', data_get($std, 'kondisi_mobil'));
+                                                                    $selected = is_array($selected) ? $selected : [];
+                                                                @endphp
+                                                                @foreach ($kondisiOptions as $i => $opt)
+                                                                    <div class="custom-control custom-checkbox">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            class="custom-control-input"
+                                                                            id="kondisi_mobil_{{ $i }}"
+                                                                            name="standar_ref[kondisi_mobil][]"
+                                                                            value="{{ $opt }}"
+                                                                            {{ in_array($opt, $selected, true) ? 'checked' : '' }}
+                                                                        >
+                                                                        <label class="custom-control-label" for="kondisi_mobil_{{ $i }}">
+                                                                            {{ $opt }}
+                                                                        </label>
+                                                                    </div>
+                                                                @endforeach
+                                                            @else
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ old('standar_ref.' . $key, data_get($std, $key)) }}"
+                                                                >
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Pemeriksaan Kedatangan Bahan Kemas')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $packagingFields = [
+                                        ['condition_design', 'Kondisi Design', 'ok', 'KONDISI'],
+                                        ['condition_sealing', 'Kondisi Sealing', 'ok', 'KONDISI'],
+                                        ['condition_color', 'Kondisi Warna', 'ok', 'KONDISI'],
+                                        ['condition_dimension', 'Dimensi', 'text', 'KONDISI'],
+                                        ['condition_weight', 'Berat', 'range', 'KONDISI'],
+
+                                        ['quantity_goods', 'Qty Barang', 'range_integer', 'KUANTITAS'],
+                                        ['quantity_sample', 'Qty Sampel', 'range_integer', 'KUANTITAS'],
+                                        ['quantity_reject', 'Qty Reject', 'range_integer', 'KUANTITAS'],
+
+                                        ['acceptance_status', 'Penerimaan', 'accept', 'PENERIMAAN'],
+                                        ['vehicle_condition', 'Kondisi Kendaraan', 'checklist', 'KENDARAAN'],
+                                        ['notes', 'Keterangan', 'text', 'KETERANGAN'],
+                                    ];
+
+                                    $packagingOptions = [
+                                        'ok' => ['OK', 'Not OK'],
+                                        'accept' => ['OK', 'Tolak'],
+                                    ];
+
+                                    $vehicleOptions = ['Bersih', 'Kotor', 'Bau', 'Bocor', 'Basah', 'Kering', 'Bebas Hama'];
+                                    $vehicleCurrent = old('standar_ref.vehicle_condition', data_get($std, 'vehicle_condition', []));
+                                    if (!is_array($vehicleCurrent)) {
+                                        $vehicleCurrent = [];
+                                    }
+
+                                    $lastGroup = null;
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang diacak per item. Min &amp; Max harus diisi keduanya.
+                                            Untuk nilai pasti, isi Min dan Max dengan angka yang sama (0 s/d 0 untuk tepat 0).
+                                            Standar diterapkan ke setiap item tanpa mengubah jumlah item.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($packagingFields as [$key, $label, $type, $group])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
+                                                    <tr>
+                                                        <td class="align-middle" style="padding-left: 1.5rem;">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if (in_array($type, ['range', 'range_integer']))
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="{{ $type === 'range_integer' ? '1' : 'any' }}"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="{{ $type === 'range_integer' ? '1' : 'any' }}"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @elseif ($type === 'checklist')
+                                                                <input type="hidden" name="standar_ref[{{ $key }}][]" value="">
+                                                                <div class="d-flex flex-wrap">
+                                                                    @foreach ($vehicleOptions as $i => $opt)
+                                                                        <div class="custom-control custom-checkbox mr-3">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                class="custom-control-input"
+                                                                                id="vehicle_std_{{ $i }}"
+                                                                                name="standar_ref[{{ $key }}][]"
+                                                                                value="{{ $opt }}"
+                                                                                {{ in_array($opt, $vehicleCurrent, true) ? 'checked' : '' }}
+                                                                            >
+                                                                            <label class="custom-control-label" for="vehicle_std_{{ $i }}">{{ $opt }}</label>
+                                                                        </div>
+                                                                    @endforeach
+                                                                </div>
+                                                            @elseif ($type === 'text')
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @else
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    @foreach ($packagingOptions[$type] as $option)
+                                                                        <option
+                                                                            value="{{ $option }}"
+                                                                            {{ $current === $option ? 'selected' : '' }}
+                                                                        >
+                                                                            {{ $option }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Pemeriksaan Loading-Unloading Produk')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $kondisiOptions = [
+                                        'bersih' => 'Bersih',
+                                        'kering' => 'Kering',
+                                        'tidak_bocor' => 'Tidak Bocor',
+                                        'tidak_berdebu' => 'Tidak Berdebu',
+                                        'tidak_basah' => 'Tidak Basah',
+                                        'bebas_hama' => 'Bebas Hama',
+                                        'bebas_noda' => 'Bebas Noda (Karat, cat, tinta)',
+                                        'bebas_bekas_oli' => 'Bebas Bekas oli di lantai/dinding',
+                                        'tidak_ada_produk_non_halal' => 'Tidak ada produk non halal',
+                                    ];
+
+                                    $kondisiCurrent = old('standar_ref.kondisi_mobil', data_get($std, 'kondisi_mobil', []));
+                                    if (!is_array($kondisiCurrent)) {
+                                        $kondisiCurrent = [];
+                                    }
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Jumlah diacak per baris produk di dalam rentang. Min &amp; Max harus diisi keduanya.
+                                            Untuk nilai pasti, isi Min dan Max dengan angka yang sama.
+                                            Standar diterapkan ke setiap baris produk tanpa mengubah jumlah barisnya.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr class="table-secondary">
+                                                    <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">KENDARAAN</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Kondisi Mobil</td>
+                                                    <td class="align-middle">
+                                                        <input type="hidden" name="standar_ref[kondisi_mobil][]" value="">
+                                                        <div class="d-flex flex-column">
+                                                            @foreach ($kondisiOptions as $slug => $label)
+                                                                <div class="custom-control custom-checkbox">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        class="custom-control-input"
+                                                                        id="kondisi_std_{{ $slug }}"
+                                                                        name="standar_ref[kondisi_mobil][]"
+                                                                        value="{{ $slug }}"
+                                                                        {{ in_array($slug, $kondisiCurrent, true) ? 'checked' : '' }}
+                                                                    >
+                                                                    <label class="custom-control-label" for="kondisi_std_{{ $slug }}">{{ $label }}</label>
+                                                                </div>
+                                                            @endforeach
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="table-secondary">
+                                                    <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">DETAIL PRODUK</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Jumlah</td>
+                                                    <td class="align-middle">
+                                                        <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[jumlah][min]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Min"
+                                                                value="{{ old('standar_ref.jumlah.min', data_get($std, 'jumlah.min')) }}"
+                                                            >
+
+                                                            <span class="text-muted mx-2">s/d</span>
+
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[jumlah][max]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Max"
+                                                                value="{{ old('standar_ref.jumlah.max', data_get($std, 'jumlah.max')) }}"
+                                                            >
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Keterangan (per baris produk)</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[item_keterangan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.item_keterangan', data_get($std, 'item_keterangan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+
+                                                <tr class="table-secondary">
+                                                    <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">KETERANGAN</td>
+                                                </tr>
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Keterangan Total (Varian &amp; Jumlah)</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan_total]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan_total', data_get($std, 'keterangan_total')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
                                                 
+                                                <tr>
+                                                    <td class="align-middle" style="padding-left: 1.5rem;">Keterangan Umum</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan_umum]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan_umum', data_get($std, 'keterangan_umum')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Pemeriksaan Suhu dan RH Ruangan')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $suhuAreas = \App\Models\Area_suhu::where('plant', $list_form->plant)
+                                        ->orderBy('area')
+                                        ->get();
+
+                                    $suhuRules = collect(data_get($std, 'suhu_area', []))->keyBy('area');
+                                    $rhRules = collect(data_get($std, 'rh_area', []))->keyBy('area');
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <h6>Pencatatan Suhu Ruangan</h6>
+
+                                        <table class="table table-bordered table-sm mb-4">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Area</th>
+                                                    <th style="width: 20%;">Suhu Minimum (°C)</th>
+                                                    <th style="width: 20%;">Suhu Maksimum (°C)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($suhuAreas as $area)
+                                                    @php
+                                                        $rule = $suhuRules->get($area->area, []);
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="align-middle">{{ $area->area }}</td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[suhu_area][{{ $area->area }}][min]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.suhu_area.' . $area->area . '.min', data_get($rule, 'min')) }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[suhu_area][{{ $area->area }}][max]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.suhu_area.' . $area->area . '.max', data_get($rule, 'max')) }}">
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+
+                                        <h6>Pencatatan RH</h6>
+
+                                        <table class="table table-bordered table-sm mb-4">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Area</th>
+                                                    <th style="width: 20%;">RH Minimum (%)</th>
+                                                    <th style="width: 20%;">RH Maksimum (%)</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($suhuAreas->filter(fn ($area) => !is_null($area->rh_min ?? null) || !is_null($area->rh_max ?? null)) as $area)
+                                                    @php
+                                                        $rule = $rhRules->get($area->area, []);
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="align-middle">{{ $area->area }}</td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[rh_area][{{ $area->area }}][min]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.rh_area.' . $area->area . '.min', data_get($rule, 'min')) }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.1"
+                                                                name="standar_ref[rh_area][{{ $area->area }}][max]"
+                                                                class="form-control form-control-sm"
+                                                                value="{{ old('standar_ref.rh_area.' . $area->area . '.max', data_get($rule, 'max')) }}">
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+
+                                        <div class="form-group">
+                                            <label>Keterangan</label>
+                                            <input type="text" name="standar_ref[keterangan]"
+                                                class="form-control form-control-sm"
+                                                placeholder="Kosongkan jika tidak ingin diubah"
+                                                value="{{ old('standar_ref.keterangan', data_get($std, 'keterangan')) }}">
+                                        </div>
+
+                                        <div class="form-group mb-0">
+                                            <label>Catatan</label>
+                                            <input type="text" name="standar_ref[catatan]"
+                                                class="form-control form-control-sm"
+                                                placeholder="Kosongkan jika tidak ingin diubah"
+                                                value="{{ old('standar_ref.catatan', data_get($std, 'catatan')) }}">
+                                        </div>
+                                    </div>
+                                </div>
+                            @break
+                                                                            
                         @endswitch
 
                         <div class="d-flex justify-content-between">
@@ -1746,6 +2304,7 @@
     </div>
 </div>
 
+    
     {{-- rule submit standards --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -1786,7 +2345,15 @@
                 'basah_minyak_ujung', 'basah_minyak_seal', 'kering_minyak_ujung', 'kering_minyak_seal'
             );
 
+            // Kedatangan Bahan Baku
+            pairKeys.push('suhu_mobil', 'suhu_daging', 'analisa_ka_ffa', 'jumlah_sampel', 'jumlah_reject');
+
             pairKeys.push('release', 'reject', 'hold');
+
+            // Packaging
+            pairKeys.push('condition_weight', 'quantity_goods', 'quantity_sample', 'quantity_reject');
+
+            pairKeys.push('jumlah');
 
             const pairFields = pairKeys
                 .map(function (key) {
@@ -1798,6 +2365,27 @@
                 .filter(function (field) {
                     return field.min && field.max;
                 });
+
+            // Pemeriksaan Suhu dan RH Ruangan
+            const areaPairs = {};
+
+            form.querySelectorAll(
+                '[name^="standar_ref[suhu_area]"], [name^="standar_ref[rh_area]"]'
+            ).forEach(function (input) {
+                const match = input.name.match(
+                    /^standar_ref\[(suhu_area|rh_area)\]\[(.+)\]\[(min|max)\]$/
+                );
+
+                if (!match) return;
+
+                const key = `${match[1]}_${match[2]}`;
+
+                if (!areaPairs[key]) {
+                    areaPairs[key] = {};
+                }
+
+                areaPairs[key][match[3]] = input;
+            });
 
             function validatePair(field) {
                 const minFilled = field.min.value.trim() !== '';
@@ -1818,8 +2406,26 @@
                 field.max.addEventListener('input', function () { validatePair(field); });
             });
 
+            Object.values(areaPairs).forEach(function (field) {
+                if (!field.min || !field.max) return;
+
+                field.min.addEventListener('input', function () {
+                    validatePair(field);
+                });
+
+                field.max.addEventListener('input', function () {
+                    validatePair(field);
+                });
+            });
+
             form.addEventListener('submit', function (event) {
                 pairFields.forEach(validatePair);
+
+                Object.values(areaPairs).forEach(function (field) {
+                    if (field.min && field.max) {
+                        validatePair(field);
+                    }
+                });
 
                 if (!form.checkValidity()) {
                     event.preventDefault();

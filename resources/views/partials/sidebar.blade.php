@@ -77,6 +77,8 @@
                         href="{{ route('produk.index') }}">List Produk</a>
                     <a class="collapse-item {{ request()->routeIs('raw-material.*') ? 'active' : '' }}"
                         href="{{ route('raw-material.index') }}">List Bahan Baku</a>
+                    <a class="collapse-item {{ request()->routeIs('packmaster.*') ? 'active' : '' }}"
+                        href="{{ route('packmaster.index') }}">List Packaging</a>
                     <a class="collapse-item {{ request()->routeIs('premix.*') ? 'active' : '' }}"
                         href="{{ route('premix.index') }}">
                         List Premix

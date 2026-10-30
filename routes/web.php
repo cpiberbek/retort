@@ -70,7 +70,8 @@ use App\Http\Controllers\{
     SsoLoginController,
     ProductivityController,
     IssueComplainController,
-    AuditModeController
+    AuditModeController,
+    PackagingMasterController
 };
 
 require_once __DIR__ . '/helpers/routeHelper.php';
@@ -177,6 +178,19 @@ Route::middleware('auth')->group(function () {
         'supplier' => 'uuid'
     ]);
 
+    Route::resource('packmaster', PackagingMasterController::class)->parameters([
+        'packmaster' => 'uuid'
+    ]);
+
+    Route::get('/packmaster', [PackagingMasterController::class, 'index'])
+        ->name('packmaster.index');
+
+    Route::post('/packmaster', [PackagingMasterController::class, 'store'])
+        ->name('packmaster.store');
+
+    Route::put('/packmaster/{uuid}', [PackagingMasterController::class, 'update'])
+        ->name('packmaster.update');
+
     // Area
     // Route::resource('area_hygiene', Area_hygieneController::class)->parameters([
     //     'area_hygiene' => 'uuid'
@@ -252,6 +266,11 @@ Route::middleware('auth')->group(function () {
 
     Route::resource('checklistmagnettrap', MagnetTrapController::class);
 
+    Route::get('/inspections/audit-data', [RawMaterialInspectionController::class, 'auditIndex'])->name('inspections.audit');
+    Route::post('/inspections/{uuid}/duplicate-to-audit', [RawMaterialInspectionController::class, 'duplicateToAudit'])->name('inspections.duplicateToAudit');
+    Route::post('/inspections/audit-bulk/preview', [RawMaterialInspectionController::class, 'auditBulkPreview'])->name('inspections.auditBulk.preview');
+    Route::post('/inspections/audit-bulk/execute', [RawMaterialInspectionController::class, 'auditBulkExecute'])->name('inspections.auditBulk.execute');
+
 
     Route::get('/inspections/{inspection}/form-update', [RawMaterialInspectionController::class, 'showUpdateForm'])
         ->name('inspections.form_update');
@@ -276,6 +295,16 @@ Route::middleware('auth')->group(function () {
     Route::get('packaging-inspections/{packagingInspection}/update-view', [PackagingInspectionController::class, 'editForUpdate'])->name('packaging-inspections.edit-for-update');
     Route::get('packaging-inspections/verification', [PackagingInspectionController::class, 'showVerificationList'])
         ->name('packaging-inspections.verification');
+
+    // audit-packaging-inspections
+    Route::get('/packaging-inspections/audit-data', [PackagingInspectionController::class, 'auditIndex'])
+        ->name('packaging-inspections.audit');
+    Route::post('/packaging-inspections/{uuid}/duplicate-to-audit', [PackagingInspectionController::class, 'duplicateToAudit'])
+        ->name('packaging-inspections.duplicateToAudit');
+    Route::post('/packaging-inspections/audit-bulk/preview', [PackagingInspectionController::class, 'auditBulkPreview'])
+        ->name('packaging-inspections.auditBulk.preview');
+    Route::post('/packaging-inspections/audit-bulk/execute', [PackagingInspectionController::class, 'auditBulkExecute'])
+        ->name('packaging-inspections.auditBulk.execute');
 
     // RUTE BARU: Memproses modal verifikasi Packaging
     Route::put('packaging-inspections/verify/{inspection}', [PackagingInspectionController::class, 'verify'])->name('packaging-inspections.verify');
@@ -336,55 +365,48 @@ Route::middleware('auth')->group(function () {
         ->names('pemeriksaan_retain');
 
 
+    Route::get('loading-produks/verification', [LoadingProdukController::class, 'showVerification'])
+    ->name('loading-produks.verification');
+
+    Route::get('loading-produks/export-pdf', [LoadingProdukController::class, 'exportPdf'])
+        ->name('loading-produks.exportPdf');
+
+    Route::get('loading-produks/recycle-bin', [LoadingProdukController::class, 'recyclebin'])
+        ->name('loading-produks.recyclebin');
+
+    Route::post('loading-produks/recycle-bin/{uuid}/restore', [LoadingProdukController::class, 'restore'])
+        ->name('loading-produks.restore');
+
+    Route::delete('loading-produks/recycle-bin/{uuid}/force-delete', [LoadingProdukController::class, 'deletePermanent'])
+        ->name('loading-produks.deletePermanent');
+
+    // audit-loading-produks
+    Route::get('loading-produks/audit-data', [LoadingProdukController::class, 'auditIndex'])
+        ->name('loading-produks.audit');
+
+    Route::post('loading-produks/audit-bulk/preview', [LoadingProdukController::class, 'auditBulkPreview'])
+        ->name('loading-produks.auditBulk.preview');
+
+    Route::post('loading-produks/audit-bulk/execute', [LoadingProdukController::class, 'auditBulkExecute'])
+        ->name('loading-produks.auditBulk.execute');
+
+    Route::post('loading-produks/{uuid}/duplicate-to-audit', [LoadingProdukController::class, 'duplicateToAudit'])
+        ->name('loading-produks.duplicateToAudit');
+
     Route::get('loading-produks/{loadingProduk}/update', [LoadingProdukController::class, 'updateDetails'])
         ->name('loading-produks.edit-details');
 
     Route::put('loading-produks/{loadingProduk}/update', [LoadingProdukController::class, 'update'])
         ->name('loading-produks.update-custom');
-    Route::get('loading-produks/verification', [LoadingProdukController::class, 'showVerification'])
-        ->name('loading-produks.verification');
+
     Route::put('loading-produks/{uuid}/verify', [LoadingProdukController::class, 'verify'])
         ->name('loading-produks.verify');
-    Route::get('loading-produks/export-pdf', [LoadingProdukController::class, 'exportPdf'])->name('loading-produks.exportPdf');
-    Route::get(
-        'loading-produks/recycle-bin',
-        [LoadingProdukController::class, 'recyclebin']
-    )->name('loading-produks.recyclebin');
 
-    Route::post(
-        'loading-produks/recycle-bin/{uuid}/restore',
-        [LoadingProdukController::class, 'restore']
-    )->name('loading-produks.restore');
-
-    Route::delete(
-        'loading-produks/recycle-bin/{uuid}/force-delete',
-        [LoadingProdukController::class, 'deletePermanent']
-    )->name('loading-produks.deletePermanent');
-    // Route::resource('loading-produks', LoadingProdukController::class)
-    // ->names('loading-produks');
-
-    Route::get(
-        'loading-produks/recycle-bin',
-        [LoadingProdukController::class, 'recyclebin']
-    )->name('loading-produks.recyclebin');
-
-    Route::post(
-        'loading-produks/recycle-bin/{uuid}/restore',
-        [LoadingProdukController::class, 'restore']
-    )->name('loading-produks.restore');
-
-    Route::delete(
-        'loading-produks/recycle-bin/{uuid}/force-delete',
-        [LoadingProdukController::class, 'deletePermanent']
-    )->name('loading-produks.deletePermanent');
+    Route::get('loading-produks/{loadingProduk}/kode-produksi', [LoadingProdukController::class, 'kodeProduksi'])
+        ->name('loading-produks.kode-produksi');
 
     Route::resource('loading-produks', LoadingProdukController::class)
         ->names('loading-produks');
-
-    Route::get('/loading-produks/{loadingProduk}/kode-produksi', [LoadingProdukController::class, 'kodeProduksi'])
-        ->name('loading-produks.kode-produksi');
-
-    // Route::resource('loading-produks', LoadingProdukController::class);
 
     Route::get('/dispositions/{disposition}/update-form', [DispositionController::class, 'showUpdateForm'])
         ->name('dispositions.update_form');
@@ -848,6 +870,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/sampel/verification/{uuid}', [SampelController::class, 'updateVerification'])
         ->name('sampel.verification.update');
     Route::get('/sampel/export-pdf', [SampelController::class, 'exportPdf'])->name('sampel.exportPdf');
+    // audit-sampel
+    Route::get('/sampel/audit-data', [SampelController::class, 'auditIndex'])->name('sampel.audit');
+    Route::post('/sampel/{uuid}/duplicate-to-audit', [SampelController::class, 'duplicateToAudit'])->name('sampel.duplicateToAudit');
+    Route::post('/sampel/audit-bulk/preview', [SampelController::class, 'auditBulkPreview'])->name('sampel.auditBulk.preview');
+    Route::post('/sampel/audit-bulk/execute', [SampelController::class, 'auditBulkExecute'])->name('sampel.auditBulk.execute');
     Route::delete('/sampel/{uuid}', [SampelController::class, 'destroy'])->name('sampel.destroy');
 
     // PVDC
@@ -1103,6 +1130,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         ->name('suhu.verification.update');
     Route::get('/suhu/export-pdf', [SuhuController::class, 'exportPdf'])->name('suhu.exportPdf');
     Route::get('/suhu/export-excel', [SuhuController::class, 'exportExcel'])->name('suhu.exportExcel');
+    // audit-suhu
+    Route::get('/suhu/audit-data', [SuhuController::class, 'auditIndex'])->name('suhu.audit');
+    Route::post('/suhu/{uuid}/duplicate-to-audit', [SuhuController::class, 'duplicateToAudit'])->name('suhu.duplicateToAudit');
+    Route::post('/suhu/audit-bulk/preview', [SuhuController::class, 'auditBulkPreview'])->name('suhu.auditBulk.preview');
+    Route::post('/suhu/audit-bulk/execute', [SuhuController::class, 'auditBulkExecute'])->name('suhu.auditBulk.execute');
     Route::delete('/suhu/{uuid}', [SuhuController::class, 'destroy'])->name('suhu.destroy');
 
     // Kontrol Sanitasi
