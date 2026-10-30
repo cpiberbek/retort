@@ -13,12 +13,21 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
+use Illuminate\Support\Facades\DB;
 use TCPDF;
 
 class KartonController extends Controller
 {
+
+    private const LAPORAN_KARTON = 'Kontrol Labelisasi Cartooning';
+
     public function index(Request $request)
     {
+
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('karton.audit');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $nama_produk = $request->input('nama_produk');
@@ -26,6 +35,7 @@ class KartonController extends Controller
 
         $data = Karton::with('mincing')
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -54,6 +64,232 @@ class KartonController extends Controller
             ->appends($request->all());
 
         return view('form.karton.index', compact('data', 'search', 'date', 'nama_produk'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('karton.index');
+        }
+
+        $userPlant   = Auth::user()->plant;
+        $search      = $request->input('search');
+        $date        = $request->input('date');
+        $nama_produk = $request->input('nama_produk');
+
+        $auditedSourceUuids = Karton::where('plant', $userPlant)
+            ->where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid');
+
+        $data = Karton::with(['mincing', 'auditVersion'])
+            ->where('plant', $userPlant)
+            ->where(function ($query) use ($auditedSourceUuids) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($q) use ($auditedSourceUuids) {
+                        $q->where('is_audit', false)
+                            ->whereNotIn('uuid', $auditedSourceUuids);
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_karton', 'like', "%{$search}%")
+                        ->orWhere('nama_supplier', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhereExists(function ($sub) use ($search) {
+                            $sub->selectRaw(1)
+                                ->from('mincings')
+                                ->whereColumn('mincings.uuid', 'kartons.kode_produksi')
+                                ->where('mincings.kode_produksi', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($date, fn ($query) => $query->whereDate('date', $date))
+            ->when($nama_produk, fn ($query) => $query->where('nama_produk', $nama_produk))
+            ->orderByRaw('COALESCE((SELECT original.date FROM kartons AS original WHERE original.uuid = kartons.source_uuid LIMIT 1), kartons.date) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM kartons AS original WHERE original.uuid = kartons.source_uuid LIMIT 1), kartons.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        $bulkMaster = List_form::where('plant', $userPlant)
+            ->where('laporan', self::LAPORAN_KARTON)
+            ->first();
+
+        $masters = List_form::where('plant', $userPlant)->get();
+
+        return view('form.karton.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'nama_produk',
+            'masters',
+            'bulkMaster'
+        ));
+    }
+
+    public function duplicateToAudit($uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $karton = Karton::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $karton->auditVersion) {
+            return redirect()
+                ->route('karton.edit.form', $existing->uuid)
+                ->with('info', 'Salinan data audit sudah tersedia.');
+        }
+
+        $clone = $this->createCorrectedAudit($karton);
+
+        return redirect()
+            ->route('karton.edit.form', $clone->uuid)
+            ->with('success', 'Salinan data audit berhasil dibuat.');
+    }
+
+    private function createCorrectedAudit(Karton $karton): Karton
+    {
+        return DB::transaction(function () use ($karton) {
+            $clone = $karton->copyToAudit();
+
+            $this->autoCorrectFromMaster(
+                $clone,
+                self::LAPORAN_KARTON
+            );
+
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $validated = $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date' => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $userPlant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $userPlant)
+            ->where('laporan', self::LAPORAN_KARTON)
+            ->first();
+
+        abort_if(
+            !is_array($master?->standar_ref) || empty($master->standar_ref),
+            422,
+            'Master auto correct belum diterapkan untuk plant ini.'
+        );
+
+        $base = Karton::where('plant', $userPlant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $validated['start_date'])
+            ->whereDate('date', '<=', $validated['end_date']);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        $sudahAda = (clone $base)
+            ->whereHas('auditVersion')
+            ->count();
+
+        return response()->json([
+            'total' => $total,
+            'sudah_ada' => $sudahAda,
+            'akan_dibuat' => $total - $sudahAda,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
+            return redirect()
+                ->route('karton.audit')
+                ->with('warning', 'Tidak ada data Karton pada rentang tanggal tersebut.');
+        }
+
+        $created = 0;
+        $failed = 0;
+
+        (clone $base)
+            ->whereDoesntHave('auditVersion')
+            ->chunkById(100, function ($kartons) use (&$created, &$failed) {
+                foreach ($kartons as $karton) {
+                    try {
+                        $this->createCorrectedAudit($karton);
+                        $created++;
+                    } catch (\Throwable $e) {
+                        report($e);
+                        $failed++;
+                    }
+                }
+            }, 'id');
+
+        $skipped = $total - $created - $failed;
+
+        $message = "Duplikasi selesai. Berhasil: {$created}, dilewati: {$skipped}, gagal: {$failed}.";
+
+        return redirect()
+            ->route('karton.audit')
+            ->with($failed > 0 ? 'warning' : 'success', $message);
+    }
+
+    private function autoCorrectFromMaster(
+        Karton $karton,
+        string $laporan
+    ): void {
+        $master = List_form::where('plant', $karton->plant)
+            ->where('laporan', $laporan)
+            ->first();
+
+        $standarRef = $master?->standar_ref;
+
+        if (is_string($standarRef)) {
+            $standarRef = json_decode($standarRef, true);
+        }
+
+        if (!is_array($standarRef) || empty($standarRef)) {
+            return;
+        }
+
+        $jumlahRule = $standarRef['jumlah'] ?? null;
+
+        if (is_array($jumlahRule)) {
+            $min = $jumlahRule['min'] ?? null;
+            $max = $jumlahRule['max'] ?? null;
+
+            $minFilled = $min !== null && $min !== '';
+            $maxFilled = $max !== null && $max !== '';
+
+            if ($minFilled && $maxFilled && is_numeric($min) && is_numeric($max)) {
+                if ((int) $min <= (int) $max) {
+                    $karton->jumlah = random_int((int) $min, (int) $max);
+                }
+            }
+        }
+
+        $keterangan = $standarRef['keterangan'] ?? null;
+
+        if (is_string($keterangan) && trim($keterangan) !== '') {
+            $karton->keterangan = trim($keterangan);
+        }
+
+        $karton->save();
     }
 
     public function create()

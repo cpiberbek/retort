@@ -20,8 +20,27 @@ class Release_packing extends Model
 
     protected $fillable = [
         'date', 'plant', 'jenis_kemasan',  'nama_produk', 'kode_produksi', 'expired_date', 'no_palet', 'release', 'keterangan',
-        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv', 'is_audit', 'source_uuid',
     ];
+
+    protected $casts = [
+        'is_audit' => 'boolean',
+    ];
+
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();
+
+        return $clone;
+    }
 
     public function mincing()
     {

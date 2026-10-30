@@ -109,7 +109,9 @@
                                 <th>QC</th>
                                 <th>Produksi</th>
                                 <th>SPV</th>
-                                <th>Verification</th> {{-- Changed from Action to Verification --}}
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan {{-- Changed from Action to Verification --}}
                             </tr>
                         </thead>
                         <tbody>
@@ -150,7 +152,9 @@
                                     </td>
 
                                     <td class="text-center align-middle">{{ $dep->catatan }}</td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_produksi == 0)
                                             <span class="fw-bold text-secondary">Created</span>

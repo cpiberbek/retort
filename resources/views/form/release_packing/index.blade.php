@@ -43,6 +43,26 @@
             </div>
         </div>
 
+        @unless(auth()->user()->hasRole('auditor'))
+            <div class="card shadow-sm mb-3 w-100">
+                <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-2">
+                    <h6 class="mb-0">
+                        <span class="text-primary" style="font-weight: 600;">
+                            <i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i>
+                            Mode Operasional
+                        </span>
+                    </h6>
+                    <form action="{{ route('toggle.mode.audit') }}" method="POST" class="d-inline"
+                        onsubmit="return confirm('Masuk ke Mode Audit?')">
+                        @csrf
+                        <button type="submit" class="btn btn-primary btn-sm">
+                            <i class="bi bi-shield-check"></i> Mode Audit
+                        </button>
+                    </form>
+                </div>
+            </div>
+        @endunless
+
         {{-- Filter dan Live Search --}}
         <form id="filterForm" method="GET" action="{{ route('release_packing.index') }}"
             class="border rounded bg-white shadow-sm p-3">
@@ -185,7 +205,9 @@
                                 <th>Keterangan</th>
                                 <th>QC</th>
                                 <th>SPV</th>
-                                <th>Verification</th>
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>
@@ -207,7 +229,9 @@
                                     <td class="text-center align-middle">{{ $dep->no_palet }}</td>
                                     <td class="text-center align-middle">{{ $dep->release }}</td>
                                     <td class="text-center align-middle">{{ $dep->keterangan }}</td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary">Created</span>

@@ -7,16 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\HasAudit;
 
 class PemeriksaanKekuatanMagnetTrap extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasAudit;
 
     protected $table = 'pemeriksaan_kekuatan_magnet_traps';
 
     protected $guarded = ['id'];
 
     protected $casts = [
+        'is_audit' => 'boolean',
         'tanggal' => 'date',
         'parameter_sesuai' => 'boolean',
         'verified_at' => 'datetime',

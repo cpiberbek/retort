@@ -200,7 +200,9 @@
                                 <th style="width: 18%;">Kepada</th>
                                 <th>Tipe Disposisi</th>
                                 <th style="width: 12%;">Status SPV</th> {{-- Kolom Baru --}}
+                                @can('can access update button')
                                 <th style="width: 18%;">Aksi</th>
+                                @endcan
                             </tr>
                         </thead>
                         <tbody>

@@ -88,7 +88,23 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
         </div>
     </div>
 
+    <div class="card shadow-sm mb-3 w-100">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h6 class="mb-0">
+                        <span class="text-primary" style="font-weight: 600;"><i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i> Mode Operasional</span>
+                    </h6>
+                </div>
 
+                <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                    onsubmit="return confirm('Masuk ke Mode Audit?')">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-shield-check"></i> Mode Audit
+                    </button>
+                </form>
+            </div>
+        </div>
 
     {{-- Filter dan Live Search --}}
     <form id="filterForm" method="GET" action="{{ route('pemeriksaan-kekuatan-magnet-trap.index') }}" class="d-flex flex-wrap align-items-center gap-2 mb-3 p-3 border rounded bg-white shadow-sm">
@@ -155,13 +171,14 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                 <table class="table table-hover">
                     <thead class="table-secondary text-center">
                         <tr>
-                            <th style="width: 5%;">No</th>
-                            <th style="width: 10%;">Tanggal</th>
-                            <th style="width: 20%;">Kondisi Visual</th>
-                            <th style="width: 15%;">Petugas QC</th>
-                            <th style="width: 12%;">Parameter</th>
-                            <th style="width: 12%;">Status SPV</th>
-                            <th style="width: 25%;">Aksi</th>
+                            <th style="width: 4%;">No</th>
+                            <th style="width: 9%;">Tanggal</th>
+                            <th style="width: 14%;">Kondisi Visual</th>
+                            <th style="width: 11%;">Petugas QC</th>
+                            <th style="width: 9%;">Parameter</th>
+                            <th style="width: 9%;">Status SPV</th>
+                            <th style="width: 15%;">Hasil Pemeriksaan</th>
+                            <th style="width: 29%;">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -196,10 +213,16 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                 @endif
                             </td>
 
+                            {{-- Detail --}}
+                            <td class="text-center">
+                                <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.show', $item->id) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
+                                    <i class="bi bi-eye me-1"></i> Detail
+                                </a>
+                            </td>
+
                             {{-- Aksi dengan Layout Text-Nowrap + MX-1 --}}
                             <td class="text-center align-middle text-nowrap">
                                 <div class="d-flex justify-content-center align-items-center">
-                                    
                                     @can('can access verification button')
                                     {{-- 0. Tombol Verifikasi (Memicu Modal) --}}
                                     <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mx-1" 
@@ -210,26 +233,21 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                                     </button>
                                     @endcan
 
-                                {{-- 1. Detail --}}
-                                <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.show', $item->id) }}" class="btn btn-outline-primary btn-sm mx-1" title="Detail">
-                                    <i class="bi bi-eye me-1"></i> Detail
-                                </a>
-
-                                {{-- 2. Edit --}}
+                                {{-- Edit --}}
                                 @can('can access edit button')
                                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.edit', $item->id) }}" class="btn btn-warning btn-sm mx-1" title="Edit">
                                     <i class="bi bi-pencil-square me-1"></i> Edit
                                 </a>
                                 @endcan
 
-                                {{-- 3. Update Form --}}
+                                {{-- Update Form --}}
                                 @can('can access update button')
                                 <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.update_form', $item->id) }}" class="btn btn-info btn-sm mx-1 text-white" title="Update / Lengkapi Data">
                                     <i class="bi bi-pencil me-1"></i> Update
                                 </a>
                                 @endcan
 
-                                {{-- 4. Hapus --}}
+                                {{-- Hapus --}}
                                 @can('can access delete button')
                                 <form action="{{ route('pemeriksaan-kekuatan-magnet-trap.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus data ini?');">
                                     @csrf

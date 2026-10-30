@@ -39,6 +39,25 @@
             </div>
         </div>
 
+        <div class="card shadow-sm mb-3 w-100">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h6 class="mb-0">
+                        <span class="text-primary" style="font-weight: 600;"><i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i> Mode Operasional</span>
+                    </h6>
+                </div>
+
+                <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                    onsubmit="return confirm('Masuk ke Mode Audit?')">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-shield-check"></i> Mode Audit
+                    </button>
+                </form>
+            </div>
+        </div>
+
+
         {{-- Filter dan Live Search --}}
         <form id="filterForm" method="GET" action="{{ route('karton.index') }}"
             class="border rounded bg-white shadow-sm p-3">
@@ -185,7 +204,9 @@
                                 <th>KR</th>
                                 <th>QC</th>
                                 <th>SPV</th>
-                                <th>Verification</th> {{-- Changed from Action to Verification --}}
+                                @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan {{-- Changed from Action to Verification --}}
                             </tr>
                         </thead>
                         <tbody>
@@ -222,7 +243,9 @@
                                     <td class="text-center align-middle">{{ $dep->keterangan }}</td>
                                     <td class="text-center align-middle">{{ $dep->nama_operator }}</td>
                                     <td class="text-center align-middle">{{ $dep->nama_koordinator }}</td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+                                        {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                                    </td>
                                     <td class="text-center align-middle">
                                         @if ($dep->status_spv == 0)
                                             <span class="fw-bold text-secondary">Created</span>
@@ -263,6 +286,7 @@
                                             </div>
                                         @endif
                                     </td>
+                                    @can('can access update button')
                                     <td class="text-center align-middle">
                                         @can('can access verification button')
                                             <button type="button" class="btn btn-primary btn-sm fw-bold shadow-sm mb-1"
@@ -393,6 +417,7 @@
                                         </div>
                 </div>
                 </td>
+                @endcan
                 </tr>
             @empty
                 <tr>

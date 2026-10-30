@@ -10,14 +10,15 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use TCPDF;
 
-// Nama class diubah
+
 class PemeriksaanKekuatanMagnetTrapController extends Controller
 {
-    /**
-     * Menampilkan daftar data dengan filter.
-     */
     public function index(Request $request)
     {
+        if (auth()->user()->isAuditView()) {
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.audit');
+        }
+
         if ($request->filled('date') && $request->filled('month')) {
             return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index', [
                 'date' => $request->date
@@ -30,8 +31,9 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
             ]);
         }
 
-        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater'])
-            ->where('plant_uuid', auth()->user()->plant);
+        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater', 'auditVersion'])
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where('is_audit', false);
 
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
@@ -55,15 +57,301 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
             });
         }
 
-        $pemeriksaanKekuatanMagnetTraps = $query->latest()
-            ->paginate(15)
-            ->withQueryString();
+        $pemeriksaanKekuatanMagnetTraps = $query
+            ->orderByDesc('tanggal')
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->appends($request->all());
 
-        return view('pemeriksaan-kekuatan-magnet-trap.index', compact('pemeriksaanKekuatanMagnetTraps'));
+
+        return view(
+            'pemeriksaan-kekuatan-magnet-trap.index',
+            compact('pemeriksaanKekuatanMagnetTraps')
+        );
     }
-    /**
-     * Menampilkan form create.
-     */
+
+    public function auditIndex(Request $request)
+    {
+        if (!auth()->user()->isAuditView()) {                                 
+            return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index');
+        }
+
+        $query = PemeriksaanKekuatanMagnetTrap::with(['creator', 'updater'])
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where(function ($q) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($subQuery) {
+                        $subQuery->where('is_audit', false)
+                            ->whereDoesntHave('auditVersion');
+                    });
+            });
+
+        if ($request->filled('date')) {
+            $query->whereDate('tanggal', $request->date);
+
+        } elseif ($request->filled('month')) {
+            [$year, $month] = explode('-', $request->month);
+
+            $query->whereYear('tanggal', $year)
+                ->whereMonth('tanggal', $month);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+
+            $query->where(function ($q) use ($search) {
+                $q->where('kondisi_magnet_trap', 'like', "%{$search}%")
+                    ->orWhere('petugas_qc', 'like', "%{$search}%")
+                    ->orWhereHas('creator', function ($subQuery) use ($search) {
+                        $subQuery->where('name', 'like', "%{$search}%");
+                    });
+            });
+        }
+
+        $pemeriksaanKekuatanMagnetTraps = $query
+            ->orderByDesc('tanggal')
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view(
+            'pemeriksaan-kekuatan-magnet-trap.index_audit',
+            compact('pemeriksaanKekuatanMagnetTraps')
+        );
+    }
+
+    
+    public function duplicateToAudit($uuid)
+    {
+        $record = PemeriksaanKekuatanMagnetTrap::where('uuid', $uuid)
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $record->auditVersion;
+
+        if (!$audit) {
+            $audit = $record->copyToAudit();
+        }
+
+        $this->autoCorrectFromMaster($audit);
+
+        return redirect()->route(
+            'pemeriksaan-kekuatan-magnet-trap.edit',
+            $audit->id
+        );
+    }
+
+
+    public function duplicateToAuditAuto($uuid)
+    {
+        $record = PemeriksaanKekuatanMagnetTrap::where('uuid', $uuid)
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $record->auditVersion;
+
+        if (!$audit) {
+            $audit = $record->copyToAudit();
+        }
+
+        $audit = $this->autoCorrectFromMaster($audit);
+        $audit->refresh();
+
+        return redirect()->route(
+            'pemeriksaan-kekuatan-magnet-trap.edit',
+            $audit->id
+        );
+    }
+
+
+    public function autoCorrectFromMaster($audit)
+    {
+        $master = List_form::where('plant', auth()->user()->plant)
+            ->where('laporan', 'Pemeriksaan Kekuatan Magnet Trap')
+            ->first();
+
+        if (!$master || $master->standar_ref === null || $master->standar_ref === '') {
+            return $audit;
+        }
+
+        $standarRef = $master->standar_ref;
+
+        if (is_string($standarRef)) {
+            $standarRef = json_decode($standarRef, true);
+
+            if (!is_array($standarRef)) {
+                return $audit;
+            }
+        }
+
+        if (!is_array($standarRef)) {
+            return $audit;
+        }
+
+        for ($i = 1; $i <= 6; $i++) {
+            $field = 'kekuatan_median_' . $i;
+
+            $min = data_get($standarRef, "$field.min");
+            $max = data_get($standarRef, "$field.max");
+
+            if (
+                $min === null || $min === '' ||
+                $max === null || $max === ''
+            ) {
+                continue;
+            }
+
+            if (
+                !is_numeric($min) ||
+                !is_numeric($max) ||
+                (float) $min > (float) $max
+            ) {
+                continue;
+            }
+
+            $audit->{$field} = mt_rand(
+                (int) round((float) $min * 100),
+                (int) round((float) $max * 100)
+            ) / 100;
+        }
+
+        $parameterSesuai = data_get($standarRef, 'parameter_sesuai');
+
+        // Master null/kosong: jangan update parameter_sesuai.
+        if (
+            $parameterSesuai !== null &&
+            $parameterSesuai !== '' &&
+            in_array((string) $parameterSesuai, ['0', '1'], true)
+        ) {
+            $audit->parameter_sesuai = (int) $parameterSesuai;
+        }
+
+        $audit->save();
+
+        return $audit;
+    }
+
+
+    public function createCorrectedAudit($uuid)
+    {
+        $record = PemeriksaanKekuatanMagnetTrap::where('uuid', $uuid)
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        $audit = $record->auditVersion;
+
+        if (!$audit) {
+            $audit = $record->copyToAudit();
+        }
+
+        $this->autoCorrectFromMaster($audit);
+
+        return redirect()->route(
+            'pemeriksaan-kekuatan-magnet-trap.edit',
+            $audit->id
+        );
+    }
+
+
+    public function auditBulkPreview(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        $plant = auth()->user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', 'Pemeriksaan Kekuatan Magnet Trap')
+            ->first();
+
+        if (!$master || $master->standar_ref === null || $master->standar_ref === '') {
+            return response()->json([
+                'message' => 'Master standar belum tersedia.',
+            ], 422);
+        }
+
+        $query = PemeriksaanKekuatanMagnetTrap::where('plant_uuid', $plant)
+            ->where('is_audit', false)
+            ->whereBetween('tanggal', [
+                $request->start_date,
+                $request->end_date,
+            ]);
+
+        $total = (clone $query)->count();
+
+        $sudahAda = (clone $query)
+            ->whereHas('auditVersion')
+            ->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudahAda,
+            'akan_dibuat' => $total - $sudahAda,
+        ]);
+    }
+
+
+    public function auditBulkExecute(Request $request)
+    {
+        $request->validate([
+            'start_date' => ['required', 'date'],
+            'end_date'   => ['required', 'date', 'after_or_equal:start_date'],
+        ]);
+
+        if (!auth()->user()->isAuditView()) {
+            abort(403);
+        }
+
+        $plant = auth()->user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', 'Pemeriksaan Kekuatan Magnet Trap')
+            ->first();
+
+        if (!$master || $master->standar_ref === null || $master->standar_ref === '') {
+            return back()->with('error', 'Master standar belum tersedia.');
+        }
+
+        $records = PemeriksaanKekuatanMagnetTrap::where('plant_uuid', $plant)
+            ->where('is_audit', false)
+            ->whereBetween('tanggal', [
+                $request->start_date,
+                $request->end_date,
+            ])
+            ->with('auditVersion')
+            ->get();
+
+        $created = 0;
+        $updated = 0;
+
+        foreach ($records as $record) {
+            $audit = $record->auditVersion;
+
+            if (!$audit) {
+                $audit = $record->copyToAudit();
+                $created++;
+            } else {
+                $updated++;
+            }
+
+            // Field dengan standar valid diperbarui.
+            // Field dengan standar null/kosong tidak di-update.
+            $this->autoCorrectFromMaster($audit);
+        }
+
+        return redirect()
+            ->route('pemeriksaan-kekuatan-magnet-trap.audit')
+            ->with(
+                'success',
+                "Audit selesai. Dibuat: {$created}, diproses ulang: {$updated}."
+            );
+    }
+
     public function create()
     {
         // View path diubah

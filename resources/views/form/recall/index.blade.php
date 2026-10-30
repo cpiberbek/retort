@@ -124,7 +124,9 @@
                                     <td class="text-center align-middle">{{ $dep->no_pendaftaran }}</td>
                                     <td class="text-center align-middle">{{ $dep->jumlah_produksi }}</td>
                                     <td class="text-center align-middle">{{ $dep->tindak_lanjut }}</td>
-                                    <td class="text-center align-middle">{{ $dep->username }}</td>
+                                    <td class="text-center">
+    {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+</td>
                                     <td class="text-center align-middle">
                                         @can('can access edit button')
                                             <a href="{{ route('recall.edit', $dep->uuid) }}" class="btn btn-warning btn-sm">

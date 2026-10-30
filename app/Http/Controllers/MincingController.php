@@ -21,19 +21,33 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use App\Exports\MincingExport;
+use App\Services\AutoCorrectStandar;
+use Carbon\Carbon;
 
 class MincingController extends Controller
 {
+    private const LAPORAN_MINCING = 'Pemeriksaan Mincing - Emulsifying - Aging';
+
     public function index(Request $request)
     {
+        if (Auth::user()->isAuditView()) {                    
+            return redirect()->route('mincing.audit');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
         $kode_batch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
+        $masters = \App\Models\List_form::where('laporan', 'Pemeriksaan Mincing - Emulsifying - Aging')
+            ->get()
+            ->keyBy('plant');
+
         $data = Mincing::query()
             ->where('plant', $userPlant)
+            ->with('auditVersion')  
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -60,8 +74,273 @@ class MincingController extends Controller
             'search',
             'date',
             'shift',
-            'kode_batch'
+            'kode_batch',
+            'masters'
         ));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {            
+            return redirect()->route('mincing.index');
+        }
+
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $shift = $request->input('shift');
+        $kode_batch = $request->input('kode_batch');
+        $userPlant = Auth::user()->plant;
+
+        $masters = \App\Models\List_form::where('laporan', 'Pemeriksaan Mincing - Emulsifying - Aging')
+            ->get()
+            ->keyBy('plant');
+
+        $auditedSourceUuids = Mincing::query()
+            ->where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Mincing::query()
+            ->where('plant', $userPlant)
+            ->with('auditVersion')  
+            ->where(function ($query) use ($auditedSourceUuids) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) use ($auditedSourceUuids) {
+                        $subQuery->where('is_audit', false);
+
+                        if (!empty($auditedSourceUuids)) {
+                            $subQuery->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%");
+                });
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->when($shift, function ($query) use ($shift) {
+                $query->where('shift', $shift);
+            })
+            ->when($kode_batch, function ($query) use ($kode_batch) {
+                $query->where('kode_produksi', 'like', "%{$kode_batch}%");
+            })
+            ->orderByDesc('date')
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.mincing.index_audit', compact(
+            'data',
+            'search',
+            'date',
+            'shift',
+            'kode_batch',
+            'masters'
+        ));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        $mincing = Mincing::where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $mincing->auditVersion) {
+            return redirect()->route('mincing.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($mincing);
+
+        return redirect()->route('mincing.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Mincing $mincing): Mincing
+    {
+        return DB::transaction(function () use ($mincing) {
+            $clone = $mincing->copyToAudit();
+            $this->autoCorrectFromMaster(
+                $clone,
+                self::LAPORAN_MINCING,
+                ['suhu_sebelum_grinding' => 'suhu']
+            );
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end   = Carbon::parse($request->end_date)->startOfDay(); 
+
+        $plant  = Auth::user()->plant;
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_MINCING)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = Mincing::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString());
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('mincing.index')
+                ->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $m) {
+            try {
+                $this->createCorrectedAudit($m);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('mincing.index')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('mincing.index')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster($model, string $laporan, array $rowKeyMap = []): void
+    {
+        $skipEmpty = true;
+        $master = \App\Models\List_form::where('plant', $model->plant)
+            ->where('laporan', $laporan)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (!is_array($std) || empty($std)) return;   // NULL = dilewati
+
+        foreach ($std as $col => $rule) {
+            $current = $model->$col;
+            $rows = is_array($current)
+                ? $current
+                : (is_string($current) ? json_decode($current, true) : null);
+
+            if (is_array($rows)) {
+                $cache = [];
+
+                foreach ($rows as &$row) {
+                    if ($this->acIsRange($rule)) {
+                        $key = $rowKeyMap[$col] ?? null;
+                        if ($key && ($v = $this->acRandomize($rule)) !== null) {
+                            $row[$key] = $v;
+                        }
+                    } elseif (is_array($rule)) {
+                        // baris yang sama (selain inspection_uuid) dapat nilai yang sama
+                        $base = $row;
+                        unset($base['inspection_uuid']);
+                        $sig = md5(json_encode($base));
+
+                        foreach ($rule as $sub => $subRule) {
+                            if ($skipEmpty
+                                && $this->acIsRange($subRule)
+                                && (($row[$sub] ?? null) === null || $row[$sub] === '')) {
+                                continue;
+                            }
+
+                            if (!isset($cache[$sig]) || !array_key_exists($sub, $cache[$sig])) {
+                                $cache[$sig][$sub] = $this->acResolve($subRule);
+                            }
+                            [$ok, $v] = $cache[$sig][$sub];
+                            if ($ok) $row[$sub] = $v;
+                        }
+                    }
+                }
+                unset($row);
+
+                $model->$col = is_array($current)
+                    ? $rows
+                    : json_encode($rows, JSON_UNESCAPED_UNICODE);
+            } else {
+                [$ok, $v] = $this->acResolve($rule);
+                if ($ok) $model->$col = $v;
+            }
+        }
+
+        $model->save();
+    }
+
+    private function acResolve($rule): array
+    {
+        if ($this->acIsRange($rule)) {
+            $v = $this->acRandomize($rule);
+            return [$v !== null, $v];
+        }
+        if (is_array($rule)) return [false, null];
+        return [true, $rule === 'Oke' ? 'Oke' : null];   // Oke = centang, null = uncheck
+    }
+
+    private function acIsRange($rule): bool
+    {
+        return is_array($rule) && (array_key_exists('min', $rule) || array_key_exists('max', $rule));
+    }
+
+    private function acRandomize(array $r): ?float
+    {
+        if (!isset($r['max'])) return null;
+
+        $max = (int) round((float) $r['max'] * 100);
+
+        // min & max: acak di dalam rentang
+        if (isset($r['min'])) {
+            $min = (int) round((float) $r['min'] * 100);
+            return round(mt_rand($min, $max) / 100, 2);
+        }
+
+        // hanya max: strictly < max, dalam jarak $span di bawahnya
+        $span = 100;   // 1.00, satu-satunya angka yang bukan dari master
+        return round(mt_rand($max - $span, $max - 1) / 100, 2);
     }
 
     public function exportPdf(Request $request)

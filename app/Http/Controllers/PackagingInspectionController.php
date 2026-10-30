@@ -12,17 +12,22 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use TCPDF;
+use Carbon\Carbon;
 use App\Models\List_form;
 
 class PackagingInspectionController extends Controller
 {
-    /**
-     * Menampilkan daftar semua inspeksi.
-     */
-    public function index(Request $request): View
+    private const LAPORAN_PACKAGING = 'Pemeriksaan Kedatangan Bahan Kemas';
+
+    public function index(Request $request): View|RedirectResponse
     {
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('packaging-inspections.audit');
+        }
+
         $query = PackagingInspection::with('items')
-            ->where('plant_uuid', auth()->user()->plant);
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where('is_audit', false);
 
         if ($request->filled('search')) {
             $searchTerm = $request->input('search');
@@ -50,6 +55,208 @@ class PackagingInspectionController extends Controller
             ->withQueryString();
 
         return view('packaging_inspections.index', compact('inspections'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('packaging-inspections.index');
+        }
+
+        $auditedSourceUuids = PackagingInspection::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $query = PackagingInspection::with(['items', 'auditVersion'])
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            });
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->input('search');
+
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('shift', 'LIKE', "%{$searchTerm}%")
+                    ->orWhere('uuid', 'LIKE', "%{$searchTerm}%")
+                    ->orWhereHas('items', function ($q) use ($searchTerm) {
+                        $q->where('packaging_type', 'LIKE', "%{$searchTerm}%");
+                    });
+            });
+        }
+
+        if ($request->filled('start_date')) {
+            $query->whereDate('inspection_date', $request->input('start_date'));
+        }
+
+        if ($request->filled('shift')) {
+            $query->where('shift', $request->input('shift'));
+        }
+
+        $inspections = $query
+            ->orderByRaw('COALESCE((SELECT original.inspection_date FROM packaging_inspections AS original WHERE original.uuid = packaging_inspections.source_uuid LIMIT 1), packaging_inspections.inspection_date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM packaging_inspections AS original WHERE original.uuid = packaging_inspections.source_uuid LIMIT 1), packaging_inspections.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM packaging_inspections AS original WHERE original.uuid = packaging_inspections.source_uuid LIMIT 1), packaging_inspections.created_at) DESC')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('packaging_inspections.index_audit', compact('inspections'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = PackagingInspection::where('uuid', $uuid)
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('packaging-inspections.edit', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('packaging-inspections.edit', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(PackagingInspection $row): PackagingInspection
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_PACKAGING)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = PackagingInspection::where('plant_uuid', $plant)
+            ->where('is_audit', false)
+            ->whereDate('inspection_date', '>=', $start)
+            ->whereDate('inspection_date', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('packaging-inspections.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('packaging-inspections.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('packaging-inspections.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster(PackagingInspection $model): void
+    {
+        $master = List_form::where('plant', $model->plant_uuid)
+            ->where('laporan', self::LAPORAN_PACKAGING)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        $range = function ($rule) {
+            if (!is_array($rule)) return null;
+            $min = $rule['min'] ?? null;
+            $max = $rule['max'] ?? null;
+            if ($min === null || $min === '' || $max === null || $max === '') return null;
+            return [(float) $min, (float) $max];
+        };
+
+        foreach ($model->items()->get() as $item) {
+            if ($r = $range($std['condition_weight'] ?? null)) {
+                $item->condition_weight = round(mt_rand((int) round($r[0] * 100), (int) round($r[1] * 100)) / 100, 2);
+            }
+
+            foreach (['quantity_goods', 'quantity_sample', 'quantity_reject'] as $col) {
+                if ($r = $range($std[$col] ?? null)) {
+                    $item->$col = mt_rand((int) $r[0], (int) $r[1]);
+                }
+            }
+
+            foreach (['condition_design', 'condition_sealing', 'condition_color', 'acceptance_status', 'condition_dimension', 'notes'] as $col) {
+                $rule = $std[$col] ?? null;
+                if (is_string($rule) && trim($rule) !== '') {
+                    $item->$col = $rule;
+                }
+            }
+
+            $vehicle = $std['vehicle_condition'] ?? null;
+            if (is_array($vehicle) && !empty($vehicle)) {
+                $item->vehicle_condition = implode(',', $vehicle);
+            }
+
+            $item->save();
+        }
     }
 
     /**

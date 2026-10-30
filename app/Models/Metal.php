@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Traits\HasAudit;
 
 class Metal extends Model
 {
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasUuids, SoftDeletes, HasAudit;
 
     protected $table = 'metals';
 
@@ -20,7 +21,7 @@ class Metal extends Model
 
     protected $fillable = [
         'date', 'plant', 'pukul', 'fe', 'nfe', 'sus', 'nama_produksi', 'status_produksi', 'tgl_update_produksi', 'nama_engineer', 'status_engineer', 'tgl_update_engineer', 'catatan',
-        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'username', 'username_updated',  'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv', 'is_audit','source_uuid',
     ];
     protected $dates = ['deleted_at'];
 }

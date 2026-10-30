@@ -10,13 +10,26 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Produk;
+use Carbon\Carbon;
 
 class PemeriksaanRetainController extends Controller
 {
+    private const LAPORAN_RETAIN = 'Pemeriksaan Sampel Retain';
+
+    private const AC_RANGE_ITEM = ['panjang', 'diameter', 'lab_garam', 'lab_air', 'lab_mikro'];
+    private const AC_SCORE_ITEM = ['sensori_rasa', 'sensori_warna', 'sensori_aroma', 'sensori_texture'];
+    private const AC_CHECK_ITEM = ['temuan_jamur', 'temuan_lendir', 'temuan_pinehole', 'temuan_kejepit', 'temuan_seal'];
+
     public function index(Request $request)
     {
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('pemeriksaan_retain.audit');
+        }
+
         $query = PemeriksaanRetain::withCount('items')
             ->with(['creator', 'items'])
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where('is_audit', false)
             ->latest();
 
         $query->when($request->date, fn($q) => $q->whereDate('tanggal', $request->date));
@@ -30,6 +43,199 @@ class PemeriksaanRetainController extends Controller
         $pemeriksaanRetains = $query->paginate(15);
 
         return view('pemeriksaan_retain.index', compact('pemeriksaanRetains'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('pemeriksaan_retain.index');
+        }
+
+        $auditedSourceUuids = PemeriksaanRetain::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $query = PemeriksaanRetain::withCount('items')
+            ->with(['creator', 'items', 'auditVersion'])
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            });
+
+        $query->when($request->date, fn($q) => $q->whereDate('tanggal', $request->date));
+
+        $query->when($request->kode_produksi, function ($q) use ($request) {
+            $q->whereHas('items', function ($item) use ($request) {
+                $item->where('kode_produksi', 'like', '%' . $request->kode_produksi . '%');
+            });
+        });
+
+        $pemeriksaanRetains = $query
+            ->orderByRaw('COALESCE((SELECT original.tanggal FROM pemeriksaan_retains AS original WHERE original.uuid = pemeriksaan_retains.source_uuid LIMIT 1), pemeriksaan_retains.tanggal) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM pemeriksaan_retains AS original WHERE original.uuid = pemeriksaan_retains.source_uuid LIMIT 1), pemeriksaan_retains.created_at) DESC')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('pemeriksaan_retain.index_audit', compact('pemeriksaanRetains'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = PemeriksaanRetain::where('uuid', $uuid)
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('pemeriksaan_retain.edit', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('pemeriksaan_retain.edit', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(PemeriksaanRetain $row): PemeriksaanRetain
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_RETAIN)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = PemeriksaanRetain::where('plant_uuid', $plant)
+            ->where('is_audit', false)
+            ->whereDate('tanggal', '>=', $start)
+            ->whereDate('tanggal', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('pemeriksaan_retain.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('pemeriksaan_retain.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('pemeriksaan_retain.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster(PemeriksaanRetain $model): void
+    {
+        $master = List_form::where('plant', $model->plant_uuid)
+            ->where('laporan', self::LAPORAN_RETAIN)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        $range = function ($rule) {
+            if (!is_array($rule)) return null;
+            $min = $rule['min'] ?? null;
+            $max = $rule['max'] ?? null;
+            if ($min === null || $min === '' || $max === null || $max === '') return null;
+            return [(float) $min, (float) $max];
+        };
+
+        foreach ($model->items()->get() as $item) {
+            foreach (self::AC_RANGE_ITEM as $col) {
+                if ($r = $range($std[$col] ?? null)) {
+                    $item->$col = round(mt_rand((int) round($r[0] * 100), (int) round($r[1] * 100)) / 100, 2);
+                }
+            }
+
+            foreach (self::AC_SCORE_ITEM as $col) {
+                if ($r = $range($std[$col] ?? null)) {
+                    $item->$col = mt_rand((int) $r[0], (int) $r[1]);
+                }
+            }
+
+            foreach (self::AC_CHECK_ITEM as $col) {
+                $rule = $std[$col] ?? null;
+                if (in_array((string) $rule, ['0', '1'], true)) {
+                    $item->$col = (bool) (int) $rule;
+                }
+            }
+
+            $item->save();
+        }
+
+        $keterangan = $std['keterangan'] ?? null;
+        if (is_string($keterangan) && trim($keterangan) !== '') {
+            $model->keterangan = trim($keterangan);
+            $model->save();
+        }
     }
 
     public function create()

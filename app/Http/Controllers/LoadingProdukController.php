@@ -14,16 +14,10 @@ use Illuminate\Support\Facades\Auth;
 
 class LoadingProdukController extends Controller
 {
-    /**
-     * Menampilkan daftar.
-     */
-    public function index(Request $request) // 1. Tambahkan (Request $request)
-    {
-        // 2. Mulai query builder
-        $query = LoadingProduk::with('creator')
-            ->where('plant_uuid', auth()->user()->plant);
+    private const LAPORAN_LOADING = 'Pemeriksaan Loading-Unloading Produk';
 
-        // 3. Terapkan filter jika ada input
+    private function applyFilters($query, Request $request)
+    {
         if ($request->filled('date')) {
             $query->whereDate('tanggal', $request->date);
         }
@@ -52,12 +46,209 @@ class LoadingProdukController extends Controller
             });
         }
 
+        return $query;
+    }
 
-        // 4. Eksekusi query dengan urutan terbaru dan paginasi
-        $produks = $query->latest()->paginate(10);
+    public function index(Request $request)
+    {
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('loading-produks.audit');
+        }
 
-        // 5. Kirim data ke view
+        $query = LoadingProduk::with('creator')
+            ->where('plant_uuid', auth()->user()->plant)
+            ->where('is_audit', false);
+
+        $produks = $this->applyFilters($query, $request)->latest()->paginate(10);
+
         return view('loading-produks.index', compact('produks'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('loading-produks.index');
+        }
+
+        $auditedSourceUuids = LoadingProduk::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $query = LoadingProduk::with(['creator', 'auditVersion'])
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            });
+
+        $produks = $this->applyFilters($query, $request)
+            ->orderByRaw('COALESCE((SELECT original.tanggal FROM loading_checks AS original WHERE original.uuid = loading_checks.source_uuid LIMIT 1), loading_checks.tanggal) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM loading_checks AS original WHERE original.uuid = loading_checks.source_uuid LIMIT 1), loading_checks.created_at) DESC')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('loading-produks.index_audit', compact('produks'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = LoadingProduk::where('uuid', $uuid)
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('loading-produks.edit', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('loading-produks.edit', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(LoadingProduk $row): LoadingProduk
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_LOADING)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = LoadingProduk::where('plant_uuid', $plant)
+            ->where('is_audit', false)
+            ->whereDate('tanggal', '>=', $start)
+            ->whereDate('tanggal', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('loading-produks.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('loading-produks.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('loading-produks.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster(LoadingProduk $model): void
+    {
+        $master = List_form::where('plant', $model->plant_uuid)
+            ->where('laporan', self::LAPORAN_LOADING)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        // detail (jumlah baris bebas)
+        $min = $std['jumlah']['min'] ?? null;
+        $max = $std['jumlah']['max'] ?? null;
+        $hasJumlah = $min !== null && $min !== '' && $max !== null && $max !== '';
+
+        $itemKet = $std['item_keterangan'] ?? null;
+        $hasItemKet = is_string($itemKet) && trim($itemKet) !== '';
+
+        if ($hasJumlah || $hasItemKet) {
+            foreach ($model->details()->get() as $detail) {
+                if ($hasJumlah) {
+                    $detail->jumlah = mt_rand((int) $min, (int) $max);
+                }
+
+                if ($hasItemKet) {
+                    $detail->keterangan = trim($itemKet);
+                }
+
+                $detail->save();
+            }
+        }
+
+        // induk
+        $kondisi = $std['kondisi_mobil'] ?? null;
+        if (is_array($kondisi) && !empty($kondisi)) {
+            $model->kondisi_mobil = array_values($kondisi);
+        }
+
+        $umum = $std['keterangan_umum'] ?? null;
+        if (is_string($umum) && trim($umum) !== '') {
+            $model->keterangan_umum = trim($umum);
+        }
+
+        $total = $std['keterangan_total'] ?? null;
+        if (is_string($total) && trim($total) !== '') {
+            $model->keterangan_total = trim($total);
+        }
+
+        $model->save();
     }
 
     /**

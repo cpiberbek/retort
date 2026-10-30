@@ -64,7 +64,9 @@
                             <th>QC</th>
                             <th>Operator</th>
                             <th>SPV</th>
-                            <th>Verification</th>
+                            @can('can access update button')
+                                <th>Aksi</th>
+                                @endcan
                         </tr>
                     </thead>
                     <tbody>
@@ -152,7 +154,9 @@
                             <span>-</span>
                             @endif
                         </td>
-                        <td class="text-center align-middle">{{ $dep->username }}</td>
+                        <td class="text-center">
+                            {{ \Illuminate\Support\Facades\DB::table('users')->where('username', $dep->username)->value('name') }}
+                        </td>
                         <td class="text-center align-middle">{{ $dep->nama_operator }}</td>
                         <td class="text-center align-middle">
                             @if ($dep->status_spv == 0)

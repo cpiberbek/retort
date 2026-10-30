@@ -13,10 +13,18 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 
 class RawMaterialInspectionController extends Controller
 {
     // Daftar field boolean (dari tombol OK/Not OK)
+    private const LAPORAN_BAHAN = 'Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia';
+
+    private const AC_BOOL = [
+        'mobil_check_warna', 'mobil_check_kotoran', 'mobil_check_aroma',
+        'mobil_check_kemasan', 'analisa_logo_halal', 'dokumen_halal_berlaku',
+    ];
+    
     private $booleanFields = [
         'mobil_check_warna',
         'mobil_check_kotoran',
@@ -28,22 +36,23 @@ class RawMaterialInspectionController extends Controller
 
     public function index(Request $request)
     {
-        // Mulai query
-        $query = RawMaterialInspection::with(['creator', 'updater']);
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('inspections.audit');
+        }
+
+        $query = RawMaterialInspection::with(['creator', 'updater'])
+            ->where('is_audit', false);
 
         if (Auth::check() && !empty(Auth::user()->plant)) {
             $query->where('plant_uuid', Auth::user()->plant);
         }
 
-        // Terapkan filter tanggal (gunakan kolom 'setup_kedatangan')
         $query->when($request->filled('date'), function ($q) use ($request) {
             $q->whereDate('setup_kedatangan', $request->date);
         });
 
-        // Terapkan filter pencarian (search)
         $query->when($request->filled('search'), function ($q) use ($request) {
             $search = $request->search;
-            // Grup 'where' agar 'orWhere' tidak mengganggu filter tanggal
             $q->where(function ($subQuery) use ($search) {
                 $subQuery->where('bahan_baku', 'like', "%{$search}%")
                     ->orWhere('supplier', 'like', "%{$search}%")
@@ -51,12 +60,227 @@ class RawMaterialInspectionController extends Controller
             });
         });
 
-        // Ambil data setelah difilter, urutkan, dan paginasi
-        $inspections = $query->latest() // Mengurutkan dari yang terbaru
+        $inspections = $query->latest()
             ->paginate(10)
-            ->withQueryString(); // <-- Penting agar filter tetap ada di link paginasi
+            ->withQueryString();
 
         return view('raw_material.IndexRawMaterial', compact('inspections'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('inspections.index');
+        }
+
+        $auditedSourceUuids = RawMaterialInspection::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $query = RawMaterialInspection::with(['creator', 'updater', 'auditVersion'])
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            });
+
+        $query->when($request->filled('date'), function ($q) use ($request) {
+            $q->whereDate('setup_kedatangan', $request->date);
+        });
+
+        $query->when($request->filled('search'), function ($q) use ($request) {
+            $search = $request->search;
+            $q->where(function ($subQuery) use ($search) {
+                $subQuery->where('bahan_baku', 'like', "%{$search}%")
+                    ->orWhere('supplier', 'like', "%{$search}%")
+                    ->orWhere('do_po', 'like', "%{$search}%");
+            });
+        });
+
+        $inspections = $query
+            ->orderByRaw('COALESCE((SELECT original.setup_kedatangan FROM raw_material_inspections AS original WHERE original.uuid = raw_material_inspections.source_uuid LIMIT 1), raw_material_inspections.setup_kedatangan) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM raw_material_inspections AS original WHERE original.uuid = raw_material_inspections.source_uuid LIMIT 1), raw_material_inspections.created_at) DESC')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('raw_material.IndexAuditRawMaterial', compact('inspections'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = RawMaterialInspection::where('uuid', $uuid)
+            ->where('plant_uuid', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('inspections.edit', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('inspections.edit', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(RawMaterialInspection $row): RawMaterialInspection
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_BAHAN)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = RawMaterialInspection::where('plant_uuid', $plant)
+            ->where('is_audit', false)
+            ->whereDate('setup_kedatangan', '>=', $start)
+            ->whereDate('setup_kedatangan', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('inspections.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('inspections.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('inspections.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster(RawMaterialInspection $model): void
+    {
+        $master = List_form::where('plant', $model->plant_uuid)
+            ->where('laporan', self::LAPORAN_BAHAN)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        $range = function (string $key) use ($std) {
+            $r = $std[$key] ?? null;
+            if (!is_array($r)) return null;
+
+            $min = $r['min'] ?? null;
+            $max = $r['max'] ?? null;
+            if ($min === null || $min === '' || $max === null || $max === '') return null;
+
+            return [(float) $min, (float) $max];
+        };
+
+        $rand = fn (array $r) => round(
+            mt_rand((int) round($r[0] * 100), (int) round($r[1] * 100)) / 100,
+            2
+        );
+
+        foreach (['suhu_mobil', 'suhu_daging'] as $col) {
+            if ($r = $range($col)) {
+                $model->$col = $rand($r);
+            }
+        }
+
+        if ($r = $range('analisa_ka_ffa')) {
+            $model->analisa_ka_ffa = number_format($rand($r), 2, '.', '');
+        }
+
+        foreach (self::AC_BOOL as $col) {
+            $rule = $std[$col] ?? null;
+            if (in_array((string) $rule, ['0', '1'], true)) {
+                $model->$col = (bool) (int) $rule;
+            }
+        }
+
+        $kondisi = $std['kondisi_mobil'] ?? null;
+        if (is_array($kondisi) && !empty($kondisi)) {
+            $model->kondisi_mobil = implode(',', $kondisi);
+        }
+
+        $keterangan = $std['keterangan'] ?? null;
+        if (is_string($keterangan) && trim($keterangan) !== '') {
+            $model->keterangan = trim($keterangan);
+        }
+
+        $model->save();
+
+        $rSampel = $range('jumlah_sampel');
+        $rReject = $range('jumlah_reject');
+
+        if ($rSampel || $rReject) {
+            foreach ($model->productDetails()->get() as $detail) {
+                if ($rSampel) $detail->jumlah_sampel = $rand($rSampel);
+                if ($rReject) $detail->jumlah_reject = $rand($rReject);
+                $detail->save();
+            }
+        }
     }
 
     public function create()

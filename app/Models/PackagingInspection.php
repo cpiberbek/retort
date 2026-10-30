@@ -35,17 +35,21 @@ class PackagingInspection extends Model
         'plant_uuid',
         'created_by',
         'updated_by',
-        
+
         // Field Verifikasi
         'status_spv',
         'catatan_spv',
         'verified_by',
         'verified_at',
+
+        'is_audit',
+        'source_uuid',
     ];
 
     protected $casts = [
         'inspection_date' => 'date',
         'verified_at' => 'datetime',
+        'is_audit' => 'boolean',
     ];
 
     /**
@@ -54,6 +58,27 @@ class PackagingInspection extends Model
     public function items(): HasMany
     {
         return $this->hasMany(PackagingInspectionItem::class);
+    }
+
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id', 'uuid']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();
+
+        foreach ($this->items as $item) {
+            $copy = $item->replicate(['id', 'uuid']);
+            $copy->packaging_inspection_id = $clone->id;
+            $copy->save();
+        }
+
+        return $clone;
     }
 
     /**

@@ -16,29 +16,246 @@ use Illuminate\Support\Facades\Auth;
 use TCPDF;
 use App\Exports\MetalExport;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\DB;
 
 class MetalController extends Controller
 {
+    private const LAPORAN_METAL = 'Pemeriksaan Metal Detector';
+
     public function index(Request $request)
     {
-        $search     = $request->input('search');
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('metal.audit');
+        }
+
+        $search = $request->input('search');
         $date = $request->input('date');
-        $userPlant  = Auth::user()->plant;
+        $userPlant = Auth::user()->plant;
 
         $data = Metal::query()
-        ->where('plant', $userPlant)
-        ->when($search, function ($query) use ($search) {
-            $query->where('username', 'like', "%{$search}%");
-        })
-        ->when($date, function ($query) use ($date) {
-            $query->whereDate('date', $date);
-        })
-        ->orderBy('date', 'desc')
-        ->orderBy('created_at', 'desc')
-        ->paginate(10)
-        ->appends($request->all());
+            ->where('plant', $userPlant)
+            ->where('is_audit', false)
+            ->with('auditVersion')
+            ->when($search, function ($query) use ($search) {
+                $query->where('username', 'like', "%{$search}%");
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderByDesc('date')
+            ->orderByDesc('created_at')
+            ->paginate(10)
+            ->appends($request->all());
 
-        return view('form.metal.index', compact('data', 'search', 'date'));
+        return view('form.metal.index', compact(
+            'data',
+            'search',
+            'date'
+        ));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('metal.index');
+        }
+
+        $search = $request->input('search');
+        $date = $request->input('date');
+        $userPlant = Auth::user()->plant;
+
+        $auditedSourceUuids = Metal::query()
+            ->where('plant', $userPlant)
+            ->where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Metal::query()
+            ->where('plant', $userPlant)
+            ->with('auditVersion')
+            ->where(function ($query) use ($auditedSourceUuids) {
+                $query->where('is_audit', true)
+                    ->orWhere(function ($subQuery) use ($auditedSourceUuids) {
+                        $subQuery->where('is_audit', false);
+
+                        if (!empty($auditedSourceUuids)) {
+                            $subQuery->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where('username', 'like', "%{$search}%");
+            })
+            ->when($date, function ($query) use ($date) {
+                $query->whereDate('date', $date);
+            })
+            ->orderByDesc('date')
+            ->orderByDesc('pukul')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.metal.index_audit', compact(
+            'data',
+            'search',
+            'date'
+        ));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        $metal = Metal::query()
+            ->where('uuid', $uuid)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $metal->auditVersion) {
+            return redirect()->route('metal.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($metal);
+
+        return redirect()
+            ->route('metal.edit.form', $clone->uuid)
+            ->with(
+                'info',
+                'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.'
+            );
+    }
+
+    private function createCorrectedAudit(Metal $metal): Metal
+    {
+        return DB::transaction(function () use ($metal) {
+            $clone = $metal->copyToAudit();
+
+            $this->autoCorrectFromMaster(
+                $clone,
+                self::LAPORAN_METAL
+            );
+
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->startOfDay();
+        $end = Carbon::parse($request->end_date)->startOfDay();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::query()
+            ->where('plant', $plant)
+            ->where('laporan', self::LAPORAN_METAL)
+            ->first();
+
+        abort_if(
+            empty($master?->standar_ref),
+            422,
+            'Master auto correct belum diterapkan untuk plant ini.'
+        );
+
+        $base = Metal::query()
+            ->where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start->toDateString())
+            ->whereDate('date', '<=', $end->toDateString());
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total' => $total,
+            'sudah_ada' => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+
+        if ($total === 0) {
+            return redirect()->route('metal.index')
+                ->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)
+            ->whereDoesntHave('auditVersion')
+            ->get();
+
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed = 0;
+
+        foreach ($targets as $metal) {
+            try {
+                $this->createCorrectedAudit($metal);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('metal.index')
+                ->with(
+                    'info',
+                    "0 data baru. {$skipped} data dilewati karena sudah ada audit."
+                );
+        }
+
+        $message = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+
+        if ($failed > 0) {
+            $message .= " {$failed} gagal diproses (cek log).";
+        }
+
+        return redirect()
+            ->route('metal.index')
+            ->with($failed ? 'warning' : 'success', $message);
+    }
+
+    private function autoCorrectFromMaster($model, string $laporan): void
+    {
+        $master = List_form::query()
+            ->where('plant', $model->plant)
+            ->where('laporan', $laporan)
+            ->first();
+
+        $standar = $master?->standar_ref;
+
+        if (!is_array($standar) || empty($standar)) {
+            return;
+        }
+
+        foreach ($standar as $column => $value) {
+            if (!array_key_exists($column, $model->getAttributes())) {
+                continue;
+            }
+
+            if (is_string($value)) {
+                $model->$column = $value;
+            }
+        }
+
+        $model->save();
     }
 
     public function create()
