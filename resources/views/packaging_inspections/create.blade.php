@@ -135,7 +135,7 @@
 
                     <div class="card-body">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-6" data-field>
                                 <label for="inspection_date" class="form-label">
                                     Hari/Tanggal <span class="text-danger">*</span>
                                 </label>
@@ -149,7 +149,7 @@
                                 >
                             </div>
 
-                            <div class="col-md-6">
+                            <div class="col-md-6" data-field>
                                 <label for="shift" class="form-label">
                                     Shift <span class="text-danger">*</span>
                                 </label>
@@ -168,6 +168,76 @@
                                 id="qc_inspector"
                                 value="{{ auth()->user()->name }}"
                             >
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <strong>
+                            <i class="bi bi-card-checklist"></i>
+                            Informasi Tambahan
+                        </strong>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row g-3">
+
+                            <div class="col-md-6" data-field>
+                                <label for="pbb_op" class="form-label">
+                                    DO/PO/OP
+                                </label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="pbb_op"
+                                    value="{{ old('pbb_op') }}"
+                                >
+                                <div class="err-msg">DO/PO/OP wajib diisi</div>
+                            </div>
+
+                            <div class="col-md-6" data-field>
+                                <label for="no_pol" class="form-label">
+                                    No. Polisi <span class="text-danger">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="no_pol"
+                                    value="{{ old('no_pol') }}"
+                                    required
+                                >
+                                <div class="err-msg">No. Polisi wajib diisi</div>
+                            </div>
+
+                            <div class="col-12" data-field>
+                                <label class="form-label">
+                                    Kondisi Kendaraan <span class="text-danger">*</span>
+                                </label>
+
+                                <div class="vehicle-group">
+                                    @foreach ($vehicleConditions ?? [] as $index => $condition)
+                                        <div class="form-check form-check-inline">
+                                            <input
+                                                class="form-check-input additional-vc"
+                                                type="checkbox"
+                                                value="{{ $condition }}"
+                                                id="additional_vehicle_{{ $index }}"
+                                                {{ in_array($condition, old('vehicle_condition', [])) ? 'checked' : '' }}
+                                            >
+                                            <label
+                                                class="form-check-label"
+                                                for="additional_vehicle_{{ $index }}"
+                                            >
+                                                {{ $condition }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="err-msg">Pilih minimal 1 kondisi kendaraan</div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -217,9 +287,10 @@
 $(function () {
     const container = document.getElementById('details-container');
     const addBtn = document.getElementById('add-detail-btn');
+    const form = $('form[action="{{ route('packaging-inspections.store') }}"]');
+
     let detailIndex = 0;
 
-    const vehicleConditions = @json($vehicleConditions ?? []);
     const suppliers = @json($suppliers->pluck('nama_supplier')->values());
     const oldItems = @json(old('items', []));
 
@@ -228,10 +299,6 @@ $(function () {
         .replace(/"/g, '&quot;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
-
-    const toArray = value => Array.isArray(value)
-        ? value
-        : (value ? String(value).split(',').map(s => s.trim()).filter(Boolean) : []);
 
     const field = (col, label, required, inner, errMsg = 'Wajib diisi') => `
         <div class="${col}" data-field>
@@ -262,8 +329,6 @@ $(function () {
         const i = detailIndex;
 
         const v = key => data?.[key] ?? '';
-        const acceptVal = v('acceptance_status') || 'OK';
-        const selectedConditions = toArray(v('vehicle_condition'));
 
         const checkList = [
             { key: 'condition_design', label: 'Kondisi Design' },
@@ -311,23 +376,6 @@ $(function () {
             </option>
         `).join('');
 
-        const vehicleCheckboxes = vehicleConditions.map((condition, index) => `
-            <div class="form-check form-check-inline">
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    data-vc
-                    name="items[${i}][vehicle_condition][]"
-                    value="${esc(condition)}"
-                    id="vehicle_${i}_${index}"
-                    ${selectedConditions.includes(condition) ? 'checked' : ''}
-                >
-                <label class="form-check-label" for="vehicle_${i}_${index}">
-                    ${esc(condition)}
-                </label>
-            </div>
-        `).join('');
-
         const card = document.createElement('div');
         card.className = 'dynamic-item-card border p-3 p-md-4 mb-4';
 
@@ -343,7 +391,7 @@ $(function () {
             <div class="row g-3">
                 <div class="col-12 section-title">Data Packaging</div>
 
-                ${field('col-md-6', 'Jenis Packaging', true, `
+                ${field('col-md-4', 'Jenis Packaging', true, `
                     <select
                         name="items[${i}][packaging_type]"
                         class="form-select packaging-select"
@@ -362,7 +410,7 @@ $(function () {
                     </select>
                 `, 'Jenis packaging wajib dipilih')}
 
-                ${field('col-md-6', 'Supplier', true, `
+                ${field('col-md-4', 'Supplier', true, `
                     <select
                         name="items[${i}][supplier]"
                         class="form-select supplier-select"
@@ -374,11 +422,8 @@ $(function () {
                     </select>
                 `, 'Supplier wajib dipilih')}
 
-                ${field('col-md-6', 'Lot Batch', true,
+                ${field('col-md-4', 'Lot Batch', true,
                     textInput(`items[${i}][lot_batch]`, 'text', v('lot_batch'), true))}
-
-                ${field('col-md-6', 'DO/PO/OP', false,
-                    textInput(`items[${i}][pbb_op]`, 'text', v('pbb_op'), false))}
 
                 <div class="col-12 section-title">Kondisi Packaging</div>
 
@@ -405,35 +450,27 @@ $(function () {
                     textInput(`items[${i}][quantity_reject]`, 'number', v('quantity_reject') === '' ? 0 : v('quantity_reject'), true,
                         'min="0" step="1" inputmode="numeric"'))}
 
-                <div class="col-12 section-title">Kendaraan &amp; Penerimaan</div>
+                <div class="col-12 section-title">Penerimaan</div>
 
-                ${field('col-md-6', 'No. Polisi', true,
-                    textInput(`items[${i}][no_pol]`, 'text', v('no_pol'), true))}
-
-                ${field('col-md-6', 'Penerimaan', true, `
+                ${field('col-md-4', 'Penerimaan', true, `
                     <select
                         name="items[${i}][acceptance_status]"
                         class="form-select acceptance-select"
                         data-req
                         required
                     >
-                        <option value="OK" ${acceptVal === 'OK' ? 'selected' : ''}>OK</option>
-                        <option value="Tolak" ${acceptVal === 'Tolak' ? 'selected' : ''}>Tolak</option>
+                        <option value="OK" ${v('acceptance_status') === 'Tolak' ? '' : 'selected'}>OK</option>
+                        <option value="Tolak" ${v('acceptance_status') === 'Tolak' ? 'selected' : ''}>Tolak</option>
                     </select>
                 `)}
 
-                ${field('col-12', 'Kondisi Kendaraan', true, `
-                    <div class="vehicle-group">${vehicleCheckboxes}</div>
-                `, 'Pilih minimal 1 kondisi kendaraan')}
-
-                <div class="col-12" data-field>
-                    <label class="form-label">Keterangan (Optional)</label>
+                ${field('col-md-8', 'Keterangan (Optional)', false, `
                     <textarea
                         name="items[${i}][notes]"
                         class="form-control"
                         rows="2"
                     >${esc(v('notes'))}</textarea>
-                </div>
+                `)}
 
                 <input type="hidden" name="items[${i}][id]" value="${esc(v('id'))}">
                 <input type="hidden" name="items[${i}][condition_weight_pcs]" value="${esc(v('condition_weight_pcs'))}">
@@ -451,9 +488,21 @@ $(function () {
 
         $(card).find('.packaging-select').select2({
             theme: 'bootstrap-5',
-            placeholder: '-- Pilih Jenis Packaging --',
+            placeholder: '-- Pilih Opsi Packaging / Ketik Manual --',
             allowClear: true,
-            width: '100%'
+            tags: true,
+            width: '100%',
+            createTag: function (params) {
+                const term = $.trim(params.term);
+
+                if (term === '') return null;
+
+                return {
+                    id: term,
+                    text: term,
+                    newTag: true
+                };
+            }
         });
 
         detailIndex++;
@@ -494,10 +543,16 @@ $(function () {
 
         if ($(this).is('[data-req]') && !String(this.value).trim()) return;
 
-        if ($(this).is('[data-vc]') && !wrapper.find('[data-vc]:checked').length) return;
-
         wrapper.removeClass('field-error');
         $(this).removeClass('is-invalid');
+    });
+
+    $(document).on('change', '.additional-vc', function () {
+        const wrapper = $(this).closest('[data-field]');
+
+        if (wrapper.find('.additional-vc:checked').length) {
+            wrapper.removeClass('field-error');
+        }
     });
 
     function validateForm() {
@@ -524,21 +579,22 @@ $(function () {
             }
         });
 
-        $('.vehicle-group').each(function () {
-            const wrapper = $(this).closest('[data-field]');
-            const checked = wrapper.find('[data-vc]:checked').length > 0;
+        const vehicleChecked = $('.additional-vc:checked').length > 0;
 
-            if (!checked) {
-                wrapper.addClass('field-error');
-            }
-        });
-
-        if (!$('input[name="inspection_date"]').val()) {
-            $('input[name="inspection_date"]').closest('.col-md-6').addClass('field-error');
+        if (!vehicleChecked) {
+            $('.additional-vc').first().closest('[data-field]').addClass('field-error');
         }
 
-        if (!$('input[name="shift"]').val()?.trim()) {
-            $('input[name="shift"]').closest('.col-md-6').addClass('field-error');
+        if (!$('#inspection_date').val()) {
+            $('#inspection_date').closest('[data-field]').addClass('field-error');
+        }
+
+        if (!$('#shift').val()?.trim()) {
+            $('#shift').closest('[data-field]').addClass('field-error');
+        }
+
+        if (!$('#no_pol').val()?.trim()) {
+            $('#no_pol').closest('[data-field]').addClass('field-error');
         }
 
         const errors = $('.field-error');
@@ -548,7 +604,7 @@ $(function () {
 
             if (!errorBox.length) {
                 errorBox = $('<div id="client-errors" class="alert alert-danger"></div>');
-                $('form[action="{{ route('packaging-inspections.store') }}"]').prepend(errorBox);
+                form.prepend(errorBox);
             }
 
             errorBox
@@ -568,10 +624,46 @@ $(function () {
         return true;
     }
 
-    $('form[action="{{ route('packaging-inspections.store') }}"]').on('submit', function (event) {
+    form.on('submit', function (event) {
         if (!validateForm()) {
             event.preventDefault();
+            return;
         }
+
+        const pbbOp = $('#pbb_op').val();
+        const noPol = $('#no_pol').val();
+
+        const vehicleConditions = $('.additional-vc:checked')
+            .map(function () {
+                return this.value;
+            })
+            .get();
+
+        $('.dynamic-item-card').each(function () {
+            const index = $('.dynamic-item-card').index(this);
+
+            $(this).find('input[name$="[pbb_op]"], input[name$="[no_pol]"], input[name$="[vehicle_condition]"]').remove();
+
+            $('<input>', {
+                type: 'hidden',
+                name: `items[${index}][pbb_op]`,
+                value: pbbOp
+            }).appendTo(this);
+
+            $('<input>', {
+                type: 'hidden',
+                name: `items[${index}][no_pol]`,
+                value: noPol
+            }).appendTo(this);
+
+            vehicleConditions.forEach(condition => {
+                $('<input>', {
+                    type: 'hidden',
+                    name: `items[${index}][vehicle_condition][]`,
+                    value: condition
+                }).appendTo(this);
+            });
+        });
     });
 
     addBtn.addEventListener('click', () => renderDetailForm(null));

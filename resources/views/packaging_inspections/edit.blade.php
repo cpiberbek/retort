@@ -1,5 +1,29 @@
 @extends('layouts.app')
 
+@php
+    $existingItems = old('items', $packagingInspection->items ?? []);
+    $firstItem = collect($existingItems)->first() ?? [];
+
+    $sharedNoPol = old('no_pol', data_get($firstItem, 'no_pol', ''));
+    $sharedPbbOp = old('pbb_op', data_get($firstItem, 'pbb_op', ''));
+
+    $sharedVehicleCondition = old(
+        'vehicle_condition',
+        data_get($firstItem, 'vehicle_condition', [])
+    );
+
+    if (is_string($sharedVehicleCondition)) {
+        $sharedVehicleCondition = array_filter(
+            array_map('trim', explode(',', $sharedVehicleCondition))
+        );
+    }
+
+    $packagingOptions = \App\Models\MasterPackaging::where(
+        'plant_uuid',
+        auth()->user()->plant_active
+    )->get();
+@endphp
+
 @push('styles')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
@@ -23,6 +47,12 @@
         min-height: 44px;
     }
 
+    .form-control[readonly],
+    .form-control:disabled,
+    .form-select:disabled {
+        background-color: #e9ecef;
+    }
+
     .select2-container {
         width: 100% !important;
     }
@@ -41,6 +71,10 @@
 
     .select2-container--bootstrap-5 .select2-selection--single .select2-selection__arrow {
         height: 42px;
+    }
+
+    .select2-container--bootstrap-5 .select2-selection.is-invalid {
+        border-color: #dc3545 !important;
     }
 
     .dynamic-item-card {
@@ -98,12 +132,13 @@
         background-color: #fff;
     }
 
-    .vehicle-condition-group .form-check-input {
+    .vehicle-condition-group .form-check-input,
+    .vehicle-condition-group .form-check-label {
         cursor: pointer;
     }
 
-    .vehicle-condition-group .form-check-label {
-        cursor: pointer;
+    .vehicle-condition-group.is-invalid .form-check {
+        border-color: #dc3545;
     }
 
     .inspection-section-header {
@@ -118,6 +153,18 @@
 
     .inspection-section-header.bg-primary strong {
         color: #fff;
+    }
+
+    .invalid-feedback-custom {
+        display: none;
+        color: #dc3545;
+        font-size: .875rem;
+        margin-top: .35rem;
+    }
+
+    .is-invalid + .invalid-feedback-custom,
+    .invalid-feedback-custom.show {
+        display: block;
     }
 
     @media (max-width: 767.98px) {
@@ -167,10 +214,16 @@
                 </div>
             @endif
 
-            <form action="{{ route('packaging-inspections.update', $packagingInspection->uuid) }}" method="POST">
+            <form
+                id="packaging-inspection-form"
+                action="{{ route('packaging-inspections.update', $packagingInspection->uuid) }}"
+                method="POST"
+                novalidate
+            >
                 @csrf
                 @method('PUT')
 
+                {{-- INFORMASI INSPEKSI --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header inspection-section-header bg-primary text-white">
                         <strong>
@@ -193,7 +246,12 @@
                                     name="inspection_date"
                                     value="{{ old('inspection_date', date('Y-m-d', strtotime($packagingInspection->inspection_date))) }}"
                                     required
+                                    data-req="Tanggal inspeksi wajib diisi."
                                 >
+
+                                <div class="invalid-feedback-custom">
+                                    Tanggal inspeksi wajib diisi.
+                                </div>
                             </div>
 
                             <div class="col-md-6">
@@ -208,12 +266,100 @@
                                     name="shift"
                                     value="{{ old('shift', $packagingInspection->shift) }}"
                                     required
+                                    data-req="Shift wajib diisi."
                                 >
+
+                                <div class="invalid-feedback-custom">
+                                    Shift wajib diisi.
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
+                {{-- INFORMASI TAMBAHAN --}}
+                <div class="card border-0 shadow-sm mb-4">
+                    <div class="card-header inspection-section-header">
+                        <strong>
+                            <i class="bi bi-truck me-1"></i>
+                            Informasi Tambahan
+                        </strong>
+                    </div>
+
+                    <div class="card-body p-3 p-md-4">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="pbb_op" class="form-label">
+                                    DO/PO/OP
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="pbb_op"
+                                    name="pbb_op"
+                                    value="{{ $sharedPbbOp }}"
+                                    placeholder="Masukkan nomor DO/PO/OP"
+                                >
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="no_pol" class="form-label">
+                                    No. Polisi
+                                </label>
+
+                                <input
+                                    type="text"
+                                    class="form-control"
+                                    id="no_pol"
+                                    name="no_pol"
+                                    value="{{ $sharedNoPol }}"
+                                    placeholder="Masukkan nomor polisi"
+                                    required
+                                    data-req="Nomor polisi wajib diisi."
+                                >
+
+                                <div class="invalid-feedback-custom">
+                                    Nomor polisi wajib diisi.
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label d-block">
+                                    Kondisi Kendaraan
+                                </label>
+
+                                <div class="vehicle-condition-group" id="vehicle-condition-group">
+                                    @foreach ($vehicleConditions ?? [] as $condition)
+                                        <div class="form-check">
+                                            <input
+                                                class="form-check-input vehicle-condition-input"
+                                                type="checkbox"
+                                                name="vehicle_condition[]"
+                                                value="{{ $condition }}"
+                                                id="vehicle_condition_{{ $loop->index }}"
+                                                {{ in_array($condition, $sharedVehicleCondition) ? 'checked' : '' }}
+                                            >
+
+                                            <label
+                                                class="form-check-label"
+                                                for="vehicle_condition_{{ $loop->index }}"
+                                            >
+                                                {{ $condition }}
+                                            </label>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                <div class="invalid-feedback-custom" id="vehicle-condition-error">
+                                    Pilih minimal satu kondisi kendaraan.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- DETAIL ITEM PACKAGING --}}
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header inspection-section-header">
                         <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
@@ -252,7 +398,6 @@
                         Kembali
                     </a>
                 </div>
-
             </form>
         </div>
     </div>
@@ -264,117 +409,71 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script>
-    $(document).ready(function() {
-
-        $(document).on('click', '.btn-check-group .btn', function(e) {
-            e.preventDefault();
-
-            const button = $(this);
-            const value = button.data('value');
-            const targetInputId = button.data('target-input');
-
-            if (targetInputId) {
-                $(targetInputId).val(value);
-            }
-
-            const group = button.closest('.btn-check-group');
-
-            group.find('.btn').each(function() {
-                $(this)
-                    .removeClass('btn-success btn-danger')
-                    .addClass('btn-outline-secondary');
-            });
-
-            if (value === 'OK') {
-                button
-                    .removeClass('btn-outline-secondary')
-                    .addClass('btn-success');
-            } else {
-                button
-                    .removeClass('btn-outline-secondary')
-                    .addClass('btn-danger');
-            }
-        });
-
-        $(document).on('click', '.remove-detail-btn', function() {
-            $(this).closest('.dynamic-item-card').remove();
-            reindexDetails();
-        });
-
-    });
-
-    function reindexDetails() {
-        $('#details-container .dynamic-item-card').each(function(index) {
-            const card = $(this);
-
-            card.find('h5').first().text(`Item #${index + 1}`);
-
-            card.find('[name]').each(function() {
-                const element = $(this);
-                const name = element.attr('name');
-
-                if (!name) {
-                    return;
-                }
-
-                element.attr(
-                    'name',
-                    name.replace(/items\[\d+\]/, `items[${index}]`)
-                );
-            });
-
-            card.find('[id]').each(function() {
-                const element = $(this);
-                const id = element.attr('id');
-
-                if (!id) {
-                    return;
-                }
-
-                element.attr(
-                    'id',
-                    id.replace(/_\d+$/, `_${index}`)
-                );
-            });
-
-            card.find('[data-target-input]').each(function() {
-                const element = $(this);
-                const target = element.attr('data-target-input');
-
-                if (!target) {
-                    return;
-                }
-
-                element.attr(
-                    'data-target-input',
-                    target.replace(/_\d+$/, `_${index}`)
-                );
-            });
-
-            card.find('label[for]').each(function() {
-                const element = $(this);
-                const value = element.attr('for');
-
-                if (!value) {
-                    return;
-                }
-
-                element.attr(
-                    'for',
-                    value.replace(/_\d+_\d+$/, `_${index}_${value.split('_').pop()}`)
-                );
-            });
-        });
-    }
-
     document.addEventListener('DOMContentLoaded', function() {
-
+        const form = document.getElementById('packaging-inspection-form');
         const container = document.getElementById('details-container');
         const addBtn = document.getElementById('add-detail-btn');
 
         let detailIndex = 0;
 
+        const existingDetails = @json($existingItems);
         const vehicleConditions = @json($vehicleConditions ?? []);
+        const suppliers = @json(
+            collect($suppliers ?? [])->pluck('nama_supplier')->values()
+        );
+        const packagingOptions = @json(
+            $packagingOptions->pluck('nama_packaging')->values()
+        );
+
+        const escapeHtml = function(value) {
+            return String(value ?? '').replace(/[&<>"']/g, function(character) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[character];
+            });
+        };
+
+        const normalizeVehicleConditions = function(value) {
+            if (Array.isArray(value)) {
+                return value;
+            }
+
+            if (typeof value === 'string' && value.trim() !== '') {
+                return value.split(',').map(item => item.trim()).filter(Boolean);
+            }
+
+            return [];
+        };
+
+        function initializeSelect2(element) {
+            $(element).select2({
+                theme: 'bootstrap-5',
+                placeholder: element.classList.contains('packaging-select')
+                    ? '-- Pilih atau ketik Jenis Packaging --'
+                    : '-- Pilih Supplier --',
+                allowClear: true,
+                width: '100%',
+                dropdownAutoWidth: false,
+                tags: element.classList.contains('packaging-select'),
+                createTag: function(params) {
+                    const term = $.trim(params.term);
+
+                    if (term === '') {
+                        return null;
+                    }
+
+                    return {
+                        id: term,
+                        text: term,
+                        newTag: true
+                    };
+                }
+            });
+        }
 
         function renderDetailForm(data = null) {
             const i = detailIndex;
@@ -394,23 +493,21 @@
                 }
             ];
 
-            const no_pol = data?.no_pol || '';
-            const vehicle_cond = data?.vehicle_condition || '';
-            const pbb_op = data?.pbb_op || '';
-            const packaging_type = data?.packaging_type || '';
-            const supplier = data?.supplier || '';
-            const lot_batch = data?.lot_batch || '';
-            const dimension = data?.condition_dimension || '';
-            const qty_goods = data?.quantity_goods || 0;
-            const qty_sample = data?.quantity_sample || 0;
-            const qty_reject = data?.quantity_reject || 0;
-            const notes = data?.notes || '';
-            const accept_val = data?.acceptance_status || 'OK';
+            const packagingType = data?.packaging_type ?? '';
+            const supplier = data?.supplier ?? '';
+            const lotBatch = data?.lot_batch ?? '';
+            const dimension = data?.condition_dimension ?? '';
+            const weight = data?.condition_weight ?? '';
+            const qtyGoods = data?.quantity_goods ?? 0;
+            const qtySample = data?.quantity_sample ?? 0;
+            const qtyReject = data?.quantity_reject ?? 0;
+            const notes = data?.notes ?? '';
+            const acceptanceStatus = data?.acceptance_status ?? 'OK';
 
             let checksHtml = '';
 
             checkList.forEach(item => {
-                const val = data?.[item.key] || '';
+                const value = data?.[item.key] ?? '';
 
                 checksHtml += `
                     <div class="col-lg-2 col-md-6">
@@ -422,14 +519,14 @@
                             type="hidden"
                             name="items[${i}][${item.key}]"
                             id="${item.key}_${i}"
-                            value="${val}"
-                            required
+                            value="${escapeHtml(value)}"
+                            data-check-required="true"
                         >
 
                         <div class="btn-group btn-check-group w-100" role="group">
                             <button
                                 type="button"
-                                class="btn ${val === 'OK' ? 'btn-success' : 'btn-outline-secondary'} w-50"
+                                class="btn ${value === 'OK' ? 'btn-success' : 'btn-outline-secondary'} w-50"
                                 data-value="OK"
                                 data-target-input="#${item.key}_${i}"
                             >
@@ -439,7 +536,7 @@
 
                             <button
                                 type="button"
-                                class="btn ${val === 'Not OK' ? 'btn-danger' : 'btn-outline-secondary'} w-50"
+                                class="btn ${value === 'Not OK' ? 'btn-danger' : 'btn-outline-secondary'} w-50"
                                 data-value="Not OK"
                                 data-target-input="#${item.key}_${i}"
                             >
@@ -447,9 +544,31 @@
                                 Not OK
                             </button>
                         </div>
+
+                        <div class="invalid-feedback-custom">
+                            ${item.label} wajib dipilih.
+                        </div>
                     </div>
                 `;
             });
+
+            const packagingOptionsHtml = packagingOptions.map(option => `
+                <option
+                    value="${escapeHtml(option)}"
+                    ${String(packagingType) === String(option) ? 'selected' : ''}
+                >
+                    ${escapeHtml(option)}
+                </option>
+            `).join('');
+
+            const supplierOptionsHtml = suppliers.map(option => `
+                <option
+                    value="${escapeHtml(option)}"
+                    ${String(supplier) === String(option) ? 'selected' : ''}
+                >
+                    ${escapeHtml(option)}
+                </option>
+            `).join('');
 
             const newDetail = document.createElement('div');
 
@@ -488,13 +607,19 @@
                             Jenis Packaging
                         </label>
 
-                        <input
-                            type="text"
+                        <select
                             name="items[${i}][packaging_type]"
-                            class="form-control"
-                            value="${packaging_type}"
+                            class="form-select packaging-select"
                             required
+                            data-req="Jenis Packaging wajib dipilih atau diisi."
                         >
+                            <option value=""></option>
+                            ${packagingOptionsHtml}
+                        </select>
+
+                        <div class="invalid-feedback-custom">
+                            Jenis Packaging wajib dipilih atau diisi.
+                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -506,18 +631,15 @@
                             name="items[${i}][supplier]"
                             class="form-select supplier-select"
                             required
+                            data-req="Supplier wajib dipilih."
                         >
-                            <option value="">-- Pilih Supplier --</option>
-
-                            @foreach ($suppliers as $supplierItem)
-                                <option
-                                    value="{{ $supplierItem->nama_supplier }}"
-                                    ${supplier === @json($supplierItem->nama_supplier) ? 'selected' : ''}
-                                >
-                                    {{ $supplierItem->nama_supplier }}
-                                </option>
-                            @endforeach
+                            <option value=""></option>
+                            ${supplierOptionsHtml}
                         </select>
+
+                        <div class="invalid-feedback-custom">
+                            Supplier wajib dipilih.
+                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -529,9 +651,14 @@
                             type="text"
                             name="items[${i}][lot_batch]"
                             class="form-control"
-                            value="${lot_batch}"
+                            value="${escapeHtml(lotBatch)}"
                             required
+                            data-req="Lot Batch wajib diisi."
                         >
+
+                        <div class="invalid-feedback-custom">
+                            Lot Batch wajib diisi.
+                        </div>
                     </div>
 
                     <div class="col-12">
@@ -549,7 +676,7 @@
                             type="text"
                             name="items[${i}][condition_dimension]"
                             class="form-control"
-                            value="${dimension}"
+                            value="${escapeHtml(dimension)}"
                         >
                     </div>
 
@@ -562,10 +689,15 @@
                             type="number"
                             name="items[${i}][condition_weight]"
                             class="form-control"
-                            value="${data?.condition_weight || ''}"
+                            value="${escapeHtml(weight)}"
                             min="0"
                             step="0.01"
+                            data-numeric="true"
                         >
+
+                        <div class="invalid-feedback-custom">
+                            Berat tidak boleh bernilai negatif.
+                        </div>
                     </div>
 
                     <div class="col-12">
@@ -581,10 +713,17 @@
                             type="number"
                             name="items[${i}][quantity_goods]"
                             class="form-control"
-                            value="${qty_goods}"
+                            value="${escapeHtml(qtyGoods)}"
                             min="0"
+                            step="1"
                             required
+                            data-req="Qty Barang wajib diisi."
+                            data-numeric="true"
                         >
+
+                        <div class="invalid-feedback-custom">
+                            Qty Barang wajib diisi dan tidak boleh negatif.
+                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -596,10 +735,17 @@
                             type="number"
                             name="items[${i}][quantity_sample]"
                             class="form-control"
-                            value="${qty_sample}"
+                            value="${escapeHtml(qtySample)}"
                             min="0"
+                            step="1"
                             required
+                            data-req="Qty Sampel wajib diisi."
+                            data-numeric="true"
                         >
+
+                        <div class="invalid-feedback-custom">
+                            Qty Sampel wajib diisi dan tidak boleh negatif.
+                        </div>
                     </div>
 
                     <div class="col-md-4">
@@ -611,17 +757,24 @@
                             type="number"
                             name="items[${i}][quantity_reject]"
                             class="form-control"
-                            value="${qty_reject}"
+                            value="${escapeHtml(qtyReject)}"
                             min="0"
+                            step="1"
                             required
+                            data-req="Qty Reject wajib diisi."
+                            data-numeric="true"
                         >
+
+                        <div class="invalid-feedback-custom">
+                            Qty Reject wajib diisi dan tidak boleh negatif.
+                        </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="section-title">Kendaraan & Penerimaan</div>
+                        <div class="section-title">Penerimaan</div>
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label">
                             Penerimaan
                         </label>
@@ -630,79 +783,19 @@
                             name="items[${i}][acceptance_status]"
                             class="form-select acceptance-select"
                             required
+                            data-req="Status penerimaan wajib dipilih."
                         >
-                            <option value="OK" ${accept_val === 'OK' ? 'selected' : ''}>
+                            <option value="OK" ${acceptanceStatus === 'OK' ? 'selected' : ''}>
                                 OK
                             </option>
 
-                            <option value="Tolak" ${accept_val === 'Tolak' ? 'selected' : ''}>
+                            <option value="Tolak" ${acceptanceStatus === 'Tolak' ? 'selected' : ''}>
                                 Tolak
                             </option>
                         </select>
                     </div>
 
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            No. Polisi
-                        </label>
-
-                        <input
-                            type="text"
-                            name="items[${i}][no_pol]"
-                            class="form-control"
-                            value="${no_pol}"
-                            required
-                        >
-                    </div>
-
-                    <div class="col-md-3">
-                        <label class="form-label">
-                            DO/PO/OP
-                        </label>
-
-                        <input
-                            type="text"
-                            name="items[${i}][pbb_op]"
-                            class="form-control"
-                            value="${pbb_op}"
-                        >
-                    </div>
-
-                    <div class="col-12">
-                        <label class="form-label d-block">
-                            Kondisi Kendaraan
-                        </label>
-
-                        <div class="vehicle-condition-group">
-                            ${vehicleConditions.map((c, index) => {
-                                const isChecked = vehicle_cond?.split(',').includes(c)
-                                    ? 'checked'
-                                    : '';
-
-                                return `
-                                    <div class="form-check">
-                                        <input
-                                            class="form-check-input"
-                                            type="checkbox"
-                                            name="items[${i}][vehicle_condition][]"
-                                            value="${c}"
-                                            id="vehicle_${i}_${index}"
-                                            ${isChecked}
-                                        >
-
-                                        <label
-                                            class="form-check-label"
-                                            for="vehicle_${i}_${index}"
-                                        >
-                                            ${c}
-                                        </label>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-
-                    <div class="col-12">
+                    <div class="col-md-8">
                         <label class="form-label">
                             Keterangan (Optional)
                         </label>
@@ -711,60 +804,393 @@
                             name="items[${i}][notes]"
                             class="form-control"
                             rows="2"
-                        >${notes}</textarea>
+                        >${escapeHtml(notes)}</textarea>
                     </div>
 
                     <input
                         type="hidden"
                         name="items[${i}][id]"
-                        value="${data?.id || ''}"
+                        value="${escapeHtml(data?.id ?? '')}"
                     >
 
                     <input
                         type="hidden"
                         name="items[${i}][condition_weight_pcs]"
-                        value="${data?.condition_weight_pcs || ''}"
+                        value="${escapeHtml(data?.condition_weight_pcs ?? '')}"
                     >
+
+                    <input
+                        type="hidden"
+                        name="items[${i}][no_pol]"
+                        class="shared-no-pol"
+                        value=""
+                    >
+
+                    <input
+                        type="hidden"
+                        name="items[${i}][pbb_op]"
+                        class="shared-pbb-op"
+                        value=""
+                    >
+
+                    <div class="shared-vehicle-condition-inputs"></div>
 
                 </div>
             `;
 
             container.appendChild(newDetail);
 
-            $(newDetail).find('.supplier-select').select2({
-                theme: 'bootstrap-5',
-                placeholder: '-- Pilih Supplier --',
-                allowClear: true,
-                width: '100%',
-                dropdownAutoWidth: false
-            });
+            const packagingSelect = newDetail.querySelector('.packaging-select');
 
-            $(newDetail).find('.acceptance-select').select2({
-                theme: 'bootstrap-5',
-                placeholder: 'Pilih...',
-                allowClear: true,
-                width: '100%',
-                dropdownAutoWidth: false
-            });
+            if (
+                packagingType &&
+                !Array.from(packagingSelect.options).some(option => option.value === String(packagingType))
+            ) {
+                packagingSelect.add(new Option(packagingType, packagingType, true, true));
+            }
+
+            initializeSelect2(packagingSelect);
+            initializeSelect2(newDetail.querySelector('.supplier-select'));
+            initializeSelect2(newDetail.querySelector('.acceptance-select'));
 
             detailIndex++;
+            updateRemoveButtons();
         }
 
-        if (addBtn) {
-            addBtn.addEventListener('click', function() {
-                renderDetailForm(null);
+        function updateRemoveButtons() {
+            const cards = container.querySelectorAll('.dynamic-item-card');
+            const removeButtons = container.querySelectorAll('.remove-detail-btn');
+
+            removeButtons.forEach(button => {
+                button.disabled = cards.length <= 1;
             });
         }
 
-        const existingDetails = @json(old('items', $packagingInspection->items ?? []));
+        function reindexDetails() {
+            container.querySelectorAll('.dynamic-item-card').forEach((card, index) => {
+                card.querySelector('h5').textContent = `Item #${index + 1}`;
 
-        if (existingDetails.length > 0) {
+                card.querySelectorAll('[name]').forEach(element => {
+                    const name = element.getAttribute('name');
+
+                    if (name) {
+                        element.setAttribute(
+                            'name',
+                            name.replace(/items\[\d+\]/, `items[${index}]`)
+                        );
+                    }
+                });
+
+                card.querySelectorAll('[id]').forEach(element => {
+                    const id = element.getAttribute('id');
+
+                    if (id) {
+                        element.setAttribute(
+                            'id',
+                            id.replace(/_\d+$/, `_${index}`)
+                        );
+                    }
+                });
+
+                card.querySelectorAll('[data-target-input]').forEach(element => {
+                    const target = element.getAttribute('data-target-input');
+
+                    if (target) {
+                        element.setAttribute(
+                            'data-target-input',
+                            target.replace(/_\d+$/, `_${index}`)
+                        );
+                    }
+                });
+
+                card.querySelectorAll('label[for]').forEach(element => {
+                    const value = element.getAttribute('for');
+
+                    if (value) {
+                        element.setAttribute(
+                            'for',
+                            value.replace(/_\d+_\d+$/, `_${index}_${value.split('_').pop()}`)
+                        );
+                    }
+                });
+            });
+
+            detailIndex = container.querySelectorAll('.dynamic-item-card').length;
+            updateRemoveButtons();
+        }
+
+        function clearValidation(element) {
+            element.classList.remove('is-invalid');
+
+            const wrapper = element.closest('.col-12, .col-md-6, .col-md-4, .col-md-8, .col-lg-3, .col-lg-2');
+
+            if (wrapper) {
+                wrapper.querySelectorAll('.invalid-feedback-custom').forEach(error => {
+                    error.classList.remove('show');
+                });
+            }
+
+            if ($(element).hasClass('select2-hidden-accessible')) {
+                $(element).next('.select2-container')
+                    .find('.select2-selection')
+                    .removeClass('is-invalid');
+            }
+        }
+
+        function showValidation(element, message = null) {
+            element.classList.add('is-invalid');
+
+            if ($(element).hasClass('select2-hidden-accessible')) {
+                $(element).next('.select2-container')
+                    .find('.select2-selection')
+                    .addClass('is-invalid');
+            }
+
+            const wrapper = element.closest('.col-12, .col-md-6, .col-md-4, .col-md-8, .col-lg-3, .col-lg-2');
+
+            if (wrapper) {
+                const error = wrapper.querySelector('.invalid-feedback-custom');
+
+                if (error) {
+                    if (message) {
+                        error.textContent = message;
+                    }
+
+                    error.classList.add('show');
+                }
+            }
+        }
+
+        function validateForm() {
+            let firstInvalid = null;
+            let isValid = true;
+
+            form.querySelectorAll('.is-invalid').forEach(element => {
+                clearValidation(element);
+            });
+
+            form.querySelectorAll('.invalid-feedback-custom').forEach(error => {
+                error.classList.remove('show');
+            });
+
+            const inspectionDate = document.getElementById('inspection_date');
+            const shift = document.getElementById('shift');
+            const noPol = document.getElementById('no_pol');
+
+            const requiredFields = [
+                inspectionDate,
+                shift,
+                noPol
+            ];
+
+            requiredFields.forEach(element => {
+                if (!element.value.trim()) {
+                    isValid = false;
+                    showValidation(element);
+
+                    if (!firstInvalid) {
+                        firstInvalid = element;
+                    }
+                }
+            });
+
+            const vehicleInputs = document.querySelectorAll('.vehicle-condition-input');
+            const selectedVehicleConditions = Array.from(vehicleInputs).filter(input => input.checked);
+
+            const vehicleGroup = document.getElementById('vehicle-condition-group');
+            const vehicleError = document.getElementById('vehicle-condition-error');
+
+            if (selectedVehicleConditions.length === 0) {
+                isValid = false;
+                vehicleGroup.classList.add('is-invalid');
+                vehicleError.classList.add('show');
+
+                if (!firstInvalid) {
+                    firstInvalid = vehicleGroup;
+                }
+            }
+
+            const itemCards = container.querySelectorAll('.dynamic-item-card');
+
+            if (itemCards.length === 0) {
+                isValid = false;
+
+                if (!firstInvalid) {
+                    firstInvalid = addBtn;
+                }
+            }
+
+            itemCards.forEach(card => {
+                card.querySelectorAll('[data-req]').forEach(element => {
+                    if (!element.value.trim()) {
+                        isValid = false;
+                        showValidation(element);
+
+                        if (!firstInvalid) {
+                            firstInvalid = element;
+                        }
+                    }
+                });
+
+                card.querySelectorAll('[data-check-required]').forEach(element => {
+                    if (!element.value) {
+                        isValid = false;
+                        showValidation(element);
+
+                        if (!firstInvalid) {
+                            firstInvalid = element;
+                        }
+                    }
+                });
+
+                card.querySelectorAll('[data-numeric]').forEach(element => {
+                    const value = element.value.trim();
+
+                    if (value === '' && !element.required) {
+                        return;
+                    }
+
+                    const number = Number(value);
+                    const isIntegerField = element.step === '1';
+
+                    if (
+                        value === '' ||
+                        !Number.isFinite(number) ||
+                        number < 0 ||
+                        (isIntegerField && !Number.isInteger(number))
+                    ) {
+                        isValid = false;
+                        showValidation(element);
+
+                        if (!firstInvalid) {
+                            firstInvalid = element;
+                        }
+                    }
+                });
+            });
+
+            if (!isValid && firstInvalid) {
+                firstInvalid.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'center'
+                });
+
+                if (typeof firstInvalid.focus === 'function') {
+                    setTimeout(() => firstInvalid.focus(), 300);
+                }
+            }
+
+            return isValid;
+        }
+
+        function copySharedInformation() {
+            const noPol = document.getElementById('no_pol').value.trim();
+            const pbbOp = document.getElementById('pbb_op').value.trim();
+
+            const vehicleConditions = Array.from(
+                document.querySelectorAll('.vehicle-condition-input:checked')
+            ).map(input => input.value);
+
+            container.querySelectorAll('.dynamic-item-card').forEach(card => {
+                card.querySelector('[name$="[no_pol]"]').value = noPol;
+                card.querySelector('[name$="[pbb_op]"]').value = pbbOp;
+
+                const conditionContainer = card.querySelector('.shared-vehicle-condition-inputs');
+
+                conditionContainer.innerHTML = '';
+
+                vehicleConditions.forEach(condition => {
+                    const input = document.createElement('input');
+
+                    input.type = 'hidden';
+                    input.name = card.querySelector('[name$="[id]"]').name
+                        .replace('[id]', '[vehicle_condition][]');
+                    input.value = condition;
+
+                    conditionContainer.appendChild(input);
+                });
+            });
+        }
+
+        $(document).on('click', '.btn-check-group .btn', function(event) {
+            event.preventDefault();
+
+            const button = $(this);
+            const value = button.data('value');
+            const targetInput = $(button.data('target-input'));
+            const group = button.closest('.btn-check-group');
+
+            targetInput.val(value);
+
+            group.find('.btn')
+                .removeClass('btn-success btn-danger')
+                .addClass('btn-outline-secondary');
+
+            if (value === 'OK') {
+                button
+                    .removeClass('btn-outline-secondary')
+                    .addClass('btn-success');
+            } else {
+                button
+                    .removeClass('btn-outline-secondary')
+                    .addClass('btn-danger');
+            }
+
+            const wrapper = group.closest('.col-lg-2, .col-md-6');
+            wrapper.find('.invalid-feedback-custom').removeClass('show');
+        });
+
+        $(document).on('change', '.packaging-select, .supplier-select, .acceptance-select', function() {
+            clearValidation(this);
+        });
+
+        $(document).on('input change', '[data-req], [data-numeric]', function() {
+            clearValidation(this);
+        });
+
+        $(document).on('change', '.vehicle-condition-input', function() {
+            const selected = document.querySelectorAll('.vehicle-condition-input:checked').length > 0;
+
+            if (selected) {
+                document.getElementById('vehicle-condition-group').classList.remove('is-invalid');
+                document.getElementById('vehicle-condition-error').classList.remove('show');
+            }
+        });
+
+        $(document).on('click', '.remove-detail-btn', function() {
+            const cards = container.querySelectorAll('.dynamic-item-card');
+
+            if (cards.length <= 1) {
+                return;
+            }
+
+            $(this).closest('.dynamic-item-card').remove();
+            reindexDetails();
+        });
+
+        addBtn.addEventListener('click', function() {
+            renderDetailForm(null);
+        });
+
+        form.addEventListener('submit', function(event) {
+            if (!validateForm()) {
+                event.preventDefault();
+                alert('Periksa kembali formulir. Masih terdapat data yang belum lengkap atau tidak valid.');
+                return;
+            }
+
+            copySharedInformation();
+        });
+
+        if (Array.isArray(existingDetails) && existingDetails.length > 0) {
             existingDetails.forEach(itemData => {
                 renderDetailForm(itemData);
             });
         } else {
             renderDetailForm(null);
         }
+
+        updateRemoveButtons();
     });
 </script>
 @endpush
