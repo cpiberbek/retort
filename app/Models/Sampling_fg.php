@@ -13,15 +13,34 @@ class Sampling_fg extends Model
 
     protected $table = 'sampling_fgs';
 
-    protected $primaryKey = 'uuid';  
+    protected $primaryKey = 'uuid';
 
     public $incrementing = false;
     protected $keyType   = 'string';
 
     protected $fillable = [
-        'date', 'plant', 'shift', 'palet', 'nama_produk', 'kode_produksi', 'exp_date', 'pukul', 'kalibrasi', 'berat_produk', 'keterangan', 'isi_per_box', 'kemasan', 'jumlah_box', 'release', 'reject', 'hold', 'item_mutu', 'catatan', 'username', 'username_updated',  'nama_koordinator', 'status_koordinator', 'tgl_update_koordinator', 'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv'
+        'date', 'plant', 'shift', 'palet', 'nama_produk', 'kode_produksi', 'exp_date', 'pukul', 'kalibrasi', 'berat_produk', 'keterangan', 'isi_per_box', 'kemasan', 'jumlah_box', 'release', 'reject', 'hold', 'item_mutu', 'catatan', 'username', 'username_updated', 'nama_koordinator', 'status_koordinator', 'tgl_update_koordinator', 'nama_spv', 'status_spv', 'catatan_spv', 'tgl_update_spv',
+        'is_audit', 'source_uuid',
+    ];
+
+    protected $casts = [
+        'is_audit' => 'boolean',
     ];
 
     protected $dates = ['deleted_at'];
-}
 
+    public function auditVersion()
+    {
+        return $this->hasOne(self::class, 'source_uuid', 'uuid')->where('is_audit', true);
+    }
+
+    public function copyToAudit(): self
+    {
+        $clone = $this->replicate(['id']);
+        $clone->is_audit    = true;
+        $clone->source_uuid = $this->uuid;
+        $clone->save();  
+
+        return $clone;
+    }
+}

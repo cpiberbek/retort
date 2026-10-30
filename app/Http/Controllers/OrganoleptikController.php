@@ -9,12 +9,26 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use TCPDF;
+use App\Models\Mincing;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class OrganoleptikController extends Controller
 {
+    private const LAPORAN_ORGANO = 'Pemeriksaan Organoleptik';
+
+    private const SCORE_KEYS = [
+        'penampilan', 'aroma', 'kekenyalan', 'rasa_asin',
+        'rasa_gurih', 'rasa_manis', 'rasa_daging', 'rasa_keseluruhan',
+    ];
+
     // ========================= INDEX =========================
     public function index(Request $request)
     {
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('organoleptik.audit');
+        }
+
         $search     = $request->input('search');
         $date       = $request->input('date');
         $shift      = $request->input('shift');
@@ -23,6 +37,7 @@ class OrganoleptikController extends Controller
 
         $data = Organoleptik::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -58,6 +73,246 @@ class OrganoleptikController extends Controller
         // }
 
         return view('form.organoleptik.index', compact('data', 'search', 'date', 'shift', 'nama_produk'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('organoleptik.index');
+        }
+
+        $search      = $request->input('search');
+        $date        = $request->input('date');
+        $shift       = $request->input('shift');
+        $nama_produk = $request->input('nama_produk');
+
+        $auditedSourceUuids = Organoleptik::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Organoleptik::query()
+            ->where('plant', Auth::user()->plant)
+            ->with('auditVersion')
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $uuids = Mincing::where('kode_produksi', 'like', "%{$search}%")
+                    ->limit(200)->pluck('uuid')->toArray();
+
+                $query->where(function ($q) use ($search, $uuids) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%");
+
+                    foreach ($uuids as $u) {
+                        $q->orWhere('sensori', 'like', "%{$u}%");
+                    }
+                });
+            })
+            ->when($date, fn ($q) => $q->whereDate('date', $date))
+            ->when($shift, fn ($q) => $q->where('shift', $shift))
+            ->when($nama_produk, fn ($q) => $q->where('nama_produk', $nama_produk))
+            ->orderByRaw('COALESCE((SELECT original.date FROM organoleptiks AS original WHERE original.uuid = organoleptiks.source_uuid LIMIT 1), organoleptiks.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM organoleptiks AS original WHERE original.uuid = organoleptiks.source_uuid LIMIT 1), organoleptiks.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM organoleptiks AS original WHERE original.uuid = organoleptiks.source_uuid LIMIT 1), organoleptiks.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        $allUuids = [];
+        foreach ($data as $row) {
+            foreach ($this->decodeRows($row->sensori) as $item) {
+                if (!empty($item['kode_produksi'])) {
+                    $allUuids[] = $item['kode_produksi'];
+                }
+            }
+        }
+        $kodeMap = Mincing::whereIn('uuid', array_unique($allUuids))->pluck('kode_produksi', 'uuid');
+
+        return view('form.organoleptik.index_audit', compact('data', 'search', 'date', 'shift', 'nama_produk', 'kodeMap'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = Organoleptik::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('organoleptik.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('organoleptik.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Organoleptik $row): Organoleptik
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_ORGANO)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = Organoleptik::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('organoleptik.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('organoleptik.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('organoleptik.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    /**
+     * sensori bisa: array, JSON string, atau JSON yang di-encode dua kali.
+     */
+    private function decodeRows($value): array
+    {
+        $guard = 0;
+        while (is_string($value) && $guard++ < 3) {
+            $value = json_decode($value, true);
+        }
+
+        return is_array($value) ? array_values($value) : [];
+    }
+
+    private function autoCorrectFromMaster(Organoleptik $model): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', self::LAPORAN_ORGANO)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        // hanya parameter yang min & max-nya terisi
+        $rules = [];
+        foreach (self::SCORE_KEYS as $key) {
+            $min = $std[$key]['min'] ?? null;
+            $max = $std[$key]['max'] ?? null;
+            if ($min === null || $min === '' || $max === null || $max === '') continue;
+            $rules[$key] = [(int) $min, (int) $max];
+        }
+        if (empty($rules)) return;
+
+        $original = $model->sensori;
+        $rows     = $this->decodeRows($original);
+        if (empty($rows)) return;
+
+        foreach ($rows as &$row) {
+            // 1. acak per baris, per parameter (disimpan sebagai string, sama seperti data asli)
+            foreach ($rules as $key => [$min, $max]) {
+                $row[$key] = (string) mt_rand($min, $max);
+            }
+
+            // 2. hitung ulang rata_score: sama dengan JS (nilai > 0 saja, 1 desimal)
+            $nilai = [];
+            foreach (self::SCORE_KEYS as $key) {
+                $v = (float) ($row[$key] ?? 0);
+                if ($v > 0) $nilai[] = $v;
+            }
+
+            if (count($nilai) > 0) {
+                $avg = round(array_sum($nilai) / count($nilai), 1);
+                $row['rata_score'] = number_format($avg, 1, '.', '');
+
+                if ($avg >= 1 && $avg <= 1.5) {
+                    $row['release'] = 'Tidak Release';
+                } elseif ($avg >= 1.6 && $avg <= 3) {
+                    $row['release'] = 'Release';
+                } else {
+                    $row['release'] = '';
+                }
+            }
+        }
+        unset($row);
+
+        // pertahankan format penyimpanan asli (string JSON -> tetap string JSON)
+        $model->sensori = is_array($original)
+            ? $rows
+            : json_encode($rows, JSON_UNESCAPED_UNICODE);
+
+        $model->save();
     }
 
     public function create()

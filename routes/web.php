@@ -322,6 +322,16 @@ Route::middleware('auth')->group(function () {
         [PemeriksaanRetainController::class, 'deletePermanent']
     )->name('pemeriksaan_retain.deletePermanent');
 
+    // audit-pemeriksaan_retain
+    Route::get('pemeriksaan-retain/audit-data', [PemeriksaanRetainController::class, 'auditIndex'])
+        ->name('pemeriksaan_retain.audit');
+    Route::post('pemeriksaan-retain/{uuid}/duplicate-to-audit', [PemeriksaanRetainController::class, 'duplicateToAudit'])
+        ->name('pemeriksaan_retain.duplicateToAudit');
+    Route::post('pemeriksaan-retain/audit-bulk/preview', [PemeriksaanRetainController::class, 'auditBulkPreview'])
+        ->name('pemeriksaan_retain.auditBulk.preview');
+    Route::post('pemeriksaan-retain/audit-bulk/execute', [PemeriksaanRetainController::class, 'auditBulkExecute'])
+        ->name('pemeriksaan_retain.auditBulk.execute');
+
     Route::resource('pemeriksaan_retain', PemeriksaanRetainController::class)
         ->names('pemeriksaan_retain');
 
@@ -681,6 +691,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/sampling_fg/verification/{uuid}', [Sampling_fgController::class, 'updateVerification'])
         ->name('sampling_fg.verification.update');
     Route::delete('/sampling_fg/{uuid}', [Sampling_fgController::class, 'destroy'])->name('sampling_fg.destroy');
+    // audit-sampling_fg
+    Route::get('/sampling_fg/audit-data', [Sampling_fgController::class, 'auditIndex'])->name('sampling_fg.audit');
+    Route::post('/sampling_fg/{uuid}/duplicate-to-audit', [Sampling_fgController::class, 'duplicateToAudit'])->name('sampling_fg.duplicateToAudit');
+    Route::post('/sampling_fg/audit-bulk/preview', [Sampling_fgController::class, 'auditBulkPreview'])->name('sampling_fg.auditBulk.preview');
+    Route::post('/sampling_fg/audit-bulk/execute', [Sampling_fgController::class, 'auditBulkExecute'])->name('sampling_fg.auditBulk.execute');
 
 
     // Chamber
@@ -742,6 +757,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/karton/verification/{uuid}', [KartonController::class, 'updateVerification'])
         ->name('karton.verification.update');
     Route::get('/karton/export-pdf', [KartonController::class, 'exportPdf'])->name('karton.exportPdf');
+    // audit-karton
+    Route::get('/karton/audit-data', [KartonController::class, 'auditIndex'])->name('karton.audit');
+    Route::post('/karton/{uuid}/duplicate-to-audit', [KartonController::class, 'duplicateToAudit'])->name('karton.duplicateToAudit');
+    Route::post('/karton/audit-bulk/preview', [KartonController::class, 'auditBulkPreview'])->name('karton.auditBulk.preview');
+    Route::post('/karton/audit-bulk/execute', [KartonController::class, 'auditBulkExecute'])->name('karton.auditBulk.execute');
     Route::delete('/karton/{uuid}', [KartonController::class, 'destroy'])->name('karton.destroy');
 
     // Sampling
@@ -758,6 +778,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/sampling/export-pdf', [SamplingController::class, 'exportPdf'])->name('sampling.exportPdf');
     Route::get('/sampling/export-excel', [SamplingController::class, 'exportExcel'])->name('sampling.exportExcel');
     Route::delete('/sampling/{uuid}', [SamplingController::class, 'destroy'])->name('sampling.destroy');
+    // audit-sampling
+    Route::get('/sampling/audit-data', [SamplingController::class, 'auditIndex'])->name('sampling.audit');
+    Route::post('/sampling/{uuid}/duplicate-to-audit', [SamplingController::class, 'duplicateToAudit'])->name('sampling.duplicateToAudit');
+    Route::post('/sampling/audit-bulk/preview', [SamplingController::class, 'auditBulkPreview'])->name('sampling.auditBulk.preview');
+    Route::post('/sampling/audit-bulk/execute', [SamplingController::class, 'auditBulkExecute'])->name('sampling.auditBulk.execute');
 
     // Packing
     Route::get('/packing', [PackingController::class, 'index'])->name('packing.index');
@@ -771,6 +796,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/packing/verification/{uuid}', [PackingController::class, 'updateVerification'])
         ->name('packing.verification.update');
     Route::get('/packing/export-pdf', [PackingController::class, 'exportPdf'])->name('packing.exportPdf');
+    // audit-packing
+    Route::get('/packing/audit-data', [PackingController::class, 'auditIndex'])->name('packing.audit');
+    Route::post('/packing/{uuid}/duplicate-to-audit', [PackingController::class, 'duplicateToAudit'])->name('packing.duplicateToAudit');
+    Route::post('/packing/audit-bulk/preview', [PackingController::class, 'auditBulkPreview'])->name('packing.auditBulk.preview');
+    Route::post('/packing/audit-bulk/execute', [PackingController::class, 'auditBulkExecute'])->name('packing.auditBulk.execute');
     Route::delete('/packing/{uuid}', [PackingController::class, 'destroy'])->name('packing.destroy');
 
     // Pengecekan Klorin
@@ -799,6 +829,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/organoleptik/verification/{uuid}', [OrganoleptikController::class, 'updateVerification'])
         ->name('organoleptik.verification.update');
     Route::get('/organoleptik/export-pdf', [OrganoleptikController::class, 'exportPdf'])->name('organoleptik.exportPdf');
+    // audit-organoleptik
+    Route::get('/organoleptik/audit-data', [OrganoleptikController::class, 'auditIndex'])->name('organoleptik.audit');
+    Route::post('/organoleptik/{uuid}/duplicate-to-audit', [OrganoleptikController::class, 'duplicateToAudit'])->name('organoleptik.duplicateToAudit');
+    Route::post('/organoleptik/audit-bulk/preview', [OrganoleptikController::class, 'auditBulkPreview'])->name('organoleptik.auditBulk.preview');
+    Route::post('/organoleptik/audit-bulk/execute', [OrganoleptikController::class, 'auditBulkExecute'])->name('organoleptik.auditBulk.execute');
     Route::delete('/organoleptik/{uuid}', [OrganoleptikController::class, 'destroy'])->name('organoleptik.destroy');
 
     // Sampel
@@ -932,6 +967,11 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         ->name('prepacking.verification.update');
     Route::get('/prepacking/export-pdf', [PrepackingController::class, 'exportPdf'])->name('prepacking.exportPdf');
     Route::get('/prepacking/export-excel', [PrepackingController::class, 'exportExcel'])->name('prepacking.exportExcel');
+    // audit-prepacking
+    Route::get('/prepacking/audit-data', [PrepackingController::class, 'auditIndex'])->name('prepacking.audit');
+    Route::post('/prepacking/{uuid}/duplicate-to-audit', [PrepackingController::class, 'duplicateToAudit'])->name('prepacking.duplicateToAudit');
+    Route::post('/prepacking/audit-bulk/preview', [PrepackingController::class, 'auditBulkPreview'])->name('prepacking.auditBulk.preview');
+    Route::post('/prepacking/audit-bulk/execute', [PrepackingController::class, 'auditBulkExecute'])->name('prepacking.auditBulk.execute');
     Route::delete('/prepacking/{uuid}', [PrepackingController::class, 'destroy'])->name('prepacking.destroy');
 
     // Washing
@@ -980,8 +1020,13 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/release_packing/verification/{uuid}', [Release_packingController::class, 'updateVerification'])
         ->name('release_packing.verification.update');
     Route::get('/release_packing/export-pdf', [Release_packingController::class, 'exportPdf'])->name('release_packing.exportPdf');
+    // audit-release_packing
+    Route::get('/release_packing/audit-data', [Release_packingController::class, 'auditIndex'])->name('release_packing.audit');
+    Route::post('/release_packing/{uuid}/duplicate-to-audit', [Release_packingController::class, 'duplicateToAudit'])->name('release_packing.duplicateToAudit');
+    Route::post('/release_packing/audit-bulk/preview', [Release_packingController::class, 'auditBulkPreview'])->name('release_packing.auditBulk.preview');
+    Route::post('/release_packing/audit-bulk/execute', [Release_packingController::class, 'auditBulkExecute'])->name('release_packing.auditBulk.execute');
     Route::delete('/release_packing/{uuid}', [Release_packingController::class, 'destroy'])->name('release_packing.destroy');
-
+    
     /*FORM RTE CIKANDE*/
     // Retain RTE
     Route::get('/retain_rte', [Retain_rteController::class, 'index'])->name('retain_rte.index');

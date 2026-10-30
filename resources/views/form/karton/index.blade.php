@@ -39,6 +39,25 @@
             </div>
         </div>
 
+        <div class="card shadow-sm mb-3 w-100">
+            <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                    <h6 class="mb-0">
+                        <span class="text-primary" style="font-weight: 600;"><i class="bi bi-clipboard-check" style="font-size: 1.75rem; margin-right: 0.75rem;"></i> Mode Operasional</span>
+                    </h6>
+                </div>
+
+                <form action="{{ route('toggle.mode.audit') }}" method="POST"
+                    onsubmit="return confirm('Masuk ke Mode Audit?')">
+                    @csrf
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="bi bi-shield-check"></i> Mode Audit
+                    </button>
+                </form>
+            </div>
+        </div>
+
+
         {{-- Filter dan Live Search --}}
         <form id="filterForm" method="GET" action="{{ route('karton.index') }}"
             class="border rounded bg-white shadow-sm p-3">

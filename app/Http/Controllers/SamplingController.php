@@ -14,12 +14,26 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use Carbon\Carbon;
 use TCPDF;
 
 class SamplingController extends Controller
 {
+    private const LAPORAN_SAMPLING = 'Data Sampling Produk';
+
+    private const AC_COLUMNS = [
+        'jamur', 'lendir', 'klip_tajam', 'pin_hole', 'air_trap_pvdc', 'air_trap_produk',
+        'keriput', 'bengkok', 'non_kode', 'over_lap', 'kecil', 'terjepit',
+        'double_klip', 'seal_halus', 'basah', 'dll',
+        'catatan',
+    ];
+
     public function index(Request $request)
     {
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('sampling.audit');
+        }
+
         $search     = $request->input('search');
         $date = $request->input('date');
         $shift = $request->input('shift');
@@ -28,6 +42,7 @@ class SamplingController extends Controller
 
         $data = Sampling::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -51,6 +66,191 @@ class SamplingController extends Controller
             ->appends($request->all());
 
         return view('form.sampling.index', compact('data', 'search', 'date', 'shift', 'nama_produk'));
+    }
+
+    private function applySearch($query, ?string $search)
+    {
+        return $query->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('nama_produk', 'like', "%{$search}%")
+                    ->orWhere('kode_produksi', 'like', "%{$search}%")
+                    ->orWhere('jenis_kemasan', 'like', "%{$search}%");
+            });
+        });
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('sampling.index');
+        }
+
+        $search      = $request->input('search');
+        $date        = $request->input('date');
+        $shift       = $request->input('shift');
+        $nama_produk = $request->input('nama_produk');
+
+        $auditedSourceUuids = Sampling::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $query = Sampling::query()
+            ->where('plant', Auth::user()->plant)
+            ->with('auditVersion')
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            });
+
+        $data = $this->applySearch($query, $search)
+            ->when($date, fn ($q) => $q->whereDate('date', $date))
+            ->when($shift, fn ($q) => $q->where('shift', $shift))
+            ->when($nama_produk, fn ($q) => $q->where('nama_produk', $nama_produk))
+            ->orderByRaw('COALESCE((SELECT original.date FROM samplings AS original WHERE original.uuid = samplings.source_uuid LIMIT 1), samplings.date) DESC')
+            ->orderByRaw('CAST(COALESCE((SELECT original.shift FROM samplings AS original WHERE original.uuid = samplings.source_uuid LIMIT 1), samplings.shift) AS UNSIGNED) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM samplings AS original WHERE original.uuid = samplings.source_uuid LIMIT 1), samplings.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.sampling.index_audit', compact('data', 'search', 'date', 'shift', 'nama_produk'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = Sampling::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('sampling.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('sampling.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Sampling $row): Sampling
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_SAMPLING)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = Sampling::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('sampling.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('sampling.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('sampling.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    private function autoCorrectFromMaster(Sampling $model): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', self::LAPORAN_SAMPLING)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        foreach (self::AC_COLUMNS as $col) {
+            $rule = $std[$col] ?? null;
+
+            if (is_array($rule)) {
+                $min = $rule['min'] ?? null;
+                $max = $rule['max'] ?? null;
+                if ($min === null || $min === '' || $max === null || $max === '') continue;
+
+                $model->$col = mt_rand((int) $min, (int) $max);
+            } elseif (is_string($rule) && trim($rule) !== '') {
+                $model->$col = $rule;
+            }
+        }
+
+        $model->save();
     }
 
     public function create()

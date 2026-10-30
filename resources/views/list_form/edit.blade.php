@@ -941,6 +941,796 @@
                                 </div>
                             @break
 
+                            @case('Pemeriksaan Proses Sampling Finish Good')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $samplingFields = [
+                                        ['kalibrasi', 'Kalibrasi', 'select', null],
+                                        ['berat_produk', 'Berat Produk', 'range_integer', null],
+                                        ['release', 'Release', 'range_integer', 'pair'],
+                                        ['reject', 'Reject', 'range_integer', 'pair'],
+                                        ['hold', 'Hold', 'range_integer', 'pair'],
+                                        ['item_mutu', 'Item Mutu', 'text', null],
+                                        ['keterangan', 'Keterangan', 'text', null],
+                                        ['catatan', 'Catatan', 'text', null],
+                                    ];
+
+                                    $kalibrasiOptions = ['Sesuai', 'Tidak Sesuai'];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang akan diacak berdasarkan rentang bilangan bulat yang ditetapkan,
+                                            sedangkan field teks menggunakan nilai tetap.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($samplingFields as [$key, $label, $type, $note])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'range_integer')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="1"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="1"
+                                                                        min="0"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+
+                                                                @if ($note === 'pair')
+                                                                    <small class="text-muted d-block mt-1">
+                                                                        Min &amp; Max harus diisi keduanya. Kosongkan keduanya jika tidak ingin diubah.
+                                                                        Untuk nilai tepat 0, isi <b>0 s/d 0</b>.
+                                                                    </small>
+                                                                @endif
+                                                            @elseif ($type === 'text')
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @else
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    @foreach ($kalibrasiOptions as $option)
+                                                                        <option
+                                                                            value="{{ $option }}"
+                                                                            {{ $current === $option ? 'selected' : '' }}
+                                                                        >
+                                                                            {{ $option }}
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Data Sampling Produk')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $samplingsFields = [
+                                        ['jamur', 'Jamur'],
+                                        ['lendir', 'Lendir'],
+                                        ['klip_tajam', 'Klip Tajam'],
+                                        ['pin_hole', 'Pin Hole'],
+                                        ['air_trap_pvdc', 'Air Trap PVDC'],
+                                        ['air_trap_produk', 'Air Trap Produk'],
+                                        ['keriput', 'Keriput'],
+                                        ['bengkok', 'Bengkok'],
+                                        ['non_kode', 'Non Kode'],
+                                        ['over_lap', 'Over Lap'],
+                                        ['kecil', 'Kecil'],
+                                        ['terjepit', 'Terjepit'],
+                                        ['double_klip', 'Double Klip'],
+                                        ['seal_halus', 'Seal Halus'],
+                                        ['basah', 'Basah'],
+                                        ['dll', 'Dll'],
+                                    ];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field jumlah cacat diacak berdasarkan rentang bilangan bulat. Min &amp; Max harus diisi
+                                            keduanya, atau kosongkan keduanya jika tidak ingin diubah. Untuk nilai tepat 0, isi <b>0 s/d 0</b>.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($samplingsFields as [$key, $label])
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    min="0"
+                                                                    name="standar_ref[{{ $key }}][min]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Min"
+                                                                    value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                >
+
+                                                                <span class="text-muted mx-2">s/d</span>
+
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    min="0"
+                                                                    name="standar_ref[{{ $key }}][max]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Max"
+                                                                    value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                >
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+
+                                                <tr>
+                                                    <td class="align-middle">Catatan</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[catatan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.catatan', data_get($std, 'catatan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Data Release Packing')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Release diacak berdasarkan rentang bilangan bulat. Min &amp; Max harus diisi keduanya,
+                                            atau kosongkan keduanya jika tidak ingin diubah. Untuk nilai tepat tertentu, isi Min dan Max
+                                            dengan angka yang sama.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="align-middle">Release</td>
+                                                    <td class="align-middle">
+                                                        <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[release][min]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Min"
+                                                                value="{{ old('standar_ref.release.min', data_get($std, 'release.min')) }}"
+                                                            >
+
+                                                            <span class="text-muted mx-2">s/d</span>
+
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[release][max]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Max"
+                                                                value="{{ old('standar_ref.release.max', data_get($std, 'release.max')) }}"
+                                                            >
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td class="align-middle">Keterangan</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan', data_get($std, 'keterangan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+                            
+                            @case('Pemeriksaan Proses Packing')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Min dan Max harus diisi keduanya, atau kosongkan keduanya jika tidak ingin diubah.
+                                            Untuk nilai tepat tertentu, isi Min dan Max dengan angka yang sama.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ([
+                                                    'suhu' => 'Suhu',
+                                                    'speed' => 'Speed',
+                                                    'berat_pcs' => 'Berat PCS',
+                                                    'berat_pack' => 'Berat Pack',
+                                                ] as $key => $label)
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                <input
+                                                                    type="number"
+                                                                    step="any"
+                                                                    name="standar_ref[{{ $key }}][min]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Min"
+                                                                    value="{{ old("standar_ref.{$key}.min", data_get($std, "{$key}.min")) }}"
+                                                                >
+
+                                                                <span class="text-muted mx-2">s/d</span>
+
+                                                                <input
+                                                                    type="number"
+                                                                    step="any"
+                                                                    name="standar_ref[{{ $key }}][max]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Max"
+                                                                    value="{{ old("standar_ref.{$key}.max", data_get($std, "{$key}.max")) }}"
+                                                                >
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+
+                                                @foreach ([
+                                                    'kalibrasi' => [
+                                                        'label' => 'Kalibrasi',
+                                                        'options' => ['Oke', 'Tidak Oke'],
+                                                    ],
+                                                    'kondisi_segel' => [
+                                                        'label' => 'Kondisi Segel',
+                                                        'options' => ['OKE', 'TIDAK OKE'],
+                                                    ],
+                                                ] as $key => $field)
+                                                    <tr>
+                                                        <td class="align-middle">{{ $field['label'] }}</td>
+                                                        <td class="align-middle">
+                                                            <select
+                                                                name="standar_ref[{{ $key }}]"
+                                                                class="form-control form-control-sm"
+                                                            >
+                                                                <option value="">-- Pilih Standar --</option>
+                                                                @foreach ($field['options'] as $option)
+                                                                    <option
+                                                                        value="{{ $option }}"
+                                                                        {{ old("standar_ref.{$key}", data_get($std, $key)) === $option ? 'selected' : '' }}
+                                                                    >
+                                                                        {{ $option }}
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+
+                                                <tr>
+                                                    <td class="align-middle">Keterangan</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan', data_get($std, 'keterangan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Kontrol Labelisasi Cartooning')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Min dan Max harus diisi keduanya, atau kosongkan keduanya jika tidak ingin diubah.
+                                            Untuk nilai tepat tertentu, isi Min dan Max dengan angka yang sama.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td class="align-middle">Jumlah</td>
+                                                    <td class="align-middle">
+                                                        <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[jumlah][min]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Min"
+                                                                value="{{ old('standar_ref.jumlah.min', data_get($std, 'jumlah.min')) }}"
+                                                            >
+
+                                                            <span class="text-muted mx-2">s/d</span>
+
+                                                            <input
+                                                                type="number"
+                                                                step="1"
+                                                                min="0"
+                                                                name="standar_ref[jumlah][max]"
+                                                                class="form-control form-control-sm"
+                                                                placeholder="Max"
+                                                                value="{{ old('standar_ref.jumlah.max', data_get($std, 'jumlah.max')) }}"
+                                                            >
+                                                        </div>
+                                                    </td>
+                                                </tr>
+
+                                                <tr>
+                                                    <td class="align-middle">Keterangan</td>
+                                                    <td class="align-middle">
+                                                        <input
+                                                            type="text"
+                                                            name="standar_ref[keterangan]"
+                                                            class="form-control form-control-sm"
+                                                            placeholder="Kosongkan jika tidak ingin diubah"
+                                                            value="{{ old('standar_ref.keterangan', data_get($std, 'keterangan')) }}"
+                                                        >
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Pemeriksaan Organoleptik')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $organoFields = [
+                                        ['penampilan', 'Penampilan'],
+                                        ['aroma', 'Aroma'],
+                                        ['kekenyalan', 'Kekenyalan'],
+                                        ['rasa_asin', 'Rasa Asin'],
+                                        ['rasa_gurih', 'Rasa Gurih'],
+                                        ['rasa_manis', 'Rasa Manis'],
+                                        ['rasa_daging', 'Rasa Daging / Ayam / BBQ / Ikan'],
+                                        ['rasa_keseluruhan', 'Rasa Keseluruhan'],
+                                    ];
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika parameter tidak ingin diubah saat membuat data audit.
+                                            Skor 1 sampai 3 (bilangan bulat) dan diacak per baris kode produksi di dalam rentang.
+                                            Min dan Max harus diisi keduanya. Untuk nilai pasti, isi Min dan Max dengan angka yang sama.
+                                            Rata-rata skor dan hasil Release / Tidak Release tetap dihitung ulang otomatis di form.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Parameter</th>
+                                                    <th style="width: 50%;">Standar Skor</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($organoFields as [$key, $label])
+                                                    <tr>
+                                                        <td class="align-middle">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    min="1"
+                                                                    max="3"
+                                                                    name="standar_ref[{{ $key }}][min]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Min (1-3)"
+                                                                    value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                >
+
+                                                                <span class="text-muted mx-2">s/d</span>
+
+                                                                <input
+                                                                    type="number"
+                                                                    step="1"
+                                                                    min="1"
+                                                                    max="3"
+                                                                    name="standar_ref[{{ $key }}][max]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Max (1-3)"
+                                                                    value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                >
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Pemeriksaan Sampel Retain')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    // [key, label, type, grup]
+                                    $retainFields = [
+                                        ['panjang', 'Panjang (cm)', 'range', 'DIMENSI'],
+                                        ['diameter', 'Diameter (cm)', 'range', 'DIMENSI'],
+
+                                        ['sensori_rasa', 'Rasa', 'range_13', 'SENSORI'],
+                                        ['sensori_warna', 'Warna', 'range_13', 'SENSORI'],
+                                        ['sensori_aroma', 'Aroma', 'range_13', 'SENSORI'],
+                                        ['sensori_texture', 'Texture', 'range_13', 'SENSORI'],
+
+                                        ['temuan_jamur', 'Jamur', 'check', 'TEMUAN'],
+                                        ['temuan_lendir', 'Lendir', 'check', 'TEMUAN'],
+                                        ['temuan_pinehole', 'Pinehole', 'check', 'TEMUAN'],
+                                        ['temuan_kejepit', 'Kejepit', 'check', 'TEMUAN'],
+                                        ['temuan_seal', 'Seal Halus/Lepas', 'check', 'TEMUAN'],
+
+                                        ['lab_garam', 'Kadar Garam (%)', 'range', 'PARAMETER LAB'],
+                                        ['lab_air', 'Kadar Air (%)', 'range', 'PARAMETER LAB'],
+                                        ['lab_mikro', 'Mikro (<10 cfu)', 'range', 'PARAMETER LAB'],
+
+                                        ['keterangan', 'Keterangan', 'text', 'KETERANGAN'],
+                                    ];
+
+                                    $lastGroup = null;
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang diacak per item pemeriksaan di dalam rentang. Min &amp; Max harus diisi keduanya.
+                                            Untuk nilai pasti, isi Min dan Max dengan angka yang sama.
+                                            Standar diterapkan ke setiap item tanpa mengubah jumlah item.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($retainFields as [$key, $label, $type, $group])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                                @if ($group === 'SENSORI')
+                                                                    <span class="text-muted" style="font-weight: 400;">(skor 1 - 3)</span>
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
+                                                    <tr>
+                                                        <td class="align-middle" style="padding-left: 1.5rem;">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if (in_array($type, ['range', 'range_13']))
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        @if ($type === 'range_13') step="1" min="1" max="3" @else step="any" @endif
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        @if ($type === 'range_13') step="1" min="1" max="3" @else step="any" @endif
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @elseif ($type === 'check')
+                                                                <select
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                >
+                                                                    <option value="">— Tidak Diubah —</option>
+                                                                    <option value="1" {{ (string) $current === '1' ? 'selected' : '' }}>
+                                                                        Dicentang
+                                                                    </option>
+                                                                    <option value="0" {{ (string) $current === '0' ? 'selected' : '' }}>
+                                                                        Tidak Dicentang
+                                                                    </option>
+                                                                </select>
+                                                            @else
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+
+                            @case('Pemeriksaan Pre Packing')
+                                @php
+                                    $std = $list_form->standar_ref ?? [];
+
+                                    if (is_string($std)) {
+                                        $std = json_decode($std, true) ?? [];
+                                    }
+
+                                    $prepackingFields = [
+                                        ['suhu_prepacking', 'Suhu Varian (°C) - berlaku untuk Suhu 1, 2, 3', 'range', 'SUHU VARIAN'],
+
+                                        ['pcs', 'Berat per Pcs - berlaku untuk Pcs 1, 2, 3', 'range', 'BERAT VARIAN'],
+                                        ['toples', 'Berat per Toples (berat kotor) - berlaku untuk Toples 1, 2, 3', 'range', 'BERAT VARIAN'],
+
+                                        ['basah_air_ujung', 'Basah - Air Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['basah_air_seal', 'Basah - Air Seal (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_air_ujung', 'Kering - Air Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_air_seal', 'Kering - Air Seal (%)', 'range', 'KONDISI PRODUK'],
+                                        ['basah_minyak_ujung', 'Basah - Minyak Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['basah_minyak_seal', 'Basah - Minyak Seal (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_minyak_ujung', 'Kering - Minyak Ujung (%)', 'range', 'KONDISI PRODUK'],
+                                        ['kering_minyak_seal', 'Kering - Minyak Seal (%)', 'range', 'KONDISI PRODUK'],
+
+                                        ['catatan', 'Catatan', 'text', 'CATATAN'],
+                                    ];
+
+                                    $lastGroup = null;
+                                @endphp
+
+                                <div class="card mb-3 border">
+                                    <div class="card-header bg-info text-white" style="font-weight: 600;">
+                                        Standar Data Audit
+                                    </div>
+
+                                    <div class="card-body">
+                                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                                            Kosongkan standar jika field tidak ingin diubah saat membuat data audit.
+                                            Field rentang diacak sesuai rentang min-max, tiap titik ukur diacak sendiri.
+                                            Min &amp; Max harus diisi keduanya. Untuk nilai pasti, isi Min dan Max dengan angka yang sama.
+                                            Total Air / Minyak pada kondisi produk dihitung ulang otomatis.
+                                        </p>
+
+                                        <table class="table table-bordered table-sm mb-0">
+                                            <thead class="thead-light">
+                                                <tr>
+                                                    <th>Field</th>
+                                                    <th style="width: 50%;">Standar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach ($prepackingFields as [$key, $label, $type, $group])
+                                                    @php
+                                                        $current = old('standar_ref.' . $key, data_get($std, $key));
+                                                    @endphp
+
+                                                    @if ($group !== $lastGroup)
+                                                        <tr class="table-secondary">
+                                                            <td colspan="2" style="font-weight: 700; letter-spacing: .03em;">
+                                                                {{ $group }}
+                                                            </td>
+                                                        </tr>
+                                                        @php $lastGroup = $group; @endphp
+                                                    @endif
+
+                                                    <tr>
+                                                        <td class="align-middle" style="padding-left: 1.5rem;">{{ $label }}</td>
+                                                        <td class="align-middle">
+                                                            @if ($type === 'range')
+                                                                <div class="d-flex align-items-center" style="white-space: nowrap;">
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][min]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Min"
+                                                                        value="{{ old('standar_ref.' . $key . '.min', data_get($std, $key . '.min')) }}"
+                                                                    >
+
+                                                                    <span class="text-muted mx-2">s/d</span>
+
+                                                                    <input
+                                                                        type="number"
+                                                                        step="any"
+                                                                        name="standar_ref[{{ $key }}][max]"
+                                                                        class="form-control form-control-sm"
+                                                                        placeholder="Max"
+                                                                        value="{{ old('standar_ref.' . $key . '.max', data_get($std, $key . '.max')) }}"
+                                                                    >
+                                                                </div>
+                                                            @else
+                                                                <input
+                                                                    type="text"
+                                                                    name="standar_ref[{{ $key }}]"
+                                                                    class="form-control form-control-sm"
+                                                                    placeholder="Kosongkan jika tidak ingin diubah"
+                                                                    value="{{ $current }}"
+                                                                >
+                                                            @endif
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @break
+                                                
                         @endswitch
 
                         <div class="d-flex justify-content-between">
@@ -963,54 +1753,73 @@
 
             if (!form) return;
 
-            const magnetFields = [];
+            const pairKeys = [];
 
             for (let i = 1; i <= 6; i++) {
-                const key = `kekuatan_median_${i}`;
-
-                magnetFields.push({
-                    min: form.querySelector(`[name="standar_ref[${key}][min]"]`),
-                    max: form.querySelector(`[name="standar_ref[${key}][max]"]`)
-                });
+                pairKeys.push(`kekuatan_median_${i}`);
             }
 
-            magnetFields.forEach(function (field) {
-                if (!field.min || !field.max) return;
+            // Samplings
+            pairKeys.push(
+                'jamur', 'lendir', 'klip_tajam', 'pin_hole', 'air_trap_pvdc', 'air_trap_produk',
+                'keriput', 'bengkok', 'non_kode', 'over_lap', 'kecil', 'terjepit',
+                'double_klip', 'seal_halus', 'basah', 'dll'
+            );
 
-                function validatePair() {
-                    const minFilled = field.min.value.trim() !== '';
-                    const maxFilled = field.max.value.trim() !== '';
+            // Organoleptik
+            pairKeys.push(
+                'penampilan', 'aroma', 'kekenyalan', 'rasa_asin',
+                'rasa_gurih', 'rasa_manis', 'rasa_daging', 'rasa_keseluruhan'
+            );
 
-                    field.min.setCustomValidity('');
-                    field.max.setCustomValidity('');
+            // Sampel Retain
+            pairKeys.push(
+                'panjang', 'diameter',
+                'sensori_rasa', 'sensori_warna', 'sensori_aroma', 'sensori_texture',
+                'lab_garam', 'lab_air', 'lab_mikro'
+            );
 
-                    if (minFilled && !maxFilled) {
-                        field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
-                    } else if (!minFilled && maxFilled) {
-                        field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
-                    }
+            // Pre Packing
+            pairKeys.push(
+                'suhu_prepacking', 'pcs', 'toples',
+                'basah_air_ujung', 'basah_air_seal', 'kering_air_ujung', 'kering_air_seal',
+                'basah_minyak_ujung', 'basah_minyak_seal', 'kering_minyak_ujung', 'kering_minyak_seal'
+            );
+
+            pairKeys.push('release', 'reject', 'hold');
+
+            const pairFields = pairKeys
+                .map(function (key) {
+                    return {
+                        min: form.querySelector(`[name="standar_ref[${key}][min]"]`),
+                        max: form.querySelector(`[name="standar_ref[${key}][max]"]`)
+                    };
+                })
+                .filter(function (field) {
+                    return field.min && field.max;
+                });
+
+            function validatePair(field) {
+                const minFilled = field.min.value.trim() !== '';
+                const maxFilled = field.max.value.trim() !== '';
+
+                field.min.setCustomValidity('');
+                field.max.setCustomValidity('');
+
+                if (minFilled && !maxFilled) {
+                    field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
+                } else if (!minFilled && maxFilled) {
+                    field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
                 }
+            }
 
-                field.min.addEventListener('input', validatePair);
-                field.max.addEventListener('input', validatePair);
+            pairFields.forEach(function (field) {
+                field.min.addEventListener('input', function () { validatePair(field); });
+                field.max.addEventListener('input', function () { validatePair(field); });
             });
 
             form.addEventListener('submit', function (event) {
-                magnetFields.forEach(function (field) {
-                    if (!field.min || !field.max) return;
-
-                    const minFilled = field.min.value.trim() !== '';
-                    const maxFilled = field.max.value.trim() !== '';
-
-                    field.min.setCustomValidity('');
-                    field.max.setCustomValidity('');
-
-                    if (minFilled && !maxFilled) {
-                        field.max.setCustomValidity('Maksimum wajib diisi jika minimum diisi.');
-                    } else if (!minFilled && maxFilled) {
-                        field.min.setCustomValidity('Minimum wajib diisi jika maksimum diisi.');
-                    }
-                });
+                pairFields.forEach(validatePair);
 
                 if (!form.checkValidity()) {
                     event.preventDefault();

@@ -317,7 +317,6 @@ class List_formController extends Controller
 
                     $standarRef = $pemasakanRef;
                 break;
-
                 
                 case 'Verifikasi Timer Chamber':
                     $timerRef = [];
@@ -368,6 +367,359 @@ class List_formController extends Controller
 
                 break;
 
+                case 'Pemeriksaan Proses Sampling Finish Good':
+                    $samplingRef = [];
+
+                    foreach (['berat_produk', 'release', 'reject', 'hold'] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                            ]);
+                        }
+
+                        if ($minFilled && (int) $min > (int) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min tidak boleh lebih besar dari Max.',
+                            ]);
+                        }
+
+                        $samplingRef[$field] = [
+                            'min' => $minFilled ? (int) $min : null,
+                            'max' => $maxFilled ? (int) $max : null,
+                        ];
+                    }
+
+                    $kalibrasi = $standarRef['kalibrasi'] ?? null;
+                    $samplingRef['kalibrasi'] = in_array($kalibrasi, ['Sesuai', 'Tidak Sesuai'], true)
+                        ? $kalibrasi
+                        : null;
+
+                    foreach (['item_mutu', 'keterangan', 'catatan'] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $samplingRef[$field] = is_string($value) && trim($value) !== ''
+                            ? trim($value)
+                            : null;
+                    }
+
+                    $standarRef = $samplingRef;
+                break;
+
+                case 'Data Sampling Produk':
+                    $samplingsRef = [];
+
+                    foreach ([
+                        'jamur', 'lendir', 'klip_tajam', 'pin_hole', 'air_trap_pvdc', 'air_trap_produk',
+                        'keriput', 'bengkok', 'non_kode', 'over_lap', 'kecil', 'terjepit',
+                        'double_klip', 'seal_halus', 'basah', 'dll',
+                    ] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                            ]);
+                        }
+
+                        if ($minFilled && (int) $min > (int) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min tidak boleh lebih besar dari Max.',
+                            ]);
+                        }
+
+                        $samplingsRef[$field] = [
+                            'min' => $minFilled ? (int) $min : null,
+                            'max' => $maxFilled ? (int) $max : null,
+                        ];
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $samplingsRef['catatan'] = is_string($catatan) && trim($catatan) !== ''
+                        ? trim($catatan)
+                        : null;
+
+                    $standarRef = $samplingsRef;
+                break;
+
+                case 'Pemeriksaan Release Packing':
+                    $releaseRef = [];
+
+                    $min = $standarRef['release']['min'] ?? null;
+                    $max = $standarRef['release']['max'] ?? null;
+
+                    $minFilled = $min !== null && $min !== '';
+                    $maxFilled = $max !== null && $max !== '';
+
+                    if ($minFilled xor $maxFilled) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.release' => 'Release: Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                        ]);
+                    }
+
+                    if ($minFilled && (int) $min > (int) $max) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.release' => 'Release: Min tidak boleh lebih besar dari Max.',
+                        ]);
+                    }
+
+                    $releaseRef['release'] = [
+                        'min' => $minFilled ? (int) $min : null,
+                        'max' => $maxFilled ? (int) $max : null,
+                    ];
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $releaseRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $releaseRef;
+                break;
+
+                case 'Pemeriksaan Proses Packing':
+                    $packingRef = [];
+
+                    foreach (['suhu', 'speed', 'berat_pcs', 'berat_pack'] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.{$field}" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                            ]);
+                        }
+
+                        if ($minFilled && (float) $min > (float) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.{$field}" => ucfirst(str_replace('_', ' ', $field))
+                                    . ': Min tidak boleh lebih besar dari Max.',
+                            ]);
+                        }
+
+                        $packingRef[$field] = [
+                            'min' => $minFilled ? (float) $min : null,
+                            'max' => $maxFilled ? (float) $max : null,
+                        ];
+                    }
+
+                    foreach ([
+                        'kalibrasi' => ['Oke', 'Tidak Oke'],
+                        'kondisi_segel' => ['OKE', 'TIDAK OKE'],
+                    ] as $field => $allowedValues) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $packingRef[$field] = in_array($value, $allowedValues, true)
+                            ? $value
+                            : null;
+                    }
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $packingRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $packingRef;
+                break;
+
+                case 'Kontrol Labelisasi Cartooning':
+                    $cartooningRef = [];
+
+                    $min = $standarRef['jumlah']['min'] ?? null;
+                    $max = $standarRef['jumlah']['max'] ?? null;
+
+                    $minFilled = $min !== null && $min !== '';
+                    $maxFilled = $max !== null && $max !== '';
+
+                    if ($minFilled xor $maxFilled) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min dan Max harus diisi keduanya (atau kosongkan keduanya).',
+                        ]);
+                    }
+
+                    if ($minFilled && (int) $min > (int) $max) {
+                        throw \Illuminate\Validation\ValidationException::withMessages([
+                            'standar_ref.jumlah' => 'Jumlah: Min tidak boleh lebih besar dari Max.',
+                        ]);
+                    }
+
+                    $cartooningRef['jumlah'] = [
+                        'min' => $minFilled ? (int) $min : null,
+                        'max' => $maxFilled ? (int) $max : null,
+                    ];
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $cartooningRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $cartooningRef;
+                break;
+
+                case 'Pemeriksaan Organoleptik':
+                    $organoRef = [];
+
+                    foreach ([
+                        'penampilan', 'aroma', 'kekenyalan', 'rasa_asin',
+                        'rasa_gurih', 'rasa_manis', 'rasa_daging', 'rasa_keseluruhan',
+                    ] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled) {
+                            if ((int) $min < 1 || (int) $max > 3 || (int) $min > (int) $max) {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "standar_ref.$field" => "{$label}: Skor harus 1 sampai 3 dan Min tidak boleh lebih besar dari Max.",
+                                ]);
+                            }
+                        }
+
+                        $organoRef[$field] = [
+                            'min' => $minFilled ? (int) $min : null,
+                            'max' => $maxFilled ? (int) $max : null,
+                        ];
+                    }
+
+                    $standarRef = $organoRef;
+                break;
+
+                case 'Pemeriksaan Sampel Retain':
+                    $retainRef = [];
+
+                    $rangeRules = [
+                        'panjang'         => false,
+                        'diameter'        => false,
+                        'lab_garam'       => false,
+                        'lab_air'         => false,
+                        'lab_mikro'       => false,
+                        'sensori_rasa'    => true,
+                        'sensori_warna'   => true,
+                        'sensori_aroma'   => true,
+                        'sensori_texture' => true,
+                    ];
+
+                    foreach ($rangeRules as $field => $isScore) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled) {
+                            if ((float) $min > (float) $max) {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "standar_ref.$field" => "{$label}: Min tidak boleh lebih besar dari Max.",
+                                ]);
+                            }
+
+                            if ($isScore && ((int) $min < 1 || (int) $max > 3)) {
+                                throw \Illuminate\Validation\ValidationException::withMessages([
+                                    "standar_ref.$field" => "{$label}: Skor harus bernilai 1 sampai 3.",
+                                ]);
+                            }
+                        }
+
+                        $retainRef[$field] = [
+                            'min' => $minFilled ? ($isScore ? (int) $min : (float) $min) : null,
+                            'max' => $maxFilled ? ($isScore ? (int) $max : (float) $max) : null,
+                        ];
+                    }
+
+                    foreach ([
+                        'temuan_jamur', 'temuan_lendir', 'temuan_pinehole',
+                        'temuan_kejepit', 'temuan_seal',
+                    ] as $field) {
+                        $value = $standarRef[$field] ?? null;
+
+                        $retainRef[$field] = in_array((string) $value, ['0', '1'], true)
+                            ? (int) $value
+                            : null;
+                    }
+
+                    $keterangan = $standarRef['keterangan'] ?? null;
+                    $retainRef['keterangan'] = is_string($keterangan) && trim($keterangan) !== ''
+                        ? trim($keterangan)
+                        : null;
+
+                    $standarRef = $retainRef;
+                break;
+
+                case 'Pemeriksaan Pre Packing':
+                    $prepackingRef = [];
+
+                    foreach ([
+                        'suhu_prepacking', 'pcs', 'toples',
+                        'basah_air_ujung', 'basah_air_seal', 'kering_air_ujung', 'kering_air_seal',
+                        'basah_minyak_ujung', 'basah_minyak_seal', 'kering_minyak_ujung', 'kering_minyak_seal',
+                    ] as $field) {
+                        $min = $standarRef[$field]['min'] ?? null;
+                        $max = $standarRef[$field]['max'] ?? null;
+
+                        $minFilled = $min !== null && $min !== '';
+                        $maxFilled = $max !== null && $max !== '';
+
+                        $label = ucfirst(str_replace('_', ' ', $field));
+
+                        if ($minFilled xor $maxFilled) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min dan Max harus diisi keduanya (atau kosongkan keduanya).",
+                            ]);
+                        }
+
+                        if ($minFilled && (float) $min > (float) $max) {
+                            throw \Illuminate\Validation\ValidationException::withMessages([
+                                "standar_ref.$field" => "{$label}: Min tidak boleh lebih besar dari Max.",
+                            ]);
+                        }
+
+                        $prepackingRef[$field] = [
+                            'min' => $minFilled ? (float) $min : null,
+                            'max' => $maxFilled ? (float) $max : null,
+                        ];
+                    }
+
+                    $catatan = $standarRef['catatan'] ?? null;
+                    $prepackingRef['catatan'] = is_string($catatan) && trim($catatan) !== ''
+                        ? trim($catatan)
+                        : null;
+
+                    $standarRef = $prepackingRef;
+                break;
 
             }
 

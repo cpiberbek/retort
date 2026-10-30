@@ -13,18 +13,31 @@ use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Carbon\Carbon;
 use TCPDF;
 
 class PrepackingController extends Controller
 {
+    private const LAPORAN_PREPACKING = 'Pemeriksaan Pre Packing';
+
+    private const KONDISI_KEYS = [
+        'basah_air_ujung', 'basah_air_seal', 'kering_air_ujung', 'kering_air_seal',
+        'basah_minyak_ujung', 'basah_minyak_seal', 'kering_minyak_ujung', 'kering_minyak_seal',
+    ];
+
     public function index(Request $request)
     {
+        if (Auth::user()->isAuditView()) {
+            return redirect()->route('prepacking.audit');
+        }
+
         $search = $request->input('search');
         $date = $request->input('date');
         $userPlant = Auth::user()->plant;
 
         $data = Prepacking::query()
             ->where('plant', $userPlant)
+            ->where('is_audit', false)
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('username', 'like', "%{$search}%")
@@ -54,6 +67,266 @@ class PrepackingController extends Controller
         });
 
         return view('form.prepacking.index', compact('data', 'search', 'date'));
+    }
+
+    public function auditIndex(Request $request)
+    {
+        if (!Auth::user()->isAuditView()) {
+            return redirect()->route('prepacking.index');
+        }
+
+        $search = $request->input('search');
+        $date   = $request->input('date');
+
+        $auditedSourceUuids = Prepacking::where('is_audit', true)
+            ->whereNotNull('source_uuid')
+            ->pluck('source_uuid')
+            ->toArray();
+
+        $data = Prepacking::query()
+            ->where('plant', Auth::user()->plant)
+            ->with(['auditVersion', 'mincing'])
+            ->where(function ($q) use ($auditedSourceUuids) {
+                $q->where('is_audit', true)
+                    ->orWhere(function ($sub) use ($auditedSourceUuids) {
+                        $sub->where('is_audit', false);
+                        if (!empty($auditedSourceUuids)) {
+                            $sub->whereNotIn('uuid', $auditedSourceUuids);
+                        }
+                    });
+            })
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('username', 'like', "%{$search}%")
+                        ->orWhere('nama_produk', 'like', "%{$search}%")
+                        ->orWhere('kode_produksi', 'like', "%{$search}%")
+                        ->orWhereExists(function ($sub) use ($search) {
+                            $sub->selectRaw(1)
+                                ->from('mincings')
+                                ->whereColumn('mincings.uuid', 'prepackings.kode_produksi')
+                                ->where('mincings.kode_produksi', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->when($date, fn ($q) => $q->whereDate('date', $date))
+            ->orderByRaw('COALESCE((SELECT original.date FROM prepackings AS original WHERE original.uuid = prepackings.source_uuid LIMIT 1), prepackings.date) DESC')
+            ->orderByRaw('COALESCE((SELECT original.created_at FROM prepackings AS original WHERE original.uuid = prepackings.source_uuid LIMIT 1), prepackings.created_at) DESC')
+            ->paginate(10)
+            ->appends($request->all());
+
+        return view('form.prepacking.index_audit', compact('data', 'search', 'date'));
+    }
+
+    public function duplicateToAudit(string $uuid)
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $row = Prepacking::where('uuid', $uuid)
+            ->where('plant', Auth::user()->plant)
+            ->where('is_audit', false)
+            ->firstOrFail();
+
+        if ($existing = $row->auditVersion) {
+            return redirect()->route('prepacking.edit.form', $existing->uuid);
+        }
+
+        $clone = $this->createCorrectedAudit($row);
+
+        return redirect()->route('prepacking.edit.form', $clone->uuid)
+            ->with('info', 'Salinan data audit berhasil dibuat. Silakan lakukan penyesuaian.');
+    }
+
+    private function createCorrectedAudit(Prepacking $row): Prepacking
+    {
+        return DB::transaction(function () use ($row) {
+            $clone = $row->copyToAudit();
+            $this->autoCorrectFromMaster($clone);
+            return $clone;
+        });
+    }
+
+    private function bulkBase(Request $request): array
+    {
+        abort_if(Auth::user()->hasRole('auditor'), 403);
+
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $start = Carbon::parse($request->start_date)->toDateString();
+        $end   = Carbon::parse($request->end_date)->toDateString();
+        $plant = Auth::user()->plant;
+
+        $master = List_form::where('plant', $plant)
+            ->where('laporan', self::LAPORAN_PREPACKING)
+            ->first();
+
+        abort_if(empty($master?->standar_ref), 422, 'Master auto correct belum diterapkan untuk plant ini.');
+
+        $base = Prepacking::where('plant', $plant)
+            ->where('is_audit', false)
+            ->whereDate('date', '>=', $start)
+            ->whereDate('date', '<=', $end);
+
+        return [$base];
+    }
+
+    public function auditBulkPreview(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        $sudah = (clone $base)->whereHas('auditVersion')->count();
+
+        return response()->json([
+            'total'       => $total,
+            'sudah_ada'   => $sudah,
+            'akan_dibuat' => $total - $sudah,
+        ]);
+    }
+
+    public function auditBulkExecute(Request $request)
+    {
+        [$base] = $this->bulkBase($request);
+
+        $total = (clone $base)->count();
+        if ($total === 0) {
+            return redirect()->route('prepacking.audit')->with('warning', 'Tidak ada entry di tanggal ini.');
+        }
+
+        $targets = (clone $base)->whereDoesntHave('auditVersion')->get();
+        $skipped = $total - $targets->count();
+        $created = 0;
+        $failed  = 0;
+
+        foreach ($targets as $row) {
+            try {
+                $this->createCorrectedAudit($row);
+                $created++;
+            } catch (\Throwable $e) {
+                $failed++;
+                report($e);
+            }
+        }
+
+        if ($created === 0 && $failed === 0) {
+            return redirect()->route('prepacking.audit')
+                ->with('info', "0 data baru. {$skipped} data dilewati karena sudah ada audit.");
+        }
+
+        $msg = "{$created} data diduplikasi dan disesuaikan sesuai master. {$skipped} dilewati karena sudah ada.";
+        if ($failed) $msg .= " {$failed} gagal diproses (cek log).";
+
+        return redirect()->route('prepacking.audit')->with($failed ? 'warning' : 'success', $msg);
+    }
+
+    /**
+     * Kolom JSON bisa array, JSON string, atau JSON yang di-encode dua kali.
+     */
+    private function decodeJson($value): array
+    {
+        $guard = 0;
+        while (is_string($value) && $guard++ < 3) {
+            $value = json_decode($value, true);
+        }
+
+        return is_array($value) ? $value : [];
+    }
+
+    private function fmtNum(float $v): string
+    {
+        return rtrim(rtrim(number_format($v, 2, '.', ''), '0'), '.');
+    }
+
+    private function autoCorrectFromMaster(Prepacking $model): void
+    {
+        $master = List_form::where('plant', $model->plant)
+            ->where('laporan', self::LAPORAN_PREPACKING)
+            ->first();
+
+        $std = $master?->standar_ref;
+        if (is_string($std)) $std = json_decode($std, true);
+        if (!is_array($std) || empty($std)) return;
+
+        $range = function (string $key) use ($std) {
+            $r = $std[$key] ?? null;
+            if (!is_array($r)) return null;
+
+            $min = $r['min'] ?? null;
+            $max = $r['max'] ?? null;
+            if ($min === null || $min === '' || $max === null || $max === '') return null;
+
+            return [(float) $min, (float) $max];
+        };
+
+        $rand = fn (array $r) => $this->fmtNum(
+            mt_rand((int) round($r[0] * 100), (int) round($r[1] * 100)) / 100
+        );
+
+        // suhu_produk dan berat_produk: key bernomor (suhu_1..n, pcs_1..n, toples_1..n)
+        $jobs = [
+            'suhu_produk'  => [['suhu_prepacking', '/^suhu_\d+$/']],
+            'berat_produk' => [['pcs', '/^pcs_\d+$/'], ['toples', '/^toples_\d+$/']],
+        ];
+
+        foreach ($jobs as $col => $defs) {
+            $original = $model->$col;
+            $rows     = $this->decodeJson($original);
+            if (empty($rows)) continue;
+
+            $changed = false;
+
+            foreach ($defs as [$ruleKey, $pattern]) {
+                if (!($r = $range($ruleKey))) continue;
+
+                foreach (array_keys($rows) as $k) {
+                    if (preg_match($pattern, (string) $k)) {
+                        $rows[$k] = $rand($r);
+                        $changed  = true;
+                    }
+                }
+            }
+
+            if ($changed) {
+                $model->$col = is_array($original) ? $rows : json_encode($rows);
+            }
+        }
+
+        // kondisi_produk
+        $original = $model->kondisi_produk;
+        $kondisi  = $this->decodeJson($original);
+
+        if (!empty($kondisi)) {
+            $changed = false;
+
+            foreach (self::KONDISI_KEYS as $key) {
+                if ($r = $range($key)) {
+                    $kondisi[$key] = $rand($r);
+                    $changed = true;
+                }
+            }
+
+            if ($changed) {
+                // total (ASUMSI: ujung + seal, hanya jika key total memang ada)
+                foreach (['basah_air', 'kering_air', 'basah_minyak', 'kering_minyak'] as $p) {
+                    if (array_key_exists("{$p}_total", $kondisi)) {
+                        $kondisi["{$p}_total"] = $this->fmtNum(
+                            (float) ($kondisi["{$p}_ujung"] ?? 0) + (float) ($kondisi["{$p}_seal"] ?? 0)
+                        );
+                    }
+                }
+
+                $model->kondisi_produk = is_array($original) ? $kondisi : json_encode($kondisi);
+            }
+        }
+
+        $catatan = $std['catatan'] ?? null;
+        if (is_string($catatan) && trim($catatan) !== '') {
+            $model->catatan = trim($catatan);
+        }
+
+        $model->save();
     }
 
     public function create()
@@ -97,7 +370,7 @@ class PrepackingController extends Controller
 
         Prepacking::create($data);
 
-        return redirect()->route('prepacking.index')->with('success', 'Pengecekan Pre Packing berhasil disimpan');
+        return redirect()->route('prepacking.index')->with('success', 'Pemeriksaan Pre Packing berhasil disimpan');
     }
 
     public function update(string $uuid)
@@ -155,7 +428,7 @@ class PrepackingController extends Controller
 
         $prepacking->update($data);
 
-        return redirect()->route('prepacking.index')->with('success', 'Data Pengecekan Prepacking berhasil diperbarui');
+        return redirect()->route('prepacking.index')->with('success', 'Data Pemeriksaan Prepacking berhasil diperbarui');
     }
 
     public function edit(string $uuid)
@@ -205,7 +478,7 @@ class PrepackingController extends Controller
 
         $prepacking->update($data);
 
-        return redirect()->route('prepacking.index')->with('success', 'Data Pengecekan Prepacking berhasil diperbarui');
+        return redirect()->route('prepacking.index')->with('success', 'Data Pemeriksaan Prepacking berhasil diperbarui');
     }
 
     public function verification(Request $request)
@@ -254,7 +527,7 @@ class PrepackingController extends Controller
             'page'   => $request->input('page', 1),
             'search' => $request->input('search'),
             'date'   => $request->input('date'),
-        ])->with('success', 'Status Verifikasi Pengecekan Pre Packing berhasil diperbarui.');
+        ])->with('success', 'Status Verifikasi Pemeriksaan Pre Packing berhasil diperbarui.');
     }
 
     public function destroy($uuid)
@@ -332,8 +605,8 @@ class PrepackingController extends Controller
 
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('Your Name/Company');
-        $pdf->SetTitle('Pengecekan Pre Packing');
-        $pdf->SetSubject('Pengecekan Pre Packing');
+        $pdf->SetTitle('Pemeriksaan Pre Packing');
+        $pdf->SetSubject('Pemeriksaan Pre Packing');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
@@ -364,7 +637,7 @@ class PrepackingController extends Controller
 
         $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
 
-        $pdf->Output('Pengecekan_Pre_Packing_' . date('Ymd_His') . '.pdf', 'I');
+        $pdf->Output('Pemeriksaan_Pre_Packing_' . date('Ymd_His') . '.pdf', 'I');
 
         exit();
     }
