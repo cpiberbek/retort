@@ -716,6 +716,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/sampling_fg/edit/{uuid}', [Sampling_fgController::class, 'edit'])->name('sampling_fg.edit.form');
     Route::put('/sampling_fg/edit_spv/{uuid}', [Sampling_fgController::class, 'edit_spv'])->name('sampling_fg.edit_spv');
     Route::get('/sampling_fg/verification', [Sampling_fgController::class, 'verification'])->name('sampling_fg.verification');
+    Route::post('/sampling-fg/multi-verification', [Sampling_fgController::class, 'multiVerification'])->name('sampling_fg.multiVerification');
     Route::put('/sampling_fg/verification/{uuid}', [Sampling_fgController::class, 'updateVerification'])
         ->name('sampling_fg.verification.update');
     Route::delete('/sampling_fg/{uuid}', [Sampling_fgController::class, 'destroy'])->name('sampling_fg.destroy');
