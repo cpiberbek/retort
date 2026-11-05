@@ -743,6 +743,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/chamber/verification', [ChamberController::class, 'verification'])->name('chamber.verification');
     Route::put('/chamber/verification/{uuid}', [ChamberController::class, 'updateVerification'])
         ->name('chamber.verification.update');
+    Route::post('/chamber/multi-verification', [ChamberController::class, 'multiVerification'])->name('chamber.multiVerification');
     Route::delete('/chamber/{uuid}', [ChamberController::class, 'destroy'])->name('chamber.destroy');
 
     // Timbangan
@@ -988,6 +989,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/pemasakan/verification', [PemasakanController::class, 'verification'])->name('pemasakan.verification');
     Route::put('/pemasakan/verification/{uuid}', [PemasakanController::class, 'updateVerification'])
         ->name('pemasakan.verification.update');
+    Route::post('/pemasakan/multi-verification', [PemasakanController::class, 'multiVerification'])->name('pemasakan.multiVerification');
     Route::delete('/pemasakan/{uuid}', [PemasakanController::class, 'destroy'])->name('pemasakan.destroy');
 
     // Prepacking
@@ -1028,6 +1030,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/washing/verification', [WashingController::class, 'verification'])->name('washing.verification');
     Route::put('/washing/verification/{uuid}', [WashingController::class, 'updateVerification'])
         ->name('washing.verification.update');
+    Route::post('/washing/multi-verification', [WashingController::class, 'multiVerification'])->name('washing.multiVerification');
     Route::delete('/washing/{uuid}', [WashingController::class, 'destroy'])->name('washing.destroy');
 
     // Pemusnahan
