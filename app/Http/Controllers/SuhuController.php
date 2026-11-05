@@ -700,6 +700,31 @@ class SuhuController extends Controller
         ])->with('success', 'Status Verifikasi Pemeriksaan Suhu dan RH berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Suhu::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('suhu.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $suhu = Suhu::where('uuid', $uuid)->firstOrFail();

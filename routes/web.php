@@ -1162,6 +1162,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         ->name('suhu.verification.update');
     Route::get('/suhu/export-pdf', [SuhuController::class, 'exportPdf'])->name('suhu.exportPdf');
     Route::get('/suhu/export-excel', [SuhuController::class, 'exportExcel'])->name('suhu.exportExcel');
+    Route::post('/suhu/multi-verification', [SuhuController::class, 'multiVerification'])->name('suhu.multiVerification');
     // audit-suhu
     Route::get('/suhu/audit-data', [SuhuController::class, 'auditIndex'])->name('suhu.audit');
     Route::post('/suhu/{uuid}/duplicate-to-audit', [SuhuController::class, 'duplicateToAudit'])->name('suhu.duplicateToAudit');
