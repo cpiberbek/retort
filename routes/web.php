@@ -422,6 +422,8 @@ Route::middleware('auth')->group(function () {
         ->name('dispositions.update_form');
     Route::get('dispositions-verification', [DispositionController::class, 'verification'])
         ->name('dispositions.verification');
+    Route::post('/dispositions/multi-verification', [DispositionController::class, 'multiVerification'])
+        ->name('dispositions.multiVerification');
 
     Route::put('dispositions-verify/{disposition:uuid}', [DispositionController::class, 'verify'])
         ->name('dispositions.verify');
@@ -455,6 +457,7 @@ Route::middleware('auth')->group(function () {
         Route::post('{beritaAcara}/verify-spv', [BeritaAcaraController::class, 'verifySpv'])
             ->name('verify.spv');
     });
+    Route::post('/berita-acara/multi-verification', [BeritaAcaraController::class, 'multiVerification'])->name('berita-acara.multiVerification');
     Route::get('/berita-acara/export-pdf', [BeritaAcaraController::class, 'exportPdf'])->name('berita-acara.exportPdf');
     // Route::resource('berita-acara', BeritaAcaraController::class);
 
@@ -781,6 +784,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/thermometer/verification', [ThermometerController::class, 'verification'])->name('thermometer.verification');
     Route::put('/thermometer/verification/{uuid}', [ThermometerController::class, 'updateVerification'])
         ->name('thermometer.verification.update');
+    Route::post('/thermometer/multi-verification', [ThermometerController::class, 'multiVerification'])->name('thermometer.multiVerification');
     Route::get('/thermometer/export-pdf', [ThermometerController::class, 'exportPdf'])->name('thermometer.exportPdf');
     Route::delete('/thermometer/{uuid}', [ThermometerController::class, 'destroy'])->name('thermometer.destroy');
 
@@ -856,6 +860,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/klorin/verification', [KlorinController::class, 'verification'])->name('klorin.verification');
     Route::put('/klorin/verification/{uuid}', [KlorinController::class, 'updateVerification'])
         ->name('klorin.verification.update');
+    Route::post('/klorin/multi-verification', [KlorinController::class, 'multiVerification'])->name('klorin.multiVerification');
     Route::get('/klorin/export-pdf', [KlorinController::class, 'exportPdf'])->name('klorin.exportPdf');
     Route::delete('/klorin/{uuid}', [KlorinController::class, 'destroy'])->name('klorin.destroy');
 
@@ -1139,6 +1144,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
 
     Route::get('/gmp/export', [GmpController::class, 'export'])->name('gmp.export');
     Route::put('/gmp/{uuid}/update-verification', [GmpController::class, 'updateVerification'])->name('gmp.updateVerification');
+    Route::post('/gmp/multi-verification', [GmpController::class, 'multiVerification'])->name('gmp.multiVerification');
 
     // GMP
     Route::get('gmp/verification', [GmpController::class, 'verification'])->name('gmp.verification');
@@ -1181,6 +1187,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/sanitasi/verification', [SanitasiController::class, 'verification'])->name('sanitasi.verification');
     Route::put('/sanitasi/verification/{uuid}', [SanitasiController::class, 'updateVerification'])
         ->name('sanitasi.verification.update');
+    Route::post('/sanitasi/multi-verification', [SanitasiController::class, 'multiVerification'])->name('sanitasi.multiVerification');
     Route::get('/sanitasi/export-pdf', [SanitasiController::class, 'exportPdf'])->name('sanitasi.exportPdf');
     Route::delete('/sanitasi/{uuid}', [SanitasiController::class, 'destroy'])->name('sanitasi.destroy');
     Route::resource('raw-material', MasterRawMaterialController::class);

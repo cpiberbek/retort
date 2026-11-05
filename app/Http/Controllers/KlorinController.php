@@ -234,6 +234,30 @@ class KlorinController extends Controller
         ])->with('success', 'Status verifikasi berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+       $updated = Klorin::where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('klorin.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $klorin = Klorin::where('uuid', $uuid)->firstOrFail();
