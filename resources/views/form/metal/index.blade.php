@@ -58,7 +58,7 @@
                         <h5 class="modal-title" id="multiVerificationLabel">
                             <i class="bi bi-check2-all"></i> Multi Verification
                         </h5>
-                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                        <button type="button" class="btn-close btn-close-white" data-dismiss="modal"></button>
                     </div>
 
                     <div class="modal-body">
@@ -74,7 +74,7 @@
                     </div>
 
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="submit" class="btn btn-primary">
                             <i class="bi bi-check2-all"></i> Verifikasi
                         </button>

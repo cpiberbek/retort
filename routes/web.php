@@ -670,6 +670,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::post('/stuffing/{uuid}/duplicate-to-audit', [StuffingController::class, 'duplicateToAudit'])->name('stuffing.duplicateToAudit');
     Route::post('/stuffing/audit-bulk/preview', [StuffingController::class, 'auditBulkPreview'])->name('stuffing.auditBulk.preview');
     Route::post('/stuffing/audit-bulk/execute', [StuffingController::class, 'auditBulkExecute'])->name('stuffing.auditBulk.execute');
+    Route::post('/stuffing/multi-verification', [StuffingController::class, 'multiVerification'])->name('stuffing.multiVerification');
 
     Route::get('/stuffing/create', [StuffingController::class, 'create'])->name('stuffing.create');
     Route::post('/stuffing', [StuffingController::class, 'store'])->name('stuffing.store');
@@ -700,6 +701,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/wire/verification', [WireController::class, 'verification'])->name('wire.verification');
     Route::put('/wire/verification/{uuid}', [WireController::class, 'updateVerification'])
         ->name('wire.verification.update');
+    Route::post('/wire/multi-verification', [WireController::class, 'multiVerification'])->name('wire.multiVerification');
     Route::delete('/wire/{uuid}', [WireController::class, 'destroy'])->name('wire.destroy');
 
     // Sampling FG
@@ -898,6 +900,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('/pvdc/edit_spv/{uuid}', [PvdcController::class, 'edit_spv'])->name('pvdc.edit_spv');
     Route::get('/pvdc/verification', [PvdcController::class, 'verification'])->name('pvdc.verification');
     Route::put('/pvdc/verification/{uuid}', [PvdcController::class, 'updateVerification'])->name('pvdc.verification.update');
+    Route::post('/pvdc/multi-verification', [PvdcController::class, 'multiVerification'])->name('pvdc.multiVerification');
     Route::delete('/pvdc/{uuid}', [PvdcController::class, 'destroy'])->name('pvdc.destroy');
     Route::get('/pvdc/export-pdf', [PvdcController::class, 'exportPdf'])->name('pvdc.exportPdf');
 
@@ -917,8 +920,8 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/labelisasi_pvdc/edit/{uuid}', [Labelisasi_pvdcController::class, 'edit'])->name('labelisasi_pvdc.edit.form');
     Route::put('/labelisasi_pvdc/edit_spv/{uuid}', [Labelisasi_pvdcController::class, 'edit_spv'])->name('labelisasi_pvdc.edit_spv');
     Route::get('/labelisasi_pvdc/verification', [Labelisasi_pvdcController::class, 'verification'])->name('labelisasi_pvdc.verification');
-    Route::put('/labelisasi_pvdc/verification/{uuid}', [Labelisasi_pvdcController::class, 'updateVerification'])
-        ->name('labelisasi_pvdc.verification.update');
+    Route::put('/labelisasi_pvdc/verification/{uuid}', [Labelisasi_pvdcController::class, 'updateVerification'])->name('labelisasi_pvdc.verification.update');
+    Route::post('/labelisasi-pvdc/multi-verification', [Labelisasi_pvdcController::class, 'multiVerification'])->name('labelisasi_pvdc.multiVerification');
     Route::post('/labelisasi_pvdc/save-row-temp', [Labelisasi_pvdcController::class, 'saveRowTemp'])->name('labelisasi_pvdc.saveRowTemp');
     Route::post('/labelisasi_pvdc/store-final', [Labelisasi_pvdcController::class, 'storeFinal'])->name('labelisasi_pvdc.storeFinal');
     Route::delete('/labelisasi_pvdc/{uuid}', [Labelisasi_pvdcController::class, 'destroy'])->name('labelisasi_pvdc.destroy');
