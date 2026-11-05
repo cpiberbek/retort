@@ -231,6 +231,7 @@ Route::middleware('auth')->group(function () {
     Route::put('checklistmagnettrap/{uuid}/verify', [MagnetTrapController::class, 'verify'])->name('checklistmagnettrap.verify');
     Route::get('checklistmagnettrap/export-pdf', [MagnetTrapController::class, 'exportPdf'])->name('checklistmagnettrap.exportPdf');
     Route::get('checklistmagnettrap/export-excel', [MagnetTrapController::class, 'exportExcel'])->name('checklistmagnettrap.exportExcel');
+    Route::post('/checklistmagnettrap/multi-verification', [MagnetTrapController::class, 'multiVerification'])->name('checklistmagnettrap.multiVerification');
     // Route::resource('checklistmagnettrap', MagnetTrapController::class);
     Route::get(
         'checklistmagnettrap/recycle-bin',
@@ -501,6 +502,9 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         'pemeriksaan-kekuatan-magnet-trap/recycle-bin/{uuid}/force-delete',
         [PemeriksaanKekuatanMagnetTrapController::class, 'deletePermanent']
     )->name('pemeriksaan-kekuatan-magnet-trap.deletePermanent');
+
+    Route::post('/pemeriksaan-kekuatan-magnet-trap/multi-verification', [PemeriksaanKekuatanMagnetTrapController::class, 'multiVerification'])
+    ->name('pemeriksaan-kekuatan-magnet-trap.multiVerification');
 
     Route::get(
         '/pemeriksaan-kekuatan-magnet-trap/audit-data',
@@ -935,6 +939,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/mincing/export-pdf', [MincingController::class, 'exportPdf'])->name('mincing.exportPdf');
     Route::get('/mincing/export-excel', [MincingController::class, 'exportExcel'])->name('mincing.exportExcel');
     Route::delete('/mincing/{uuid}', [MincingController::class, 'destroy'])->name('mincing.destroy');
+    Route::post('/mincing/multi-verification', [MincingController::class, 'multiVerification'])->name('mincing.multiVerification');
     // audit-mincing
     Route::get('/mincing/audit-data', [MincingController::class, 'auditIndex'])->name('mincing.audit');
     Route::post('/mincing/{uuid}/duplicate-to-audit', [MincingController::class, 'duplicateToAudit'])->name('mincing.duplicateToAudit');
@@ -954,6 +959,7 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
         ->name('metal.verification.update');
     Route::get('/metal/export-pdf', [MetalController::class, 'exportPdf'])->name('metal.exportPdf');
     Route::delete('/metal/{uuid}', [MetalController::class, 'destroy'])->name('metal.destroy');
+    Route::post('/metal/multi-verification', [MetalController::class, 'multiVerification'])->name('metal.multiVerification');
     //audit-metal
     Route::get('/metal/audit-data', [MetalController::class, 'auditIndex'])->name('metal.audit');
     Route::post('/metal/{uuid}/duplicate-to-audit', [MetalController::class, 'duplicateToAudit'])->name('metal.duplicateToAudit');

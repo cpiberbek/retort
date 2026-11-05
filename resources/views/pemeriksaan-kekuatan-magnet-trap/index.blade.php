@@ -79,6 +79,11 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
                 <i class="bi bi-file-earmark-pdf"></i> Export PDF
             </button>
             @endcan
+            @can('can access verification button')
+                <button type="button" class="btn btn-primary" id="multiVerificationBtn">
+                    <i class="bi bi-check2-all"></i> Multi Verification
+                </button>
+            @endcan
             {{-- Tombol Export PDF dihapus sementara karena tidak ada di snippet asli, silakan tambahkan jika routenya ada --}}
             @can('can access recycle')
             <a href="{{ route('pemeriksaan-kekuatan-magnet-trap.recyclebin') }}" class="btn btn-secondary">
@@ -87,6 +92,48 @@ STYLING KHUSUS (Modal Gradient & Tombol Rapi)
             @endcan
         </div>
     </div>
+
+    <div class="modal fade" id="multiVerificationModal" tabindex="-1" aria-labelledby="multiVerificationLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="{{ route('pemeriksaan-kekuatan-magnet-trap.multiVerification') }}" method="POST">
+                    @csrf
+                    <div class="modal-header bg-primary text-white">
+                        <h5 class="modal-title" id="multiVerificationLabel">
+                            <i class="bi bi-check2-all"></i> Multi Verification
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="startdate" class="form-label">Start Date</label>
+                            <input type="date" class="form-control" name="startdate" id="startdate" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="enddate" class="form-label">End Date</label>
+                            <input type="date" class="form-control" name="enddate" id="enddate" required>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check2-all"></i> Verifikasi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('multiVerificationBtn').addEventListener('click', function () {
+            const modal = new bootstrap.Modal(document.getElementById('multiVerificationModal'));
+            modal.show();
+        });
+    </script>
 
     <div class="card shadow-sm mb-3 w-100">
             <div class="card-body d-flex flex-wrap justify-content-between align-items-center">
