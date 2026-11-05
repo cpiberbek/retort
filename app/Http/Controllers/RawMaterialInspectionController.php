@@ -670,6 +670,29 @@ class RawMaterialInspectionController extends Controller
         ])->with('success', 'Data berhasil diverifikasi.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = RawMaterialInspection::where('is_audit', 0)
+            ->where('plant_uuid', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereDate('created_at', '>=', $request->startdate)
+            ->whereDate('created_at', '<=', $request->enddate)
+            ->update([
+                'status_spv'           => 1,
+                'catatan_spv'          => null,
+                'verified_by_spv_uuid' => Auth::id(),
+                'verified_at_spv'      => now(),
+            ]);
+
+        return redirect()->route('inspections.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+
     public function showUpdateForm(RawMaterialInspection $inspection)
     {
         // Load relasi productDetails agar bisa ditampilkan di JS

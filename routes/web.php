@@ -282,6 +282,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/inspections/verify/{inspection}', [RawMaterialInspectionController::class, 'verify'])->name('inspections.verify');
     Route::get('/inspections/export-pdf', [RawMaterialInspectionController::class, 'exportPdf'])->name('inspections.exportPdf');
     Route::resource('inspections', RawMaterialInspectionController::class);
+    Route::post('/inspections/multi-verification', [RawMaterialInspectionController::class, 'multiVerification'])->name('inspections.multiVerification');
 
     // Packaging Inspections
     Route::get('/packaging-inspections/verification', [PackagingInspectionController::class, 'showVerificationList'])
@@ -296,6 +297,8 @@ Route::middleware('auth')->group(function () {
     Route::get('packaging-inspections/{packagingInspection}/update-view', [PackagingInspectionController::class, 'editForUpdate'])->name('packaging-inspections.edit-for-update');
     Route::get('packaging-inspections/verification', [PackagingInspectionController::class, 'showVerificationList'])
         ->name('packaging-inspections.verification');
+    Route::post('/packaging-inspections/multi-verification', [PackagingInspectionController::class, 'multiVerification'])
+        ->name('packaging-inspections.multiVerification');
 
     // audit-packaging-inspections
     Route::get('/packaging-inspections/audit-data', [PackagingInspectionController::class, 'auditIndex'])
@@ -371,6 +374,9 @@ Route::middleware('auth')->group(function () {
 
     Route::get('loading-produks/verification', [LoadingProdukController::class, 'showVerification'])
     ->name('loading-produks.verification');
+
+    Route::post('/loading-produks/multi-verification', [LoadingProdukController::class, 'multiVerification'])
+    ->name('loading-produks.multiVerification');
 
     Route::get('loading-produks/export-pdf', [LoadingProdukController::class, 'exportPdf'])
         ->name('loading-produks.exportPdf');
@@ -885,6 +891,8 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::get('/sampel/verification', [SampelController::class, 'verification'])->name('sampel.verification');
     Route::put('/sampel/verification/{uuid}', [SampelController::class, 'updateVerification'])
         ->name('sampel.verification.update');
+    Route::post('/sampel/multi-verification', [SampelController::class, 'multiVerification'])
+        ->name('sampel.multiVerification');
     Route::get('/sampel/export-pdf', [SampelController::class, 'exportPdf'])->name('sampel.exportPdf');
     // audit-sampel
     Route::get('/sampel/audit-data', [SampelController::class, 'auditIndex'])->name('sampel.audit');
