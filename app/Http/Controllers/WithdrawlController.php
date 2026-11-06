@@ -74,6 +74,30 @@ class WithdrawlController extends Controller
         ])->with('success', 'Status Verifikasi Laporan Withdrawl Berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate' => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Withdrawl::where('plant', Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv' => 1,
+                'catatan_spv' => null,
+                'nama_spv' => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('withdrawl.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+
     public function updateApproval(Request $request, $uuid)
     {
         $request->validate([

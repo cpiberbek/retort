@@ -616,6 +616,9 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
     Route::put('withdrawl/{uuid}/update-verification', [WithdrawlController::class, 'updateVerification'])
         ->name('withdrawl.updateVerification');
 
+    Route::post('/withdrawl/multi-verification', [WithdrawlController::class, 'multiVerification'])
+        ->name('withdrawl.multiVerification');
+
     Route::put('withdrawl/verify-manager/{uuid}', [WithdrawlController::class, 'updateApproval'])
         ->name('withdrawl.updateApproval');
 
@@ -641,6 +644,9 @@ Route::prefix('pemeriksaan-kekuatan-magnet-trap-verification')
 
     Route::put('traceability/{uuid}/update-verification', [TraceabilityController::class, 'updateVerification'])
         ->name('traceability.updateVerification');
+
+    Route::post('/traceability/multi-verification', [TraceabilityController::class, 'multiVerification'])
+        ->name('traceability.multiVerification');
 
     Route::put('traceability/verify-manager/{uuid}', [TraceabilityController::class, 'updateApproval'])
         ->name('traceability.updateApproval');
