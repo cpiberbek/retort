@@ -78,6 +78,7 @@
     $jamSelesai = $firstLoading ? $firstLoading->jam_selesai : '';
     $noPol = $firstLoading ? $firstLoading->no_pol_mobil : '';
     $namaSupir = $firstLoading ? $firstLoading->nama_supir : '';
+    $jenisAktivitas = $firstLoading ? $firstLoading->jenis_aktivitas : '';
     $jenisKendaraan = $firstLoading ? $firstLoading->jenis_kendaraan : '';
     $ekspedisi = $firstLoading ? $firstLoading->ekspedisi : '';
     $tujuanAsal = $firstLoading ? $firstLoading->tujuan_asal : '';
@@ -134,18 +135,17 @@
     <br>
 
     {{-- INFO --}}
-    <table width="100%" class="tbl-header">
+    <table width="100%" class="tbl-header" cellpadding="2" cellspacing="0" border="0">
         <tr>
-            <td width="15%">Hari / Tanggal</td>
-            <td width="18%">: {{ $date }}</td>
+            <td width="14%">Hari / Tanggal</td>
+            <td width="19%">: {{ $date }}</td>
 
-            <td width="15%">Jam Mulai</td>
-            <td width="18%">: {{ $jamMulai }}</td>
+            <td width="14%">Jam Mulai</td>
+            <td width="19%">: {{ $jamMulai }}</td>
 
-            <td width="15%">Ekspedisi</td>
-            <td width="19%">: {{ $ekspedisi }}</td>
+            <td width="14%">Ekspedisi</td>
+            <td width="20%">: {{ $ekspedisi }}</td>
         </tr>
-
         <tr>
             <td>Shift</td>
             <td>: {{ $shift }}</td>
@@ -156,7 +156,6 @@
             <td>Tujuan / Asal</td>
             <td>: {{ $tujuanAsal }}</td>
         </tr>
-
         <tr>
             <td>No. Pol Mobil</td>
             <td>: {{ $noPol }}</td>
@@ -164,23 +163,22 @@
             <td>Nama Sopir</td>
             <td>: {{ $namaSupir }}</td>
 
-            <td>No. Segel</td>
-            <td>: {{ $noSegel }}</td>
+            <td>Jenis Aktivitas</td>
+            <td>: {{ $jenisAktivitas }}</td>
         </tr>
-
         <tr>
             <td>Jenis Kendaraan</td>
-            <td colspan="5">: {{ $jenisKendaraan }}</td>
-        </tr>
+            <td>: {{ $jenisKendaraan }}</td>
 
+            <td>No. Segel</td>
+            <td>: {{ $noSegel }}</td>
+
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
         <tr>
             <td>Kondisi Mobil</td>
-            <td colspan="5">
-                :
-                {{ collect($kondisi_mobil ?? [])
-                    ->map(fn($item) => ucwords(str_replace('_', ' ', $item)))
-                    ->implode(', ') }}
-            </td>
+            <td colspan="5">: {{ collect($kondisi_mobil ?? [])->map(fn($item) => ucwords(str_replace('_', ' ', $item)))->implode(', ') }}</td>
         </tr>
     </table>
 
