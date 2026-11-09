@@ -611,6 +611,31 @@ class Labelisasi_pvdcController extends Controller
         ])->with('success', 'Status Verifikasi Labelisasi PVDC berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Labelisasi_pvdc::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('labelisasi_pvdc.index')
+            ->with('success', "Multi Verification Labelisasi PVDC berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $labelisasi_pvdc = Labelisasi_pvdc::where('uuid', $uuid)->firstOrFail();

@@ -305,6 +305,29 @@ class BeritaAcaraController extends Controller
         }
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = BeritaAcara::where('status_spv', 0)
+            ->whereBetween('tanggal_kedatangan', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'      => 1,
+                'catatan_spv'     => null,
+                'spv_verified_by' => Auth::user()->uuid,
+                'spv_verified_at' => now(),
+            ]);
+
+        return redirect()->route('berita-acara.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+
     public function showUpdateForm(BeritaAcara $beritaAcara)
     {
         return view('berita-acara.update_view', compact('beritaAcara'));

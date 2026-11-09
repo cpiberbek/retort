@@ -939,6 +939,30 @@ class MincingController extends Controller
         ])->with('success', 'Status Verifikasi Pengecekan mincing berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        Mincing::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('mincing.index')
+            ->with('success', 'Multi Verification Mincing berhasil diperbarui.');
+    }
+
     public function destroy($uuid)
     {
         $mincing = Mincing::where('uuid', $uuid)->firstOrFail();

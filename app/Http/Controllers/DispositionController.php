@@ -245,6 +245,29 @@ class DispositionController extends Controller
         }
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Disposition::where('status_spv', 0)
+            ->whereBetween('tanggal', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'  => 1,
+                'catatan_spv' => null,
+                'verified_by' => Auth::id(),
+                'verified_at' => now(),
+            ]);
+
+        return redirect()->route('dispositions.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+
     public function showUpdateForm(Disposition $disposition)
     {
         // Kita menggunakan view baru bernama 'dispositions.update_view'

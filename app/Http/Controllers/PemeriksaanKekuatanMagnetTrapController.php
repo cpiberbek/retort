@@ -524,6 +524,28 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
         }
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        PemeriksaanKekuatanMagnetTrap::where('is_audit', 0)
+            ->where('plant_uuid', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->whereDate('created_at', '>=', $request->startdate)
+            ->whereDate('created_at', '<=', $request->enddate)
+            ->update([
+                'status_spv' => 1,
+                'catatan_spv' => null,
+                'verified_by' => Auth::user()->uuid,
+                'verified_at' => now(),
+            ]);
+
+        return redirect()->route('pemeriksaan-kekuatan-magnet-trap.index')
+            ->with('success', 'Multi Verification Pemeriksaan Kekuatan Magnet Trap berhasil diperbarui.');
+    }
+
     public function showUpdateForm(PemeriksaanKekuatanMagnetTrap $pemeriksaanKekuatanMagnetTrap)
     {
         // Menggunakan view baru khusus update

@@ -872,30 +872,30 @@ class StuffingController extends Controller
 
     public function verification(Request $request)
     {
-     $search     = $request->input('search');
-     $date       = $request->input('date');
-     $userPlant  = Auth::user()->plant;
+        $search     = $request->input('search');
+        $date       = $request->input('date');
+        $userPlant  = Auth::user()->plant;
 
-     $data = Stuffing::query()
-     ->where('plant', $userPlant) 
-     ->when($search, function ($query) use ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('username', 'like', "%{$search}%")
-            ->orWhere('nama_produk', 'like', "%{$search}%")
-            ->orWhere('kode_produksi', 'like', "%{$search}%")
-            ->orWhere('kode_mesin', 'like', "%{$search}%");
-        });
-    })
-     ->when($date, function ($query) use ($date) {
-        $query->whereDate('date', $date);
-    })
-     ->orderBy('date', 'desc')
-     ->orderBy('created_at', 'desc')
-     ->paginate(10)
-     ->appends($request->all());
+        $data = Stuffing::query()
+        ->where('plant', $userPlant) 
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                ->orWhere('nama_produk', 'like', "%{$search}%")
+                ->orWhere('kode_produksi', 'like', "%{$search}%")
+                ->orWhere('kode_mesin', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->orderBy('date', 'desc')
+        ->orderBy('created_at', 'desc')
+        ->paginate(10)
+        ->appends($request->all());
 
-     return view('form.stuffing.index', compact('data', 'search', 'date'));
- }
+        return view('form.stuffing.index', compact('data', 'search', 'date'));
+    }
 
     public function updateVerification(Request $request, $uuid)
     {
@@ -929,37 +929,64 @@ class StuffingController extends Controller
         ])->with('success', 'Verifikasi berhasil disimpan.');
     }
 
-public function destroy($uuid)
-{
-    $stuffing = Stuffing::where('uuid', $uuid)->firstOrFail();
-    $stuffing->delete();
-    return redirect()->route('stuffing.index')->with('success', 'Stuffing berhasil dihapus');
-}
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
 
-public function recyclebin()
-{
-    $stuffing = Stuffing::onlyTrashed()
-    ->with('mincing')
-    ->orderBy('deleted_at', 'desc')
-    ->paginate(10);
+        $plant = Auth::user()->plant_active ?? Auth::user()->plant;
 
-    return view('form.stuffing.recyclebin', compact('stuffing'));
-}
+        $updated = Stuffing::where('is_audit', 0)
+            ->where('plant', $plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username ?? 'SPV',
+                'tgl_update_spv' => now(),
+            ]);
 
-public function restore($uuid)
-{
-    $stuffing = Stuffing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $stuffing->restore();
+        return redirect()->route('stuffing.index')
+            ->with('success', "Multi Verification Stuffing berhasil. {$updated} data diperbarui.");
+    }
 
-    return redirect()->route('stuffing.recyclebin')
-    ->with('success', 'Data berhasil direstore.');
-}
-public function deletePermanent($uuid)
-{
-    $stuffing = Stuffing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
-    $stuffing->forceDelete();
+    public function destroy($uuid)
+    {
+        $stuffing = Stuffing::where('uuid', $uuid)->firstOrFail();
+        $stuffing->delete();
+        return redirect()->route('stuffing.index')->with('success', 'Stuffing berhasil dihapus');
+    }
 
-    return redirect()->route('stuffing.recyclebin')
-    ->with('success', 'Data berhasil dihapus permanen.');
-}
+    public function recyclebin()
+    {
+        $stuffing = Stuffing::onlyTrashed()
+        ->with('mincing')
+        ->orderBy('deleted_at', 'desc')
+        ->paginate(10);
+
+        return view('form.stuffing.recyclebin', compact('stuffing'));
+    }
+
+    public function restore($uuid)
+    {
+        $stuffing = Stuffing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $stuffing->restore();
+
+        return redirect()->route('stuffing.recyclebin')
+        ->with('success', 'Data berhasil direstore.');
+    }
+    public function deletePermanent($uuid)
+    {
+        $stuffing = Stuffing::onlyTrashed()->where('uuid', $uuid)->firstOrFail();
+        $stuffing->forceDelete();
+
+        return redirect()->route('stuffing.recyclebin')
+        ->with('success', 'Data berhasil dihapus permanen.');
+    }
 }

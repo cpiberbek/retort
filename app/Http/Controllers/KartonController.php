@@ -580,6 +580,31 @@ class KartonController extends Controller
         ])->with('success', 'Status verifikasi Kontrol Labelisasi Karton berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Karton::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('karton.index')
+            ->with('success', "Multi Verification Kontrol Labelisasi Karton berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $karton = Karton::where('uuid', $uuid)->firstOrFail();

@@ -552,6 +552,29 @@ class PackagingInspectionController extends Controller
         }
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = PackagingInspection::where('is_audit', 0)
+            ->where('plant_uuid', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereDate('created_at', '>=', $request->startdate)
+            ->whereDate('created_at', '<=', $request->enddate)
+            ->update([
+                'status_spv'  => 1,
+                'catatan_spv' => null,
+                'verified_by' => Auth::user()->id,
+                'verified_at' => now(),
+            ]);
+
+        return redirect()->route('packaging-inspections.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+
     public function editForUpdate(PackagingInspection $packagingInspection): View
     {
         $packagingInspection->load('items');

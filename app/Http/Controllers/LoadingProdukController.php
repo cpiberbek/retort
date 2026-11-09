@@ -552,6 +552,32 @@ class LoadingProdukController extends Controller
         }
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = LoadingProduk::where('is_audit', 0)
+            ->where('plant_uuid', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('tanggal', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'  => 1,
+                'catatan_spv' => null,
+                'verified_by' => Auth::id(),
+                'verified_at' => now(),
+            ]);
+
+        return redirect()->route('loading-produks.index')
+            ->with('success', "Multi Verification berhasil. {$updated} data diperbarui.");
+    }
+        
+
     public function updateDetails(LoadingProduk $loadingProduk)
     {
         // Pastikan relasi details dimuat

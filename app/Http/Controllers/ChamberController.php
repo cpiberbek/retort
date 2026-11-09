@@ -680,6 +680,31 @@ class ChamberController extends Controller
         ])->with('success', 'Status Verifikasi Timer Chamber berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Chamber::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('chamber.index')
+            ->with('success', "Multi Verification Timer Chamber berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $chamber = Chamber::where('uuid', $uuid)->firstOrFail();
