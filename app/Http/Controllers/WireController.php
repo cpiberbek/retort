@@ -467,6 +467,31 @@ class WireController extends Controller
         ])->with('success', 'Status Verifikasi Data No. Lot Wire berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Wire::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('wire.index')
+            ->with('success', "Multi Verification Data No. Lot Wire berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $wire = Wire::where('uuid', $uuid)->firstOrFail();

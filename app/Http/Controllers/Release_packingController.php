@@ -437,6 +437,31 @@ class Release_packingController extends Controller
         ])->with('success', 'Status Verifikasi Data Release Packing diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Release_packing::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('release_packing.index')
+            ->with('success', "Multi Verification Data Release Packing berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $release_packing = Release_packing::where('uuid', $uuid)->firstOrFail();

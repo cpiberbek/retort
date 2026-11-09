@@ -470,6 +470,31 @@ class MetalController extends Controller
             'date' => $request->input('date'),
         ])->with('success', 'Status Verifikasi Pengecekan Metal Detector berhasil diperbarui.');
     }
+
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        Metal::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('metal.verification')
+            ->with('success', 'Multi Verification Metal Detector berhasil diperbarui.');
+    }
+
     public function destroy($uuid)
     {
         $metal = Metal::where('uuid', $uuid)->firstOrFail();

@@ -545,6 +545,28 @@ class MagnetTrapController extends Controller
         ])->with('success', 'Data berhasil diverifikasi.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        MagnetTrapModel::where('is_audit', 0)
+            ->where('plant_uuid', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->whereDate('created_at', '>=', $request->startdate)
+            ->whereDate('created_at', '<=', $request->enddate)
+            ->update([
+                'status_spv'           => 1,
+                'catatan_spv'          => null,
+                'verified_by_spv_uuid' => Auth::id(),
+                'verified_at_spv'      => now(),
+            ]);
+
+        return redirect()->route('checklistmagnettrap.index')
+            ->with('success', 'Multi Verification Checklist Magnet Trap berhasil diperbarui.');
+    }
+
     /**
      * Menampilkan view khusus UpdateMagnetTrap.blade.php
      * Logic pengambilan datanya sama dengan edit() biasa.

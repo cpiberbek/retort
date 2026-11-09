@@ -585,6 +585,31 @@ class Sampling_fgController extends Controller
         ])->with('success', 'Status Verifikasi Pemeriksaan Proses sampling_fg Finish Good berhasil diperbarui.');
     }
 
+    public function multiVerification(Request $request)
+    {
+        $request->validate([
+            'startdate' => 'required|date',
+            'enddate'   => 'required|date|after_or_equal:startdate',
+        ]);
+
+        $updated = Sampling_fg::where('is_audit', 0)
+            ->where('plant', Auth::user()->plant_active ?? Auth::user()->plant)
+            ->where('status_spv', 0)
+            ->whereBetween('date', [
+                $request->startdate,
+                $request->enddate,
+            ])
+            ->update([
+                'status_spv'     => 1,
+                'catatan_spv'    => null,
+                'nama_spv'       => Auth::user()->username,
+                'tgl_update_spv' => now(),
+            ]);
+
+        return redirect()->route('sampling_fg.index')
+            ->with('success', "Multi Verification Pemeriksaan Proses Sampling Finish Good berhasil. {$updated} data diperbarui.");
+    }
+
     public function destroy($uuid)
     {
         $sampling_fg = Sampling_fg::where('uuid', $uuid)->firstOrFail();
