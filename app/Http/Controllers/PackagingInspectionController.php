@@ -586,9 +586,8 @@ class PackagingInspectionController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
-        $date = $request->input('start_date');
-        $shift = $request->input('shift');
+        $date      = $request->input('start_date');
+        $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
 
         $noDokumen = List_form::where('plant', $userPlant)
@@ -596,11 +595,11 @@ class PackagingInspectionController extends Controller
             ->value('no_dokumen');
 
         $query = PackagingInspection::with(['items']);
-        if (Auth::check() && !empty($userPlant)) {
+
+        if (!empty($userPlant)) {
             $query->where('plant_uuid', $userPlant);
         }
 
-        // Filter tanggal dan shift
         $query->when($date, function ($q) use ($date) {
             $q->whereDate('inspection_date', $date);
         });
@@ -611,35 +610,68 @@ class PackagingInspectionController extends Controller
 
         $inspections = $query->orderBy('inspection_date', 'asc')->get();
 
+        $first        = $inspections->first();
+        $pemeriksa    = '';
+        $tglPemeriksa = '';
+
+        if ($first) {
+            $pemeriksa = \App\Models\User::where('uuid', $first->created_by)->value('name') ?? '';
+            $tglPemeriksa = $first->created_at
+                ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+                : '';
+        }
+
+        $semuaDisetujui = $inspections->count() > 0
+            && $inspections->every(fn($i) => !empty($i->verified_by));
+
+        $spv    = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $verified = $inspections->first();
+
+            $spv = \App\Models\User::where('id', $verified->verified_by)->value('name') ?? '';
+            $tglSpv = $verified->verified_at
+                ? \Carbon\Carbon::parse($verified->verified_at)->format('d-m-Y')
+                : '';
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Landscape, A4)
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
-        // Metadata
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Pemeriksaan Packaging');
 
-        // Hilangkan Header/Footer Bawaan
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margin
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set Font Default
         $pdf->SetFont('helvetica', '', 6);
-
         $pdf->AddPage();
 
-        // 3. Render
-        $html = view('reports.pemeriksaan-packaging', compact('inspections', 'request', 'noDokumen'))->render();
+        $html = view(
+            'reports.pemeriksaan-packaging',
+            compact(
+                'inspections',
+                'request',
+                'noDokumen',
+                'pemeriksa',
+                'tglPemeriksa',
+                'spv',
+                'tglSpv',
+                'semuaDisetujui'
+            )
+        )->render();
+
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Pemeriksaan_Packaging_' . date('d-m-Y_His') . '.pdf';
+
         $pdf->Output($filename, 'I');
         exit();
     }

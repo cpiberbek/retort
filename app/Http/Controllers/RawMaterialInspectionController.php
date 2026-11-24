@@ -711,15 +711,15 @@ class RawMaterialInspectionController extends Controller
         // Arahkan ke blade baru: resources/views/raw_material/UpdateRawMaterial.blade.php
         return view('raw_material.UpdateRawMaterial', compact('inspection', 'masterBahanBaku', 'suppliers'));
     }
-
+ 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
-        $date = $request->input('date');
+        $date      = $request->input('date');
         $userPlant = Auth::user()->plant;
 
         $query = RawMaterialInspection::with(['creator', 'productDetails']);
-        if (Auth::check() && !empty($userPlant)) {
+
+        if (!empty($userPlant)) {
             $query->where('plant_uuid', $userPlant);
         }
 
@@ -727,43 +727,71 @@ class RawMaterialInspectionController extends Controller
             ->where('laporan', 'Pemeriksaan Kedatangan Bahan Baku dan Bahan Kimia')
             ->value('no_dokumen');
 
-        // Filter tanggal (menggunakan setup_kedatangan)
         $query->when($date, function ($q) use ($date) {
             $q->whereDate('setup_kedatangan', $date);
         });
 
         $items = $query->orderBy('setup_kedatangan', 'asc')->get();
 
+        $firstItem = $items->first();
+
+        $pemeriksa    = '';
+        $tglPemeriksa = '';
+        $spv          = '';
+        $tglSpv       = '';
+
+        if ($firstItem) {
+            $pemeriksa = \App\Models\User::where('uuid', $firstItem->created_by_uuid)->value('name') ?? '';
+            $tglPemeriksa = $firstItem->created_at
+                ? \Carbon\Carbon::parse($firstItem->created_at)->format('d-m-Y')
+                : '';
+
+            if (!empty($firstItem->verified_by_spv_uuid)) {
+                $spv = \App\Models\User::where('uuid', $firstItem->verified_by_spv_uuid)->value('name') ?? '';
+                $tglSpv = $firstItem->verified_at_spv
+                    ? \Carbon\Carbon::parse($firstItem->verified_at_spv)->format('d-m-Y')
+                    : '';
+            }
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Landscape, A4)
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
-        // Metadata
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Pemeriksaan Input Bahan Baku');
 
-        // Hilangkan Header/Footer Bawaan
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margin
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set Font Default
         $pdf->SetFont('helvetica', '', 6);
-
         $pdf->AddPage();
 
-        // 3. Render
-        $html = view('reports.pemeriksaan-input-bahan-baku', compact('items', 'request', 'noDokumen'))->render();
+        $html = view(
+            'reports.pemeriksaan-input-bahan-baku',
+            compact(
+                'items',
+                'request',
+                'noDokumen',
+                'pemeriksa',
+                'tglPemeriksa',
+                'spv',
+                'tglSpv'
+            )
+        )->render();
+
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Pemeriksaan_Input_Bahan_Baku_' . date('d-m-Y_His') . '.pdf';
+
         $pdf->Output($filename, 'I');
         exit();
     }
+
+
 }
