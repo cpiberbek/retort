@@ -1,210 +1,264 @@
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
+    <title>Data Release Packing</title>
     <style>
-        body { font-size: 9px; }
-        .title { font-size: 12px; font-weight: bold; text-align: center; }
-        table { border-collapse: collapse; }
-
-        .tbl-header td {
-            font-size: 9px;
-            padding: 2px 0;
+        body {
+            font-family: times;
+            font-size: 9pt;
+            line-height: 1.15;
+            color: #000;
         }
 
-        .tbl-main, 
-        .tbl-main th, 
+        table {
+            border-collapse: collapse;
+        }
+
+        .company-name {
+            font-size: 12pt;
+            font-weight: bold;
+            line-height: 1.1;
+        }
+
+        .report-title {
+            font-size: 13pt;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .filter-table td {
+            font-size: 8pt;
+            padding: 2px;
+        }
+
+        .tbl-main {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tbl-main th,
         .tbl-main td {
-            border: 0.3px solid #000;
+            border: 0.8px solid #000;
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 8pt;
         }
 
         .tbl-main th {
-            text-align: center;
-            vertical-align: middle;
-            font-size: 8px;
+            background-color: #d9e2f3;
+            font-weight: bold;
+            line-height: 1.15;
         }
 
-        .center { text-align: center; }
-        .sign { text-align: center; }
-        .small { font-size: 8px; }
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
+        .document-number {
+            font-size: 8pt;
+            text-align: right;
+        }
+
+        .notes {
+            font-size: 8pt;
+            text-align: left;
+            vertical-align: top;
+            padding: 3px;
+        }
+
+        .signature-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .signature {
             font-size: 9pt;
+            text-align: center;
+            vertical-align: top;
+            line-height: 1.2;
+        }
+
+        .signature img {
+            width: 25mm;
+            height: 25mm;
         }
     </style>
 </head>
-
 <body>
 
-<table width="100%" style="border-collapse:collapse;border:1px solid #000;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
-        <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
-            <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
+        <td width="60" align="left" valign="middle">
+            <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="48">
         </td>
-
-        <td width="50%" style="border:1px solid #000;padding:0;text-align:center;vertical-align:middle;">
-            <table width="100%" style="border-collapse:collapse;">
-                <tr>
-                    <td style="border-bottom:1px solid #000;padding:5px;font-size:19px;">
-                        <b>FORM</b>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding:5px;font-size:18px;">
-                        <b>DATA RELEASE PACKING</b>
-                    </td>
-                </tr>
-            </table>
+        <td align="left" valign="middle" class="company-name">
+            PT Charoen<br>
+            Pokphand Indonesia<br>
+            Food Division
         </td>
-
-        <td width="25%" style="border:1px solid #000;padding:0;font-size:10px;">
-            <table width="100%" style="border-collapse:collapse;">
-                <tr>
-                    <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        No. Dokumen
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ $noDokumen }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Revisi
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Tanggal Efektif
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : 01-04-2016
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;padding:3px;">
-                        Halaman
-                    </td>
-                    <td style="padding:3px;">
-                        : {{ $pageIndex + 1 }} dari {{ $totalPage }}
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
-
-
-<br><br>
-
-@php
-    $dateFilter = request('date')
-        ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y')
-        : 'All Dates';
-
-    $jenisKemasanFilter = request('jenis_kemasan') ?: 'Semua Jenis Kemasan';
-@endphp
-
-<table width="100%" class="tbl-header">
-    <tr>
-        <td>Hari/Tgl : {{ $dateFilter }}</td>
-        <td>Jenis Kemasan : {{ $jenisKemasanFilter }}</td>
     </tr>
 </table>
 
 <br>
 
-<table width="100%" class="tbl-main small">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td class="report-title">
+            DATA RELEASE PACKING
+        </td>
+    </tr>
+</table>
+
+<br>
+
+<table width="100%" cellpadding="2" cellspacing="0" border="0" class="filter-table">
+    <tr>
+        <td width="50%" align="center">
+            <b>Hari/Tgl:</b>
+            {{ $date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : 'SEMUA' }}
+        </td>
+        <td width="50%" align="center">
+            <b>Jenis Kemasan:</b>
+            {{ $jenisKemasan ?: 'Semua Jenis Kemasan' }}
+        </td>
+    </tr>
+</table>
+
+<br>
+
+<table width="100%" class="tbl-main" cellpadding="0" cellspacing="0">
     <thead>
         <tr>
-            <th class="center" width="4%">No.</th>
-            <th class="center" width="24%">Nama Varian</th>
-            <th class="center" width="24%">Kode Batch</th>
-            <th class="center" width="14%">Best Before</th>
-            <th class="center" width="10%">No. Palet</th>
-            <th class="center" width="14%">Jumlah Release</th>
-            <th class="center" width="10%">Paraf QC</th>
+            <th width="4%">No.</th>
+            <th width="24%">Nama Varian</th>
+            <th width="24%">Kode Batch</th>
+            <th width="14%">Best Before</th>
+            <th width="10%">No. Palet</th>
+            <th width="14%">Jumlah Release</th>
+            <th width="10%">Paraf QC</th>
         </tr>
     </thead>
-
     <tbody>
         @forelse($release_packings as $packing)
-        <tr>
-            <td class="center" width="4%">
-                {{ ($pageIndex * 10) + $loop->iteration }}
-            </td>
-            <td class="center" width="24%">{{ $packing->nama_produk ?? '-' }}</td>
-            <td class="center" width="24%">{{ $packing->kode_produksi ?? '-' }}</td>
-            <td class="center" width="14%">
-                {{ $packing->expired_date ? \Carbon\Carbon::parse($packing->expired_date)->format('d-m-Y') : '-' }}
-            </td>
-            <td class="center" width="10%">{{ $packing->no_palet ?? '-' }}</td>
-            <td class="center" width="14%">{{ $packing->release ?? '-' }}</td>
-            <td class="center" width="10%">{{ $packing->username ?? '-' }}</td>
-        </tr>
+            <tr>
+                <td width="4%">
+                    {{ ($pageIndex * $perPage) + $loop->iteration }}
+                </td>
+                <td width="24%">
+                    {{ $packing->nama_produk ?? '-' }}
+                </td>
+                <td width="24%">
+                    {{ $packing->kode_produksi ?? '-' }}
+                </td>
+                <td width="14%">
+                    {{ $packing->expired_date ? \Carbon\Carbon::parse($packing->expired_date)->format('d-m-Y') : '-' }}
+                </td>
+                <td width="10%">
+                    {{ $packing->no_palet ?? '-' }}
+                </td>
+                <td width="14%">
+                    {{ $packing->release ?? '-' }}
+                </td>
+                <td width="10%">
+                    {{ \App\Models\User::where('username', $packing->username_updated ?? $packing->username)->value('name') ?? '-' }}
+                </td>
+            </tr>
         @empty
-        <tr>
-            <td colspan="7" class="center">Tidak ada data release packing</td>
-        </tr>
+            <tr>
+                <td colspan="7" width="100%" align="center">
+                    Tidak ada data release packing
+                </td>
+            </tr>
         @endforelse
     </tbody>
 </table>
+
 <br>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td width="100%" class="document-number">
+            <i>{{ $noDokumen ?? '-' }}</i>
+        </td>
+    </tr>
+</table>
 
 @if($lastPage)
-<table width="100%" style="border-collapse:collapse; border:0.3px solid #000;" class="small">
-    <tr>
-        <td style="border:0.3px solid #000; padding:5px;">
-            @php
-                $keterangan = $release_packings
-                    ->filter(fn($item) => trim($item->keterangan ?? '') !== '')
-                    ->values()
-                    ->map(fn($item, $index) => '  -Data ke-' . ($index + 1) . ': ' . $item->keterangan)
-                    ->unique()
-                    ->implode('<br>');
-            @endphp
 
-            <b>Catatan :</b><br>{!! $keterangan ?: '-' !!}
-        </td>
-    </tr>
-</table>
-<br>
+    <br>
 
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="100%" class="notes">
+                <b>Catatan:</b>
+                @if($keterangan->isNotEmpty())
+                    @foreach($keterangan as $catatan)
+                        <br>- {{ $catatan }}
+                    @endforeach
+                @else
+                    <br>-
+                @endif
+            </td>
+        </tr>
+    </table>
+
+    <br><br>
+
+    
 @php
-    $namaSpv = $release_packings->every(fn($item) => !empty($item->nama_spv))
-        ? $release_packings->first()->nama_spv
-        : null;
+    $namaQcBersih  = (!empty($namaQc) && trim($namaQc) !== '-') ? trim($namaQc) : '';
+    $namaSpvBersih = ($semuaDisetujui && !empty($namaSpv) && trim($namaSpv) !== '-') ? trim($namaSpv) : '';
+
+    $makeQrTtd = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . \Carbon\Carbon::parse($tanggal)->format('d-m-Y');
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
+
+    $qrQc  = $makeQrTtd($namaQcBersih, $tanggalQc ?? '');
+    $qrSpv = $makeQrTtd($namaSpvBersih, $tanggalSpv ?? '');
 @endphp
-<br><br>
-<table width="100%" class="small">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" nobr="true">
     <tr>
-        <td width="70%"></td>
+        <td width="60%"></td>
 
-        <td width="30%" class="sign">
-            Diverifikasi oleh,
-            <br><br><br><br><br>
-
-            @if($namaSpv)
-                (<u>{{ $namaSpv }}</u>)
-            @else
-                (<u>Belum Semua Entry Disetujui Oleh SPV</u>)
+        <td width="20%" align="center" style="vertical-align: top;">
+            @if($namaQcBersih)
+                Dibuat oleh :<br>
+                <u>{{ $namaQcBersih }}</u><br>
+                <br>
+                <img src="data:image/png;base64,{{ $qrQc }}" width="60" height="60"><br>
+                QC
             @endif
+        </td>
 
-            <br>
-            QC SPV
+        <td width="20%" align="center" style="vertical-align: top;">
+            Diverifikasi oleh :<br>
+            @if($namaSpvBersih)
+                <u>{{ $namaSpvBersih }}</u><br>
+                <br>
+                <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                SPV QC
+            @else
+                <i>Belum semua entry disetujui</i><br>
+                <br>
+                <br>
+                <br>
+                <br>
+                <br>
+                SPV QC
+            @endif
         </td>
     </tr>
 </table>
+
+
 @endif
 
 </body>

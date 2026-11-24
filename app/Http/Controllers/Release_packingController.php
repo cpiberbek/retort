@@ -495,80 +495,126 @@ class Release_packingController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $date = $request->input('date');
-        $jenis_kemasan = $request->input('jenis_kemasan');
-        $userPlant = Auth::user()->plant;
-        $search = $request->input('search');
+{
+    $date = $request->input('date');
+    $jenisKemasan = $request->input('jenis_kemasan');
+    $search = $request->input('search');
+    $userPlant = Auth::user()->plant;
 
-        $release_packings = Release_packing::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('kode_produksi', 'like', "%{$search}%")
-                        ->orWhere('nama_produk', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($jenis_kemasan, function ($query) use ($jenis_kemasan) {
-                $query->where('jenis_kemasan', $jenis_kemasan);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('created_at', 'asc')
-            ->get();
+    $release_packings = Release_packing::query()
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('kode_produksi', 'like', "%{$search}%")
+                    ->orWhere('nama_produk', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($jenisKemasan, function ($query) use ($jenisKemasan) {
+            $query->where('jenis_kemasan', $jenisKemasan);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('created_at', 'asc')
+        ->get();
 
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Data Release Packing')
-            ->value('no_dokumen');
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Data Release Packing')
+        ->value('no_dokumen');
 
-        $perPage = 15;
+    $firstItem = $release_packings->first();
 
-        $pages = $release_packings->chunk($perPage);
-        $totalPage = max($pages->count(), 1);
+    $namaQc = $firstItem
+        ? ($firstItem->username_updated ?? $firstItem->username)
+        : null;
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
+    $tanggalQc = $firstItem?->created_at;
 
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, 'F4', true, 'UTF-8', false);
+    $jumlahDisetujui = $release_packings
+        ->filter(fn($item) => (string) $item->status_spv === '1')
+        ->count();
 
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('System');
-        $pdf->SetTitle('Data Release Packing');
+    $semuaDisetujui = $release_packings->count() > 0
+        && $jumlahDisetujui === $release_packings->count();
 
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
+    $namaSpv = $semuaDisetujui
+        ? $firstItem->nama_spv
+        : null;
 
-        $pdf->SetMargins(8, 8, 8);
-        $pdf->SetAutoPageBreak(true, 8);
+    $tanggalSpv = $semuaDisetujui
+        ? $firstItem->tgl_update_spv
+        : null;
 
-        $pdf->SetFont('helvetica', '', 8);
+    $keterangan = $release_packings
+        ->values()
+        ->map(function ($item, $index) {
+            $catatan = trim($item->keterangan ?? '');
 
-        if ($pages->isEmpty()) {
-            $pages = collect([collect()]);
-            $totalPage = 1;
-        }
+            if ($catatan === '') {
+                return null;
+            }
 
-        foreach ($pages as $pageIndex => $pageData) {
+            return 'Data ke-' . ($index + 1) . ': ' . $catatan;
+        })
+        ->filter()
+        ->unique()
+        ->values();
 
-            $pdf->AddPage('L', 'F4');
+    $perPage = 20;
+    $pages = $release_packings->chunk($perPage);
+    $totalPage = max($pages->count(), 1);
 
-            $html = view('reports.data-release-packing', [
-                'release_packings' => $pageData,
-                'request' => $request,
-                'noDokumen' => $noDokumen,
-                'pageIndex' => $pageIndex,
-                'totalPage' => $totalPage,
-                'perPage' => $perPage,
-                'lastPage' => ($pageIndex == $totalPage - 1),
-            ])->render();
-
-            $pdf->writeHTML($html, true, false, true, false, '');
-        }
-
-        $pdf->Output('Data_Release_Packing_' . date('Ymd_His') . '.pdf', 'I');
-        exit;
+    if ($pages->isEmpty()) {
+        $pages = collect([collect()]);
     }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetAuthor('System');
+    $pdf->SetTitle('Data Release Packing');
+    $pdf->SetSubject('Data Release Packing');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+    $pdf->SetMargins(8, 8, 8);
+    $pdf->SetHeaderMargin(0);
+    $pdf->SetFooterMargin(0);
+    $pdf->SetAutoPageBreak(true, 8);
+    $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+    $pdf->SetFont('times', '', 9);
+
+    foreach ($pages as $pageIndex => $pageData) {
+        $pdf->AddPage('L', 'A4');
+
+        $html = view('reports.data-release-packing', [
+            'release_packings' => $pageData,
+            'noDokumen' => $noDokumen,
+            'pageIndex' => $pageIndex,
+            'totalPage' => $totalPage,
+            'perPage' => $perPage,
+            'lastPage' => $pageIndex === $totalPage - 1,
+            'namaQc' => $namaQc,
+            'tanggalQc' => $tanggalQc,
+            'namaSpv' => $namaSpv,
+            'tanggalSpv' => $tanggalSpv,
+            'keterangan' => $keterangan,
+            'semuaDisetujui' => $semuaDisetujui,
+            'date' => $date,
+            'jenisKemasan' => $jenisKemasan,
+        ])->render();
+
+        $pdf->writeHTML($html, true, false, true, false, '');
+    }
+
+    $pdf->Output('Data_Release_Packing_' . date('Ymd_His') . '.pdf', 'I');
+    exit;
+}
 }
