@@ -648,12 +648,12 @@ class KartonController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $date = $request->input('date');
+        $date        = $request->input('date');
         $nama_produk = $request->input('nama_produk');
-        $search = $request->input('search');
-        $userPlant = Auth::user()->plant;
+        $search      = $request->input('search');
+        $userPlant   = Auth::user()->plant;
 
-        $kartons = Karton::query()
+        $all = Karton::query()
             ->where('plant', $userPlant)
             ->when($date, function ($query) use ($date) {
                 $query->whereDate('date', $date);
@@ -671,47 +671,82 @@ class KartonController extends Controller
             })
             ->orderBy('date', 'asc')
             ->orderBy('created_at', 'asc')
-            ->get()
-            ->chunk(4);
+            ->get();
+
+        $pages = $all->chunk(4);
 
         $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Kontrol Labelisasi Cartooning')
             ->value('no_dokumen');
 
+        $usernames = $all->pluck('username')
+            ->merge($all->pluck('nama_spv'))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap = \App\Models\User::whereIn('username', $usernames)
+            ->pluck('name', 'username');
+
+        $first = $all->first();
+
+        $pemeriksa    = '';
+        $tglPemeriksa = '';
+        $spv          = '';
+        $tglSpv       = '';
+
+        if ($first) {
+            $pemeriksa = $userMap[$first->username] ?? $first->username ?? '';
+            $tglPemeriksa = $first->created_at
+                ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+                : '';
+        }
+
+        $semuaDisetujui = $all->isNotEmpty()
+            && $all->every(fn ($k) => !empty($k->nama_spv));
+
+        if ($semuaDisetujui) {
+            $spvRaw = trim((string) $first->nama_spv);
+            $spv = $userMap[$spvRaw] ?? $spvRaw;
+            $tglSpv = $first->tgl_update_spv
+                ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
 
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Company');
         $pdf->SetTitle('Kontrol Labelisasi Karton');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(true, 10);
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
+
         $pdf->SetFont('helvetica', '', 8);
+        $pdf->AddPage();
 
-        $totalPage = $kartons->count();
+        $html = view('reports.kontrol-labelisasi-karton', compact(
+            'pages',
+            'request',
+            'noDokumen',
+            'userMap',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
 
-        foreach ($kartons as $index => $data) {
-            $pdf->AddPage('L', 'F4');
-
-            $html = view('reports.kontrol-labelisasi-karton', [
-                'kartons' => $data,
-                'request' => $request,
-                'noDokumen' => $noDokumen,
-                'pageIndex' => $index,
-                'totalPage' => $totalPage
-            ])->render();
-
-            $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-        }
+        $pdf->writeHTML($html, true, false, true, false, '');
 
         $pdf->Output('Kontrol_Labelisasi_Karton_' . date('Ymd_His') . '.pdf', 'I');
+
         exit();
     }
 

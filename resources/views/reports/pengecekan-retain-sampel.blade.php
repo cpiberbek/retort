@@ -3,8 +3,24 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-size: 8px; }
-        table { border-collapse: collapse; }
+        body, table, tr, td, th {
+            font-family: helvetica;
+            font-size: 7px;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        .header td {
+            vertical-align: middle;
+        }
+
+        .company {
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
 
         .title {
             font-size: 12px;
@@ -12,219 +28,204 @@
             text-align: center;
         }
 
-        .small { font-size: 7px; }
-        .center { text-align: center; }
-        .right { text-align: right; }
-        .sign { text-align: center; }
-
         .tbl-main, .tbl-main th, .tbl-main td {
-            border: 0.3px solid #000;
+            border: 0.8px solid #000;
         }
 
         .tbl-main th {
-            background-color: #cfddee;
+            background-color: #d9e2f3;
             text-align: center;
             vertical-align: middle;
             font-size: 7px;
+            padding: 3px 2px;
         }
 
-        .tbl-header td {
-            padding: 2px;
-            font-size: 8px;
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
         }
-          /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 9pt;
+
+        .center {
+            text-align: center;
+        }
+
+        .sign {
+            text-align: center;
+            vertical-align: top;
+        }
+
+        .small {
+            font-size: 7px;
         }
     </style>
 </head>
 
 <body>
 
-{{-- HEADER --}}
+@foreach($pages as $pageIndex => $retains)
 
-<table width="100%" style="border-collapse:collapse;border:1px solid #000;">
-    <tr>
-        <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
-            <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
-        </td>
+    @if($pageIndex > 0)
+        <br pagebreak="true" />
+    @endif
 
-        <td width="50%" style="border:1px solid #000;padding:0;text-align:center;vertical-align:middle;">
-            <table width="100%" style="border-collapse:collapse;">
-                <tr>
-                    <td style="border-bottom:1px solid #000;padding:5px;font-size:19px;">
-                        <b>FORM</b>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="padding:5px;font-size:18px;">
-                        <b>PENGECEKAN RETAIN SAMPEL</b>
-                    </td>
-                </tr>
-            </table>
-        </td>
-
-        <td width="25%" style="border:1px solid #000;padding:0;font-size:10px;">
-            <table width="100%" style="border-collapse:collapse;">
-                <tr>
-                    <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        No. Dokumen
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ $noDokumen }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Revisi
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Tanggal Efektif
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : 27-09-2017
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;padding:3px;">
-                        Halaman
-                    </td>
-                    <td style="padding:3px;">
-                        : {{ $pageIndex + 1 }} dari {{ $totalPage }}
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
-
-<br>
-<br>
-
-@php
-$firstRetain = $retains->first();
-$date = $firstRetain ? \Carbon\Carbon::parse($firstRetain->tanggal)->format('d-m-Y') : '';
-@endphp
-
-<table width="100%" class="tbl-header">
-    <tr>
-        <td width="15%">Hari / Tanggal: {{ $date }}</td>
-        <td width="85%"></td>
-    </tr>
-</table>
-
-<br>
-
-<table width="100%" class="tbl-main small">
-    <tr>
-        <th rowspan="2" class="center">Kode Batch</th>
-        <th rowspan="2" class="center">Varian</th>
-        <th rowspan="2" class="center">Panjang<br>(cm)</th>
-        <th rowspan="2" class="center">Diameter<br>(cm)</th>
-        <th colspan="4" class="center">Sensori</th>
-        <th colspan="5" class="center">Temuan</th>
-        <th colspan="3" class="center">Parameter Lab</th>
-        <th rowspan="2" class="center">Keterangan</th>
-    </tr>
-
-    <tr>
-        <th class="center">Rasa</th>
-        <th class="center">Warna</th>
-        <th class="center">Aroma</th>
-        <th class="center">Texture</th>
-
-        <th class="center">Jamur</th>
-        <th class="center">Lendir</th>
-        <th class="center">Pinehole</th>
-        <th class="center">Kejepit</th>
-        <th class="center">Seal<br>halus / lepas</th>
-
-        <th class="center">Kadar Garam</th>
-        <th class="center">Kadar Air</th>
-        <th class="center">Mikro</th>
-    </tr>
-
-    @foreach($retains as $retain)
-        @if($retain->items && $retain->items->count() > 0)
-
-            @foreach($retain->items as $item)
+   <div style="margin-left:-30px; margin-bottom:0;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
             <tr>
-                <td>{{ $item->kode_produksi ?? '' }}</td>
-                <td>{{ $item->varian ?? '' }}</td>
-                <td>{{ $item->panjang ?? '' }}</td>
-                <td>{{ $item->diameter ?? '' }}</td>
-
-                <td>{{ $item->sensori_rasa ?? '' }}</td>
-                <td>{{ $item->sensori_warna ?? '' }}</td>
-                <td>{{ $item->sensori_aroma ?? '' }}</td>
-                <td>{{ $item->sensori_texture ?? '' }}</td>
-
-                <td>{{ $item->temuan_jamur ? 'V' : '' }}</td>
-                <td>{{ $item->temuan_lendir ? 'V' : '' }}</td>
-                <td>{{ $item->temuan_pinehole ? 'V' : '' }}</td>
-                <td>{{ $item->temuan_kejepit ? 'V' : '' }}</td>
-                <td>{{ $item->temuan_seal ? 'V' : '' }}</td>
-
-                <td>{{ $item->lab_garam ?? '' }}</td>
-                <td>{{ $item->lab_air ?? '' }}</td>
-                <td>{{ $item->lab_mikro ?? '' }}</td>
-
-                <td>{{ $retain->keterangan ?? '' }}</td>
+                <td width="55" style="padding:0;">
+                    <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+                </td>
+                <td style="padding:0; line-height:1;">
+                    <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
+                    <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                    <span style="font-size:14pt;"><b>Food Division</b></span>
+                </td>
             </tr>
-            @endforeach
+        </table>
+    </div>
 
-        @endif
-    @endforeach
+    <h2 class="title" style="margin:0; padding:0;">
+        PEMERIKSAAN PROSES PACKING
+    </h2>
+    <br>
+    <br>
+    <br>
 
-</table>
+    @php
+        $firstRetain = $retains->first();
+        $tanggal = $firstRetain
+            ? \Carbon\Carbon::parse($firstRetain->tanggal)->format('d-m-Y')
+            : '';
 
+        $qrPemeriksa = null;
+        $qrSpv = null;
 
-@if($lastPage)
+        if ($pemeriksa && $tglPemeriksa) {
+            $qrText = 'Ditandatangani secara digital oleh ' . $pemeriksa . ' pada ' . $tglPemeriksa;
+            $barcode = new \TCPDF2DBarcode($qrText, 'QRCODE,H');
+            $qrPemeriksa = base64_encode($barcode->getBarcodePngData(3, 3));
+        }
 
-@php
-    $namaSpv = null;
+        if ($semuaDisetujui && $spv && $tglSpv) {
+            $qrText = 'Ditandatangani secara digital oleh ' . $spv . ' pada ' . $tglSpv;
+            $barcode = new \TCPDF2DBarcode($qrText, 'QRCODE,H');
+            $qrSpv = base64_encode($barcode->getBarcodePngData(3, 3));
+        }
+    @endphp
 
-    if ($retains->isNotEmpty() && $retains->every(fn($retain) => !empty($retain->verified_by))) {
-        $namaSpv = \App\Models\User::where('uuid', $retains->first()->verified_by)->value('name');
-    }
-@endphp
+    <table width="100%">
+        <tr>
+            <td width="100%">Hari / Tanggal: {{ $tanggal }}</td>
+        </tr>
+    </table>
 
-<br><br>
+    <br>
 
-<table width="100%" class="small">
-    <tr>
-        <td width="70%"></td>
+    <table width="100%" class="tbl-main">
+        <tr>
+            <th width="6%" rowspan="2">Kode Batch</th>
+            <th width="6%" rowspan="2">Varian</th>
+            <th width="5%" rowspan="2">Panjang<br>(cm)</th>
+            <th width="5%" rowspan="2">Diameter<br>(cm)</th>
+            <th width="20%" colspan="4">Sensori</th>
+            <th width="25%" colspan="5">Temuan</th>
+            <th width="18%" colspan="3">Parameter Lab</th>
+            <th width="15%" rowspan="2">Keterangan</th>
+        </tr>
 
-        <td width="30%" class="sign">
-            Diverifikasi oleh,
-            <br><br><br><br><br>
+        <tr>
+            <th width="5%">Rasa</th>
+            <th width="5%">Warna</th>
+            <th width="5%">Aroma</th>
+            <th width="5%">Texture</th>
 
-            @if($namaSpv)
-                (<u>{{ $namaSpv }}</u>)
-            @else
-                (<u>Belum Semua Entry Disetujui Oleh SPV</u>)
+            <th width="5%">Jamur</th>
+            <th width="5%">Lendir</th>
+            <th width="5%">Pinehole</th>
+            <th width="5%">Kejepit</th>
+            <th width="5%">Seal<br>halus / lepas</th>
+
+            <th width="6%">Kadar Garam</th>
+            <th width="6%">Kadar Air</th>
+            <th width="6%">Mikro</th>
+        </tr>
+
+        @foreach($retains as $retain)
+            @if($retain->items && $retain->items->count() > 0)
+                @foreach($retain->items as $item)
+                    <tr>
+                        <td width="6%">{{ $item->kode_produksi ?? '' }}</td>
+                        <td width="6%">{{ $item->varian ?? '' }}</td>
+                        <td width="5%" class="center">{{ $item->panjang ?? '' }}</td>
+                        <td width="5%" class="center">{{ $item->diameter ?? '' }}</td>
+
+                        <td width="5%">{{ $item->sensori_rasa ?? '' }}</td>
+                        <td width="5%">{{ $item->sensori_warna ?? '' }}</td>
+                        <td width="5%">{{ $item->sensori_aroma ?? '' }}</td>
+                        <td width="5%">{{ $item->sensori_texture ?? '' }}</td>
+
+                        <td width="5%" class="center">{{ $item->temuan_jamur ? 'V' : '' }}</td>
+                        <td width="5%" class="center">{{ $item->temuan_lendir ? 'V' : '' }}</td>
+                        <td width="5%" class="center">{{ $item->temuan_pinehole ? 'V' : '' }}</td>
+                        <td width="5%" class="center">{{ $item->temuan_kejepit ? 'V' : '' }}</td>
+                        <td width="5%" class="center">{{ $item->temuan_seal ? 'V' : '' }}</td>
+
+                        <td width="6%">{{ $item->lab_garam ?? '' }}</td>
+                        <td width="6%">{{ $item->lab_air ?? '' }}</td>
+                        <td width="6%">{{ $item->lab_mikro ?? '' }}</td>
+
+                        <td width="15%">{{ $retain->keterangan ?? '' }}</td>
+                    </tr>
+                @endforeach
             @endif
+        @endforeach
+    </table>
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
 
-            <br>
-            QC SPV
-        </td>
-    </tr>
-</table>
+    @if($loop->last)
+        <br><br>
 
-@endif
+        <table width="100%" nobr="true">
+            <tr>
+                <td width="60%" valign="top"></td>
+
+                <td width="20%" class="sign">
+                    Diperiksa oleh:
+                    <br><br>
+
+                    @if($pemeriksa)
+                        @if($qrPemeriksa)
+                            <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60">
+                            <br>
+                        @endif
+                        <u>{{ $pemeriksa }}</u>
+                        <br>
+                        QC
+                    @endif
+                </td>
+
+                <td width="20%" class="sign">
+                    Diverifikasi oleh:
+                    <br><br>
+
+                    @if($semuaDisetujui && $spv)
+                        @if($qrSpv)
+                            <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60">
+                            <br>
+                        @endif
+                        <u>{{ $spv }}</u>
+                        <br>
+                        QC SPV
+                    @else
+                        <u>Belum Semua Entry Disetujui Oleh SPV</u>
+                    @endif
+                </td>
+            </tr>
+        </table>
+    @endif
+
+@endforeach
 
 </body>
 </html>

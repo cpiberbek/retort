@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PemeriksaanRetain;
 use App\Models\List_form;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -500,99 +501,100 @@ class PemeriksaanRetainController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $date = $request->input('date');
-        $kodeProduksi = $request->input('kode_produksi');
-        $userPlant = Auth::user()->plant;
+{
+    $date = $request->input('date');
+    $kodeProduksi = $request->input('kode_produksi');
+    $userPlant = Auth::user()->plant;
 
-        $query = PemeriksaanRetain::with(['items', 'creator']);
-
-        if (Auth::check() && !empty($userPlant)) {
+    $all = PemeriksaanRetain::with(['items', 'creator'])
+        ->when(Auth::check() && !empty($userPlant), function ($query) use ($userPlant) {
             $query->where('plant_uuid', $userPlant);
-        }
-
-        $query->when($date, function ($q) use ($date) {
-            $q->whereDate('tanggal', $date);
-        });
-
-        $query->when($kodeProduksi, function ($q) use ($kodeProduksi) {
-            $q->whereHas('items', function ($item) use ($kodeProduksi) {
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('tanggal', $date);
+        })
+        ->when($kodeProduksi, function ($query) use ($kodeProduksi) {
+            $query->whereHas('items', function ($item) use ($kodeProduksi) {
                 $item->where('kode_produksi', 'like', '%' . $kodeProduksi . '%');
             });
-        });
+        })
+        ->orderBy('tanggal', 'asc')
+        ->get();
 
-        $retains = $query->orderBy('tanggal', 'asc')->get();
+    $pages = $all->chunk(4);
 
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pemeriksaan Sampel Retain')
-            ->value('no_dokumen');
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pemeriksaan Sampel Retain')
+        ->value('no_dokumen');
 
-        $perPage = 3;
+    $usernames = $all->pluck('created_by')
+        ->merge($all->pluck('verified_by'))
+        ->filter()
+        ->unique();
 
-        $pages = collect();
-        $temp = collect();
-        $countItem = 0;
+    $userMap = User::whereIn('uuid', $usernames)
+        ->pluck('name', 'uuid')
+        ->toArray();
 
-        foreach ($retains as $retain) {
-            $itemCount = $retain->items ? $retain->items->count() : 0;
+    $first = $all->first();
 
-            if ($countItem + $itemCount > $perPage && $temp->count() > 0) {
-                $pages->push($temp);
-                $temp = collect();
-                $countItem = 0;
-            }
+    $pemeriksa = null;
+    $tglPemeriksa = null;
+    $spv = null;
+    $tglSpv = null;
 
-            $temp->push($retain);
-            $countItem += $itemCount;
-        }
-
-        if ($temp->count() > 0) {
-            $pages->push($temp);
-        }
-
-        $totalPage = max($pages->count(), 1);
-
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
-        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
-
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Pengecekan Retain Sampel');
-
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-
-        $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
-
-        $pdf->SetFont('helvetica', '', 6);
-
-        if ($pages->isEmpty()) {
-            $pages = collect([collect()]);
-            $totalPage = 1;
-        }
-
-        foreach ($pages as $pageIndex => $pageData) {
-
-            $pdf->AddPage();
-
-            $html = view('reports.pengecekan-retain-sampel', [
-                'retains' => $pageData,
-                'request' => $request,
-                'noDokumen' => $noDokumen,
-                'pageIndex' => $pageIndex,
-                'totalPage' => $totalPage,
-                'perPage' => $perPage,
-                'lastPage' => ($pageIndex == $totalPage - 1),
-            ])->render();
-
-            $pdf->writeHTML($html, true, false, true, false, '');
-        }
-
-        $filename = 'Pengecekan_Retain_Sampel_' . date('d-m-Y_His') . '.pdf';
-        $pdf->Output($filename, 'I');
-        exit();
+    if ($first) {
+        $pemeriksa = $userMap[$first->created_by] ?? null;
+        $tglPemeriksa = $first->created_at
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : null;
     }
+
+    $semuaDisetujui = $all->isNotEmpty() && $all->every(function ($retain) {
+        return (int) $retain->status_spv === 1 && !empty($retain->verified_by);
+    });
+
+    if ($semuaDisetujui && $first) {
+        $spv = $userMap[$first->verified_by] ?? null;
+        $tglSpv = $first->verified_at
+            ? \Carbon\Carbon::parse($first->verified_at)->format('d-m-Y')
+            : null;
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Pengecekan Retain Sampel');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->AddPage();
+
+    $html = view('reports.pengecekan-retain-sampel', compact(
+        'pages',
+        'request',
+        'noDokumen',
+        'userMap',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $filename = 'Pengecekan_Retain_Sampel_' . date('d-m-Y_His') . '.pdf';
+    $pdf->Output($filename, 'I');
+    exit();
+}
 }

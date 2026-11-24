@@ -607,14 +607,14 @@ class PackingController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $date = $request->input('date');
-        $shift = $request->input('shift');
+        $date        = $request->input('date');
+        $shift       = $request->input('shift');
         $nama_produk = $request->input('nama_produk');
-        $userPlant = Auth::user()->plant;
+        $userPlant   = Auth::user()->plant;
+
         $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Pemeriksaan Proses Packing')
             ->value('no_dokumen');
-
 
         $packings = Packing::query()
             ->where('plant', $userPlant)
@@ -631,56 +631,82 @@ class PackingController extends Controller
             ->orderBy('shift', 'asc')
             ->get();
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+        $usernames = $packings->pluck('username')
+            ->merge($packings->pluck('nama_produksi'))
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap = \App\Models\User::whereIn('username', $usernames)
+            ->pluck('name', 'username');
+
+        $kodeTopleMap = \App\Models\Mincing::whereIn(
+            'uuid',
+            $packings->pluck('kode_toples')->filter()->unique()
+        )->pluck('kode_produksi', 'uuid');
+
+        $first = $packings->first();
+
+        $pemeriksa    = '';
+        $tglPemeriksa = '';
+        $spv          = '';
+        $tglSpv       = '';
+
+        if ($first) {
+            $pemeriksa = $userMap[$first->username] ?? $first->username ?? '';
+            $tglPemeriksa = $first->created_at
+                ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+                : '';
+        }
+
+        $semuaDisetujui = $packings->isNotEmpty()
+            && $packings->every(fn ($p) => (string) $p->status_spv === '1');
+
+        if ($semuaDisetujui) {
+            $namaSpvRaw = trim((string) ($first->nama_spv ?? ''));
+
+            $spv = \App\Models\User::where('username', $namaSpvRaw)->value('name')
+                ?? $namaSpvRaw;
+
+            $tglSpv = $first->tgl_update_spv
+                ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // Create new TCPDF object
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
-        // Set document information
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
         $pdf->SetTitle('Pemeriksaan Proses Packing');
         $pdf->SetSubject('Pemeriksaan Proses Packing');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set default monospaced font
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, PDF_MARGIN_TOP, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+        $pdf->SetFont('helvetica', '', 6);
+        $pdf->AddPage();
 
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+        $html = view('reports.proses-packing', compact(
+            'packings',
+            'request',
+            'noDokumen',
+            'userMap',
+            'kodeTopleMap',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
 
-        // Set image scale factor
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+        $pdf->writeHTML($html, true, false, true, false, '');
 
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
-            require_once(dirname(__FILE__) . '/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-
-        // Set font
-        $pdf->SetFont('helvetica', '', 10);
-
-        // Add a page
-        $pdf->AddPage('L', 'A4'); // Landscape A4
-
-        // Convert the Blade view to HTML
-        $html = view('reports.proses-packing', compact('packings', 'request', 'noDokumen'))->render();
-
-        // Print text using writeHTMLCell()
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
-        // Close and output PDF document (Inline/Preview)
         $pdf->Output('Pemeriksaan_Proses_Packing_' . date('Ymd_His') . '.pdf', 'I');
 
         exit();
