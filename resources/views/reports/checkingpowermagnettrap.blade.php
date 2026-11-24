@@ -3,239 +3,277 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-size: 9px; }
-        .title { font-size: 12px; font-weight:bold; text-align:center; }
-        table { border-collapse:collapse; }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        .title {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
 
         .tbl-header td {
-            font-size:9px;
-            padding:2px 0;
+            padding: 2px 0;
+            font-size: 8px;
+            line-height: 1.15;
         }
 
         .tbl-main,
         .tbl-main th,
         .tbl-main td {
-            border:0.3px solid #000;
-            text-align:center;
-            vertical-align:middle;
-            padding:2px;
+            border: 0.8px solid #000;
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
         }
 
         .tbl-main th {
-            font-size:8px;
+            background-color: #d9e2f3;
+            font-weight: bold;
+            line-height: 1.15;
         }
 
-        .center {
-            text-align:center;
+        .note td {
+            padding: 3px 2px;
+            vertical-align: top;
+            line-height: 1.4;
         }
 
-        .small {
-            font-size:8px;
-        }
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 9pt;
+        .sign td {
+            text-align: center;
+            vertical-align: top;
         }
     </style>
 </head>
 
 <body>
 
-<table width="100%" style="border-collapse:collapse;border:1px solid #000;">
+@php
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv = (!empty($spv) && $spv !== '-') ? $spv : '';
+
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+
+        return base64_encode(
+            $barcode->getBarcodePngData(4, 4, [0, 0, 0])
+        );
+    };
+
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv = $makeQr($namaSpv, $tglSpv ?? '');
+
+    $pages = $magnetTraps->count() > 0
+        ? $magnetTraps->chunk(20)
+        : collect([collect()]);
+@endphp
+
+<div style="margin-left:-30px; margin-bottom:0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="55" style="padding:0;">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
+                <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h2 class="title" style="margin:0; padding:0;">
+    VERIFIKASI MAGNET TRAP
+</h2>
+
+<br>
+<br>
+
+<table width="100%" class="tbl-header">
     <tr>
-        <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
-            <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
-        </td>
-
-        <td width="50%" style="border:1px solid #000;text-align:center;font-size:18px;padding:5px;">
-            <b>FORM</b><br>
-            <b>VERIFIKASI MAGNET TRAP</b>
-        </td>
-
-        <td width="25%" style="border:1px solid #000;font-size:10px;padding:0;">
-
-            <table width="100%" style="border-collapse:collapse;">
-                <tr>
-                    <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        No. Dokumen
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ $noDokumen }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Revisi
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Tanggal Efektif
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : 27/12/2021
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;padding:3px;">
-                        Halaman
-                    </td>
-                    <td style="padding:3px;">
-                        : 1 dari 1
-                    </td>
-                </tr>
-            </table>
-
+        <td width="100%">
+            Periode: {{ $periode }}
         </td>
     </tr>
 </table>
 
 <br>
 
-{{-- <h2 class="title">CHECKLIST CLEANING MAGNET TRAP</h2> --}}
+@foreach($pages as $pageIndex => $pageItems)
 
-<br>
-
-<table width="100%" class="tbl-main small">
-
+<table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
     <tr>
-        <th rowspan="3">NO</th>
-        <th colspan="10" style="text-align:left;">
-            Periode : {{ $month ? \Carbon\Carbon::parse($month)->locale('id')->translatedFormat('F Y') : '-' }}
+        <th rowspan="3" width="5%">NO</th>
+        <th colspan="10" width="95%" style="text-align:left;">
+            Periode: {{ $periode }}
         </th>
     </tr>
 
     <tr>
-        <th rowspan="2">TANGGAL</th>
-
-        <th colspan="3">
+        <th rowspan="2" width="10%">TANGGAL</th>
+        <th colspan="3" width="30%">
             KEKUATAN MEDAN MAGNET (GAUSS)<br>
             MAGNET KE-
         </th>
-
-        <th colspan="2">
-            <span style="color:red">*</span> PARAMETER SETTINGAN
+        <th colspan="2" width="15%">
+            * PARAMETER SETTINGAN
         </th>
-
-        <th rowspan="2">
-            <span style="color:red">*</span> KONDISI<br>
+        <th rowspan="2" width="10%">
+            * KONDISI<br>
             MAGNET<br>
             TRAP
         </th>
-
-        <th rowspan="2">
-            <span style="color:red">*</span> KETERANGAN
+        <th rowspan="2" width="15%">
+            * KETERANGAN
         </th>
-
-        <th colspan="2">
+        <th colspan="2" width="15%">
             PETUGAS
         </th>
     </tr>
 
     <tr>
-        <th>1</th>
-        <th>2</th>
-        <th>3</th>
-
-        <th>SESUAI</th>
-        <th>TIDAK SESUAI</th>
-
-        <th>QC</th>
-        {{-- <th>PROD</th> --}}
-        <th>ENG</th>
+        <th width="10%">1</th>
+        <th width="10%">2</th>
+        <th width="10%">3</th>
+        <th width="7.5%">SESUAI</th>
+        <th width="7.5%">TIDAK SESUAI</th>
+        <th width="7.5%">QC</th>
+        <th width="7.5%">ENG</th>
     </tr>
 
-    @forelse($magnetTraps as $index => $item)
+    @foreach($pageItems as $index => $item)
     <tr>
-        <td>{{ $index + 1 }}</td>
-        <td>{{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}</td>
-        <td>{{ $item->kekuatan_median_1 ?? '-' }}</td>
-        <td>{{ $item->kekuatan_median_2 ?? '-' }}</td>
-        <td>{{ $item->kekuatan_median_3 ?? '-' }}</td>
-        <td>{{ $item->parameter_sesuai == 1 ? 'V' : '-' }}</td>
-        <td>{{ $item->parameter_sesuai == 0 ? 'X' : '-' }}</td>
-        <td>{{ $item->kondisi_magnet_trap ?? '-' }}</td>
-        <td>{{ Str::limit($item->keterangan ?? '-', 30) }}</td>
-        <td>{{ $item->petugas_qc ?? '-' }}</td>
- 
-        <td>{{ $item->petugas_eng ?? '-' }}</td>
-    </tr>
-    @empty
-    @for($i = 1; $i <= 6; $i++)
-    <tr>
-        <td>{{ $i }}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    @endfor
-    @endforelse
+        <td width="5%">
+            {{ ($pageIndex * 20) + $index + 1 }}
+        </td>
 
+        <td width="10%">
+            {{ $item->tanggal ? \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') : '-' }}
+        </td>
+
+        <td width="10%">
+            {{ $item->kekuatan_median_1 ?? '-' }}
+        </td>
+
+        <td width="10%">
+            {{ $item->kekuatan_median_2 ?? '-' }}
+        </td>
+
+        <td width="10%">
+            {{ $item->kekuatan_median_3 ?? '-' }}
+        </td>
+
+        <td width="7.5%">
+            {{ $item->parameter_sesuai == 1 ? 'V' : '-' }}
+        </td>
+
+        <td width="7.5%">
+            {{ $item->parameter_sesuai == 0 ? 'X' : '-' }}
+        </td>
+
+        <td width="10%">
+            {{ $item->kondisi_magnet_trap ?? '-' }}
+        </td>
+
+        <td width="15%">
+            {{ \Illuminate\Support\Str::limit($item->keterangan ?? '-', 30) }}
+        </td>
+
+        <td width="7.5%">
+            {{ $item->petugas_qc ?? '-' }}
+        </td>
+
+        <td width="7.5%">
+            {{ $item->petugas_eng ?? '-' }}
+        </td>
+    </tr>
+    @endforeach
 </table>
+
+<div style="margin-top:5px; text-align:right;">
+    <i>{{ $noDokumen ?? '-' }}</i>
+</div>
+
+@if($loop->last)
 
 <br>
+<br>
 
-<table width="100%" class="small" style="border-collapse:collapse;border:1px solid #000;">
+<table width="100%" class="note small" nobr="true">
+    <tr>
+        <td width="60%">
+            <b>* Keterangan Pengisian data:</b><br><br>
 
-<tr>
+            <u>Kolom Parameter Settingan:</u><br>
+            Beri tanda V untuk kondisi baik<br>
+            Beri tanda X untuk kondisi tidak sesuai<br><br>
 
-<td width="60%" style="border:1px solid #000;padding:5px;text-align:left;">
+            <u>Kolom Kondisi Magnet Trap:</u><br>
+            Diisi dengan keadaan visual magnet tersebut (contoh: magnet/slongsong gembel, penyok atau dalam keadaan baik, sempurna, dll)<br><br>
 
-<b><span style="color:red">*</span> Keterangan Pengisian data :</b><br>
+            <u>Kolom Keterangan Mengacu pada Standar Kekuatan Medan Magnet:</u><br>
+            &gt;= 8000 Gauss maka magnet masih bisa digunakan<br>
+            &lt; 8000 Gauss maka magnet harus dilakukan penggantian
+        </td>
 
-<u>- Kolom Parameter Settingan :</u><br>
-Beri tanda V untuk kondisi baik<br>
-Beri tanda X untuk kondisi tidak sesuai<br><br>
+        <td width="20%" align="center">
+            Dibuat oleh :<br>
 
-<u>- Kolom Kondisi Magnet trap diisi dengan keadaan Visual Magnet tersebut</u><br>
-(contoh : magnet/slongsong gembel, penyok atau dalam keadaan baik,
-sempurna, dll)<br><br>
+            @if($namaPemeriksa)
+                <u>{{ $namaPemeriksa }}</u><br>
+                <br>
+                <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                QC
+            @endif
+        </td>
 
-<u>- Kolom Keterangan Mengacu pada Standart Kekuatan Medan Magnet :</u><br>
->= 8000 Gauss maka Magnet masih bisa digunakan<br>
-< 8000 Gauss maka Magnet harus dilakukan penggantian
+        <td width="20%" align="center">
+            Diverifikasi oleh :<br>
 
-</td>
-
-
-<td width="40%" style="border:1px solid #000;text-align:center;">
-
-Disetujui oleh,<br><br><br><br>
-
-@php
-    $allVerified = $magnetTraps->every(fn($item) => $item->status_spv == 1);
-    $firstVerified = $allVerified ? $magnetTraps->first() : null;
-@endphp
-
-<u>(
-{{ $firstVerified ? \App\Models\User::where('uuid', $firstVerified->verified_by)->value('name') : 'Belum Semua Entry di periode ini terverifikasi' }}
-)</u><br>
-QC SPV
-
-</td>
-
-</tr>
-
+            @if($namaSpv)
+                <u>{{ $namaSpv }}</u><br>
+                <br>
+                <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                SPV QC
+            @elseif($magnetTraps->count() > 0 && !$semuaDisetujui)
+                <i>Belum semua entry disetujui</i>
+            @endif
+        </td>
+    </tr>
 </table>
+
+@else
+<br pagebreak="true" />
+@endif
+
+@endforeach
 
 </body>
 </html>

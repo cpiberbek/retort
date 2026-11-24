@@ -27,9 +27,9 @@
             </a>
             @endcan
             @can('can access export')
-                {{-- <button type="button" class="btn btn-success me-2" id="exportExcelBtn">
+                <button type="button" class="btn btn-success me-2" id="exportExcelBtn">
                     <i class="bi bi-file-earmark-excel"></i> Export Excel
-                </button> --}}
+                </button>
                 {{-- disable sesuai kesepakatan --}}
                 <a href="javascript:void(0)" id="exportPdfBtn" class="btn btn-danger me-2">
                     <i class="bi bi-file-earmark-pdf"></i> Export PDF

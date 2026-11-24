@@ -217,7 +217,7 @@ class WireController extends Controller
     {
         $search    = $request->input('search');
         $date      = $request->input('date');
-        $shift     = $request->input('shift'); // Ambil input Shift
+        $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
 
         $items = Wire::query()
@@ -232,42 +232,105 @@ class WireController extends Controller
                 $query->whereDate('date', $date);
             })
             ->when($shift, function ($query) use ($shift) {
-                // Filter Query berdasarkan Shift yang dipilih
                 $query->where('shift', $shift);
             })
             ->orderBy('date', 'asc')
             ->orderBy('shift', 'asc')
             ->get();
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
         $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Data No. Lot Wire')
             ->value('no_dokumen');
 
-        // Setup PDF (Landscape)
-        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Laporan Data No. Lot Wire');
+        $grids = [];
 
-        // Remove default header/footer
+        foreach ($items as $item) {
+            $dataWire = json_decode($item->data_wire, true);
+
+            if (!is_array($dataWire)) {
+                continue;
+            }
+
+            foreach ($dataWire as $mesin) {
+                $details = $mesin['detail'] ?? [];
+
+                if (!is_array($details)) {
+                    continue;
+                }
+
+                foreach ($details as $detail) {
+                    $grids[] = [
+                        'mesin'  => $mesin['mesin'] ?? '-',
+                        'start'  => $detail['start'] ?? '-',
+                        'end'    => $detail['end'] ?? '-',
+                        'no_lot' => $detail['no_lot'] ?? '-',
+                    ];
+                }
+            }
+        }
+
+        $pages = array_chunk($grids, 45);
+
+        if (empty($pages)) {
+            $pages = [[]];
+        }
+
+        $firstItem = $items->first();
+
+        $supplier = $firstItem->nama_supplier ?? '-';
+
+        $pemeriksa = trim((string) ($firstItem->username_updated ?? $firstItem->username ?? ''));
+
+        $tglPemeriksa = $firstItem && $firstItem->created_at
+            ? \Carbon\Carbon::parse($firstItem->created_at)->format('d-m-Y')
+            : '';
+
+        $semuaDisetujui = $items->isNotEmpty()
+            && $items->every(fn ($item) => (string) $item->status_spv === '1');
+
+        $spv = $semuaDisetujui
+            ? trim((string) ($firstItem->nama_spv ?? ''))
+            : '';
+
+        $tglSpv = $semuaDisetujui && $firstItem->tgl_update_spv
+            ? \Carbon\Carbon::parse($firstItem->tgl_update_spv)->format('d-m-Y')
+            : '';
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+
+        $pdf->SetCreator(PDF_CREATOR);
+        $pdf->SetAuthor('CPI');
+        $pdf->SetTitle('Laporan Data No. Lot Wire');
+        $pdf->SetSubject('Laporan Data No. Lot Wire');
+
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margins (Left, Top, Right) -> 5mm
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
-        $pdf->SetFont('helvetica', '', 8);
+        $pdf->SetAutoPageBreak(true, 5);
 
+        $pdf->SetFont('helvetica', '', 7);
         $pdf->AddPage();
 
-        // Render View
-        $html = view('reports.wire', compact('items', 'request', 'noDokumen'))->render();
+        $html = view('reports.wire', compact(
+            'pages',
+            'request',
+            'noDokumen',
+            'supplier',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv'
+        ))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
+
         $pdf->Output('Laporan_Wire_' . date('d-m-Y_His') . '.pdf', 'I');
+
         exit();
     }
 

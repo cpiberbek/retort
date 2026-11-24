@@ -620,7 +620,11 @@ class MagnetTrapController extends Controller
             ->where('laporan', 'Checklist Cleaning Magnet Trap')
             ->value('no_dokumen');
 
-        $magnetTraps = MagnetTrapModel::query()
+        $magnetTraps = MagnetTrapModel::with([
+            'creator',
+            'produksi',
+            'engineer'
+        ])
             ->where('plant_uuid', $userPlant)
             ->when($date, function ($query) use ($date) {
                 $query->where(function ($query) use ($date) {
@@ -639,69 +643,106 @@ class MagnetTrapController extends Controller
                 ->with('error', 'Tidak ada data untuk tanggal yang dipilih.');
         }
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+        $kodeBatchUuids = $magnetTraps
+            ->pluck('kode_batch')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $kodeBatchMap = \App\Models\Mincing::whereIn('uuid', $kodeBatchUuids)
+            ->pluck('kode_produksi', 'uuid')
+            ->toArray();
+
+        $first = $magnetTraps->first();
+
+        $pemeriksa = '';
+        $tglPemeriksa = '';
+
+        if ($first->created_by) {
+            $pemeriksa = \App\Models\User::where('uuid', $first->created_by)
+                ->value('name') ?? '';
+        }
+
+        if ($first->created_at) {
+            $tglPemeriksa = \Carbon\Carbon::parse($first->created_at)
+                ->format('d-m-Y');
+        }
+
+        $jumlahDisetujui = $magnetTraps->filter(function ($item) {
+            return !empty($item->verified_by_spv_uuid);
+        })->count();
+
+        $semuaDisetujui = $magnetTraps->count() > 0
+            && $jumlahDisetujui === $magnetTraps->count();
+
+        $spv = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $verified = $magnetTraps->first();
+
+            $spv = \App\Models\User::where('uuid', $verified->verified_by_spv_uuid)
+                ->value('name') ?? '';
+
+            $tglSpv = $verified->verified_at_spv
+                ? \Carbon\Carbon::parse($verified->verified_at_spv)->format('d-m-Y')
+                : '';
+        }
+
+        $dateFilter = $date
+            ? \Carbon\Carbon::parse($date)->format('d-m-Y')
+            : 'All Dates';
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // Create new TCPDF object
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
-        // Set document information
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
+        $pdf->SetAuthor('PT Charoen Pokphand Indonesia');
         $pdf->SetTitle('Checklist Cleaning Magnet Trap');
         $pdf->SetSubject('Checklist Cleaning Magnet Trap');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set default monospaced font
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, 10, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->AddPage();
 
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+        $html = view('reports.cleaning-magnet-trap', compact(
+            'magnetTraps',
+            'request',
+            'noDokumen',
+            'kodeBatchMap',
+            'dateFilter',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
 
-        // Set image scale factor
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+        $pdf->writeHTML($html, true, false, true, false, '');
 
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__).'/lang/eng.php')) {
-            require_once(dirname(__FILE__).'/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
+        $filename = 'Checklist_Cleaning_Magnet_Trap_' . date('Ymd_His') . '.pdf';
 
-        // Set font
-        $pdf->SetFont('helvetica', '', 8);
-
-        // Add a page
-        $pdf->AddPage('L', 'F4'); // Landscape A3 for many columns
-
-        // Convert the Blade view to HTML
-        $html = view('reports.cleaning-magnet-trap', compact('magnetTraps', 'request', 'noDokumen'))->render();
-
-        // Print text using writeHTMLCell()
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
-        // Close and output PDF document (Inline/Preview)
-        $pdf->Output('Checklist_Cleaning_Magnet_Trap_' . date('Ymd_His') . '.pdf', 'I');
-
+        $pdf->Output($filename, 'I');
         exit();
     }
 
     public function exportExcel(Request $request)
     {
         try {
-            $search = $request->input('search');
-            $date = $request->input('date');
+            $search    = $request->input('search');
+            $date      = $request->input('date');
             $userPlant = Auth::user()->plant;
 
-            $data = MagnetTrapModel::where('plant_uuid', $userPlant)
+            $data = MagnetTrapModel::with(['creator', 'produksi', 'engineer'])
+                ->where('plant_uuid', $userPlant)
                 ->when($search, function ($query) use ($search) {
                     $query->where(function ($q) use ($search) {
                         $q->where('nama_produk', 'like', "%{$search}%")
@@ -710,9 +751,15 @@ class MagnetTrapController extends Controller
                     });
                 })
                 ->when($date, function ($query) use ($date) {
-                    $query->whereDate('created_at', $date);
+                    $query->where(function ($query) use ($date) {
+                        $query->whereDate('tanggal', $date)
+                            ->orWhere(function ($query) use ($date) {
+                                $query->whereNull('tanggal')
+                                    ->whereDate('created_at', $date);
+                            });
+                    });
                 })
-                ->orderBy('created_at')
+                ->orderBy('created_at', 'asc')
                 ->get();
 
             if ($data->isEmpty()) {
@@ -739,7 +786,7 @@ class MagnetTrapController extends Controller
 
             $sheet->getStyle($sheet->calculateWorksheetDimension())
                 ->getAlignment()
-                ->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                ->setVertical(Alignment::VERTICAL_CENTER);
 
             $noDokumen = List_form::where('plant', $userPlant)
                 ->where('laporan', 'Checklist Cleaning Magnet Trap')
@@ -749,63 +796,78 @@ class MagnetTrapController extends Controller
 
             $sheet->setCellValue('Z2', ': ' . ($noDokumen ?? '-'));
             $sheet->setCellValue('Z3', ': ' . $revisi);
-
-            foreach ($data as $index => $item) {
-                if ($index >= 24) {
-                    break;
-                }
-
-                $row = $index + 10;
-
-                $sheet->setCellValue(
-                "C{$row}",
-                Mincing::where('uuid', $item->kode_batch)->value('kode_produksi') ?? '-'
-            );
-                $sheet->setCellValue(
-                    "F{$row}",
-                    \Carbon\Carbon::parse($item->pukul)->format('H:i')
-                );
-                $sheet->setCellValue("K{$row}", $item->jumlah_temuan);
-                $sheet->getStyle("K{$row}")
-                    ->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setVertical(Alignment::VERTICAL_CENTER);
-                $sheet->setCellValue("N{$row}", $item->keterangan ?: '-');
-                $sheet->getStyle("N{$row}")
-                    ->getAlignment()
-                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                    ->setVertical(Alignment::VERTICAL_CENTER);
-                $sheet->setCellValue(
-                    "S{$row}",
-                    User::where('uuid', $item->created_by)->value('username') ?? '-'
-                );
-                $sheet->setCellValue("W{$row}", optional($item->produksi)->nama_karyawan ?? '-');
-                $sheet->setCellValue(
-                    "Z{$row}",
-                    Operator::find($item->engineer_id)->nama_karyawan ?? '-'
-                );
-            }
-
-            $verifiedBySpv = User::whereIn(
-                'uuid',
-                $data->pluck('verified_by_spv_uuid')->filter()->unique()
-            )->value('username');
-
-            $sheet->setCellValue('X38', '(' . ($verifiedBySpv ?? '-') . ')');
-
-            $sheet->getStyle('X38')
-                ->getAlignment()
-                ->setHorizontal(Alignment::HORIZONTAL_CENTER)
-                ->setVertical(Alignment::VERTICAL_CENTER);
-
-            $sheet->getStyle('X38')
-                ->getFont()
-                ->setUnderline(true);
-
             $sheet->getStyle('Z2:Z3')
                 ->getAlignment()
                 ->setHorizontal(Alignment::HORIZONTAL_LEFT)
                 ->setVertical(Alignment::VERTICAL_CENTER);
+
+            $kodeBatchMap = \App\Models\Mincing::whereIn(
+                'uuid',
+                $data->pluck('kode_batch')->filter()->unique()
+            )->pluck('kode_produksi', 'uuid');
+
+            $userMap = User::whereIn(
+                'uuid',
+                $data->pluck('created_by')->filter()->unique()
+            )->pluck('username', 'uuid');
+
+            foreach ($data->take(24) as $index => $item) {
+                $row = $index + 10;
+
+                $sheet->setCellValue("C{$row}", $kodeBatchMap[$item->kode_batch] ?? '-');
+                $sheet->setCellValue("F{$row}", \Carbon\Carbon::parse($item->pukul)->format('H:i'));
+                $sheet->setCellValue("K{$row}", $item->jumlah_temuan);
+                $sheet->setCellValue("N{$row}", $item->keterangan ?: '-');
+                $sheet->setCellValue("S{$row}", $userMap[$item->created_by] ?? '-');
+                $sheet->setCellValue("W{$row}", optional($item->produksi)->nama_karyawan ?? '-');
+                $sheet->setCellValue("Z{$row}", optional($item->engineer)->nama_karyawan ?? '-');
+
+                $sheet->getStyle("K{$row}")
+                    ->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+
+                $sheet->getStyle("N{$row}")
+                    ->getAlignment()
+                    ->setHorizontal(Alignment::HORIZONTAL_CENTER)
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+            }
+
+            $spvUuid = $data->pluck('verified_by_spv_uuid')->filter()->first();
+
+            $spv = $spvUuid
+                ? (User::where('uuid', $spvUuid)->value('name') ?? '')
+                : '';
+
+            $kolomSpv = 'X';
+
+            foreach ($sheet->getRowIterator(39, 39) as $barisSpv) {
+                $cellIterator = $barisSpv->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(true);
+
+                foreach ($cellIterator as $cell) {
+                    if (stripos(trim((string) $cell->getValue()), 'QC.SPV') !== false) {
+                        $kolomSpv = $cell->getColumn();
+                    }
+                }
+            }
+
+            $cellNamaSpv = $kolomSpv . '38';
+
+            if (!empty($spv) && $spv !== '-') {
+                $sheet->setCellValue($cellNamaSpv, '(' . $spv . ')');
+
+                $sheet->getStyle($cellNamaSpv)
+                    ->getAlignment()
+                    ->setHorizontal(
+                        $sheet->getStyle($kolomSpv . '39')->getAlignment()->getHorizontal()
+                    )
+                    ->setVertical(Alignment::VERTICAL_CENTER);
+
+                $sheet->getStyle($cellNamaSpv)
+                    ->getFont()
+                    ->setUnderline(true);
+            }
 
             $filename = 'Checklist_Cleaning_Magnet_Trap_' .
                 ($date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
@@ -819,10 +881,10 @@ class MagnetTrapController extends Controller
                 $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
                 $writer->save('php://output');
             }, $filename, [
-                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                 'Content-Disposition' => 'attachment; filename="' . $filename . '"',
-                'Cache-Control' => 'max-age=0',
-                'Pragma' => 'public',
+                'Cache-Control'       => 'max-age=0',
+                'Pragma'              => 'public',
             ]);
         } catch (\Throwable $e) {
             \Log::error($e);

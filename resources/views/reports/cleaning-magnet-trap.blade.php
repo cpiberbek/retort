@@ -3,225 +3,216 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-size: 9px; }
-        .title { font-size: 12px; font-weight: bold; text-align: center; }
-        table { border-collapse: collapse; }
-
-        .tbl-header td {
-            font-size: 11px;
-            padding: 2px 0;
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
         }
 
-        .tbl-main, 
-        .tbl-main th, 
+        table {
+            border-collapse: collapse;
+        }
+
+        .title {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .tbl-header td {
+            padding: 2px 0;
+            font-size: 8px;
+            line-height: 1.15;
+        }
+
+        .tbl-main,
+        .tbl-main th,
         .tbl-main td {
-            border: 0.3px solid #000;
+            border: 0.8px solid #000;
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
         }
 
         .tbl-main th {
-            text-align: center;
-            vertical-align: middle;
-            font-size: 8px;
+            background-color: #d9e2f3;
+            font-weight: bold;
+            line-height: 1.15;
         }
 
-        .center { text-align: center; }
-        .sign { text-align: center; }
-        .small { font-size: 8px; }
-
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 9pt;
+        .sign td {
+            text-align: center;
+            vertical-align: top;
         }
     </style>
 </head>
-
 <body>
 
-{{-- HEADER LOGO + TITLE --}}
-<table width="100%" style="border-collapse:collapse;border:1px solid #000;table-layout:fixed;">
-    <tr>
-        <td width="25%" style="border:1px solid #000;text-align:center;padding:5px;">
-            <img src="{{ public_path('assets/img/Logofd.png') }}" width="50">
-        </td>
-
-        <td width="50%" style="border:1px solid #000;text-align:center;font-size:18px;padding:5px;">
-            <b>FORM</b><br>
-            <b>CHECKLIST CLEANING MAGNET TRAP</b>
-        </td>
-
-        <td width="25%" style="border:1px solid #000;font-size:10px;padding:0;vertical-align:top;">
-
-            <table width="100%" style="border-collapse:collapse;height:100%;">
-                <tr>
-                    <td width="45%" style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        No. Dokumen
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ $noDokumen }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Revisi
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : {{ (int) substr(strrchr($noDokumen, '/'), 1) }}
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;border-bottom:1px solid #000;padding:3px;">
-                        Tanggal Efektif
-                    </td>
-                    <td style="border-bottom:1px solid #000;padding:3px;">
-                        : 27/12/2021
-                    </td>
-                </tr>
-
-                <tr>
-                    <td style="border-right:1px solid #000;padding:3px;">
-                        Halaman
-                    </td>
-                    <td style="padding:3px;">
-                        : 1 dari 1
-                    </td>
-                </tr>
-            </table>
-
-        </td>
-    </tr>
-</table>
-
-{{-- <h2 class="title">CHECKLIST CLEANING MAGNET TRAP</h2> --}}
-<br>
-<br>
-
 @php
-    $dateFilter = request('date') ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y') : 'All Dates';
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv = (!empty($spv) && $spv !== '-') ? $spv : '';
+
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+
+        return base64_encode(
+            $barcode->getBarcodePngData(4, 4, [0, 0, 0])
+        );
+    };
+
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv = $makeQr($namaSpv, $tglSpv ?? '');
+
+    $pages = $magnetTraps->chunk(20);
 @endphp
 
+<div style="margin-left:-30px; margin-bottom:0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td width="55" style="padding:0;">
+                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
+            </td>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
+                <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<h2 class="title" style="margin:0; padding:0;">
+    CHECKLIST CLEANING MAGNET TRAP
+</h2>
+
+<br>
+<br>
+
 <table width="100%" class="tbl-header">
+    <tr>
+        <td width="100%">
+            Tanggal: {{ $dateFilter }}
+        </td>
+    </tr>
 </table>
 
-<table width="100%" class="tbl-main small" style="border-collapse:collapse;">
+<br>
 
+@foreach($pages as $pageIndex => $pageItems)
+
+<table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
     <tr>
-        <th class="center" rowspan="3" style="padding:0;">No.</th>
-        <th class="center" rowspan="3" style="padding:0;">Pukul</th>
-
-        <th class="center" colspan="6" style="padding:0;">
-           Tanggal: {{ $dateFilter }}
+        <th rowspan="3" width="5%">No.</th>
+        <th rowspan="3" width="10%">Pukul</th>
+        <th colspan="6" width="85%">
+            Tanggal: {{ $dateFilter }}
         </th>
     </tr>
-
     <tr>
-        <th class="center" rowspan="2" style="padding:0;">Batch Ke-</th>
-        <th class="center" rowspan="2" style="padding:0;">Jumlah Temuan</th>
-        <th class="center" rowspan="2" style="padding:0;">Keterangan</th>
-
-        <th class="center" colspan="3" style="padding:0;">
-            PARAF
-        </th>
+        <th rowspan="2" width="15%">Batch Ke-</th>
+        <th rowspan="2" width="12%">Jumlah Temuan</th>
+        <th rowspan="2" width="28%">Keterangan</th>
+        <th colspan="3" width="30%">PARAF</th>
+    </tr>
+    <tr>
+        <th width="10%">QC</th>
+        <th width="10%">Prod</th>
+        <th width="10%">Eng</th>
     </tr>
 
+    @foreach($pageItems as $index => $item)
     <tr>
-        <th class="center" style="padding:0;">QC</th>
-        <th class="center" style="padding:0;">Prod</th>
-        <th class="center" style="padding:0;">Eng</th>
-    </tr>
-
-    @forelse($magnetTraps as $index => $item)
-
-    @php
-        $kode_batch_text = \App\Models\Mincing::where('uuid', $item->kode_batch)->value('kode_produksi') ?? $item->kode_batch;
-    @endphp
-
-    <tr>
-        <td class="center" style="padding:0;">{{ $index + 1 }}</td>
-
-        <td class="center" style="padding:0;">
+        <td width="5%">
+            {{ ($pageIndex * 20) + $index + 1 }}
+        </td>
+        <td width="10%">
             {{ $item->pukul ? \Carbon\Carbon::parse($item->pukul)->format('H:i') : '-' }}
         </td>
-
-        <td class="center" style="padding:0;">
-            {{ $kode_batch_text }}
+        <td width="15%">
+            {{ $kodeBatchMap[$item->kode_batch] ?? $item->kode_batch }}
         </td>
-
-        <td class="center" style="padding:0;">
+        <td width="12%">
             {{ $item->jumlah_temuan ?? '-' }}
         </td>
-
-        <td class="center" style="padding:0;">
-            {{ Str::limit($item->keterangan ?? '-', 30) }}
+        <td width="28%">
+            {{ \Illuminate\Support\Str::limit($item->keterangan ?? '-', 30) }}
         </td>
-
-        <td class="center" style="padding:0;">
+        <td width="10%">
             {{ optional($item->creator)->name ?? '-' }}
         </td>
-
-        <td class="center" style="padding:0;">
+        <td width="10%">
             {{ optional($item->produksi)->nama_karyawan ?? '-' }}
         </td>
-
-        <td class="center" style="padding:0;">
+        <td width="10%">
             {{ optional($item->engineer)->nama_karyawan ?? '-' }}
         </td>
     </tr>
-
-    @empty
-
-    @for($i = 1; $i <= 6; $i++)
-    <tr>
-        <td>{{ $i }}</td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    @endfor
-
-    @endforelse
-
+    @endforeach
 </table>
+
+<div style="margin-top:5px; text-align:right;">
+    <i>{{ $noDokumen ?? '-' }}</i>
+</div>
+
+@if($loop->last)
+
 <br>
-{{-- <table width="100%">
-    <tr>
-        <td width="75%"></td>
-        <td width="25%" align="right" style="font-style: italic;">
-            {{ $noDokumen }}
-        </td>
-    </tr>
-</table> --}}
 <br>
 
-<table width="100%" class="small">
+<table width="100%" class="sign small" nobr="true">
     <tr>
-        <td align="right">
-            {{-- SIGN --}}
-            <table width="100%">
-                <tr>
-                    <td width="70%"></td>
-                    <td width="30%" class="sign">
-                        Disetujui oleh,<br><br><br><br>
-                       <u>({{ \App\Models\User::where('uuid', $item->verified_by_spv_uuid)->value('name') ?? '___________________' }})</u><br>
-                        QC SPV
-                    </td>
-                </tr>
-            </table>
+        <td width="60%"></td>
+
+        <td width="20%">
+            Dibuat oleh :<br>
+
+            @if($namaPemeriksa)
+                <u>{{ $namaPemeriksa }}</u><br>
+                <br>
+                <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                QC
+            @endif
+        </td>
+
+        <td width="20%">
+            Diverifikasi oleh :<br>
+
+            @if($namaSpv)
+                <u>{{ $namaSpv }}</u><br>
+                <br>
+                <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                SPV QC
+            @elseif(!$semuaDisetujui)
+                <i>Belum semua entry disetujui</i>
+            @endif
         </td>
     </tr>
 </table>
 
+@else
+<br pagebreak="true" />
+@endif
 
+@endforeach
 
 </body>
 </html>

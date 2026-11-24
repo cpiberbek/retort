@@ -570,11 +570,50 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
 
+        $first = $magnetTraps->first();
+
+        $pemeriksa = '';
+        $tglPemeriksa = '';
+
+        if ($first && $first->created_by) {
+            $pemeriksa = \App\Models\User::where('uuid', $first->created_by)
+                ->value('name') ?? '';
+        }
+
+        if ($first && $first->created_at) {
+            $tglPemeriksa = \Carbon\Carbon::parse($first->created_at)
+                ->format('d-m-Y');
+        }
+
+        $semuaDisetujui = $magnetTraps->count() > 0
+            && $magnetTraps->filter(fn($item) => $item->status_spv == 1)->count() === $magnetTraps->count();
+
+        $spv = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $verified = $magnetTraps->first();
+
+            if ($verified->verified_by) {
+                $spv = \App\Models\User::where('uuid', $verified->verified_by)
+                    ->value('name') ?? '';
+            }
+
+            if ($verified->verified_at) {
+                $tglSpv = \Carbon\Carbon::parse($verified->verified_at)
+                    ->format('d-m-Y');
+            }
+        }
+
+        $periode = $month
+            ? \Carbon\Carbon::parse($month)->locale('id')->translatedFormat('F Y')
+            : '-';
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetAuthor('CPI');
@@ -584,30 +623,23 @@ class PemeriksaanKekuatanMagnetTrapController extends Controller
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        $pdf->SetMargins(PDF_MARGIN_LEFT, 10, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
-        $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
-
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
-            require_once(dirname(__FILE__) . '/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-
-        $pdf->SetFont('helvetica', '', 8);
-
-        $pdf->AddPage('L', 'F4');
+        $pdf->SetFont('helvetica', '', 7);
+        $pdf->AddPage();
 
         $html = view('reports.checkingpowermagnettrap', compact(
             'magnetTraps',
             'request',
             'month',
-            'noDokumen'
+            'noDokumen',
+            'periode',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
         ))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');

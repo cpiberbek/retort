@@ -436,7 +436,15 @@ MODAL VERIFIKASI (LOOPING)
                     return;
                 }
 
-                window.location.href = "{{ route('checkingpowermagnettrap.exportPdf') }}?month=" + month.value;
+                const url = "{{ route('checkingpowermagnettrap.exportPdf') }}?month=" + encodeURIComponent(month.value);
+
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
             });
         });
     </script>
