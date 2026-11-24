@@ -588,84 +588,123 @@ class PrepackingController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $date = $request->input('date');
-        $userPlant = Auth::user()->plant;
-        $search = $request->input('search');
+{
+    $date      = $request->input('date');
+    $search    = $request->input('search');
+    $userPlant = Auth::user()->plant;
 
-        $prepackings = Prepacking::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($search, function ($query) use ($search) {
-                $uuidMincing = Mincing::where('kode_produksi', 'like', "%{$search}%")
-                    ->pluck('uuid')
-                    ->toArray();
+    $prepackings = Prepacking::query()
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($search, function ($query) use ($search) {
+            $uuidMincing = Mincing::where('kode_produksi', 'like', "%{$search}%")
+                ->pluck('uuid')
+                ->toArray();
 
-                $query->where(function ($q) use ($search, $uuidMincing) {
-                    $q->where('username', 'like', "%{$search}%")
-                        ->orWhere('nama_produk', 'like', "%{$search}%");
+            $query->where(function ($q) use ($search, $uuidMincing) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('nama_produk', 'like', "%{$search}%");
 
-                    if (!empty($uuidMincing)) {
-                        $q->orWhereIn('kode_produksi', $uuidMincing);
-                    } else {
-                        $q->orWhere('kode_produksi', 'like', "%{$search}%");
-                    }
-                });
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('created_at', 'asc')
-            ->get();
+                if (!empty($uuidMincing)) {
+                    $q->orWhereIn('kode_produksi', $uuidMincing);
+                } else {
+                    $q->orWhere('kode_produksi', 'like', "%{$search}%");
+                }
+            });
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('created_at', 'asc')
+        ->get();
 
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pemeriksaan Pre Packing')
-            ->value('no_dokumen');
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pemeriksaan Pre Packing')
+        ->value('no_dokumen');
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
+    $kodeMap = \App\Models\Mincing::whereIn(
+        'uuid',
+        $prepackings->pluck('kode_produksi')->filter()->unique()
+    )->pluck('kode_produksi', 'uuid');
 
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+    $usernames = $prepackings->pluck('username')
+        ->merge($prepackings->pluck('nama_spv'))
+        ->filter()
+        ->unique()
+        ->values();
 
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
-        $pdf->SetTitle('Pemeriksaan Pre Packing');
-        $pdf->SetSubject('Pemeriksaan Pre Packing');
+    $userMap = \App\Models\User::whereIn('username', $usernames)
+        ->pluck('name', 'username');
 
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
+    $catatan = $prepackings
+        ->filter(fn ($p) => !empty(trim((string) $p->catatan)))
+        ->map(fn ($p) => ($kodeMap[$p->kode_produksi] ?? '-') . ': ' . trim($p->catatan))
+        ->implode(', ');
 
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+    $first = $prepackings->first();
 
-        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+    $pemeriksa    = '';
+    $tglPemeriksa = '';
+    $spv          = '';
+    $tglSpv       = '';
 
-        $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
-            require_once(dirname(__FILE__) . '/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-
-        $pdf->SetFont('helvetica', '', 6);
-
-        $pdf->AddPage('L', 'F4');
-
-        $html = view('reports.pengecekan-pre-packing', [
-            'prepackings' => $prepackings,
-            'request' => $request,
-            'noDokumen' => $noDokumen,
-        ])->render();
-
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
-        $pdf->Output('Pemeriksaan_Pre_Packing_' . date('Ymd_His') . '.pdf', 'I');
-
-        exit();
+    if ($first) {
+        $pemeriksa = $userMap[$first->username] ?? $first->username ?? '';
+        $tglPemeriksa = $first->created_at
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
     }
+
+    $semuaDisetujui = $prepackings->isNotEmpty()
+        && $prepackings->every(fn ($p) => !empty($p->nama_spv));
+
+    if ($semuaDisetujui) {
+        $spvRaw = trim((string) $first->nama_spv);
+        $spv = $userMap[$spvRaw] ?? $spvRaw;
+        $tglSpv = $first->tgl_update_spv
+            ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
+            : '';
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Pemeriksaan Pre Packing');
+    $pdf->SetSubject('Pemeriksaan Pre Packing');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->AddPage();
+
+    $html = view('reports.pengecekan-pre-packing', compact(
+        'prepackings',
+        'request',
+        'noDokumen',
+        'kodeMap',
+        'userMap',
+        'catatan',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Pemeriksaan_Pre_Packing_' . date('Ymd_His') . '.pdf', 'I');
+
+    exit();
+}
 
     public function exportExcel(Request $request)
     {
