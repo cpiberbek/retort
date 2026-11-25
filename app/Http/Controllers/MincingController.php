@@ -344,67 +344,121 @@ class MincingController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $search = $request->input('search');
-        $date = $request->input('date');
-        $shift = $request->input('shift');
-        $kode_batch = $request->input('kode_batch');
-        $userPlant = Auth::user()->plant;
+{
+    $search     = $request->input('search');
+    $date       = $request->input('date');
+    $shift      = $request->input('shift');
+    $kode_batch = $request->input('kode_batch');
+    $userPlant  = Auth::user()->plant;
 
-        $produks = Mincing::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('username', 'like', "%{$search}%")
-                        ->orWhere('nama_produk', 'like', "%{$search}%")
-                        ->orWhere('kode_produksi', 'like', "%{$search}%");
-                });
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->when($kode_batch, function ($query) use ($kode_batch) {
-                $query->where('kode_produksi', 'like', "%{$kode_batch}%");
-            })
-            ->orderBy('date', 'desc')
-            ->get();
+    $produks = Mincing::query()
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('nama_produk', 'like', "%{$search}%")
+                    ->orWhere('kode_produksi', 'like', "%{$search}%");
+            });
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->when($kode_batch, function ($query) use ($kode_batch) {
+            $query->where('kode_produksi', 'like', "%{$kode_batch}%");
+        })
+        ->orderBy('date', 'desc')
+        ->get();
 
-        if ($produks->isEmpty()) {
-            abort(404, 'Data tidak ditemukan.');
-        }
-
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pemeriksaan Mincing - Emulsifying - Aging')
-            ->value('no_dokumen');
-
-        $html = view('reports.mincing-emulsifying-aging', compact('produks', 'request', 'noDokumen'))->render();
-
-        $pdf = new \TCPDF('P', 'mm', [210, 330], true, 'UTF-8', false);
-
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-
-        $pdf->SetCreator('CPI');
-        $pdf->SetAuthor('CPI');
-        $pdf->SetTitle('Pemeriksaan Mincing - Emulsifying - Aging');
-
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->AddPage();
-
-        $pdf->SetFont('times', '', 10);
-
-        $pdf->writeHTML($html, true, false, true, false, '');
-
-        $filename = 'Pemeriksaan_Mincing_' . $kode_batch . '_' . date('d-m-Y') . '.pdf';
-
-        return response()->streamDownload(function () use ($pdf) {
-            ob_clean();
-            $pdf->Output('php://output', 'I');
-        }, $filename);
+    if ($produks->isEmpty()) {
+        abort(404, 'Data tidak ditemukan.');
     }
+
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pemeriksaan Mincing - Emulsifying - Aging')
+        ->value('no_dokumen');
+
+    $inspectionUuids = $produks
+        ->flatMap(fn ($r) => collect(json_decode($r->non_premix, true) ?? [])->pluck('inspection_uuid'))
+        ->filter()
+        ->unique();
+
+    $kodeBatchMap = \App\Models\InspectionProductDetail::whereIn('uuid', $inspectionUuids)
+        ->pluck('kode_batch', 'uuid');
+
+    $usernames = $produks->pluck('username')
+        ->merge($produks->pluck('username_updated'))
+        ->merge($produks->pluck('nama_spv'))
+        ->filter()
+        ->unique()
+        ->values();
+
+    $userMap = \App\Models\User::whereIn('username', $usernames)
+        ->pluck('name', 'username');
+
+    $first = $produks->first();
+
+    $qcRaw     = $first->username_updated ?: $first->username;
+    $pemeriksa = $userMap[$qcRaw] ?? $qcRaw ?? '';
+
+    $tglPemeriksa = $first->created_at
+        ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+        : '';
+
+    $semuaDisetujui = $produks->every(fn ($p) => !empty($p->nama_spv));
+
+    $spv    = '';
+    $tglSpv = '';
+
+    if ($semuaDisetujui) {
+        $spvRaw = trim((string) $first->nama_spv);
+        $spv    = $userMap[$spvRaw] ?? $spvRaw;
+        $tglSpv = $first->tgl_update_spv
+            ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
+            : '';
+    }
+
+    $html = view('reports.mincing-emulsifying-aging', compact(
+        'produks',
+        'request',
+        'noDokumen',
+        'kodeBatchMap',
+        'userMap',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf = new \TCPDF('P', 'mm', [210, 330], true, 'UTF-8', false);
+
+    $pdf->setPrintHeader(false);
+    $pdf->setPrintFooter(false);
+
+    $pdf->SetCreator('CPI');
+    $pdf->SetAuthor('CPI');
+    $pdf->SetTitle('Pemeriksaan Mincing - Emulsifying - Aging');
+
+    $pdf->SetMargins(10, 10, 10);
+    $pdf->SetAutoPageBreak(true, 10);
+
+    $pdf->SetFont('times', '', 8);
+    $pdf->AddPage();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $filename = 'Pemeriksaan_Mincing_' . ($kode_batch ?: 'Semua') . '_' . date('d-m-Y') . '.pdf';
+
+    return response()->streamDownload(function () use ($pdf, $filename) {
+        if (ob_get_length()) {
+            ob_clean();
+        }
+        $pdf->Output($filename, 'I');
+    }, $filename);
+}
 
     public function create()
     {

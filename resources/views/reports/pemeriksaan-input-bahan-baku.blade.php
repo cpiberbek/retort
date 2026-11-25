@@ -116,12 +116,11 @@
 <div style="margin-left:-30px; margin-bottom:0;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
         <tr>
-            <td width="55" style="padding:0;">
+            {{-- <td width="55" style="padding:0;">
                 <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-            </td>
+            </td> --}}
             <td style="padding:0; line-height:1;">
-                <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
-                <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
                 <span style="font-size:14pt;"><b>Food Division</b></span>
             </td>
         </tr>
@@ -150,7 +149,7 @@
     <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
         <tr>
             <th rowspan="3" width="2.5%"><b>No.</b></th>
-            <th rowspan="3" width="7%"><b>Nama Varian</b></th>
+            <th rowspan="3" width="7%"><b>Nama Produk</b></th>
             <th rowspan="3" width="5.5%"><b>Supplier</b></th>
             <th colspan="2" width="10%"><b>Tanggal</b></th>
             <th rowspan="3" width="4%"><b>Jumlah<br>Barang</b></th>
@@ -242,9 +241,9 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     Diperiksa oleh :<br>
                     @if($namaPemeriksa)
-                        <u>{{ $namaPemeriksa }}</u><br>
                         <br>
                         <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
                         QC
                     @endif
                 </td>
@@ -252,9 +251,9 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     Disetujui oleh :<br>
                     @if($namaSpv)
-                        <u>{{ $namaSpv }}</u><br>
                         <br>
                         <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
                         SPV QC
                     @endif
                 </td>

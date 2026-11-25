@@ -435,55 +435,98 @@ class SampelController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        // 1. Ambil Data
-        $date      = $request->input('date');
-        $userPlant = Auth::user()->plant;
+{
+    $date      = $request->input('date');
+    $userPlant = Auth::user()->plant;
 
-        $items = Sampel::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->orderBy('date', 'asc')
-            ->get();
+    $items = Sampel::query()
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->orderBy('date', 'asc')
+        ->get();
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pengambilan Sampel')
+        ->value('no_dokumen');
 
-        // 2. Setup PDF (Portrait, A4)
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+    $kodeMap = \App\Models\Mincing::whereIn(
+        'uuid',
+        $items->pluck('kode_produksi')->filter()->unique()
+    )->pluck('kode_produksi', 'uuid');
 
-        // Metadata
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Pengambilan Sampel');
+    $usernames = $items->pluck('username')
+        ->merge($items->pluck('nama_spv'))
+        ->filter()
+        ->unique()
+        ->values();
 
-        // Hilangkan Header/Footer Bawaan
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
+    $userMap = \App\Models\User::whereIn('username', $usernames)
+        ->pluck('name', 'username');
 
-        // Set Margin
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(TRUE, 10);
+    $first = $items->first();
 
-        // Set Font Default
-        $pdf->SetFont('helvetica', '', 9);
+    $pemeriksa    = '';
+    $tglPemeriksa = '';
+    $spv          = '';
+    $tglSpv       = '';
 
-        $pdf->AddPage();
-
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pengambilan Sampel')
-            ->value('no_dokumen');
-
-        // 3. Render
-        $html = view('reports.pengambilan-sampel', compact('items', 'request', 'noDokumen'))->render();
-        $pdf->writeHTML($html, true, false, true, false, '');
-
-        $filename = 'Pengambilan_Sampel_' . date('d-m-Y_His') . '.pdf';
-        $pdf->Output($filename, 'I');
-        exit();
+    if ($first) {
+        $pemeriksa = $userMap[$first->username] ?? $first->username ?? '';
+        $tglPemeriksa = $first->created_at
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
     }
+
+    $semuaDisetujui = $items->isNotEmpty()
+        && $items->every(fn ($i) => !empty($i->nama_spv));
+
+    if ($semuaDisetujui) {
+        $spvRaw = trim((string) $first->nama_spv);
+        $spv = $userMap[$spvRaw] ?? $spvRaw;
+        $tglSpv = $first->tgl_update_spv
+            ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
+            : '';
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Pengambilan Sampel');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 7);
+    $pdf->AddPage();
+
+    $html = view('reports.pengambilan-sampel', compact(
+        'items',
+        'request',
+        'noDokumen',
+        'kodeMap',
+        'userMap',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Pengambilan_Sampel_' . date('d-m-Y_His') . '.pdf', 'I');
+
+    exit();
+}
     public function getBatch($nama_produk)
     {
         $data = DB::table('mincings')

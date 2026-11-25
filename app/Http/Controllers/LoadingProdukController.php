@@ -609,21 +609,20 @@ class LoadingProdukController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
-        $date = $request->input('date');
-        $shift = $request->input('shift');
+        $date      = $request->input('date');
+        $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
+
         $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Pemeriksaan Loading-Unloading Produk')
             ->value('no_dokumen');
 
-
         $query = LoadingProduk::with(['details', 'creator']);
-        if (Auth::check() && !empty($userPlant)) {
+
+        if (!empty($userPlant)) {
             $query->where('plant_uuid', $userPlant);
         }
 
-        // Filter tanggal dan shift
         $query->when($date, function ($q) use ($date) {
             $q->whereDate('tanggal', $date);
         });
@@ -634,40 +633,93 @@ class LoadingProdukController extends Controller
 
         $loadings = $query->orderBy('tanggal', 'asc')->get();
 
+        $header = $loadings->first();
+
+        $allDetails = $loadings->flatMap(fn ($l) => $l->details ?? collect());
+
+        $kodeMap = \App\Models\Mincing::whereIn(
+            'uuid',
+            $allDetails->pluck('kode_produksi')->filter()->unique()
+        )->pluck('kode_produksi', 'uuid');
+
+        $userMap = \App\Models\User::whereIn('username', collect([
+            $header?->pic_qc,
+            $header?->pic_warehouse,
+            $header?->pic_qc_spv,
+        ])->filter()->unique())->pluck('name', 'username');
+
+        $pemeriksa    = '';
+        $tglPemeriksa = '';
+        $warehouse    = '';
+        $spv          = '';
+        $tglSpv       = '';
+
+        if ($header) {
+            $qcRaw = trim((string) $header->pic_qc);
+
+            $pemeriksa = $qcRaw !== ''
+                ? ($userMap[$qcRaw] ?? $qcRaw)
+                : (\App\Models\User::where('uuid', $header->created_by)->value('name') ?? '');
+
+            $tglPemeriksa = $header->created_at
+                ? \Carbon\Carbon::parse($header->created_at)->format('d-m-Y')
+                : '';
+
+            $whRaw     = trim((string) $header->pic_warehouse);
+            $warehouse = $userMap[$whRaw] ?? $whRaw;
+        }
+
+        $semuaDisetujui = $loadings->isNotEmpty()
+            && $loadings->every(fn ($l) => (int) $l->status_spv === 1);
+
+        if ($semuaDisetujui) {
+            $spvRaw = trim((string) $header->pic_qc_spv);
+            $spv    = $userMap[$spvRaw] ?? $spvRaw;
+            $tglSpv = $header->verified_at
+                ? \Carbon\Carbon::parse($header->verified_at)->format('d-m-Y')
+                : '';
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Landscape, A4)
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
-        // Metadata
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Pemeriksaan Loading Unloading Produk');
 
-        // Hilangkan Header/Footer Bawaan
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margin
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set Font Default
         $pdf->SetFont('helvetica', '', 6);
-
         $pdf->AddPage();
 
-        $header = $loadings->first();
+        $html = view('reports.pemeriksaan-loading-unloading', compact(
+            'loadings',
+            'header',
+            'request',
+            'noDokumen',
+            'allDetails',
+            'kodeMap',
+            'pemeriksa',
+            'tglPemeriksa',
+            'warehouse',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
 
-        // 3. Render
-        $html = view('reports.pemeriksaan-loading-unloading', compact('loadings', 'header', 'request', 'noDokumen'))->render();
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = 'Laporan_Stuffing_' .
-            \Carbon\Carbon::parse($date)->format('d-m-Y') .
-            '_Shift' . $shift .
-            '.pdf';
+        $filename = 'Pemeriksaan_Loading_Unloading_'
+            . ($date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : date('d-m-Y'))
+            . ($shift ? '_Shift' . $shift : '')
+            . '.pdf';
+
         $pdf->Output($filename, 'I');
         exit();
     }

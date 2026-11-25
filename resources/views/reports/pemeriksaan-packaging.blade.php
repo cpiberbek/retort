@@ -98,12 +98,8 @@
 <div style="margin-left:-30px; margin-bottom:0;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
         <tr>
-            <td width="55" style="padding:0;">
-                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-            </td>
             <td style="padding:0; line-height:1;">
-                <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
-                <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
                 <span style="font-size:14pt;"><b>Food Division</b></span>
             </td>
         </tr>
@@ -208,9 +204,9 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     Dibuat oleh :<br>
                     @if($namaPemeriksa)
-                        <u>{{ $namaPemeriksa }}</u><br>
                         <br>
                         <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
                         QC
                     @endif
                 </td>
@@ -219,9 +215,9 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     Diverifikasi oleh :<br>
                     @if($namaSpv)
-                        <u>{{ $namaSpv }}</u>
-                        <br><br>
+                        <br>
                         <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
                         SPV QC
                     @elseif(!$semuaDisetujui && $inspections->count() > 0)
                         <i>Belum semua entry disetujui</i>
