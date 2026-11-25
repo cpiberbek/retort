@@ -528,81 +528,96 @@ class MetalController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $date = $request->input('date');
-        $search = $request->input('search');
-        $userPlant = Auth::user()->plant;
+{
+    $date      = $request->input('date');
+    $search    = $request->input('search');
+    $userPlant = Auth::user()->plant;
 
-        $metals = Metal::where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where('username', 'like', "%{$search}%");
-            })
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->orderBy('pukul')
-            ->get();
+    $metals = Metal::where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where('username', 'like', "%{$search}%");
+        })
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->orderBy('pukul')
+        ->get();
 
-        if ($metals->isEmpty()) {
-            return back()->with('error', 'Data tidak ditemukan');
-        }
-
-        $plantName = Plant::where('uuid', $userPlant)
-            ->value('plant');
-
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pemeriksaan Metal Detector')
-            ->value('no_dokumen');
-
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
-        $pdf->SetTitle('Pengecekan Metal Detector');
-        $pdf->SetSubject('Pengecekan Metal Detector');
-
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-
-        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
-        $pdf->SetAutoPageBreak(true, PDF_MARGIN_BOTTOM);
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
-            require_once(dirname(__FILE__) . '/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-
-        $pdf->SetFont('times', '', 10);
-        $pdf->AddPage('L', 'A4');
-
-        $html = view('reports.metal-detector', compact(
-            'metals',
-            'date',
-            'search',
-            'plantName',
-            'noDokumen'
-        ))->render();
-
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
-        $filename = 'Pengecekan_Metal_Detector_' .
-            ($date ? Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
-            '.pdf';
-
-        $pdf->Output($filename, 'I');
-
-        exit();
+    if ($metals->isEmpty()) {
+        return back()->with('error', 'Data tidak ditemukan');
     }
+
+    $plantName = Plant::where('uuid', $userPlant)->value('plant');
+
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pemeriksaan Metal Detector')
+        ->value('no_dokumen');
+
+    $dateFilter = $date
+        ? \Carbon\Carbon::parse($date)->format('d-m-Y')
+        : 'All Dates';
+
+    $susText = $plantName == 'Berbek' ? '2.5' : '2.0';
+
+    $rows = [];
+    foreach ($metals as $item) {
+        $rows[(int) \Carbon\Carbon::parse($item->pukul)->format('H')] = $item;
+    }
+
+    $catatan = $metals->pluck('catatan')->filter()->unique()->implode(', ');
+
+    $first        = $metals->first();
+    $pemeriksa    = trim((string) ($first->username ?? ''));
+    $tglPemeriksa = $first->created_at
+        ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+        : '';
+
+    $spvRow = $metals->first(fn($m) => !empty($m->nama_spv));
+    $spv    = $spvRow ? trim((string) $spvRow->nama_spv) : '';
+    $tglSpv = ($spvRow && $spvRow->tgl_update_spv)
+        ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+        : '';
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Pengecekan Metal Detector');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->AddPage();
+
+    $html = view('reports.metal-detector', compact(
+        'rows',
+        'dateFilter',
+        'susText',
+        'catatan',
+        'noDokumen',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $filename = 'Pengecekan_Metal_Detector_' .
+        ($date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
+        '.pdf';
+
+    $pdf->Output($filename, 'I');
+
+    exit();
+}
 
     public function exportExcel(Request $request)
     {

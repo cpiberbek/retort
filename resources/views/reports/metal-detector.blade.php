@@ -4,53 +4,56 @@
     <meta charset="utf-8">
     <style>
         body {
-            font-family: times;
-            font-size: 9pt;
-            margin: 0;
-            padding: 0;
-        }
-
-
-        .title {
-            font-size: 12pt;
-            font-weight: bold;
-            text-align: center;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
         }
 
         table {
             border-collapse: collapse;
-            margin: 0;
-            padding: 0;
         }
 
+        .title {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
 
-        .tbl-header td {
-            padding: 2px;
-            font-size: 9pt;
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
+            text-align: center;
+            vertical-align: middle;
         }
 
         .tbl-main,
         .tbl-main th,
         .tbl-main td {
-            border: 0.3px solid #000;
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
         }
 
         .tbl-main th {
-            font-size: 10pt;
+            background: #d9e2f3;
+            font-weight: bold;
             text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
+            line-height: 1.15;
+        }
+
+        .tbl-main td {
+            padding: 3px 2px;
             vertical-align: middle;
         }
 
-        .center {
-            text-align: center;
-        }
-
-        .small {
-            font-size: 8pt;
-        }
-
-        .sign {
-            text-align: center;
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -58,132 +61,128 @@
 <body>
 
 @php
-    use Carbon\Carbon;
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
 
-    $dateFilter = $date
-        ? Carbon::parse($date)->format('d-m-Y')
-        : 'All Dates';
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
 
-    $susText = $plantName == 'Berbek' ? '2.5' : '2.0';
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
 
-    $rows = [];
-
-    foreach ($metals as $item) {
-        $rows[(int) Carbon::parse($item->pukul)->format('H')] = $item;
-    }
-
-    $namaSpv = $metals->pluck('nama_spv')->filter()->unique()->first();
-    $catatan = $metals->pluck('catatan')->filter()->unique()->implode(', ');
+    $pages = collect(range(0, 23))->chunk(24);
 @endphp
 
-<div style="margin:0;padding:0;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+<div style="margin-left:-30px; margin-bottom:0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
         <tr>
-            <td width="55">
+            {{-- <td width="55" style="padding:0;">
                 <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-            </td>
-            <td>
-                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
-                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
-                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td> --}}
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:14pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
+                <span style="font-size:14pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
 </div>
 
-<h2 class="title">PENGECEKAN METAL DETECTOR</h2>
-
-<br><br>
-
-
-
+<h2 class="title" style="margin:0; padding:0;">
+    PENGECEKAN METAL DETECTOR
+</h2>
+<br>
 <br>
 
-<table width="100%" class="tbl-main small">
+@foreach($pages as $pageIndex => $hours)
 
-    <tr>
-        <th rowspan="3" class="center" valign="middle" style="vertical-align: middle;">
-            <b>Pukul</b>
-        </th>
-        <th colspan="5" style="text-align: center; vertical-align: middle;">
-            <b>Hari / Tanggal : {{ $dateFilter }}</b>
-        </th>
-    </tr>
-
-    <tr>
-        <th rowspan="2" class="center"><b>FE 1.0 mm</b></th>
-        <th rowspan="2" class="center"><b>NFE 1.5 mm</b></th>
-        <th rowspan="2" class="center"><b>SUS {{ $susText }} mm</b></th>
-        <th colspan="2" class="center"><b>Paraf</b></th>
-    </tr>
-
-    <tr>
-        <th class="center"><b>QC</b></th>
-        <th class="center"><b>Produksi</b></th>
-    </tr>
-
-    @for($i = 0; $i < 24; $i++)
-        @php
-            $record = $rows[$i] ?? null;
-        @endphp
-
+    <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
         <tr>
-            <td class="center">{{ sprintf('%02d:00', $i) }}</td>
-            <td class="center">{{ $record && $record->fe == 'Terdeteksi' ? 'V' : '' }}</td>
-            <td class="center">{{ $record && $record->nfe == 'Terdeteksi' ? 'V' : '' }}</td>
-            <td class="center">{{ $record && $record->sus == 'Terdeteksi' ? 'V' : '' }}</td>
-            <td class="center">{{ $record->username ?? '' }}</td>
-            <td class="center">{{ $record->nama_produksi ?? '' }}</td>
+            <th rowspan="3" width="12%"><b>Pukul</b></th>
+            <th colspan="5" width="88%"><b>Hari / Tanggal : {{ $dateFilter }}</b></th>
         </tr>
-    @endfor
+        <tr>
+            <th rowspan="2" width="16%"><b>FE 1.0 mm</b></th>
+            <th rowspan="2" width="16%"><b>NFE 1.5 mm</b></th>
+            <th rowspan="2" width="16%"><b>SUS {{ $susText }} mm</b></th>
+            <th colspan="2" width="40%"><b>Paraf</b></th>
+        </tr>
+        <tr>
+            <th width="20%"><b>QC</b></th>
+            <th width="20%"><b>Produksi</b></th>
+        </tr>
 
-</table>
+        @foreach($hours as $i)
+            @php
+                $record = $rows[$i] ?? null;
+            @endphp
+            <tr>
+                <td width="12%" class="center">{{ sprintf('%02d:00', $i) }}</td>
+                <td width="16%" class="center">{{ $record && $record->fe == 'Terdeteksi' ? 'V' : '' }}</td>
+                <td width="16%" class="center">{{ $record && $record->nfe == 'Terdeteksi' ? 'V' : '' }}</td>
+                <td width="16%" class="center">{{ $record && $record->sus == 'Terdeteksi' ? 'V' : '' }}</td>
+                <td width="20%" class="center">{{ $record ? (\App\Models\User::where('username', $record->username)->value('name') ?? $record->username) : '' }}</td>
+                <td width="20%" class="center">{{ $record->nama_produksi ?? '' }}</td>
+            </tr>
+        @endforeach
+    </table>
 
-<div style="text-align:right;font-size:8px;font-style:italic">
-    {{ $noDokumen }}
-</div>
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
 
-<br>
+    @if($loop->last)
 
-<table width="100%">
-    <tr>
-        <td width="55%" valign="top">
-            <table width="100%" class="small">
-                <tr>
-                    <td>Keterangan : V terdeteksi</td>
-                </tr>
-                <tr>
-                    <td>Catatan :
-                        @if($catatan)
-                            <u>{{ $catatan }}</u>
-                        @else
-                            -
-                        @endif
-                    </td>
-                </tr>
-            </table>
-        </td>
+        <br>
+        <br>
 
-        <td width="45%">
-            <table width="100%" class="sign small">
-                <tr>
-                    <td>Disetujui Oleh,</td>
-                </tr>
-                <tr>
-                    <td><br><br><br></td>
-                </tr>
-                <tr>
-                    <td>
-                        (<u>{{ $namaSpv ?? '-' }}</u>)
-                    </td>
-                </tr>
-                <tr>
-                    <td>QC SPV</td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
+        <table width="100%" class="note small" nobr="true">
+            <tr>
+                <td width="60%">
+                    Keterangan : V terdeteksi<br>
+                    Catatan :
+                    @if(!empty($catatan))
+                        <u>{{ $catatan }}</u>
+                    @else
+                        -
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        QC
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <u>{{ $namaSpv }}</u><br>
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        SPV QC
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+    @else
+        <br pagebreak="true" />
+    @endif
+
+@endforeach
 
 </body>
 </html>
