@@ -210,7 +210,7 @@
             <td width="3.5%" align="center">{{ $item->suhu_mobil }}</td>
             <td width="7%"   align="center">{{ $row['kondisi'] }}</td>
             <td width="4%"   align="center">{{ $item->do_po }}</td>
-            <td width="4.5%" align="center">{{ $item->keterangan }}</td>
+            <td width="4.5%" align="center">{{ $item->keterangan }}<br>Suhu Mobil:<br>{{ $item->suhu_daging }}°C</td>
         </tr>
         @endforeach
     </table>
