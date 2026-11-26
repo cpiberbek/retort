@@ -1,231 +1,222 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="utf-8">
     <title>Verifikasi Timer Chamber</title>
     <style>
-        /* CSS Dasar untuk TCPDF */
         body {
-            font-family: helvetica;
-            font-size: 8pt; /* Ukuran font standar */
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
         }
 
-        /* Reset Table */
         table {
             border-collapse: collapse;
-            width: 100%;
-            border-spacing: 0;
         }
 
-        /* Style Border */
-        th, td {
-            border: 1px solid #000000;
+        .title {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
         }
 
-        /* Utility Classes */
-        .text-center { text-align: center; }
-        .text-bold { font-weight: bold; }
-        
-        /* Header Style (Tanpa Border) */
-        .header-table td { border: none; }
-        .title { font-size: 14pt; font-weight: bold; text-align: center; }
-        .sub-title { font-size: 9pt; }
-        
-        /* Background Colors */
-        .bg-header { background-color: #E0E0E0; font-weight: bold; }
-        .bg-sub-header { background-color: #F0F0F0; font-weight: bold; }
+        .small {
+            font-size: 7px;
+        }
 
-        /* Font Sizes Specific */
-        .f-small { font-size: 7pt; } /* Untuk data tabel yang padat */
-        .f-norm { font-size: 7pt; }
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
 
-        /* Status Colors */
-        .status-ok { color: #006400; font-weight: bold; }
-        .status-rev { color: #8B0000; font-weight: bold; }
+        .tbl-main,
+        .tbl-main th,
+        .tbl-main td {
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
+        }
 
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 8pt;
+        .tbl-main th {
+            background: #d9e2f3;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
+            line-height: 1.15;
+        }
+
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
+        }
+
+        .tbl-main td.sec {
+            background: #d9d9d9;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
+
 <body>
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="border:none;margin:0;padding:0;">
-    <tr>
-        <td width="55" style="border:none;padding:0;">
-            <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-        </td>
-        <td style="border:none;padding:0;line-height:1.1;">
-            <span style="font-size:12pt;"><b>PT Charoen</b></span><br>
-            <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
-            <span style="font-size:12pt;"><b>Food Division</b></span>
-        </td>
-    </tr>
-</table>
-
-<h2 class="title" style="margin:5px 0 0 0;">VERIFIKASI TIMER CHAMBER</h2>
-
 @php
-    $groups = $items->groupBy(fn($item) => $item->date . '_' . $item->shift);
-    $rentang = [5, 10, 20, 30, 60];
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
+
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
+
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
 @endphp
 
-@foreach($groups as $group)
+@foreach($pages as $page)
 
-    @foreach($group as $item)
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
+        <tr>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+
+    <h2 class="title" style="margin:0; padding:0;">
+        VERIFIKASI TIMER CHAMBER
+    </h2>
+    <br>
+    <br>
+
+    @foreach($page as $form)
 
         @php
-            $verifikasi = json_decode($item->verifikasi, true) ?? [];
+            $n      = $form['n'];
+            $w      = $form['w'];
+            $lead   = $form['lead'];
+            $lead2  = round($lead * 2, 2);
+            $group  = round($w * 5, 2);
+            $pair   = round($w * 2, 2);
+            $valW   = round(100 - $lead2, 2);
+            $span   = $n * 5;
         @endphp
 
-        <table cellpadding="3" cellspacing="0" border="1" width="100%">
+        <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
             <tr>
-                <td width="50%" style="font-weight:bold;">
-                    Hari/Tanggal :
-                    {{ \Carbon\Carbon::parse($item->date)->format('d-m-Y') }}
-                </td>
-                <td width="50%" style="font-weight:bold;">
-                    Shift : {{ $item->shift }}
-                </td>
+                <td width="50%" class="sec">Hari / Tanggal : {{ $form['tanggal'] }}</td>
+                <td width="50%" class="sec">Shift : {{ $form['shift'] }}</td>
             </tr>
         </table>
 
-        <table cellpadding="2" cellspacing="0" border="1" width="100%">
-
+        <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
             <tr>
-                <th colspan="2" align="center" style="font-weight:bold;">Nomer Chamber</th>
-
-                @foreach($verifikasi as $i => $chamber)
-                    <th colspan="5" align="center" style="font-weight:bold;">Chamber {{ $i + 1 }}</th>
-                @endforeach
+                <th colspan="2" width="{{ $lead2 }}%"><b>Nomer Chamber</b></th>
+                @for($i = 1; $i <= $n; $i++)
+                    <th colspan="5" width="{{ $group }}%"><b>Chamber {{ $i }}</b></th>
+                @endfor
+            </tr>
+            <tr>
+                <th colspan="2" width="{{ $lead2 }}%"><b>RENTANG UKUR</b></th>
+                @for($i = 1; $i <= $n; $i++)
+                    <th colspan="2" width="{{ $pair }}%"><b>PLC</b></th>
+                    <th colspan="2" width="{{ $pair }}%"><b>STOPWATCH</b></th>
+                    <th width="{{ $w }}%"><b>FAKTOR</b></th>
+                @endfor
+            </tr>
+            <tr>
+                <th width="{{ $lead }}%"><b>MENIT</b></th>
+                <th width="{{ $lead }}%"><b>DETIK</b></th>
+                @for($i = 1; $i <= $n; $i++)
+                    <th width="{{ $w }}%"><b>MENIT</b></th>
+                    <th width="{{ $w }}%"><b>DETIK</b></th>
+                    <th width="{{ $w }}%"><b>MENIT</b></th>
+                    <th width="{{ $w }}%"><b>DETIK</b></th>
+                    <th width="{{ $w }}%"><b>KOREKSI</b></th>
+                @endfor
             </tr>
 
-            <tr>
-                 <th colspan="2" align="center" style="font-weight:bold;">RENTANG UKUR</th>
-
-                @foreach($verifikasi as $chamber)
-                    <th colspan="2" align="center" style="font-weight:bold;">PLC</th>
-                    <th colspan="2" align="center" style="font-weight:bold;">STOPWATCH</th>
-                    <th align="center"  style="font-weight:bold;">FAKTOR</th>
-                @endforeach
-            </tr>
-
-            <tr>
-                <th align="center" style="font-weight:bold;">MENIT</th>
-                <th align="center" style="font-weight:bold;">DETIK</th>
-
-                @foreach($verifikasi as $chamber)
-                    <th align="center" style="font-weight:bold;">MENIT</th>
-                    <th align="center" style="font-weight:bold;">DETIK</th>
-                    <th align="center" style="font-weight:bold;">MENIT</th>
-                    <th align="center" style="font-weight:bold;">DETIK</th>
-                    <th align="center" style="font-weight:bold;">KOREKSI</th>
-                @endforeach
-            </tr>
-
-            @foreach($rentang as $m)
+            @foreach($form['rows'] as $row)
                 <tr>
-                    <td align="center">{{ $m }}</td>
-                    <td align="center">00</td>
-
-                    @foreach($verifikasi as $chamber)
-
-                        <td align="center">
-                            {{ sprintf('%02d', $chamber["plc_menit_$m"] ?? 0) }}
-                        </td>
-                        <td align="center">
-                            {{ sprintf('%02d', $chamber["plc_detik_$m"] ?? 0) }}
-                        </td>
-
-                        <td align="center">
-                            {{ sprintf('%02d', $chamber["stopwatch_menit_$m"] ?? 0) }}
-                        </td>
-                        <td align="center">
-                            {{ sprintf('%02d', $chamber["stopwatch_detik_$m"] ?? 0) }}
-                        </td>
-
-                        <td align="center">
-                            {{ $chamber["faktor_koreksi_$m"] ?? '-' }}
-                        </td>
-
+                    <td width="{{ $lead }}%">{{ $row['menit'] }}</td>
+                    <td width="{{ $lead }}%">00</td>
+                    @foreach($row['cells'] as $cell)
+                        <td width="{{ $w }}%">{{ $cell }}</td>
                     @endforeach
                 </tr>
             @endforeach
 
             <tr>
-                <td colspan="2" style="font-weight:bold;">PARAF SPV</td>
-                <td colspan="{{ count($verifikasi) * 5 }}" style="font-weight:bold;">
-                    {{ $item->nama_spv ?? '-' }}
-                </td>
+                <td colspan="2" width="{{ $lead2 }}%" class="sec">PARAF QC</td>
+                <td colspan="{{ $span }}" width="{{ $valW }}%">{{ $form['parafQc'] }}</td>
             </tr>
-
             <tr>
-                <td colspan="2" style="font-weight:bold;">PARAF PRODUKSI</td>
-                <td colspan="{{ count($verifikasi) * 5 }}">
-                    {{ \App\Models\User::where('username', $item->username_updated ?? $item->username)->value('name') ?? '-' }}
-                </td>
+                <td colspan="2" width="{{ $lead2 }}%" class="sec">PARAF PRODUKSI</td>
+                <td colspan="{{ $span }}" width="{{ $valW }}%">{{ $form['parafProduksi'] }}</td>
             </tr>
-
         </table>
 
-        <br><br>
+        <br>
 
     @endforeach
 
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
+
+    @if($loop->last)
+
+        <br>
+        <br>
+
+        <table width="100%" class="note small" nobr="true">
+            <tr>
+                <td width="60%">&nbsp;</td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        Produksi
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui)
+                        <i>Belum semua entry disetujui</i>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+    @else
+        <br pagebreak="true" />
+    @endif
+
 @endforeach
-
-@php
-    $spvNames = [];
-    $allApproved = true;
-
-    foreach ($groups as $group) {
-        foreach ($group as $item) {
-            if (empty($item->nama_spv)) {
-                $allApproved = false;
-                break 2;
-            }
-
-            $spvNames[$item->nama_spv] = $item->nama_spv;
-        }
-    }
-
-    $spvName = $allApproved ? implode(', ', $spvNames) : 'Masih ada entry yang belum di approve';
-@endphp
-
-<table width="100%">
-    <tr>
-        <td width="75%"></td>
-        <td width="25%" align="right" style="font-style: italic;">
-            {{ $noDokumen }}
-        </td>
-    </tr>
-</table>
-
-<br>
-<br>
-<br>
-<table class="header-table" cellpadding="2" cellspacing="0" style="page-break-inside: avoid;">
-    <tr>
-        <td width="80%"></td>
-        <td width="20%" class="text-center f-norm">
-            Disetujui Oleh,<br>
-            QC Supervisor
-            <br><br><br><br><br>
-
-            <div style="width:80%; margin:0 auto; text-align:center;">
-                <span style="display:inline-block; min-width:120px; border-bottom:1px solid #000; padding-bottom:2px;">
-                    (<u>{{ $spvName }}</u>)
-                </span>
-            </div>
-
-        </td>
-    </tr>
-</table>
 
 </body>
 </html>

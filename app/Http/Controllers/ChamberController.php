@@ -412,67 +412,174 @@ class ChamberController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
-        $userPlant = Auth::user()->plant;
-        $month = $request->input('month');
+{
+    $search    = $request->input('search');
+    $date      = $request->input('date');
+    $shift     = $request->input('shift');
+    $month     = $request->input('month');
+    $userPlant = Auth::user()->plant;
 
-        // Ambil data tanpa pagination untuk PDF
-        $items = Chamber::query()
-            ->where('plant', $userPlant)
-            ->when($search, function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('username', 'like', "%{$search}%")
-                        ->orWhere('nama_operator', 'like', "%{$search}%");
-                });
-            })
-            // ->when($date, function ($query) use ($date) {
-            //     $query->whereDate('date', $date);
-            // })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->when($month, function ($query) use ($month) {
-                [$year, $month] = explode('-', $month);
+    $items = Chamber::query()
+        ->where('plant', $userPlant)
+        ->when($search, function ($query) use ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('username', 'like', "%{$search}%")
+                    ->orWhere('nama_operator', 'like', "%{$search}%");
+            });
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->when($month, function ($query) use ($month) {
+            [$year, $mon] = explode('-', $month);
 
-                $query->whereYear('date', $year)
-                    ->whereMonth('date', $month);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+            $query->whereYear('date', $year)
+                ->whereMonth('date', $mon);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Verifikasi Timer Chamber')
-            ->value('no_dokumen');
-
-        // Setup PDF Landscape A4
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Laporan Verifikasi Timer Chamber');
-
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-
-        $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
-        $pdf->SetFont('helvetica', '', 7);
-
-        $pdf->AddPage();
-
-        $html = view('reports.chamber', compact('items', 'request', 'noDokumen'))->render();
-
-        $pdf->writeHTML($html, true, false, true, false, '');
-        $pdf->Output('Laporan_Chamber_' . date('d-m-Y_His') . '.pdf', 'I');
-        exit();
+    if ($items->isEmpty()) {
+        return back()->with('error', 'Data tidak ditemukan');
     }
 
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Verifikasi Timer Chamber')
+        ->value('no_dokumen');
+
+    $toArray = function ($value) {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    };
+
+    $usernames = $items
+        ->flatMap(fn($i) => [$i->username_updated, $i->username, $i->nama_spv])
+        ->filter()
+        ->unique()
+        ->values();
+
+    $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+    $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+    $rentang = [5, 10, 20, 30, 60];
+
+    $two = fn($v) => sprintf('%02d', (int) ($v ?? 0));
+
+    $forms = [];
+
+    foreach ($items as $item) {
+        $verifikasi = array_values($toArray($item->verifikasi));
+
+        if (empty($verifikasi)) {
+            $verifikasi = [[]];
+        }
+
+        $n    = count($verifikasi);
+        $w    = round(90 / (5 * $n), 2);
+        $lead = round((100 - ($w * 5 * $n)) / 2, 2);
+
+        $rows = [];
+
+        foreach ($rentang as $m) {
+            $cells = [];
+
+            foreach ($verifikasi as $ch) {
+                $ch = (array) $ch;
+
+                $faktor = $ch["faktor_koreksi_$m"] ?? null;
+
+                $cells[] = $two($ch["plc_menit_$m"] ?? 0);
+                $cells[] = $two($ch["plc_detik_$m"] ?? 0);
+                $cells[] = $two($ch["stopwatch_menit_$m"] ?? 0);
+                $cells[] = $two($ch["stopwatch_detik_$m"] ?? 0);
+                $cells[] = ($faktor === null || $faktor === '') ? '-' : $faktor;
+            }
+
+            $rows[] = [
+                'menit' => $m,
+                'cells' => $cells,
+            ];
+        }
+
+        $forms[] = [
+            'tanggal'       => \Carbon\Carbon::parse($item->date)->format('d-m-Y'),
+            'shift'         => $item->shift,
+            'n'             => $n,
+            'w'             => $w,
+            'lead'          => $lead,
+            'rows'          => $rows,
+            'parafQc'       => $namaUser(trim((string) ($item->username ?? ''))) ?: '-',
+            'parafProduksi' => $namaUser(trim((string) ($item->nama_produksi ?? ''))) ?: '-',
+        ];
+    }
+
+    $pages = array_chunk($forms, 1);
+
+    $first        = $items->first();
+    $pemeriksa    = $namaUser(trim((string) ($first->username_updated ?? $first->username ?? '')));
+    $tglPemeriksa = $first->created_at
+        ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+        : '';
+
+    $semuaDisetujui = $items->every(fn($i) => !empty($i->nama_spv));
+
+    $spv    = '';
+    $tglSpv = '';
+
+    if ($semuaDisetujui) {
+        $spv = $items->pluck('nama_spv')
+            ->filter()
+            ->unique()
+            ->map(fn($u) => $namaUser(trim((string) $u)))
+            ->implode(', ');
+
+        $spvRow = $items->first(fn($i) => !empty($i->tgl_update_spv));
+        $tglSpv = $spvRow
+            ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+            : '';
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Laporan Verifikasi Timer Chamber');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->AddPage();
+
+    $html = view('reports.chamber', compact(
+        'pages',
+        'noDokumen',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Laporan_Chamber_' . date('d-m-Y_His') . '.pdf', 'I');
+
+    exit();
+}
     public function create()
     {
         $userPlant = Auth::user()->plant;
