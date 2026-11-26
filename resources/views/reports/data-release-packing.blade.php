@@ -87,12 +87,11 @@
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
-        <td width="60" align="left" valign="middle">
+        {{-- <td width="60" align="left" valign="middle">
             <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="48">
-        </td>
+        </td> --}}
         <td align="left" valign="middle" class="company-name">
-            PT Charoen<br>
-            Pokphand Indonesia<br>
+            PT Charoen Pokphand Indonesia<br>
             Food Division
         </td>
     </tr>
