@@ -4,239 +4,214 @@
     <meta charset="utf-8">
     <title>Laporan PVDC</title>
     <style>
-        @page { margin: 10px 20px; } /* Margin halaman minimal */
-        
         body {
-            font-family: 'Helvetica', sans-serif;
-            font-size: 9px;
-            color: #333;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
         }
 
-        /* HEADER DOKUMEN */
-        .header-table {
-            width: 100%;
-            margin-bottom: 10px;
-            border-bottom: 2px solid #000;
-        }
-        .judul-laporan {
-            font-size: 14px;
-            font-weight: bold;
-            text-align: center;
-            text-transform: uppercase;
-        }
-
-        /* INFO FILTER */
-        .info-table {
-            width: 100%;
-            font-size: 9px;
-            margin-bottom: 5px;
-        }
-        .info-table td {
-            padding: 1px 0; /* Jarak antar baris info rapat */
-        }
-
-        /* TABEL UTAMA - KUNCI PRESISI DI SINI */
-        .tbl-data {
-            width: 100%;
+        table {
             border-collapse: collapse;
-            table-layout: fixed; /* WAJIB: Agar kolom tidak melar sendiri */
         }
 
-        .tbl-data th, 
-        .tbl-data td {
-            border: 1px solid #000;
-            padding: 4px 2px; /* Atas/Bawah 4px, Kiri/Kanan 2px */
-            vertical-align: middle; /* Teks selalu di tengah vertikal */
-            word-wrap: break-word; /* Teks panjang akan turun ke bawah, tidak melebar */
-            overflow: hidden; /* Mencegah konten keluar garis */
-        }
-
-        .tbl-data th {
-            background-color: #ffffff;
+        .title {
+            font-size: 13px;
             font-weight: bold;
             text-align: center;
-            height: 20px; /* Tinggi header fix */
         }
 
-        .tbl-data td {
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
             text-align: center;
-            height: 15px; /* Tinggi baris data minimal */
+            vertical-align: middle;
         }
 
-        /* Helper alignment */
-        .text-left { text-align: left !important; padding-left: 4px !important; }
-        .text-center { text-align: center !important; }
-        
-        /* Footer */
-        .footer-wrapper {
-            width: 100%;
-            margin-top: 20px;
-            page-break-inside: avoid;
+        .tbl-header td {
+            padding: 0;
+            font-size: 8px;
+            line-height: 1.4;
         }
 
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 6pt;
+        .tbl-main,
+        .tbl-main th,
+        .tbl-main td {
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
+        }
+
+        .tbl-main th {
+            background: #d9e2f3;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
+            line-height: 1.15;
+        }
+
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
+        }
+
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
+
 <body>
 
-    {{-- 1. HEADER --}}
-    <div style="margin-left:-30px;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+@php
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
+
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
+
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
+@endphp
+
+@foreach($pages as $page)
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
+        <tr>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
+
+    <h2 class="title" style="margin:0; padding:0;">
+        DATA NO. LOT PVDC
+    </h2>
+    <br>
+    <br>
+
+    <table width="100%" class="tbl-header" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="35%"><strong>Hari / Tanggal</strong> : {{ $tanggal ?: '-' }}</td>
+            <td width="20%"><strong>Shift</strong> : {{ $shiftText ?: '-' }}</td>
+            <td width="45%"><strong>Nama Produk</strong> : {{ $namaProduk ?: '-' }}</td>
+        </tr>
+        <tr>
+            <td width="55%" colspan="2"><strong>Tanggal kedatangan PVDC</strong> : {{ $tglKedatangan ?: '-' }}</td>
+            <td width="45%"><strong>Tanggal expired</strong> : {{ $tglExpired ?: '-' }}</td>
+        </tr>
+    </table>
+
+    <br>
+
+    @if(empty($page))
+
+        <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
             <tr>
-                <td width="32">
-                    <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="30">
-                </td>
-                <td>
-                    <span style="font-size:9pt;"><b>PT Charoen </b></span><br>
-                    <span style="font-size:9pt;"><b>Pokphand Indonesia</b></span><br>
-                    <span style="font-size:9pt;"><b>Food Division</b></span>
-                </td>
+                <th width="30%"><b>Batch</b></th>
+                <th width="40%"><b>No. Lot</b></th>
+                <th width="30%"><b>Waktu</b></th>
             </tr>
         </table>
+
+    @else
+
+        @foreach($page as $band)
+
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                    @foreach($band as $slot => $mesin)
+                        @if($slot > 0)
+                            <td width="2%"></td>
+                        @endif
+
+                        <td width="32%" style="vertical-align: top;">
+                            @if($mesin)
+                                <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <th width="100%" colspan="3"><b>Mesin : {{ $mesin['mesin'] }}</b></th>
+                                    </tr>
+                                    <tr>
+                                        <th width="30%"><b>Batch</b></th>
+                                        <th width="40%"><b>No. Lot</b></th>
+                                        <th width="30%"><b>Waktu</b></th>
+                                    </tr>
+                                    @foreach($mesin['rows'] as $row)
+                                        <tr>
+                                            <td width="30%" class="center">{{ $row['batch'] }}</td>
+                                            <td width="40%" class="center">{{ $row['lot'] }}</td>
+                                            <td width="30%" class="center">{{ $row['waktu'] }}</td>
+                                        </tr>
+                                    @endforeach
+                                </table>
+                            @endif
+                        </td>
+                    @endforeach
+                </tr>
+            </table>
+
+            <br>
+
+        @endforeach
+
+    @endif
+
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
     </div>
 
-    {{-- 2. INFO SEBELUM TABEL --}}
-    @php
-        $tanggal = $items->pluck('date')
-            ->unique()
-            ->map(fn($item) => \Carbon\Carbon::parse($item)->translatedFormat('l, d-m-Y'))
-            ->implode(', ');
+    @if($loop->last)
 
-        $shift = $items->pluck('shift')
-            ->unique()
-            ->implode(', ');
+        <br>
+        <br>
 
-        $produkExpired = $items
-            ->unique(function ($item) {
-                return $item->nama_produk . $item->tgl_expired;
-            })
-            ->map(function ($item) {
-                return '[' . $item->nama_produk . ', ' . \Carbon\Carbon::parse($item->tgl_expired)->format('d-m-Y') . ']';
-            })
-            ->implode(', ');
-
-        $tglKedatangan = $items
-            ->pluck('tgl_kedatangan')
-            ->unique()
-            ->map(fn($item) => \Carbon\Carbon::parse($item)->format('d-m-Y'))
-            ->implode(', ');
-    @endphp
-
-    <table width="100%" cellspacing="0" cellpadding="0">
-        <tr>
-            <td width="33%">
-                <strong>Hari/Tanggal</strong> : {{ $tanggal ?: '-' }}
-            </td>
-
-           <td width="20%">
-                <strong>Shift</strong> : {{ $items->pluck('shift')->unique()->implode(', ') ?: '-' }}
-            </td>
-
-            <td width="34%">
-                <strong>Nama Produk</strong> : {{ $items->pluck('nama_produk')->unique()->implode(', ') ?: '-' }}
-            </td>
-        </tr>
-
-        <tr>
-            <td colspan="2">
-                <strong>Tanggal kedatangan PVDC</strong> : {{ $tglKedatangan ?: '-' }}
-            </td>
-
-            <td>
-                <strong>Tanggal expired</strong> : {{ $items->first()->tgl_expired ? \Carbon\Carbon::parse($items->first()->tgl_expired)->format('d-m-Y') : '-' }}
-            </td>
-        </tr>
-    </table>
-    {{-- 3. TABEL DATA --}}
-    {{-- Menggunakan border=1 di HTML juga membantu kompatibilitas PDF reader lama --}}
-    @php
-        $mesinGrid = $items->groupBy('kode_mesin')->values()->chunk(3);
-    @endphp
-
-    <table width="100%" cellspacing="0" cellpadding="3">
-    @foreach($mesinGrid as $row)
-
-    <tr>
-    @foreach($row as $mesin => $data)
-
-    <td width="33.33%" valign="top">
-
-        <table width="100%" border="1" cellspacing="0" cellpadding="3">
+        <table width="100%" class="note small" nobr="true">
             <tr>
-                <td colspan="3" align="center">
-                    <b>Mesin : {{ $data->first()->kode_mesin }}</b>
+                <td width="60%">&nbsp;</td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        QC
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui)
+                        <i>Belum semua entry disetujui</i>
+                    @endif
                 </td>
             </tr>
-
-            <tr>
-                <th>Batch</th>
-                <th>No. Lot</th>
-                <th>Waktu</th>
-            </tr>
-
-            @foreach($data as $item)
-            <tr>
-                <td>{{ $item->kode_produksi }}</td>
-                <td>{{ $item->no_lot }}</td>
-                <td>{{ $item->jam_mulai }}</td>
-            </tr>
-            @endforeach
-
         </table>
 
-    </td>
+    @else
+        <br pagebreak="true" />
+    @endif
 
-    @endforeach
+@endforeach
 
-    @for($i = $row->count(); $i < 3; $i++)
-    <td width="33.33%"></td>
-    @endfor
-
-    </tr>
-
-    @endforeach
-    </table>
-
-<table width="100%" border="0" cellspacing="0" cellpadding="0" style="border-top:1px solid #000;">
-    <tr>
-        <td width="75%"></td>
-        <td width="25%" align="right" style="font-style: italic;">
-            {{ $noDokumen }}
-        </td>
-    </tr>
-</table>
-
-    {{-- 4. TANDA TANGAN --}}
-    @php
-        $approved = $items->every(function ($item) {
-            return $item->status_spv == 1;
-        });
-
-        $namaSpv = $approved
-            ? $items->pluck('nama_spv')->unique()->implode(', ')
-            : 'Masih ada dokumen yang belum di-Approve SPV';
-    @endphp
-
-    <table class="footer-wrapper">
-        <tr>
-            <td width="75%"></td>
-
-            <td width="25%" style="text-align: center;">
-                <div style="margin-bottom: 50px;">Disetujui Oleh,</div>
-
-                <div style="font-weight: bold; display:inline-block; border-bottom:1px solid #000; padding-bottom:2px;">
-                    {{ $namaSpv ?: 'SPV / QC Head' }}
-                </div>
-            </td>
-        </tr>
-    </table>
 </body>
 </html>

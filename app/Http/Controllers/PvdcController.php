@@ -611,70 +611,140 @@ class PvdcController extends Controller
             return back()->with('error', 'Data tidak ditemukan, pastikan tanggal & varian dengan benar sebelum melakukan export');
         }
 
-        $batchUuid = collect();
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Data No. Lot PVDC')
+            ->value('no_dokumen');
 
-        foreach ($headers as $header) {
+        $decoded    = [];
+        $batchUuids = collect();
+
+        foreach ($headers as $index => $header) {
             $data = is_array($header->data_pvdc)
                 ? $header->data_pvdc
                 : json_decode($header->data_pvdc, true);
 
-            foreach ($data ?? [] as $mesinRow) {
+            $decoded[$index] = $data ?? [];
+
+            foreach ($decoded[$index] as $mesinRow) {
                 foreach ($mesinRow['detail'] ?? [] as $row) {
                     if (!empty($row['batch'])) {
-                        $batchUuid->push($row['batch']);
+                        $batchUuids->push($row['batch']);
                     }
                 }
             }
         }
 
-        $mincingMap = Mincing::whereIn('uuid', $batchUuid->unique())
+        $mincingMap = Mincing::whereIn('uuid', $batchUuids->unique())
             ->pluck('kode_produksi', 'uuid');
 
+        $mesinRows = [];
 
-        $items = collect();
-
-        foreach ($headers as $header) {
-
-            $pvdcData = is_array($header->data_pvdc)
-                ? $header->data_pvdc
-                : json_decode($header->data_pvdc, true);
-
-            foreach ($pvdcData ?? [] as $mesinRow) {
-
+        foreach ($headers as $index => $header) {
+            foreach ($decoded[$index] as $mesinRow) {
                 $namaMesin = $mesinRow['mesin'] ?? '-';
-                $details   = array_values($mesinRow['detail'] ?? []);
 
-                foreach ($details as $row) {
-
-                    $kodeProduksi = $mincingMap[$row['batch'] ?? null] ?? '-';
-
-                    $items->push((object) [
-
-                        'date' => $header->date,
-                        'shift' => $header->shift,
-                        'nama_produk' => $header->nama_produk,
-                        'nama_supplier' => $header->nama_supplier,
-                        'tgl_kedatangan' => $header->tgl_kedatangan,
-                        'tgl_expired' => $header->tgl_expired,
-                        'username' => $header->username,
-                        'catatan' => $header->catatan,
-                        'status_spv' => $header->status_spv,
-                        'nama_spv' => $header->nama_spv,
-
-                        'kode_mesin' => $namaMesin,
-                        'kode_produksi' => $kodeProduksi,
-                        'no_lot' => $row['no_lot'] ?? '-',
-                        'jam_mulai' => $row['waktu'] ?? '-',
-
-                        'suhu' => $row['suhu'] ?? null,
-                        'kecepatan_stuffing' => $row['speed'] ?? null,
-                        'panjang_pcs' => $row['pjg'] ?? null,
-                        'berat_pcs' => $row['berat'] ?? null,
-                        'cek_vakum' => $row['vakum'] ?? null,
-                        'kekuatan_seal' => $row['seal'] ?? null,
-                        'diameter_klip' => $row['klip'] ?? null,
-                    ]);
+                foreach (array_values($mesinRow['detail'] ?? []) as $row) {
+                    $mesinRows[$namaMesin][] = [
+                        'batch' => $mincingMap[$row['batch'] ?? null] ?? '-',
+                        'lot'   => $row['no_lot'] ?? '-',
+                        'waktu' => $row['waktu'] ?? '-',
+                    ];
                 }
+            }
+        }
+
+        $bands = [];
+
+        foreach (array_chunk($mesinRows, 3, true) as $group) {
+            $segments = [];
+            foreach ($group as $namaMesin => $rows) {
+                $segments[$namaMesin] = array_chunk($rows, 20);
+            }
+
+            $maxSegment = max(array_map('count', $segments));
+
+            for ($s = 0; $s < $maxSegment; $s++) {
+                $band = [];
+                foreach ($segments as $namaMesin => $chunks) {
+                    $band[] = isset($chunks[$s])
+                        ? ['mesin' => $namaMesin, 'rows' => $chunks[$s]]
+                        : null;
+                }
+                while (count($band) < 3) {
+                    $band[] = null;
+                }
+                $bands[] = $band;
+            }
+        }
+
+        $pages       = [];
+        $currentPage = [];
+        $currentCost = 0;
+
+        foreach ($bands as $band) {
+            $maxRows = max(array_map(fn($m) => $m ? count($m['rows']) : 0, $band));
+            $cost    = $maxRows + 2;
+
+            if (!empty($currentPage) && $currentCost + $cost > 22) {
+                $pages[]     = $currentPage;
+                $currentPage = [];
+                $currentCost = 0;
+            }
+
+            $currentPage[] = $band;
+            $currentCost  += $cost;
+        }
+
+        $pages[] = $currentPage;
+
+        $tanggal = $headers->pluck('date')
+            ->unique()
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->translatedFormat('l, d-m-Y'))
+            ->implode(', ');
+
+        $shiftText = $headers->pluck('shift')->unique()->implode(', ');
+
+        $namaProduk = $headers->pluck('nama_produk')->unique()->implode(', ');
+
+        $tglKedatangan = $headers->pluck('tgl_kedatangan')
+            ->filter()
+            ->unique()
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->format('d-m-Y'))
+            ->implode(', ');
+
+        $firstExpired = $headers->first()->tgl_expired;
+        $tglExpired   = $firstExpired
+            ? \Carbon\Carbon::parse($firstExpired)->format('d-m-Y')
+            : '';
+
+        $usernames = $headers
+            ->flatMap(fn($h) => [$h->username, $h->nama_spv])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+        $first        = $headers->first();
+        $pemeriksa    = $namaUser(trim((string) $first->username));
+        $tglPemeriksa = $first->created_at
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
+
+        $semuaDisetujui = $headers->every(fn($h) => (int) $h->status_spv === 1);
+
+        $spv    = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $spvRow = $headers->first(fn($h) => !empty($h->nama_spv));
+
+            if ($spvRow) {
+                $spv    = $namaUser(trim((string) $spvRow->nama_spv));
+                $tglSpv = $spvRow->tgl_update_spv
+                    ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+                    : '';
             }
         }
 
@@ -682,25 +752,39 @@ class PvdcController extends Controller
             ob_end_clean();
         }
 
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Data No. Lot PVDC')
-            ->value('no_dokumen');
+        $pdf = new \TCPDF('L', 'mm', [330, 210], true, 'UTF-8', false);
 
-        $pdf = new TCPDF('L', 'mm', [330, 210], true, 'UTF-8', false);
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Charoen Pokphand Indonesia');
         $pdf->SetTitle('Laporan Data No. Lot PVDC');
+
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(true, 10);
-        $pdf->SetFont('helvetica', '', 9);
+
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
+
+        $pdf->SetFont('helvetica', '', 6);
         $pdf->AddPage();
 
-        $html = view('reports.pvdc', compact('items', 'request', 'noDokumen'))->render();
+        $html = view('reports.pvdc', compact(
+            'pages',
+            'tanggal',
+            'shiftText',
+            'namaProduk',
+            'tglKedatangan',
+            'tglExpired',
+            'noDokumen',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
+
         $pdf->Output('Laporan_PVDC_' . date('Ymd_His') . '.pdf', 'I');
+
         exit();
     }
 }
