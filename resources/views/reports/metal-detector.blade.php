@@ -113,7 +113,7 @@
             <th rowspan="2" width="16%"><b>FE 1.0 mm</b></th>
             <th rowspan="2" width="16%"><b>NFE 1.5 mm</b></th>
             <th rowspan="2" width="16%"><b>SUS {{ $susText }} mm</b></th>
-            <th colspan="2" width="40%"><b>Paraf</b></th>
+            <th colspan="2" width="40%"><b>TTD</b></th>
         </tr>
         <tr>
             <th width="20%"><b>QC</b></th>
@@ -159,9 +159,10 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     Dibuat oleh :<br>
                     @if($namaPemeriksa)
-                        <u>{{ $namaPemeriksa }}</u><br>
+                        
                         <br>
                         <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
                         QC
                     @endif
                 </td>
@@ -169,9 +170,10 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     Diverifikasi oleh :<br>
                     @if($namaSpv)
-                        <u>{{ $namaSpv }}</u><br>
+                        
                         <br>
                         <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
                         SPV QC
                     @endif
                 </td>

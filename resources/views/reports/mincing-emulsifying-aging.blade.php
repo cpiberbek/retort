@@ -239,14 +239,14 @@
             <td width="40%" align="left">Suhu Akhir Emulsifying (°C)</td>
             <td width="60%" colspan="5" align="center">{{ $row->suhu_akhir_emulsi ?? '-' }}</td>
         </tr>
-        <tr>
+        {{-- <tr>
             <td width="40%" align="left">PARAF QC</td>
             <td width="60%" colspan="5" align="center">{{ $userMap[$qcRow] ?? $qcRow ?? '-' }}</td>
         </tr>
         <tr>
             <td width="40%" align="left">PARAF Produksi</td>
             <td width="60%" colspan="5" align="center">{{ $spvRow ? ($userMap[$spvRow] ?? $spvRow) : '-' }}</td>
-        </tr>
+        </tr> --}}
     </table>
 
     <div style="margin-top:5px; text-align:right;">

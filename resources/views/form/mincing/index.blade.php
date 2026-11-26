@@ -330,8 +330,31 @@
                                                 if (!is_array($nonPremixItems)) $nonPremixItems = [];
                                                 if (!is_array($premixItems)) $premixItems = [];
 
-                                                // rowspan hanya untuk baris nama_bahan yang BERURUTAN
                                                 $nonPremixItems = array_values($nonPremixItems);
+
+                                                $sig = fn ($x) => [
+                                                    $x['nama_bahan']  ?? '',
+                                                    (string) ($x['suhu_bahan']  ?? ''),
+                                                    (string) ($x['ph_bahan']    ?? ''),
+                                                    (string) ($x['berat_bahan'] ?? ''),
+                                                    $x['sensori']     ?? '',
+                                                ];
+
+                                                $nonPremixItems = array_values(array_filter(
+                                                    $nonPremixItems,
+                                                    function ($item) use ($nonPremixItems, $sig) {
+                                                        if (!empty($item['inspection_uuid'])) {
+                                                            return true;
+                                                        }
+                                                        foreach ($nonPremixItems as $other) {
+                                                            if (!empty($other['inspection_uuid']) && $sig($other) === $sig($item)) {
+                                                                return false;
+                                                            }
+                                                        }
+                                                        return true;
+                                                    }
+                                                ));
+                                                
                                                 $spans = [];
                                                 $n = count($nonPremixItems);
                                                 for ($i = 0; $i < $n; $i++) {
@@ -347,7 +370,6 @@
                                                     $spans[$i] = $c;
                                                 }
 
-                                                // suhu sebelum grinding
                                                 $rawSuhu = $dep->suhu_sebelum_grinding;
                                                 if (is_string($rawSuhu)) $rawSuhu = json_decode($rawSuhu, true);
                                             @endphp
