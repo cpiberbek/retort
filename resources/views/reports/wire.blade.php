@@ -192,9 +192,10 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     @if($namaPemeriksa)
                         Dibuat oleh :<br>
-                        <u>{{ $namaPemeriksa }}</u><br>
+                        
                         <br>
                         <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
                         QC
                     @endif
                 </td>
@@ -202,9 +203,10 @@
                 <td width="20%" align="center" style="vertical-align: top;">
                     @if($namaSpv)
                         Diverifikasi oleh :<br>
-                        <u>{{ $namaSpv }}</u><br>
+                        
                         <br>
                         <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
                         QC SPV
                     @endif
                 </td>

@@ -489,277 +489,327 @@ class PemasakanController extends Controller
      * Export PDF dengan Filter Shift
      */
     public function exportPdf(Request $request)
-    {
-        $kodeBatch = $request->input('kode_batch');
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
-        $userPlant = Auth::user()->plant;
+{
+    $kodeBatch = $request->input('kode_batch');
+    $date      = $request->input('date');
+    $shift     = $request->input('shift');
+    $userPlant = Auth::user()->plant;
 
-        $uuidMincing = Mincing::where('kode_produksi', $kodeBatch)
-            ->pluck('uuid')
-            ->toArray();
+    $uuidMincing = Mincing::where('kode_produksi', $kodeBatch)
+        ->pluck('uuid')
+        ->toArray();
 
-        $items = Pemasakan::query()
-            ->where('plant', $userPlant)
-            ->whereDate('date', $date)
-            ->where('shift', $shift)
-            ->where(function ($q) use ($uuidMincing) {
-                foreach ($uuidMincing as $uuid) {
-                    $q->orWhere('kode_produksi', 'like', "%{$uuid}%");
-                }
-            })
-            ->orderBy('date', 'asc')
-            ->get();
-
-        if ($items->isEmpty()) {
-            return back()->with('error', 'Data tidak ditemukan');
-        }
-
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pemeriksaan Pemasakan')
-            ->value('no_dokumen');
-
-        $toArray = function ($value) {
-            if (is_array($value)) {
-                return $value;
+    $items = Pemasakan::query()
+        ->where('plant', $userPlant)
+        ->whereDate('date', $date)
+        ->where('shift', $shift)
+        ->where(function ($q) use ($uuidMincing) {
+            foreach ($uuidMincing as $uuid) {
+                $q->orWhere('kode_produksi', 'like', "%{$uuid}%");
             }
-            if (is_string($value) && $value !== '') {
-                $decoded = json_decode($value, true);
-                return is_array($decoded) ? $decoded : [];
-            }
-            return [];
-        };
+        })
+        ->orderBy('date', 'asc')
+        ->get();
 
-        $allUuids = $items
-            ->flatMap(fn($i) => $toArray($i->kode_produksi))
-            ->filter()
-            ->unique()
-            ->values();
-
-        $mincingMap = Mincing::whereIn('uuid', $allUuids)->pluck('kode_produksi', 'uuid');
-
-        $usernames = $items
-            ->flatMap(fn($i) => [$i->username_updated, $i->username, $i->nama_spv])
-            ->filter()
-            ->unique()
-            ->values();
-
-        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
-        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
-
-        $show = function ($c, $key) {
-            $v = $c[$key] ?? null;
-            if (is_array($v)) {
-                $v = implode(', ', $v);
-            }
-            return ($v === null || $v === '') ? '-' : $v;
-        };
-
-        $fmtTime = function ($c, $key) {
-            $t = $c[$key] ?? null;
-            if (is_array($t)) {
-                $t = $t[0] ?? null;
-            }
-            return $t ? \Carbon\Carbon::parse($t)->format('H:i') : '-';
-        };
-
-        $range = fn($c, $a, $b) => $fmtTime($c, $a) . ' - ' . $fmtTime($c, $b);
-
-        $multi = function (array $values, int $cols) {
-            $values = array_values($values);
-            $out    = [];
-            for ($i = 0; $i < $cols; $i++) {
-                $v     = $values[$i] ?? null;
-                $out[] = ($v === null || $v === '') ? '-' : $v;
-            }
-            return $out;
-        };
-
-        $single = fn($label, $unit, $std, $value) => [
-            'label' => $label,
-            'unit'  => $unit,
-            'std'   => $std,
-            'value' => $value,
-        ];
-
-        $multiRow = fn($label, $unit, $std, $values) => [
-            'label'  => $label,
-            'unit'   => $unit,
-            'std'    => $std,
-            'values' => $values,
-        ];
-
-        $forms = [];
-
-        foreach ($items as $item) {
-            $c = $toArray($item->cooking);
-
-            $sSuhu    = array_values((array) ($c['suhu_air_sterilisasi'] ?? []));
-            $sRetort  = array_values((array) ($c['thermometer_retort'] ?? []));
-            $sTekanan = array_values((array) ($c['tekanan_sterilisasi'] ?? []));
-            $sTime    = array_map(
-                fn($t) => $t ? \Carbon\Carbon::parse($t)->format('H:i') : '-',
-                array_values((array) ($c['waktu_pengecekan_sterilisasi'] ?? []))
-            );
-
-            $cols  = max(count($sSuhu), count($sRetort), count($sTekanan), count($sTime), 1);
-            $resW  = number_format(25 / $cols, 2, '.', '');
-
-            $kodeProd = collect($toArray($item->kode_produksi))
-                ->map(fn($uuid) => $mincingMap[$uuid] ?? null)
-                ->filter()
-                ->implode(', ');
-
-            $tray   = implode(', ', $toArray($item->jumlah_tray));
-            $reject = implode(', ', $toArray($item->total_reject));
-
-            $sections = [
-                [
-                    'no'    => 1,
-                    'title' => 'IDENTIFIKASI',
-                    'rows'  => [
-                        $single('Nama Produk', '-', '-', $item->nama_produk ?? '-'),
-                        $single('No. Chamber', '-', '-', $item->no_chamber ?? '-'),
-                        $single('Kode Prod', '-', '-', $kodeProd ?: '-'),
-                        $single('Berat Produk', 'gram', '-', $item->berat_produk ?? '-'),
-                        $single('Suhu Produk', '19 ± 1', '-', $item->suhu_produk ?? '-'),
-                        $single('Jumlah Tray', 'Tray', '-', $tray ?: '-'),
-                    ],
-                ],
-                [
-                    'no'    => 2,
-                    'title' => 'PERSIAPAN',
-                    'rows'  => [
-                        $single('Tekanan Angin', 'Kg/Cm²', '5 - 8', $show($c, 'tekanan_angin')),
-                        $single('Tekanan Steam', 'Kg/Cm²', '6 - 9', $show($c, 'tekanan_steam')),
-                        $single('Tekanan Air', 'Kg/Cm²', '2 - 2.5', $show($c, 'tekanan_air')),
-                    ],
-                ],
-                [
-                    'no'    => 3,
-                    'title' => 'PEMANASAN AWAL',
-                    'rows'  => [
-                        $single('Suhu Air', '°C', '100 - 110', $show($c, 'suhu_air_awal')),
-                        $single('Tekanan', 'Mpa', '0.26', $show($c, 'tekanan_awal')),
-                        $single('Waktu Mulai - Selesai', 'WIB', '1.5 - 2.5 mnt', $range($c, 'waktu_mulai_awal', 'waktu_selesai_awal')),
-                    ],
-                ],
-                [
-                    'no'    => 4,
-                    'title' => 'PROSES PEMANASAN',
-                    'rows'  => [
-                        $single('Suhu Air', '°C', '119 - 121.2', $show($c, 'suhu_air_proses')),
-                        $single('Tekanan', 'Mpa', '0.26', $show($c, 'tekanan_proses')),
-                        $single('Waktu Mulai - Selesai', 'WIB', '8 - 10 mnt', $range($c, 'waktu_mulai_proses', 'waktu_selesai_proses')),
-                    ],
-                ],
-                [
-                    'no'    => 5,
-                    'title' => 'STERILISASI',
-                    'rows'  => [
-                        $multiRow('Suhu Air', '°C', '121.2', $multi($sSuhu, $cols)),
-                        $multiRow('Thermometer Retort', '°C', '121.2', $multi($sRetort, $cols)),
-                        $multiRow('Tekanan', 'Mpa', '0.26', $multi($sTekanan, $cols)),
-                        $single('Waktu Mulai - Selesai', 'WIB', '12 - 16 mnt', $range($c, 'waktu_mulai_sterilisasi', 'waktu_selesai_sterilisasi')),
-                        $multiRow('Waktu Pengecekan', 'WIB', 'Tiap 4 mnt', $multi($sTime, $cols)),
-                    ],
-                ],
-                [
-                    'no'    => 6,
-                    'title' => 'PENDINGINAN AWAL',
-                    'rows'  => [
-                        $single('Suhu Air', '°C', '30 - 35', $show($c, 'suhu_air_pendinginan_awal')),
-                        $single('Tekanan', 'Mpa', '0.26', $show($c, 'tekanan_pendinginan_awal')),
-                        $single('Waktu (Durasi)', 'WIB', '3 - 6 mnt', $range($c, 'waktu_mulai_pendinginan_awal', 'waktu_selesai_pendinginan_awal')),
-                    ],
-                ],
-                [
-                    'no'    => 7,
-                    'title' => 'PENDINGINAN',
-                    'rows'  => [
-                        $single('Suhu Air', '°C', '50 ± 3', $show($c, 'suhu_air_pendinginan')),
-                        $single('Tekanan', 'Mpa', '0.26', $show($c, 'tekanan_pendinginan')),
-                        $single('Waktu (Durasi)', 'WIB', '5 mnt', $range($c, 'waktu_mulai_pendinginan', 'waktu_selesai_pendinginan')),
-                    ],
-                ],
-                [
-                    'no'    => 8,
-                    'title' => 'PROSES AKHIR',
-                    'rows'  => [
-                        $single('Suhu Air', '°C', '36 - 42', $show($c, 'suhu_air_akhir')),
-                        $single('Tekanan', 'Mpa', '0', $show($c, 'tekanan_akhir')),
-                        $single('Waktu (Durasi)', 'WIB', '2 - 3 mnt', $range($c, 'waktu_mulai_akhir', 'waktu_selesai_akhir')),
-                    ],
-                ],
-                [
-                    'no'    => 9,
-                    'title' => 'TOTAL WAKTU PROSES',
-                    'rows'  => [
-                        $single('Total Waktu', 'menit', '32.5 - 38.5 / 36.5 - 42.5 mnt', $range($c, 'waktu_mulai_total', 'waktu_selesai_total')),
-                    ],
-                ],
-                [
-                    'no'    => 10,
-                    'title' => 'HASIL PEMASAKAN',
-                    'rows'  => [
-                        $single('Suhu Produk Akhir', '°C', '48 ± 2', $show($c, 'suhu_produk_akhir')),
-                        $single('Panjang', 'cm', '14 - 15 / 9 - 10,5', $show($c, 'panjang')),
-                        $single('Diameter', 'cm', '14,0 - 14,5 / 13,5 - 14,5', $show($c, 'diameter')),
-                        $single('Rasa', '1 - 3', 'Min. 2', $show($c, 'rasa')),
-                        $single('Warna', '1 - 3', 'Min. 2', $show($c, 'warna')),
-                        $single('Aroma', '1 - 3', 'Min. 2', $show($c, 'aroma')),
-                        $single('Tekstur', '1 - 3', 'Min. 2', $show($c, 'texture')),
-                        $single('Sobek Seal', '', '', $show($c, 'sobek_seal')),
-                    ],
-                ],
-            ];
-
-            $spv    = !empty($item->nama_spv) ? $namaUser(trim((string) $item->nama_spv)) : '';
-            $tglSpv = ($spv !== '' && $item->tgl_update_spv)
-                ? \Carbon\Carbon::parse($item->tgl_update_spv)->format('d-m-Y')
-                : '';
-
-            $forms[] = [
-                'cols'         => $cols,
-                'resW'         => $resW,
-                'sections'     => $sections,
-                'reject'       => ($reject !== '' ? $reject : '0') . ' Kg',
-                'catatan'      => $item->catatan ?? '',
-                'pemeriksa'    => $namaUser(trim((string) ($item->username_updated ?? $item->username ?? ''))),
-                'tglPemeriksa' => $item->created_at
-                    ? \Carbon\Carbon::parse($item->created_at)->format('d-m-Y')
-                    : '',
-                'spv'          => $spv,
-                'tglSpv'       => $tglSpv,
-            ];
-        }
-
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
-        $pdf = new \TCPDF('P', PDF_UNIT, 'F4', true, 'UTF-8', false);
-
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Pengecekan Pemasakan');
-
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-
-        $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(true, 5);
-
-        $pdf->SetFont('helvetica', '', 6);
-        $pdf->AddPage();
-
-        $html = view('reports.pemasakan', compact('forms', 'noDokumen'))->render();
-
-        $pdf->writeHTML($html, true, false, true, false, '');
-
-        $pdf->Output('Pengecekan_Pemasakan_' . date('YmdHis') . '.pdf', 'I');
-
-        exit();
+    if ($items->isEmpty()) {
+        return back()->with('error', 'Data tidak ditemukan');
     }
+
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pemeriksaan Pemasakan')
+        ->value('no_dokumen');
+
+    $toArray = function ($value) {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    };
+
+    $allUuids = $items
+        ->flatMap(fn($i) => $toArray($i->kode_produksi))
+        ->filter()
+        ->unique()
+        ->values();
+
+    $mincingMap = Mincing::whereIn('uuid', $allUuids)->pluck('kode_produksi', 'uuid');
+
+    $usernames = $items
+        ->flatMap(fn($i) => [$i->username_updated, $i->username, $i->nama_spv])
+        ->filter()
+        ->unique()
+        ->values();
+
+    $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+    $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+    $show = function ($c, $key) {
+        $v = $c[$key] ?? null;
+        if (is_array($v)) {
+            $v = implode(', ', $v);
+        }
+        return ($v === null || $v === '') ? '-' : $v;
+    };
+
+    $fmtTime = function ($c, $key) {
+        $t = $c[$key] ?? null;
+        if (is_array($t)) {
+            $t = $t[0] ?? null;
+        }
+        return $t ? \Carbon\Carbon::parse($t)->format('H:i') : '-';
+    };
+
+    $pad = function (array $values, int $cols) {
+        $values = array_values($values);
+        $out    = [];
+        for ($i = 0; $i < $cols; $i++) {
+            $v     = $values[$i] ?? null;
+            $out[] = ($v === null || $v === '') ? '-' : $v;
+        }
+        return $out;
+    };
+
+    $one = fn($label, $unit, $std, $alt, $value) => [
+        'type'  => 'single',
+        'label' => $label,
+        'unit'  => $unit,
+        'std'   => $std,
+        'alt'   => $alt,
+        'value' => $value,
+    ];
+
+    $many = fn($label, $unit, $std, $alt, $values) => [
+        'type'   => 'single',
+        'label'  => $label,
+        'unit'   => $unit,
+        'std'    => $std,
+        'alt'    => $alt,
+        'values' => $values,
+    ];
+
+    $line = fn($label, $unit, $value = null, $values = null) => [
+        'label'  => $label,
+        'unit'   => $unit,
+        'value'  => $value,
+        'values' => $values,
+    ];
+
+    $group = fn($std, $alt, $lines) => [
+        'type'  => 'group',
+        'std'   => $std,
+        'alt'   => $alt,
+        'lines' => $lines,
+    ];
+
+    $forms = [];
+
+    foreach ($items as $item) {
+        $c = $toArray($item->cooking);
+
+        $sSuhu    = array_values((array) ($c['suhu_air_sterilisasi'] ?? []));
+        $sRetort  = array_values((array) ($c['thermometer_retort'] ?? []));
+        $sTekanan = array_values((array) ($c['tekanan_sterilisasi'] ?? []));
+        $sTime    = array_map(
+            fn($t) => $t ? \Carbon\Carbon::parse($t)->format('H:i') : '-',
+            array_values((array) ($c['waktu_pengecekan_sterilisasi'] ?? []))
+        );
+
+        $cols = max(count($sSuhu), count($sRetort), count($sTekanan), count($sTime), 1);
+
+        $base   = round(29 / $cols, 2);
+        $resWs  = array_fill(0, $cols, $base);
+        $resWs[$cols - 1] = round(29 - ($base * ($cols - 1)), 2);
+
+        $kodeProd = collect($toArray($item->kode_produksi))
+            ->map(fn($uuid) => $mincingMap[$uuid] ?? null)
+            ->filter()
+            ->implode(', ');
+
+        $tray   = implode(', ', $toArray($item->jumlah_tray));
+        $reject = implode(', ', $toArray($item->total_reject));
+
+        $sections = [
+            [
+                'no'    => 1,
+                'title' => 'IDENTIFIKASI',
+                'head'  => null,
+                'rows'  => [
+                    $one('Nama Produk', '-', '-', null, $item->nama_produk ?? '-'),
+                    $one('No. Chamber', '-', '-', null, $item->no_chamber ?? '-'),
+                    $one('Kode Prod.', '-', '-', null, $kodeProd ?: '-'),
+                    $one('Berat Produk', 'gram', '-', null, $item->berat_produk ?? '-'),
+                    $one('Suhu Produk', '°C', '19 ± 1', null, $item->suhu_produk ?? '-'),
+                    $one('Jumlah Tray', 'Tray', '28', null, $tray ?: '-'),
+                ],
+            ],
+            [
+                'no'    => 2,
+                'title' => 'PERSIAPAN',
+                'head'  => null,
+                'rows'  => [
+                    $one('Tekanan Angin', 'Kg/Cm²', '5 - 8', null, $show($c, 'tekanan_angin')),
+                    $one('Tekanan Steam', 'Kg/Cm²', '6 - 9', null, $show($c, 'tekanan_steam')),
+                    $one('Tekanan Air', 'Kg/Cm²', '2 - 2,5', null, $show($c, 'tekanan_air')),
+                ],
+            ],
+            [
+                'no'    => 3,
+                'title' => 'PEMANASAN AWAL',
+                'head'  => null,
+                'rows'  => [
+                    $one('Suhu Air', '°C', '100 - 110', null, $show($c, 'suhu_air_awal')),
+                    $one('Tekanan', 'Mpa', '0,26', null, $show($c, 'tekanan_awal')),
+                    $group('1,5 - 2,5 menit', null, [
+                        $line('Waktu Mulai', 'WIB', $fmtTime($c, 'waktu_mulai_awal')),
+                        $line('Waktu Selesai', 'WIB', $fmtTime($c, 'waktu_selesai_awal')),
+                    ]),
+                ],
+            ],
+            [
+                'no'    => 4,
+                'title' => 'PROSES PEMANASAN',
+                'head'  => ['Standar', 'Alternatif 1'],
+                'rows'  => [
+                    $one('Suhu Air', '°C', '121,2', '119', $show($c, 'suhu_air_proses')),
+                    $one('Tekanan', 'Mpa', '0,26', '0,26', $show($c, 'tekanan_proses')),
+                    $group('8 - 10 menit', '8 - 10 menit', [
+                        $line('Waktu Mulai', 'WIB', $fmtTime($c, 'waktu_mulai_proses')),
+                        $line('Waktu Selesai', 'WIB', $fmtTime($c, 'waktu_selesai_proses')),
+                    ]),
+                ],
+            ],
+            [
+                'no'    => 5,
+                'title' => 'STERILISASI',
+                'head'  => ['Standar', 'Alternatif 1'],
+                'rows'  => [
+                    $many('Suhu Air', '°C', '121,2', '119', $pad($sSuhu, $cols)),
+                    $many('Thermometer Retort', '°C', '121,2', '119', $pad($sRetort, $cols)),
+                    $many('Tekanan', 'Mpa', '0,26', '0,26', $pad($sTekanan, $cols)),
+                    $group('12 menit', '16 menit', [
+                        $line('Waktu Mulai', 'WIB', $fmtTime($c, 'waktu_mulai_sterilisasi')),
+                        $line('Waktu Pengecekan', 'WIB', null, $pad($sTime, $cols)),
+                        $line('Waktu Selesai', 'WIB', $fmtTime($c, 'waktu_selesai_sterilisasi')),
+                    ]),
+                ],
+            ],
+            [
+                'no'    => 6,
+                'title' => 'PENDINGINAN AWAL',
+                'head'  => null,
+                'rows'  => [
+                    $one('Suhu Air', '°C', '30 - 35', null, $show($c, 'suhu_air_pendinginan_awal')),
+                    $one('Tekanan', 'Mpa', '0,26', null, $show($c, 'tekanan_pendinginan_awal')),
+                    $group('3 - 6 menit', null, [
+                        $line('Waktu Mulai', 'WIB', $fmtTime($c, 'waktu_mulai_pendinginan_awal')),
+                        $line('Waktu Selesai', 'WIB', $fmtTime($c, 'waktu_selesai_pendinginan_awal')),
+                    ]),
+                ],
+            ],
+            [
+                'no'    => 7,
+                'title' => 'PENDINGINAN',
+                'head'  => null,
+                'rows'  => [
+                    $one('Suhu Air', '°C', '50 ± 3', null, $show($c, 'suhu_air_pendinginan')),
+                    $one('Tekanan', 'Mpa', '0,26', null, $show($c, 'tekanan_pendinginan')),
+                    $group('5 menit', null, [
+                        $line('Waktu Mulai', 'WIB', $fmtTime($c, 'waktu_mulai_pendinginan')),
+                        $line('Waktu Selesai', 'WIB', $fmtTime($c, 'waktu_selesai_pendinginan')),
+                    ]),
+                ],
+            ],
+            [
+                'no'    => 8,
+                'title' => 'PROSES AKHIR',
+                'head'  => null,
+                'rows'  => [
+                    $one('Suhu Air', '°C', '36 - 42', null, $show($c, 'suhu_air_akhir')),
+                    $one('Tekanan', 'Mpa', '0', null, $show($c, 'tekanan_akhir')),
+                    $group('2 - 3 menit', null, [
+                        $line('Waktu Mulai', 'WIB', $fmtTime($c, 'waktu_mulai_akhir')),
+                        $line('Waktu Selesai', 'WIB', $fmtTime($c, 'waktu_selesai_akhir')),
+                    ]),
+                ],
+            ],
+            [
+                'no'    => 9,
+                'title' => 'TOTAL WAKTU PROSES',
+                'head'  => ['Standar', 'Alternatif 1'],
+                'rows'  => [
+                    $group('32.5 - 38.5 menit', '36.5 - 42.5 menit', [
+                        $line('Waktu Mulai', 'WIB', $fmtTime($c, 'waktu_mulai_total')),
+                        $line('Waktu Selesai', 'WIB', $fmtTime($c, 'waktu_selesai_total')),
+                    ]),
+                ],
+            ],
+            [
+                'no'    => 10,
+                'title' => 'HASIL PEMASAKAN :',
+                'head'  => ['21 gram', '12,5 gram'],
+                'rows'  => [
+                    $one('Suhu Produk Akhir', '°C', '48 ± 2', null, $show($c, 'suhu_produk_akhir')),
+                    $one('Panjang', 'cm', '14 - 15', '9 - 10,5', $show($c, 'panjang')),
+                    $one('Diameter', 'mm', '14,0 - 14,5', '13,5 - 14,5', $show($c, 'diameter')),
+                    $one('Rasa Asin/Manis/Gurih', '', '1 - 3', null, $show($c, 'rasa')),
+                    $one('Warna', '', '1 - 3', null, $show($c, 'warna')),
+                    $one('Aroma', '', '1 - 3', null, $show($c, 'aroma')),
+                    $one('Texture', '', '1 - 3', null, $show($c, 'texture')),
+                    $one('Sobek Seal', '', '', null, $show($c, 'sobek_seal')),
+                ],
+            ],
+        ];
+
+        $spv    = !empty($item->nama_spv) ? $namaUser(trim((string) $item->nama_spv)) : '';
+        $tglSpv = ($spv !== '' && $item->tgl_update_spv)
+            ? \Carbon\Carbon::parse($item->tgl_update_spv)->format('d-m-Y')
+            : '';
+
+        $forms[] = [
+            'cols'         => $cols,
+            'resWs'        => $resWs,
+            'sections'     => $sections,
+            'reject'       => $reject !== '' ? $reject : '0',
+            'catatan'      => $item->catatan ?? '',
+            'pemeriksa'    => $namaUser(trim((string) ($item->username_updated ?? $item->username ?? ''))),
+            'tglPemeriksa' => $item->created_at
+                ? \Carbon\Carbon::parse($item->created_at)->format('d-m-Y')
+                : '',
+            'spv'          => $spv,
+            'tglSpv'       => $tglSpv,
+        ];
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('P', PDF_UNIT, 'F4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Pengecekan Pemasakan');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->AddPage();
+
+    $html = view('reports.pemasakan', compact('forms', 'noDokumen'))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Pengecekan_Pemasakan_' . date('YmdHis') . '.pdf', 'I');
+
+    exit();
+}
 
     // public function exportExcel(Request $request)
     // {

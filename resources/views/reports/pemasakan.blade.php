@@ -53,8 +53,13 @@
         }
 
         .tbl-main td.sec {
-            background: #f2f2f2;
+            background: #d9d9d9;
             text-align: left;
+        }
+
+        .tbl-main td.sub {
+            background: #d9d9d9;
+            text-align: center;
         }
 
         .note td {
@@ -83,8 +88,8 @@
 @foreach($forms as $form)
 
     @php
-        $cols = $form['cols'];
-        $resW = $form['resW'];
+        $cols  = $form['cols'];
+        $resWs = $form['resWs'];
 
         $namaPemeriksa = (!empty($form['pemeriksa']) && $form['pemeriksa'] !== '-') ? $form['pemeriksa'] : '';
         $namaSpv       = (!empty($form['spv']) && $form['spv'] !== '-') ? $form['spv'] : '';
@@ -111,40 +116,93 @@
     <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
         <tr>
             <th width="5%"><b>NO</b></th>
-            <th width="35%"><b>IDENTIFIKASI / PROSES</b></th>
-            <th width="15%"><b>SATUAN</b></th>
-            <th width="20%"><b>STANDAR</b></th>
-            <th width="25%" colspan="{{ $cols }}"><b>HASIL</b></th>
+            <th width="28%"><b>IDENTIFIKASI / PROSES</b></th>
+            <th width="10%"><b>SATUAN</b></th>
+            <th width="28%" colspan="2"><b>STANDAR</b></th>
+            <th width="29%" colspan="{{ $cols }}"><b>HASIL</b></th>
         </tr>
 
         @foreach($form['sections'] as $section)
+
             <tr>
                 <td width="5%"><b>{{ $section['no'] }}</b></td>
-                <td width="95%" colspan="{{ 3 + $cols }}" class="sec"><b>{{ $section['title'] }}</b></td>
+
+                @if($section['head'])
+                    <td width="38%" colspan="2" class="sec"><b>{{ $section['title'] }}</b></td>
+                    <td width="14%" class="sub">{{ $section['head'][0] }}</td>
+                    <td width="14%" class="sub">{{ $section['head'][1] }}</td>
+                    <td width="29%" colspan="{{ $cols }}" class="sub"></td>
+                @else
+                    <td width="95%" colspan="{{ 4 + $cols }}" class="sec"><b>{{ $section['title'] }}</b></td>
+                @endif
             </tr>
 
             @foreach($section['rows'] as $row)
-                <tr>
-                    <td width="5%"></td>
-                    <td width="35%">{{ $row['label'] }}</td>
-                    <td width="15%">{{ $row['unit'] }}</td>
-                    <td width="20%">{{ $row['std'] }}</td>
 
-                    @if(isset($row['values']))
-                        @foreach($row['values'] as $value)
-                            <td width="{{ $resW }}%">{{ $value }}</td>
-                        @endforeach
-                    @else
-                        <td width="25%" colspan="{{ $cols }}">{{ $row['value'] }}</td>
-                    @endif
-                </tr>
+                @if($row['type'] === 'single')
+
+                    <tr>
+                        <td width="5%"></td>
+                        <td width="28%">{{ $row['label'] }}</td>
+                        <td width="10%">{{ $row['unit'] }}</td>
+
+                        @if($row['alt'] === null)
+                            <td width="28%" colspan="2">{{ $row['std'] }}</td>
+                        @else
+                            <td width="14%">{{ $row['std'] }}</td>
+                            <td width="14%">{{ $row['alt'] }}</td>
+                        @endif
+
+                        @if(isset($row['values']))
+                            @foreach($row['values'] as $k => $value)
+                                <td width="{{ $resWs[$k] }}%">{{ $value }}</td>
+                            @endforeach
+                        @else
+                            <td width="29%" colspan="{{ $cols }}">{{ $row['value'] }}</td>
+                        @endif
+                    </tr>
+
+                @else
+
+                    @php $total = count($row['lines']); @endphp
+
+                    @foreach($row['lines'] as $n => $ln)
+                        <tr>
+                            <td width="5%"></td>
+                            <td width="28%">{{ $ln['label'] }}</td>
+                            <td width="10%">{{ $ln['unit'] }}</td>
+
+                            @if($n === 0)
+                                @if($row['alt'] === null)
+                                    <td width="28%" colspan="2" rowspan="{{ $total }}">{{ $row['std'] }}</td>
+                                @else
+                                    <td width="14%" rowspan="{{ $total }}">{{ $row['std'] }}</td>
+                                    <td width="14%" rowspan="{{ $total }}">{{ $row['alt'] }}</td>
+                                @endif
+                            @endif
+
+                            @if(isset($ln['values']))
+                                @foreach($ln['values'] as $k => $value)
+                                    <td width="{{ $resWs[$k] }}%">{{ $value }}</td>
+                                @endforeach
+                            @else
+                                <td width="29%" colspan="{{ $cols }}">{{ $ln['value'] }}</td>
+                            @endif
+                        </tr>
+                    @endforeach
+
+                @endif
+
             @endforeach
+
         @endforeach
 
         <tr>
             <td width="5%"><b>11</b></td>
-            <td width="70%" colspan="3" class="sec"><b>TOTAL REJECT</b></td>
-            <td width="25%" colspan="{{ $cols }}">{{ $form['reject'] }}</td>
+            <td width="28%" class="sec"><b>TOTAL REJECT</b></td>
+            <td width="10%">Kg</td>
+            <td width="28%" colspan="2"></td>
+            <td width="29%" colspan="{{ $cols }}">{{ $form['reject'] }}</td>
         </tr>
     </table>
 
