@@ -2,182 +2,203 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title>Data Sampling Produk</title>
     <style>
-        body { font-size: 9px; }
-        .title { font-size: 12px; font-weight: bold; text-align: center; }
-        table { border-collapse: collapse; }
-
-        .tbl-header td {
-            font-size: 9px;
-            padding: 2px 0;
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
         }
 
-        .tbl-main, 
-        .tbl-main th, 
+        table {
+            border-collapse: collapse;
+        }
+
+        .title {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .tbl-header td {
+            padding: 0;
+            font-size: 8px;
+            line-height: 1;
+        }
+
+        .tbl-main,
+        .tbl-main th,
         .tbl-main td {
-            border: 0.3px solid #000;
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
         }
 
         .tbl-main th {
+            background: #d9e2f3;
+            font-weight: bold;
             text-align: center;
             vertical-align: middle;
-            font-size: 8px;
+            padding: 3px 2px;
+            line-height: 1.15;
         }
 
-        .center { text-align: center; }
-        .sign { text-align: center; }
-        .small { font-size: 8px; }
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
+        }
 
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 9pt;
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
 
 <body>
 
-{{-- HEADER LOGO + TITLE --}}
-<div style="margin-left:-30px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+@php
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
+
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
+
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
+@endphp
+
+@foreach($pages as $pageIndex => $page)
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
         <tr>
-            <td width="55">
-                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-            </td>
-            <td>
-                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
-                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
                 <span style="font-size:12pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
-</div>
 
-<h1 class="title" style="font-size:12pt;">DATA SAMPLING PRODUK</h1>
-<br>
-<br>
+    <h2 class="title" style="margin:0; padding:0;">
+        DATA SAMPLING PRODUK
+    </h2>
+    <br>
+    <br>
 
-@php
-    $dateFilter = request('date') ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y') : 'All Dates';
-    $shiftFilter = request('shift') ?? 'Semua Shift';
-@endphp
+    <table width="100%" class="tbl-header" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="50%" align="center">Hari / Tanggal : <u>{{ $dateFilter }}</u></td>
+            <td width="50%" align="center">Shift : <u>{{ $shiftFilter }}</u></td>
+        </tr>
+    </table>
 
-<table width="100%" class="tbl-header">
-    <tr>
-        <td style="text-align: center;">Hari / Tanggal : <u>{{ $dateFilter }}</u></td>
-        <td style="text-align: center;">Shift : <u>{{ $shiftFilter }}</u></td>
-    </tr>
-</table>
-<br><br>
+    <br>
 
-{{-- TABLE --}}
-<table width="100%" class="tbl-main small">
-    <tr>
-    <th rowspan="2" class="center"><b>No.</b></th>
-    <th rowspan="2" class="center"><b>Jenis Sampling</b></th>
-    <th rowspan="2" class="center"><b>Nama Produk</b></th>
-    <th rowspan="2" class="center"><b>Kode Batch</b></th>
-    <th rowspan="2" class="center"><b>Jumlah</b></th>
-    <th colspan="16" class="center"><b>Item Sortir</b></th>
-    <th rowspan="2" class="center"><b>Paraf QC</b></th>
-    </tr>
-    <tr>
-        <th class="center"><b>Jamur</b></th>
-        <th class="center"><b>Lendir</b></th>
-        <th class="center"><b>Klip Tajam</b></th>
-        <th class="center"><b>Pin hole</b></th>
-        <th class="center"><b>Air Trap PVDC</b></th>
-        <th class="center"><b>Air Trap Produk</b></th>
-        <th class="center"><b>Keriput</b></th>
-        <th class="center"><b>Bengkok</b></th>
-        <th class="center"><b>Non Kode</b></th>
-        <th class="center"><b>Over lap</b></th>
-        <th class="center"><b>Kecil</b></th>
-        <th class="center"><b>Terjepit</b></th>
-        <th class="center"><b>Double klip</b></th>
-        <th class="center"><b>Seal Halus / Lepas</b></th>
-        <th class="center"><b>Basah</b></th>
-        <th class="center"><b>Dll</b></th>
-    </tr>
+    <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
+        <tr>
+            <th rowspan="2" width="3%"><b>No.</b></th>
+            <th rowspan="2" width="6%"><b>Jenis Sampling</b></th>
+            <th rowspan="2" width="8%"><b>Nama Produk</b></th>
+            <th rowspan="2" width="8%"><b>Kode Batch</b></th>
+            <th rowspan="2" width="6%"><b>Jumlah</b></th>
+            <th colspan="16" width="62%"><b>Item Sortir</b></th>
+            <th rowspan="2" width="7%"><b>Paraf QC</b></th>
+        </tr>
+        <tr>
+            @foreach($labels as $label)
+                <th width="3.875%"><b>{{ $label }}</b></th>
+            @endforeach
+        </tr>
 
-    @forelse($samplings as $index => $sampling)
-    <tr>
-        <td class="center">{{ $index + 1 }}</td>
-        <td class="center">{{ $sampling->jenis_sampel ?? '-' }}</td>
-        <td class="center">{{ $sampling->nama_produk ?? '-' }}</td>
-        <td class="center">{{ $sampling->kode_produksi ?? '-' }}</td>
-        <td class="center">{{ $sampling->jumlah ? ($sampling->jumlah . ' ' . ($sampling->jenis_kemasan ?? '')) : '-' }}</td>
-        <td class="center">{{ $sampling->jamur ?? '-' }}</td>
-        <td class="center">{{ $sampling->lendir ?? '-' }}</td>
-        <td class="center">{{ $sampling->klip_tajam ?? '-' }}</td>
-        <td class="center">{{ $sampling->pin_hole ?? '-' }}</td>
-        <td class="center">{{ $sampling->air_trap_pvdc ?? '-' }}</td>
-        <td class="center">{{ $sampling->air_trap_produk ?? '-' }}</td>
-        <td class="center">{{ $sampling->keriput ?? '-' }}</td>
-        <td class="center">{{ $sampling->bengkok ?? '-' }}</td>
-        <td class="center">{{ $sampling->non_kode ?? '-' }}</td>
-        <td class="center">{{ $sampling->over_lap ?? '-' }}</td>
-        <td class="center">{{ $sampling->kecil ?? '-' }}</td>
-        <td class="center">{{ $sampling->terjepit ?? '-' }}</td>
-        <td class="center">{{ $sampling->double_klip ?? '-' }}</td>
-        <td class="center">{{ $sampling->seal_halus ?? '-' }}</td>
-        <td class="center">{{ $sampling->basah ?? '-' }}</td>
-        <td class="center">{{ $sampling->dll ?? '-' }}</td>
-        <td class="center">{{ $sampling->username ?? '-' }}</td>
-    </tr>
-    @empty
-    <tr>
-        <td colspan="22" class="center">Tidak ada data sampling</td>
-    </tr>
-    @endforelse
-
-
-</table>
-<div style="text-align:right; font-size:8px; font-style:italic;">
-    {{ $noDokumen }}
-</div>
-<br>
-
-@php
-    $catatanList = $samplings->filter(function ($item) {
-        return !empty($item->catatan);
-    });
-
-    $allApproved = $samplings->every(function ($item) {
-        return !empty($item->nama_spv);
-    });
-
-    $namaSpv = $allApproved
-        ? $samplings->pluck('nama_spv')->filter()->unique()->implode(', ')
-        : 'Belum Semua Entry Disetujui Oleh SPV';
-@endphp
-
-<table width="100%">
-    <tr>
-        <td width="70%" valign="top">
-            @if($catatanList->count())
-                <b>Catatan:</b><br>
-
-                @foreach($catatanList as $item)
-                    {{ $item->kode_produksi ?? '-' }} : {{ $item->catatan }}<br>
+        @foreach($page as $row)
+            <tr>
+                <td width="3%">{{ $row['no'] }}</td>
+                <td width="6%">{{ $row['jenis'] }}</td>
+                <td width="8%">{{ $row['nama'] }}</td>
+                <td width="8%">{{ $row['kode'] }}</td>
+                <td width="6%">{{ $row['jumlah'] }}</td>
+                @foreach($row['values'] as $value)
+                    <td width="3.875%">{{ $value }}</td>
                 @endforeach
-            @endif
-        </td>
+                <td width="7%">{{ $row['paraf'] }}</td>
+            </tr>
+        @endforeach
 
-        <td width="30%" align="center" valign="top">
-            Disetujui Oleh,
-            <br><br><br><br>
-            (<u>{{ $namaSpv }}</u>)<br>
-            QC SPV
-        </td>
-    </tr>
-</table>
+        @if(empty($page))
+            <tr>
+                <td width="100%" colspan="22">Tidak ada data sampling</td>
+            </tr>
+        @endif
+    </table>
 
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
+
+    @if($loop->last)
+
+        <br>
+        <br>
+
+        <table width="100%" class="note small" nobr="true">
+            <tr>
+                <td width="60%">
+                    @if(count($catatanList))
+                        <strong>Catatan :</strong><br>
+                        @foreach($catatanList as $catatan)
+                            {{ $catatan }}<br>
+                        @endforeach
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        QC
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui)
+                        <i>Belum semua entry disetujui</i>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+    @else
+        <br pagebreak="true" />
+    @endif
+
+@endforeach
 
 </body>
 </html>

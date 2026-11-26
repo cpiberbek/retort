@@ -606,85 +606,146 @@ class SamplingController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $date = $request->input('date');
-        $shift = $request->input('shift');
-        $nama_produk = $request->input('nama_produk');
-        $userPlant = Auth::user()->plant;
+{
+    $date        = $request->input('date');
+    $shift       = $request->input('shift');
+    $nama_produk = $request->input('nama_produk');
+    $userPlant   = Auth::user()->plant;
 
-        $samplings = Sampling::query()
-            ->where('plant', $userPlant)
-            ->when($date, function ($query) use ($date) {
-                $query->whereDate('date', $date);
-            })
-            ->when($shift, function ($query) use ($shift) {
-                $query->where('shift', $shift);
-            })
-            ->when($nama_produk, function ($query) use ($nama_produk) {
-                $query->where('nama_produk', $nama_produk);
-            })
-            ->orderBy('date', 'asc')
-            ->orderBy('shift', 'asc')
-            ->get();
+    $samplings = Sampling::query()
+        ->where('plant', $userPlant)
+        ->when($date, function ($query) use ($date) {
+            $query->whereDate('date', $date);
+        })
+        ->when($shift, function ($query) use ($shift) {
+            $query->where('shift', $shift);
+        })
+        ->when($nama_produk, function ($query) use ($nama_produk) {
+            $query->where('nama_produk', $nama_produk);
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('shift', 'asc')
+        ->get();
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
-        if (ob_get_length()) {
-            ob_end_clean();
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Data Sampling Produk')
+        ->value('no_dokumen');
+
+    $dateFilter  = $date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : 'All Dates';
+    $shiftFilter = $shift ?: 'Semua Shift';
+
+    $usernames = $samplings
+        ->flatMap(fn($s) => [$s->username, $s->nama_spv])
+        ->filter()
+        ->unique()
+        ->values();
+
+    $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+    $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+    $fields = [
+        'jamur', 'lendir', 'klip_tajam', 'pin_hole', 'air_trap_pvdc', 'air_trap_produk',
+        'keriput', 'bengkok', 'non_kode', 'over_lap', 'kecil', 'terjepit',
+        'double_klip', 'seal_halus', 'basah', 'dll',
+    ];
+
+    $labels = [
+        'Jamur', 'Lendir', 'Klip Tajam', 'Pin hole', 'Air Trap PVDC', 'Air Trap Produk',
+        'Keriput', 'Bengkok', 'Non Kode', 'Over lap', 'Kecil', 'Terjepit',
+        'Double klip', 'Seal Halus / Lepas', 'Basah', 'Dll',
+    ];
+
+    $rows = [];
+
+    foreach ($samplings as $index => $s) {
+        $values = [];
+        foreach ($fields as $f) {
+            $v        = $s->{$f} ?? null;
+            $values[] = ($v === null || $v === '') ? '-' : $v;
         }
 
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Data Sampling Produk')
-            ->value('no_dokumen');
-
-        // Create new TCPDF object
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-
-        // Set document information
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
-        $pdf->SetTitle('Data Sampling Produk');
-        $pdf->SetSubject('Data Sampling Produk');
-
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-
-        // Set default monospaced font
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
-
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
-
-        // Set image scale factor
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
-            require_once(dirname(__FILE__) . '/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-
-        // Set font
-        $pdf->SetFont('helvetica', '', 8);
-
-        // Add a page
-        $pdf->AddPage('L', 'F4'); // Landscape A3 for many columns
-
-        // Convert the Blade view to HTML
-        $html = view('reports.data-sampling-produk', compact('samplings', 'request', 'noDokumen'))->render();
-
-        // Print text using writeHTMLCell()
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
-        // Close and output PDF document (Inline/Preview)
-        $pdf->Output('Data_Sampling_Produk_' . date('Ymd_His') . '.pdf', 'I');
-
-        exit();
+        $rows[] = [
+            'no'     => $index + 1,
+            'jenis'  => $s->jenis_sampel ?? '-',
+            'nama'   => $s->nama_produk ?? '-',
+            'kode'   => $s->kode_produksi ?? '-',
+            'jumlah' => $s->jumlah ? trim($s->jumlah . ' ' . ($s->jenis_kemasan ?? '')) : '-',
+            'values' => $values,
+            'paraf'  => $namaUser($s->username) ?: '-',
+        ];
     }
+
+    $pages = empty($rows) ? [[]] : array_chunk($rows, 20);
+
+    $catatanList = $samplings
+        ->filter(fn($s) => !empty($s->catatan))
+        ->map(fn($s) => ($s->kode_produksi ?? '-') . ' : ' . $s->catatan)
+        ->values()
+        ->all();
+
+    $first        = $samplings->first();
+    $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+    $tglPemeriksa = ($first && $first->created_at)
+        ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+        : '';
+
+    $semuaDisetujui = $samplings->count() > 0
+        && $samplings->every(fn($s) => !empty($s->nama_spv));
+
+    $spv    = '';
+    $tglSpv = '';
+
+    if ($semuaDisetujui) {
+        $spv = $samplings->pluck('nama_spv')
+            ->filter()
+            ->unique()
+            ->map(fn($u) => $namaUser(trim((string) $u)))
+            ->implode(', ');
+
+        $spvRow = $samplings->first(fn($s) => !empty($s->tgl_update_spv));
+        $tglSpv = $spvRow
+            ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+            : '';
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Data Sampling Produk');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->AddPage();
+
+    $html = view('reports.data-sampling-produk', compact(
+        'pages',
+        'labels',
+        'dateFilter',
+        'shiftFilter',
+        'catatanList',
+        'noDokumen',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Data_Sampling_Produk_' . date('Ymd_His') . '.pdf', 'I');
+
+    exit();
+}
 
     public function exportExcel(Request $request)
     {
