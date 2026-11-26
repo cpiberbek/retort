@@ -94,6 +94,9 @@
         $namaPemeriksa = (!empty($form['pemeriksa']) && $form['pemeriksa'] !== '-') ? $form['pemeriksa'] : '';
         $namaSpv       = (!empty($form['spv']) && $form['spv'] !== '-') ? $form['spv'] : '';
 
+        $parafQc       = (!empty($form['parafQc']) && $form['parafQc'] !== '-') ? $form['parafQc'] : '';
+        $parafProduksi = (!empty($form['parafProduksi']) && $form['parafProduksi'] !== '-') ? $form['parafProduksi'] : '';
+
         $qrPemeriksa = $makeQr($namaPemeriksa, $form['tglPemeriksa']);
         $qrSpv       = $makeQr($namaSpv, $form['tglSpv']);
     @endphp
@@ -203,6 +206,19 @@
             <td width="10%">Kg</td>
             <td width="28%" colspan="2"></td>
             <td width="29%" colspan="{{ $cols }}">{{ $form['reject'] }}</td>
+        </tr>
+
+               <tr>
+            <td width="5%" rowspan="2"></td>
+            <td width="28%" rowspan="2" class="sec" style="text-align: center; vertical-align: middle;">
+    <b>PARAF</b>
+</td>
+            <th width="10%"><b>QC</b></th>
+            <td width="57%" colspan="{{ 2 + $cols }}" style="height:15px;">{{ $parafQc }}</td>
+        </tr>
+        <tr>
+            <th width="10%"><b>Produksi</b></th>
+            <td width="57%" colspan="{{ 2 + $cols }}" style="height:15px;">{{ $parafProduksi }}</td>
         </tr>
     </table>
 

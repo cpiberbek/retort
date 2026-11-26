@@ -539,7 +539,7 @@ class PemasakanController extends Controller
     $mincingMap = Mincing::whereIn('uuid', $allUuids)->pluck('kode_produksi', 'uuid');
 
     $usernames = $items
-        ->flatMap(fn($i) => [$i->username_updated, $i->username, $i->nama_spv])
+        ->flatMap(fn($i) => [$i->username_updated, $i->username, $i->nama_spv, $i->nama_produksi])
         ->filter()
         ->unique()
         ->values();
@@ -620,8 +620,8 @@ class PemasakanController extends Controller
 
         $cols = max(count($sSuhu), count($sRetort), count($sTekanan), count($sTime), 1);
 
-        $base   = round(29 / $cols, 2);
-        $resWs  = array_fill(0, $cols, $base);
+        $base  = round(29 / $cols, 2);
+        $resWs = array_fill(0, $cols, $base);
         $resWs[$cols - 1] = round(29 - ($base * ($cols - 1)), 2);
 
         $kodeProd = collect($toArray($item->kode_produksi))
@@ -764,6 +764,9 @@ class PemasakanController extends Controller
             ],
         ];
 
+        $pemeriksa = $namaUser(trim((string) ($item->username_updated ?? $item->username ?? '')));
+        $produksi  = $namaUser(trim((string) ($item->nama_produksi ?? '')));
+
         $spv    = !empty($item->nama_spv) ? $namaUser(trim((string) $item->nama_spv)) : '';
         $tglSpv = ($spv !== '' && $item->tgl_update_spv)
             ? \Carbon\Carbon::parse($item->tgl_update_spv)->format('d-m-Y')
@@ -775,7 +778,9 @@ class PemasakanController extends Controller
             'sections'     => $sections,
             'reject'       => $reject !== '' ? $reject : '0',
             'catatan'      => $item->catatan ?? '',
-            'pemeriksa'    => $namaUser(trim((string) ($item->username_updated ?? $item->username ?? ''))),
+            'parafQc'      => $pemeriksa,
+            'parafProduksi'=> $produksi,
+            'pemeriksa'    => $pemeriksa,
             'tglPemeriksa' => $item->created_at
                 ? \Carbon\Carbon::parse($item->created_at)->format('d-m-Y')
                 : '',
