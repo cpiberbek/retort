@@ -648,10 +648,10 @@ class OrganoleptikController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $date = $request->input('date');
-        $shift = $request->input('shift');
+        $date        = $request->input('date');
+        $shift       = $request->input('shift');
         $nama_produk = $request->input('nama_produk');
-        $userPlant = Auth::user()->plant;
+        $userPlant   = Auth::user()->plant;
 
         $organoleptiks = Organoleptik::query()
             ->where('plant', $userPlant)
@@ -672,56 +672,124 @@ class OrganoleptikController extends Controller
             ->where('laporan', 'Pemeriksaan Organoleptik')
             ->value('no_dokumen');
 
-        // Clear any previous output buffers to prevent "TCPDF ERROR: Some data has already been output"
+        $dateFilter       = $date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : 'All Dates';
+        $shiftFilter      = $shift ?: 'Semua Shift';
+        $namaProdukFilter = $nama_produk ?: 'Semua Produk';
+
+        $toArray = function ($value) {
+            if (is_array($value)) {
+                return $value;
+            }
+            if (is_string($value) && $value !== '') {
+                $decoded = json_decode($value, true);
+                return is_array($decoded) ? $decoded : [];
+            }
+            return [];
+        };
+
+        $usernames = $organoleptiks
+            ->flatMap(fn($o) => [$o->username, $o->nama_spv])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+        $sensoriByEntry = [];
+        $mincingKeys    = collect();
+
+        foreach ($organoleptiks as $index => $organoleptik) {
+            $sensoriByEntry[$index] = $toArray($organoleptik->sensori);
+
+            foreach ($sensoriByEntry[$index] as $sensor) {
+                if (!empty($sensor['kode_produksi'])) {
+                    $mincingKeys->push($sensor['kode_produksi']);
+                }
+            }
+        }
+
+        $mincingKeyName = (new \App\Models\Mincing)->getKeyName();
+        $mincingMap     = \App\Models\Mincing::whereIn($mincingKeyName, $mincingKeys->unique())
+            ->pluck('kode_produksi', $mincingKeyName);
+
+        $rows = [];
+
+        foreach ($organoleptiks as $index => $organoleptik) {
+            $paraf = $namaUser($organoleptik->username);
+
+            foreach ($sensoriByEntry[$index] as $sensor) {
+                $rows[] = [
+                    'kode'       => $mincingMap[$sensor['kode_produksi'] ?? null] ?? '-',
+                    'penampilan' => $sensor['penampilan'] ?? '',
+                    'aroma'      => $sensor['aroma'] ?? '',
+                    'kekenyalan' => $sensor['kekenyalan'] ?? '',
+                    'asin'       => $sensor['rasa_asin'] ?? '',
+                    'gurih'      => $sensor['rasa_gurih'] ?? '',
+                    'manis'      => $sensor['rasa_manis'] ?? '',
+                    'daging'     => $sensor['rasa_daging'] ?? '',
+                    'keseluruhan'=> $sensor['rasa_keseluruhan'] ?? '',
+                    'score'      => $sensor['rata_score'] ?? '',
+                    'release'    => $sensor['release'] ?? '',
+                    'paraf'      => $paraf,
+                ];
+            }
+        }
+
+        $pages = empty($rows) ? [[]] : array_chunk($rows, 20);
+
+        $first        = $organoleptiks->first();
+        $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+        $tglPemeriksa = ($first && $first->created_at)
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
+
+        $semuaDisetujui = $organoleptiks->isNotEmpty()
+            && $organoleptiks->every(fn($o) => !empty($o->nama_spv));
+
+        $spv    = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $spv    = $namaUser(trim((string) $first->nama_spv));
+            $tglSpv = $first->tgl_update_spv
+                ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // Create new TCPDF object
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
+        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
 
-        // Set document information
         $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('Your Name/Company');
         $pdf->SetTitle('Pemeriksaan Organoleptik');
-        $pdf->SetSubject('Pemeriksaan Organoleptik');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set default monospaced font
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set margins
-        $pdf->SetMargins(PDF_MARGIN_LEFT, 8, PDF_MARGIN_RIGHT);
-        $pdf->SetHeaderMargin(PDF_MARGIN_HEADER);
-        $pdf->SetFooterMargin(PDF_MARGIN_FOOTER);
+        $pdf->SetFont('helvetica', '', 6);
+        $pdf->AddPage();
 
-        // Set auto page breaks
-        $pdf->SetAutoPageBreak(TRUE, PDF_MARGIN_BOTTOM);
+        $html = view('reports.organoleptik', compact(
+            'pages',
+            'dateFilter',
+            'shiftFilter',
+            'namaProdukFilter',
+            'noDokumen',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
 
-        // Set image scale factor
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
+        $pdf->writeHTML($html, true, false, true, false, '');
 
-        // Set some language-dependent strings (optional)
-        if (@file_exists(dirname(__FILE__) . '/lang/eng.php')) {
-            require_once(dirname(__FILE__) . '/lang/eng.php');
-            $pdf->setLanguageArray($l);
-        }
-
-        // Set font
-        $pdf->SetFont('helvetica', '', 10);
-
-        // Add a page
-        $pdf->AddPage('L', 'F4'); // Landscape A4
-
-        // Convert the Blade view to HTML
-        $html = view('reports.organoleptik', compact('organoleptiks', 'request', 'noDokumen'))->render();
-
-        // Print text using writeHTMLCell()
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-
-        // Close and output PDF document (Inline/Preview)
         $pdf->Output('Pemeriksaan_Organoleptik_' . date('Ymd_His') . '.pdf', 'I');
 
         exit();

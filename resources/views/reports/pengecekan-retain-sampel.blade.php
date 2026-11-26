@@ -71,12 +71,11 @@
    <div style="margin-left:-30px; margin-bottom:0;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
             <tr>
-                <td width="55" style="padding:0;">
+                {{-- <td width="55" style="padding:0;">
                     <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-                </td>
+                </td> --}}
                 <td style="padding:0; line-height:1;">
-                    <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
-                    <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
+                    <span style="font-size:14pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
                     <span style="font-size:14pt;"><b>Food Division</b></span>
                 </td>
             </tr>

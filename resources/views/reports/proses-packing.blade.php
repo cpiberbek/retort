@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title>Pemeriksaan Proses Packing</title>
     <style>
         body {
             font-family: "Times New Roman", Times, serif;
@@ -19,15 +20,25 @@
             text-align: center;
         }
 
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
+
         .tbl-header td {
             padding: 0;
             font-size: 8px;
             line-height: 1;
         }
 
+        .tbl-main,
         .tbl-main th,
         .tbl-main td {
-            padding: 3px 1px;
+            padding: 3px 2px;
             text-align: center;
             vertical-align: middle;
             border: 0.8px solid #000;
@@ -36,19 +47,20 @@
         .tbl-main th {
             background: #d9e2f3;
             font-weight: bold;
-            font-size: 6px;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
             line-height: 1.15;
         }
 
         .tbl-main td {
-            font-size: 6.5px;
-            line-height: 1.2;
+            padding: 3px 2px;
+            vertical-align: middle;
         }
 
         .note td {
             vertical-align: top;
             line-height: 1.4;
-            font-size: 7px;
         }
     </style>
 </head>
@@ -57,7 +69,7 @@
 
 @php
     $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
-    $namaSpv       = ($semuaDisetujui && !empty($spv) && $spv !== '-') ? $spv : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
 
     $makeQr = function ($nama, $tanggal) {
         if (empty($nama)) {
@@ -74,77 +86,19 @@
     $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
     $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
 
-    $firstPacking = $packings->first();
-
-    $dateFilter = request('date')
-        ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y')
-        : ($firstPacking?->date
-            ? \Carbon\Carbon::parse($firstPacking->date)->format('d-m-Y')
-            : '');
-
-    $shiftFilter      = $firstPacking?->shift ?? request('shift') ?? '';
-    $namaProdukFilter = request('nama_produk') ?? $firstPacking?->nama_produk ?? '';
-
-    $rows = [];
-    foreach ($packings as $packing) {
-        $dataKemasan = $packing->data_kemasan;
-
-        if (is_string($dataKemasan)) {
-            $dataKemasan = json_decode($dataKemasan, true);
-        }
-
-        $kemasan = is_array($dataKemasan) ? ($dataKemasan[0] ?? []) : [];
-
-        $flat = function ($value) {
-            if (is_array($value)) {
-                $value = implode(', ', $value);
-            }
-            return ($value === null || $value === '') ? '-' : $value;
-        };
-
-        $tglKedatangan = $flat($kemasan['tgl_kedatangan'] ?? '-');
-
-        if ($tglKedatangan !== '-') {
-            try {
-                $tglKedatangan = \Carbon\Carbon::parse($tglKedatangan)->format('d-m-Y');
-            } catch (\Throwable $e) {
-                $tglKedatangan = '-';
-            }
-        }
-
-        $suhu = is_array($packing->suhu)
-            ? implode(', ', $packing->suhu)
-            : ($packing->suhu ?? '-');
-
-        $rows[] = [
-            'p'       => $packing,
-            'jenis'   => $flat($kemasan['jenis_kemasan'] ?? '-'),
-            'lot'     => $flat($kemasan['no_lot_kemasan'] ?? '-'),
-            'tgl'     => $tglKedatangan,
-            'supplier'=> $flat($kemasan['nama_supplier'] ?? '-'),
-            'suhu'    => $suhu,
-        ];
-    }
-
-    $pages = count($rows) > 0 ? array_chunk($rows, 10) : [[]];
+    $lines = fn($arr) => empty($arr) ? '-' : implode('<br>', array_map('e', $arr));
 @endphp
 
-@foreach($pages as $pageRows)
+@foreach($pages as $page)
 
-    <div style="margin-left:-30px; margin-bottom:0;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
-            <tr>
-                <td width="55" style="padding:0;">
-                    <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-                </td>
-                <td style="padding:0; line-height:1;">
-                    <span style="font-size:14pt;"><b>PT Charoen</b></span><br>
-                    <span style="font-size:14pt;"><b>Pokphand Indonesia</b></span><br>
-                    <span style="font-size:14pt;"><b>Food Division</b></span>
-                </td>
-            </tr>
-        </table>
-    </div>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
+        <tr>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
+            </td>
+        </tr>
+    </table>
 
     <h2 class="title" style="margin:0; padding:0;">
         PEMERIKSAAN PROSES PACKING
@@ -154,81 +108,82 @@
 
     <table width="100%" class="tbl-header" cellpadding="0" cellspacing="0">
         <tr>
-            <td width="33%" align="left">Hari / Tgl : {{ $dateFilter }}</td>
-            <td width="33%" align="center">Shift : {{ $shiftFilter }}</td>
-            <td width="34%" align="right">Nama Varian : {{ $namaProdukFilter }}</td>
+            <td width="30%">Hari / Tgl : {{ $tanggal ?: '-' }}</td>
+            <td width="30%">Shift : {{ $shiftText ?: '-' }} (shift 1,2,3)</td>
+            <td width="40%" align="right">Nama Varian : {{ $namaVarian ?: '-' }}</td>
         </tr>
     </table>
 
     <br>
 
-    <table width="100%" class="tbl-main" cellpadding="0" cellspacing="0">
+    <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
         <tr>
             <th rowspan="2" width="4%"><b>Waktu</b></th>
             <th rowspan="2" width="4%"><b>Kalibrasi</b></th>
-            <th rowspan="2" width="6%"><b>QR Code</b></th>
-            <th colspan="2" width="12%"><b>Kode Produk</b></th>
-            <th colspan="2" width="8.5%"><b>Shrinkle Tunnel</b></th>
-            <th rowspan="2" width="5.5%"><b>Kondisi Segel / Seal</b></th>
-            <th rowspan="2" width="5%"><b>Jumlah produk<br>per pack (pcs)</b></th>
-            <th rowspan="2" width="4.5%"><b>Berat produk<br>per pcs (gr)</b></th>
-            <th rowspan="2" width="4.5%"><b>Berat Produk<br>Per Pack (gr)</b></th>
-            <th colspan="4" width="25.5%"><b>Data Kemasan</b></th>
-            <th colspan="2" width="12%"><b>Paraf</b></th>
-            <th rowspan="2" width="8.5%"><b>Keterangan</b></th>
+            <th rowspan="2" width="5%"><b>QR Code</b></th>
+            <th colspan="2" width="13%"><b>Kode Produk</b></th>
+            <th colspan="2" width="11%"><b>Shrinkle Tunnel</b></th>
+            <th rowspan="2" width="5%"><b>Kondisi Segel / Seal</b></th>
+            <th rowspan="2" width="5%"><b>Jumlah produk per pack (pcs)</b></th>
+            <th rowspan="2" width="5%"><b>Berat produk per pcs (gr)</b></th>
+            <th rowspan="2" width="5%"><b>Berat Produk Per Pack (gr)</b></th>
+            <th colspan="4" width="25%"><b>Data Kemasan</b></th>
+            <th colspan="2" width="10%"><b>Paraf</b></th>
+            <th rowspan="2" width="8%"><b>Keterangan</b></th>
         </tr>
         <tr>
-            <th width="6%"><b>Printing Label</b></th>
-            <th width="6%"><b>Toples</b></th>
-            <th width="4%"><b>Suhu</b></th>
-            <th width="4.5%"><b>Speed<br>Conveyor</b></th>
-            <th width="6.5%"><b>Jenis<br>Kemasan</b></th>
-            <th width="6.5%"><b>No. Lot<br>Kemasan</b></th>
-            <th width="6%"><b>Tgl<br>Kedatangan</b></th>
-            <th width="6.5%"><b>Nama<br>Supplier</b></th>
-            <th width="6%"><b>QC</b></th>
-            <th width="6%"><b>Produksi</b></th>
+            <th width="5%"><b>Printing Label</b></th>
+            <th width="8%"><b>Toples</b></th>
+            <th width="6%"><b>Suhu</b></th>
+            <th width="5%"><b>Speed Conveyor</b></th>
+            <th width="5%"><b>Jenis kemasan</b></th>
+            <th width="6%"><b>No. Lot Kemasan</b></th>
+            <th width="6%"><b>Tgl Kedatangan</b></th>
+            <th width="8%"><b>Nama Supplier</b></th>
+            <th width="5%"><b>QC</b></th>
+            <th width="5%"><b>Produksi</b></th>
         </tr>
 
-        @forelse($pageRows as $row)
-            @php $packing = $row['p']; @endphp
-        <tr>
-            <td width="4%" align="center">{{ $packing->waktu ? \Carbon\Carbon::parse($packing->waktu)->format('H:i') : '-' }}</td>
-            <td width="4%" align="center">{{ $packing->kalibrasi === 'Ok' ? 'V' : ($packing->kalibrasi === 'Tidak Ok' ? 'X' : '-') }}</td>
-            <td width="6%" align="center">
-                @if($packing->qrcode && file_exists(public_path($packing->qrcode)))
-                    <img src="{{ public_path($packing->qrcode) }}" width="35">
-                @else
-                    -
-                @endif
-            </td>
-            <td width="6%" align="center">
-                @if($packing->kode_printing && file_exists(public_path($packing->kode_printing)))
-                    <img src="{{ public_path($packing->kode_printing) }}" width="35">
-                @else
-                    -
-                @endif
-            </td>
-            <td width="6%" align="center">{{ $kodeTopleMap[$packing->kode_toples] ?? $packing->kode_toples ?? '-' }}</td>
-            <td width="4%" align="center">{{ $row['suhu'] }}</td>
-            <td width="4.5%" align="center">{{ $packing->speed ?? '-' }}</td>
-            <td width="5.5%" align="center">{{ $packing->kondisi_segel ?? '-' }}</td>
-            <td width="5%" align="center">{{ $packing->jumlah_produk ?? '-' }}</td>
-            <td width="4.5%" align="center">{{ $packing->berat_pcs ?? '-' }}</td>
-            <td width="4.5%" align="center">{{ $packing->berat_pack ?? '-' }}</td>
-            <td width="6.5%" align="center">{{ $row['jenis'] }}</td>
-            <td width="6.5%" align="center">{{ $row['lot'] }}</td>
-            <td width="6%" align="center">{{ $row['tgl'] }}</td>
-            <td width="6.5%" align="center">{{ $row['supplier'] }}</td>
-            <td width="6%" align="center">{{ $userMap[$packing->username] ?? $packing->username ?? '-' }}</td>
-            <td width="6%" align="center">{{ $userMap[$packing->nama_produksi] ?? $packing->nama_produksi ?? '-' }}</td>
-            <td width="8.5%" align="center">{{ $packing->keterangan ?? '-' }}</td>
-        </tr>
-        @empty
-        <tr>
-            <td colspan="18" align="center">Tidak ada data packing</td>
-        </tr>
-        @endforelse
+        @foreach($page as $row)
+            @php $span = count($row['kemasan']); @endphp
+
+            @foreach($row['kemasan'] as $n => $k)
+                <tr>
+                    @if($n === 0)
+                        <td width="4%" rowspan="{{ $span }}">{{ $row['waktu'] }}</td>
+                        <td width="4%" rowspan="{{ $span }}">{{ $row['kalibrasi'] }}</td>
+                        <td width="5%" rowspan="{{ $span }}">
+                            @if($row['qrcode'])
+                                <img src="{{ $row['qrcode'] }}" width="30">
+                            @endif
+                        </td>
+                        <td width="5%" rowspan="{{ $span }}">
+                            @if($row['printing'])
+                                <img src="{{ $row['printing'] }}" width="30">
+                            @endif
+                        </td>
+                        <td width="8%" rowspan="{{ $span }}">{{ $row['toples'] }}</td>
+                        <td width="6%" rowspan="{{ $span }}">{!! $lines($row['suhu']) !!}</td>
+                        <td width="5%" rowspan="{{ $span }}">{{ $row['speed'] }}</td>
+                        <td width="5%" rowspan="{{ $span }}">{{ $row['segel'] }}</td>
+                        <td width="5%" rowspan="{{ $span }}">{{ $row['jumlah'] }}</td>
+                        <td width="5%" rowspan="{{ $span }}">{{ $row['berat_pcs'] }}</td>
+                        <td width="5%" rowspan="{{ $span }}">{{ $row['berat_pack'] }}</td>
+                    @endif
+
+                    <td width="5%">{{ $k['jenis'] }}</td>
+                    <td width="6%">{{ $k['lot'] }}</td>
+                    <td width="6%">{{ $k['tgl'] }}</td>
+                    <td width="8%">{{ $k['supplier'] }}</td>
+
+                    @if($n === 0)
+                        <td width="5%" rowspan="{{ $span }}">{{ $row['qc'] }}</td>
+                        <td width="5%" rowspan="{{ $span }}">{{ $row['produksi'] }}</td>
+                        <td width="8%" rowspan="{{ $span }}">{{ $row['ket'] }}</td>
+                    @endif
+                </tr>
+            @endforeach
+        @endforeach
     </table>
 
     <div style="margin-top:5px; text-align:right;">
@@ -240,39 +195,29 @@
         <br>
         <br>
 
-        <table width="100%" class="note" cellpadding="0" cellspacing="0" nobr="true">
+        <table width="100%" class="note small" nobr="true">
             <tr>
-                <td width="60%">
-                    <strong>Ket :</strong><br>
-                    OK : V<br>
-                    Tidak OK : X
-                </td>
+                <td width="60%">&nbsp;</td>
 
                 <td width="20%" align="center" style="vertical-align: top;">
                     Dibuat oleh :<br>
                     @if($namaPemeriksa)
-                        <u>{{ $namaPemeriksa }}</u><br>
                         <br>
                         <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
                         QC
                     @endif
                 </td>
 
                 <td width="20%" align="center" style="vertical-align: top;">
-                    Disetujui oleh :<br>
+                    Diverifikasi oleh :<br>
                     @if($namaSpv)
-                        <u>{{ $namaSpv }}</u><br>
                         <br>
                         <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
-                        QC SPV
-                    @elseif($packings->count() > 0)
-                        <i>Belum semua entry disetujui</i><br>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
-                        <br>
-                        QC SPV
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui && !empty($pages[0]))
+                        <i>Belum semua entry disetujui</i>
                     @endif
                 </td>
             </tr>

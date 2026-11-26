@@ -2,214 +2,208 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title>Pemeriksaan Organoleptik</title>
     <style>
-        body { font-size: 9px; }
-        .title { font-size: 12px; font-weight: bold; text-align: center; }
-        table { border-collapse: collapse; }
-
-        .tbl-header td {
-            font-size: 9px;
-            padding: 2px 0;
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
         }
 
-        .tbl-main, 
-        .tbl-main th, 
+        table {
+            border-collapse: collapse;
+        }
+
+        .title {
+            font-size: 13px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .tbl-header td {
+            padding: 0;
+            font-size: 8px;
+            line-height: 1;
+        }
+
+        .tbl-main,
+        .tbl-main th,
         .tbl-main td {
-            border: 0.3px solid #000;
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
         }
 
         .tbl-main th {
+            background: #d9e2f3;
+            font-weight: bold;
             text-align: center;
             vertical-align: middle;
-            font-size: 8px;
+            padding: 3px 2px;
+            line-height: 1.15;
         }
 
-        .center { text-align: center; }
-        .sign { text-align: center; }
-        .small { font-size: 8px; }
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
+        }
 
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 9pt;
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
+
 <body>
 
-{{-- HEADER LOGO + TITLE --}}
-<div style="margin-left:-30px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+@php
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
+
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
+
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
+@endphp
+
+@foreach($pages as $page)
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
         <tr>
-            <td width="55">
-                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-            </td>
-            <td>
-                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
-                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
                 <span style="font-size:12pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
-</div>
-<h2 class="title">PEMERIKSAAN ORGANOLEPTIK</h2>
-<br>
-<br>
 
-@php
-    $dateFilter = request('date') ? \Carbon\Carbon::parse(request('date'))->format('d-m-Y') : 'All Dates';
-    $shiftFilter = request('shift') ?? 'Semua Shift';
-    $namaProdukFilter = request('nama_produk') ?? 'Semua Produk';
-@endphp
+    <h2 class="title" style="margin:0; padding:0;">
+        PEMERIKSAAN ORGANOLEPTIK
+    </h2>
+    <br>
+    <br>
 
-<table width="100%" class="tbl-header">
-    <tr>
-        <td>Tanggal : {{ $dateFilter }}</td>
-        <td>Shift : {{ $shiftFilter }}</td>
-        <td>Nama Varian : {{ $namaProdukFilter }}</td>
-    </tr>
-</table>
-<br>
-
-{{-- TABLE --}}
-<table width="100%" class="tbl-main" cellpadding="1">
-    <tr>
-        <th rowspan="2" class="center">Kode Batch</th>
-        <th colspan="8" class="center">Sensori</th>
-        <th rowspan="2" class="center">Hasil Score</th>
-        <th rowspan="2" class="center">Release / Tidak Release</th>
-        <th rowspan="2" class="center">Paraf QC</th>
-    </tr>
-    <tr>
-        <th class="center">Penampilan</th>
-        <th class="center">Aroma</th>
-        <th class="center">Kekenyalan</th>
-        <th class="center">Rasa Asin</th>
-        <th class="center">Rasa Gurih</th>
-        <th class="center">Rasa Manis</th>
-        <th class="center">Rasa Ayam/BBQ/Ikan</th>
-        <th class="center">Rasa Keseluruhan</th>
-    </tr>
-
-    @php
-        $allSensori = [];
-        foreach ($organoleptiks as $organoleptik) {
-            $sensors = json_decode($organoleptik->sensori, true) ?? [];
-            foreach ($sensors as $sensor) {
-                $allSensori[] = [
-                    'kode_produksi' => $sensor['kode_produksi'] ?? '',
-                    'penampilan' => $sensor['penampilan'] ?? '',
-                    'aroma' => $sensor['aroma'] ?? '',
-                    'kekenyalan' => $sensor['kekenyalan'] ?? '',
-                    'rasa_asin' => $sensor['rasa_asin'] ?? '',
-                    'rasa_gurih' => $sensor['rasa_gurih'] ?? '',
-                    'rasa_manis' => $sensor['rasa_manis'] ?? '',
-                    'rasa_daging' => $sensor['rasa_daging'] ?? '',
-                    'rasa_keseluruhan' => $sensor['rasa_keseluruhan'] ?? '',
-                    'rata_score' => $sensor['rata_score'] ?? '',
-                    'release' => $sensor['release'] ?? '',
-                    'paraf' => $organoleptik->username ?? ''
-                ];
-            }
-        }
-    @endphp
-
-    @forelse($allSensori as $sensor)
+    <table width="100%" class="tbl-header" cellpadding="0" cellspacing="0">
         <tr>
-            <td class="center">{{ optional(\App\Models\Mincing::find($sensor['kode_produksi']))->kode_produksi ?? '-' }}</td>
-            <td class="center">{{ $sensor['penampilan'] }}</td>
-            <td class="center">{{ $sensor['aroma'] }}</td>
-            <td class="center">{{ $sensor['kekenyalan'] }}</td>
-            <td class="center">{{ $sensor['rasa_asin'] }}</td>
-            <td class="center">{{ $sensor['rasa_gurih'] }}</td>
-            <td class="center">{{ $sensor['rasa_manis'] }}</td>
-            <td class="center">{{ $sensor['rasa_daging'] }}</td>
-            <td class="center">{{ $sensor['rasa_keseluruhan'] }}</td>
-            <td class="center">{{ $sensor['rata_score'] }}</td>
-            <td class="center">{{ $sensor['release'] }}</td>
-            <td class="center">{{ $sensor['paraf'] }}</td>
+            <td width="30%">Tanggal : {{ $dateFilter }}</td>
+            <td width="30%">Shift : {{ $shiftFilter }}</td>
+            <td width="40%">Nama Varian : {{ $namaProdukFilter }}</td>
         </tr>
-    @empty
+    </table>
+
+    <br>
+
+    <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
         <tr>
-            <td colspan="12" class="center">Tidak ada data sensori</td>
+            <th rowspan="2" width="12%"><b>Kode Batch</b></th>
+            <th colspan="8" width="64%"><b>Sensori</b></th>
+            <th rowspan="2" width="8%"><b>Hasil Score</b></th>
+            <th rowspan="2" width="8%"><b>Release / Tidak Release</b></th>
+            <th rowspan="2" width="8%"><b>Paraf QC</b></th>
         </tr>
-    @endforelse
+        <tr>
+            <th width="8%"><b>Penampilan</b></th>
+            <th width="8%"><b>Aroma</b></th>
+            <th width="8%"><b>Kekenyalan</b></th>
+            <th width="8%"><b>Rasa Asin</b></th>
+            <th width="8%"><b>Rasa Gurih</b></th>
+            <th width="8%"><b>Rasa Manis</b></th>
+            <th width="8%"><b>Rasa Ayam/BBQ/Ikan</b></th>
+            <th width="8%"><b>Rasa Keseluruhan</b></th>
+        </tr>
 
+        @foreach($page as $row)
+            <tr>
+                <td width="12%">{{ $row['kode'] }}</td>
+                <td width="8%">{{ $row['penampilan'] }}</td>
+                <td width="8%">{{ $row['aroma'] }}</td>
+                <td width="8%">{{ $row['kekenyalan'] }}</td>
+                <td width="8%">{{ $row['asin'] }}</td>
+                <td width="8%">{{ $row['gurih'] }}</td>
+                <td width="8%">{{ $row['manis'] }}</td>
+                <td width="8%">{{ $row['daging'] }}</td>
+                <td width="8%">{{ $row['keseluruhan'] }}</td>
+                <td width="8%">{{ $row['score'] }}</td>
+                <td width="8%">{{ $row['release'] }}</td>
+                <td width="8%">{{ $row['paraf'] }}</td>
+            </tr>
+        @endforeach
 
-</table>
-<table width="100%">
-    <tr>
-        <td width="75%"></td>
-        <td width="25%" align="right" style="font-style: italic;">
-            {{ $noDokumen }}
-        </td>
-    </tr>
-</table>
+        @if(empty($page))
+            <tr>
+                <td width="100%" colspan="12">Tidak ada data sensori</td>
+            </tr>
+        @endif
+    </table>
 
-<br>
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
 
-{{-- Keterangan Parameter --}}
-@php
-    $allApproved = $organoleptiks->every(fn($item) => !empty($item->nama_spv));
-    $namaSpv = $allApproved && $organoleptiks->isNotEmpty()
-        ? $organoleptiks->first()->nama_spv
-        : null;
-@endphp
+    @if($loop->last)
 
-<table width="100%" class="small">
-    <tr>
-        <td><strong>Keterangan Parameter:</strong></td>
-    </tr>
-    <tr>
-        <td width="25%">
-            Penampilan, Aroma, Rasa Keseluruhan:<br>
-            1 = Sangat Tidak<br>
-            2 = Biasa<br>
-            3 = Sangat
-        </td>
-        <td width="25%">
-            Kekenyalan, Manis, Asin, Gurih, Ayam/BBQ/Ikan:<br>
-            1 = Terlalu<br>
-            2 = Kurang<br>
-            3 = Pas
-        </td>
-        <td width="25%">
-            Keterangan Hasil Score:<br>
-            1 - 1,5 = Tidak Release<br>
-            1,6 - 3 = Release
-        </td>
-        <td>
-            <table width="100%" class="sign">
-                <tr>
-                    <td>Disetujui Oleh,</td>
-                </tr>
-                <tr>
-                    <td><br><br><br></td>
-                </tr>
-                <tr>
-                    <td>
-                        (<u>
-                        @if($namaSpv)
-                            {{ $namaSpv }}
-                        @else
-                            Belum Semua Entry Disetujui Oleh SPV
-                        @endif
-                        </u>
-                        )
+        <br>
+        <br>
+
+        <table width="100%" class="note small" nobr="true">
+            <tr>
+                <td width="60%">
+                    <strong>Keterangan Parameter :</strong><br>
+                    Penampilan, Aroma, Rasa Keseluruhan : 1 = Sangat Tidak, 2 = Biasa, 3 = Sangat<br>
+                    Kekenyalan, Manis, Asin, Gurih, Ayam/BBQ/Ikan : 1 = Terlalu, 2 = Kurang, 3 = Pas<br>
+                    Keterangan Hasil Score : 1 - 1,5 = Tidak Release, 1,6 - 3 = Release
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
                         <br>
-                        QC SPV
-                    </td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-</table>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        QC
+                    @endif
+                </td>
 
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui && !empty($pages[0]))
+                        <i>Belum semua entry disetujui</i>
+                    @endif
+                </td>
+            </tr>
+        </table>
 
+    @else
+        <br pagebreak="true" />
+    @endif
+
+@endforeach
 
 </body>
 </html>

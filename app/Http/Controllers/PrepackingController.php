@@ -622,45 +622,116 @@ class PrepackingController extends Controller
         ->where('laporan', 'Pemeriksaan Pre Packing')
         ->value('no_dokumen');
 
+    $dateFilter = $date
+        ? \Carbon\Carbon::parse($date)->format('d-m-Y')
+        : 'Semua Tanggal';
+
     $kodeMap = \App\Models\Mincing::whereIn(
         'uuid',
         $prepackings->pluck('kode_produksi')->filter()->unique()
     )->pluck('kode_produksi', 'uuid');
 
-    $usernames = $prepackings->pluck('username')
-        ->merge($prepackings->pluck('nama_spv'))
+    $usernames = $prepackings
+        ->flatMap(fn($p) => [$p->username, $p->nama_spv])
         ->filter()
         ->unique()
         ->values();
 
-    $userMap = \App\Models\User::whereIn('username', $usernames)
-        ->pluck('name', 'username');
+    $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+    $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
 
-    $catatan = $prepackings
-        ->filter(fn ($p) => !empty(trim((string) $p->catatan)))
-        ->map(fn ($p) => ($kodeMap[$p->kode_produksi] ?? '-') . ': ' . trim($p->catatan))
-        ->implode(', ');
+    $toArray = function ($value) {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+        return [];
+    };
 
-    $first = $prepackings->first();
+    $num = fn($v) => is_numeric($v) ? $v + 0 : 0;
 
-    $pemeriksa    = '';
-    $tglPemeriksa = '';
-    $spv          = '';
-    $tglSpv       = '';
+    $rows = [];
 
-    if ($first) {
-        $pemeriksa = $userMap[$first->username] ?? $first->username ?? '';
-        $tglPemeriksa = $first->created_at
-            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
-            : '';
+    foreach ($prepackings as $i => $p) {
+        $kondisi = $toArray($p->kondisi_produk);
+        $berat   = $toArray($p->berat_produk);
+        $suhuArr = $toArray($p->suhu_produk);
+
+        $abU = $kondisi['basah_air_ujung'] ?? 0;
+        $akU = $kondisi['kering_air_ujung'] ?? 0;
+        $mbU = $kondisi['basah_minyak_ujung'] ?? 0;
+        $mkU = $kondisi['kering_minyak_ujung'] ?? 0;
+
+        $abS = $kondisi['basah_air_seal'] ?? 0;
+        $akS = $kondisi['kering_air_seal'] ?? 0;
+        $mbS = $kondisi['basah_minyak_seal'] ?? 0;
+        $mkS = $kondisi['kering_minyak_seal'] ?? 0;
+
+        $rows[] = [
+            'no'       => $i + 1,
+            'nama'     => $p->nama_produk ?: '-',
+            'kode'     => $kodeMap[$p->kode_produksi] ?? '-',
+            'conveyor' => $p->conveyor ?: '-',
+            'paraf'    => $namaUser($p->username) ?: '-',
+            'lines'    => [
+                [
+                    'suhu'   => $suhuArr['suhu_1'] ?? $suhuArr[0] ?? '-',
+                    'bagian' => 'Ujung',
+                    'ab'     => $abU,
+                    'ak'     => $akU,
+                    'mb'     => $mbU,
+                    'mk'     => $mkU,
+                    'pcs'    => $berat['pcs_1'] ?? 0,
+                    'toples' => $berat['toples_1'] ?? 0,
+                ],
+                [
+                    'suhu'   => $suhuArr['suhu_2'] ?? $suhuArr[1] ?? '-',
+                    'bagian' => 'Seal',
+                    'ab'     => $abS,
+                    'ak'     => $akS,
+                    'mb'     => $mbS,
+                    'mk'     => $mkS,
+                    'pcs'    => $berat['pcs_2'] ?? 0,
+                    'toples' => $berat['toples_2'] ?? 0,
+                ],
+                [
+                    'suhu'   => $suhuArr['suhu_3'] ?? $suhuArr[2] ?? '-',
+                    'bagian' => 'Total',
+                    'ab'     => round($num($abU) + $num($abS), 2),
+                    'ak'     => round(abs(100 - ($num($akU) + $num($akS))), 2),
+                    'mb'     => round($num($mbU) + $num($mbS), 2),
+                    'mk'     => round(abs(100 - ($num($mkU) + $num($mkS))), 2),
+                    'pcs'    => $berat['pcs_3'] ?? 0,
+                    'toples' => $berat['toples_3'] ?? 0,
+                ],
+            ],
+        ];
     }
 
+    $pages = empty($rows) ? [[]] : array_chunk($rows, 6);
+
+    $catatan = $prepackings
+        ->filter(fn($p) => !empty(trim((string) $p->catatan)))
+        ->map(fn($p) => ($kodeMap[$p->kode_produksi] ?? '-') . ': ' . trim($p->catatan))
+        ->implode(', ');
+
+    $first        = $prepackings->first();
+    $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+    $tglPemeriksa = ($first && $first->created_at)
+        ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+        : '';
+
     $semuaDisetujui = $prepackings->isNotEmpty()
-        && $prepackings->every(fn ($p) => !empty($p->nama_spv));
+        && $prepackings->every(fn($p) => !empty($p->nama_spv));
+
+    $spv    = '';
+    $tglSpv = '';
 
     if ($semuaDisetujui) {
-        $spvRaw = trim((string) $first->nama_spv);
-        $spv = $userMap[$spvRaw] ?? $spvRaw;
+        $spv    = $namaUser(trim((string) $first->nama_spv));
         $tglSpv = $first->tgl_update_spv
             ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
             : '';
@@ -674,7 +745,6 @@ class PrepackingController extends Controller
 
     $pdf->SetCreator(PDF_CREATOR);
     $pdf->SetTitle('Pemeriksaan Pre Packing');
-    $pdf->SetSubject('Pemeriksaan Pre Packing');
 
     $pdf->SetPrintHeader(false);
     $pdf->SetPrintFooter(false);
@@ -682,15 +752,13 @@ class PrepackingController extends Controller
     $pdf->SetMargins(5, 5, 5);
     $pdf->SetAutoPageBreak(true, 5);
 
-    $pdf->SetFont('helvetica', '', 7);
+    $pdf->SetFont('helvetica', '', 6);
     $pdf->AddPage();
 
     $html = view('reports.pengecekan-pre-packing', compact(
-        'prepackings',
-        'request',
+        'pages',
+        'dateFilter',
         'noDokumen',
-        'kodeMap',
-        'userMap',
         'catatan',
         'pemeriksa',
         'tglPemeriksa',

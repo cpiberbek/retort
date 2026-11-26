@@ -631,43 +631,134 @@ class PackingController extends Controller
             ->orderBy('shift', 'asc')
             ->get();
 
-        $usernames = $packings->pluck('username')
-            ->merge($packings->pluck('nama_produksi'))
+        $usernames = $packings
+            ->flatMap(fn($p) => [$p->username, $p->nama_produksi, $p->nama_spv])
             ->filter()
             ->unique()
             ->values();
 
-        $userMap = \App\Models\User::whereIn('username', $usernames)
-            ->pluck('name', 'username');
+        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
 
         $kodeTopleMap = \App\Models\Mincing::whereIn(
             'uuid',
             $packings->pluck('kode_toples')->filter()->unique()
         )->pluck('kode_produksi', 'uuid');
 
-        $first = $packings->first();
+        $decode = function ($value) {
+            for ($i = 0; $i < 2; $i++) {
+                if (is_string($value) && $value !== '') {
+                    $decoded = json_decode($value, true);
+                    if ($decoded !== null) {
+                        $value = $decoded;
+                    }
+                }
+            }
+            return is_array($value) ? $value : [];
+        };
 
-        $pemeriksa    = '';
-        $tglPemeriksa = '';
-        $spv          = '';
-        $tglSpv       = '';
+        $imagePath = function ($path) {
+            if (empty($path)) {
+                return '';
+            }
+            $full = storage_path('app/public/' . ltrim($path, '/'));
+            return file_exists($full) ? $full : '';
+        };
 
-        if ($first) {
-            $pemeriksa = $userMap[$first->username] ?? $first->username ?? '';
-            $tglPemeriksa = $first->created_at
-                ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
-                : '';
+        $dash = fn($v) => ($v === null || $v === '') ? '-' : $v;
+
+        $rows = [];
+
+        foreach ($packings as $p) {
+            $suhuList = $decode($p->suhu);
+            if (empty($suhuList) && $p->suhu !== null && $p->suhu !== '') {
+                $suhuList = [$p->suhu];
+            }
+
+            $suhu = [];
+            foreach (array_values($suhuList) as $i => $v) {
+                $suhu[] = '#' . ($i + 1) . ': ' . $v;
+            }
+
+            $kemasan = [];
+            foreach (array_values($decode($p->data_kemasan)) as $k) {
+                $kemasan[] = [
+                    'jenis'    => $dash($k['jenis_kemasan'] ?? null),
+                    'lot'      => $dash($k['no_lot_kemasan'] ?? null),
+                    'tgl'      => !empty($k['tgl_kedatangan'])
+                        ? \Carbon\Carbon::parse($k['tgl_kedatangan'])->format('d-m-Y')
+                        : '-',
+                    'supplier' => $dash($k['nama_supplier'] ?? null),
+                ];
+            }
+
+            if (empty($kemasan)) {
+                $kemasan[] = ['jenis' => '-', 'lot' => '-', 'tgl' => '-', 'supplier' => '-'];
+            }
+
+            $rows[] = [
+                'waktu'      => $p->waktu ? \Carbon\Carbon::parse($p->waktu)->format('H:i') : '-',
+                'kalibrasi'  => $dash($p->kalibrasi),
+                'qrcode'     => $imagePath($p->qrcode),
+                'printing'   => $imagePath($p->kode_printing),
+                'toples'     => $dash($kodeTopleMap[$p->kode_toples] ?? null),
+                'suhu'       => $suhu,
+                'speed'      => $dash($p->speed),
+                'segel'      => $dash($p->kondisi_segel),
+                'jumlah'     => $dash($p->jumlah_produk),
+                'berat_pcs'  => $dash($p->berat_pcs),
+                'berat_pack' => $dash($p->berat_pack),
+                'kemasan'    => $kemasan,
+                'qc'         => $dash($namaUser($p->username)),
+                'produksi'   => $dash($namaUser($p->nama_produksi)),
+                'ket'        => $dash($p->keterangan),
+            ];
         }
 
+        $pages       = [];
+        $currentPage = [];
+        $currentCost = 0;
+
+        foreach ($rows as $row) {
+            $cost = count($row['kemasan']);
+
+            if (!empty($currentPage) && $currentCost + $cost > 20) {
+                $pages[]     = $currentPage;
+                $currentPage = [];
+                $currentCost = 0;
+            }
+
+            $currentPage[] = $row;
+            $currentCost  += $cost;
+        }
+
+        $pages[] = $currentPage;
+
+        $tanggal = $date
+            ? \Carbon\Carbon::parse($date)->format('d-m-Y')
+            : $packings->pluck('date')
+                ->filter()
+                ->unique()
+                ->map(fn($d) => \Carbon\Carbon::parse($d)->format('d-m-Y'))
+                ->implode(', ');
+
+        $shiftText  = $shift ?: $packings->pluck('shift')->filter()->unique()->implode(', ');
+        $namaVarian = $packings->pluck('nama_produk')->filter()->unique()->implode(', ');
+
+        $first        = $packings->first();
+        $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+        $tglPemeriksa = ($first && $first->created_at)
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
+
         $semuaDisetujui = $packings->isNotEmpty()
-            && $packings->every(fn ($p) => (string) $p->status_spv === '1');
+            && $packings->every(fn($p) => (string) $p->status_spv === '1');
+
+        $spv    = '';
+        $tglSpv = '';
 
         if ($semuaDisetujui) {
-            $namaSpvRaw = trim((string) ($first->nama_spv ?? ''));
-
-            $spv = \App\Models\User::where('username', $namaSpvRaw)->value('name')
-                ?? $namaSpvRaw;
-
+            $spv    = $namaUser(trim((string) ($first->nama_spv ?? '')));
             $tglSpv = $first->tgl_update_spv
                 ? \Carbon\Carbon::parse($first->tgl_update_spv)->format('d-m-Y')
                 : '';
@@ -681,7 +772,6 @@ class PackingController extends Controller
 
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Pemeriksaan Proses Packing');
-        $pdf->SetSubject('Pemeriksaan Proses Packing');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
@@ -693,11 +783,11 @@ class PackingController extends Controller
         $pdf->AddPage();
 
         $html = view('reports.proses-packing', compact(
-            'packings',
-            'request',
+            'pages',
+            'tanggal',
+            'shiftText',
+            'namaVarian',
             'noDokumen',
-            'userMap',
-            'kodeTopleMap',
             'pemeriksa',
             'tglPemeriksa',
             'spv',
