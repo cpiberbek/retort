@@ -2,56 +2,64 @@
 <html>
 <head>
     <meta charset="utf-8">
-
     <style>
         body {
-            font-family: times;
-            font-size: 9pt;
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
+        }
+
+        table {
+            border-collapse: collapse;
         }
 
         .title {
-            text-align: center;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: bold;
-            margin-bottom: 10px;
-        }
-
-        .info {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 8px;
-        }
-
-        .info td {
-            border: none;
-            padding: 2px;
-        }
-
-        .main {
-            width: 100%;
-            border-collapse: collapse;
-            border-spacing: 0;
-        }
-
-        .main th,
-        .main td {
-            border: 1px solid #000;
-            padding: 5px;
-            vertical-align: middle;
             text-align: center;
         }
 
-        .main th {
+        .small {
+            font-size: 7px;
+        }
+
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .tbl-header td {
+            padding: 0;
+            font-size: 8px;
+            line-height: 1;
+        }
+
+        .tbl-main,
+        .tbl-main th,
+        .tbl-main td {
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
+        }
+
+        .tbl-main th {
+            background: #d9e2f3;
             font-weight: bold;
-        }
-
-        .main tbody td {
-            vertical-align: middle;
             text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
+            line-height: 1.15;
         }
 
-        .row {
-            height: 28px;
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
+        }
+
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
@@ -59,127 +67,122 @@
 <body>
 
 @php
-    $header = $produks->first();
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
 
-    function resolveNameFromUsername($username)
-    {
-        if (empty($username)) {
-            return '-';
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
         }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
 
-        $user = \App\Models\User::where('username', $username)->first();
-
-        return $user->name ?? $username;
-    }
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
 @endphp
 
-<div style="margin-left:-30px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-            <td width="55">
-                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-            </td>
+@foreach($pages as $page)
 
-            <td>
-                <span style="font-size:12pt;"><b>PT Charoen</b></span><br>
-                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
+        <tr>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
                 <span style="font-size:12pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
-</div>
 
-<div class="title">
-    KONTROL LABELISASI PVDC
-</div>
+    <h2 class="title" style="margin:0; padding:0;">
+        KONTROL LABELISASI PVDC
+    </h2>
+    <br>
+    <br>
 
-<br>
-
-<table class="info">
-    <tr>
-        <td width="10%"><b>Hari / Tanggal</b></td>
-        <td width="15%">: {{ $header ? \Carbon\Carbon::parse($header->date)->format('d-m-Y') : '-' }}</td>
-
-        <td width="10%"><b>Shift</b></td>
-        <td width="15%">: {{ $header->shift ?? '-' }}</td>
-
-        <td width="10%"><b>Nama Produk</b></td>
-        <td width="40%">: {{ $header->nama_produk ?? '-' }}</td>
-    </tr>
-</table>
-
-<br><br>
-
-<table class="main">
-    <thead>
+    <table width="100%" class="tbl-header" cellpadding="0" cellspacing="0">
         <tr>
-            <th width="15%" rowspan="2" style="vertical-align: middle;">
-                Kode<br>Mesin
-            </th>
+            <td width="25%"><b>Hari / Tanggal</b> : {{ $tanggal ?: '-' }}</td>
+            <td width="15%"><b>Shift</b> : {{ $shiftText ?: '-' }}</td>
+            <td width="60%"><b>Nama Produk</b> : {{ $namaProduk ?: '-' }}</td>
+        </tr>
+    </table>
 
-            <th width="30%" rowspan="2" style="vertical-align: middle;">
-                Kode Produksi
-            </th>
+    <br>
 
-            <th width="15%" colspan="2" style="vertical-align: middle;">
-                Paraf
-            </th>
-
-            <th width="40%" rowspan="2" style="vertical-align: middle;">
-                Keterangan
-            </th>
+    <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
+        <tr>
+            <th rowspan="2" width="12%"><b>Kode Mesin</b></th>
+            <th rowspan="2" width="28%"><b>Kode Produksi</b></th>
+            <th colspan="2" width="30%"><b>Paraf</b></th>
+            <th rowspan="2" width="30%"><b>Keterangan</b></th>
+        </tr>
+        <tr>
+            <th width="15%"><b>Operator</b></th>
+            <th width="15%"><b>QC</b></th>
         </tr>
 
+        @foreach($page as $row)
         <tr>
-            <th width="7.5%" style="vertical-align: middle;">
-                Operator
-            </th>
-
-            <th width="7.5%" style="vertical-align: middle;">
-                QC
-            </th>
+            <td width="12%" class="center">{{ $row['mesin'] }}</td>
+            <td width="28%" class="center">
+                {{ $row['kode'] }}
+                @if($row['file'])
+                    <br><img src="{{ $row['file'] }}" width="40">
+                @endif
+            </td>
+            <td width="15%" class="center">{{ $row['operator'] }}</td>
+            <td width="15%" class="center">{{ $row['qc'] }}</td>
+            <td width="30%" class="center">{{ $row['keterangan'] }}</td>
         </tr>
-    </thead>
-
-    <tbody>
-        @foreach($produks as $row)
-            @foreach($row->labelisasi_detail as $item)
-                <tr class="row">
-                    <td width="15%" style="vertical-align: middle; text-align: center;">
-                        {{ $item['mesin'] }}
-                    </td>
-
-                    <td width="30%" style="vertical-align: middle; text-align: center;">
-                        {{ optional($item['mincing'])->kode_produksi ?? '-' }}<br>
-                        <img src="{{ storage_path('app/public/' . $item['file']) }}" width="60">
-                    </td>
-
-                    <td width="7.5%" style="vertical-align: middle; text-align: center;">
-                        {{ $row->nama_operator ?? '-' }}
-                    </td>
-
-                    <td width="7.5%" style="vertical-align: middle; text-align: center;">
-                        {{ resolveNameFromUsername($row->username) }}
-                    </td>
-
-                    <td width="40%" style="vertical-align: middle; text-align: center;">
-                        {{ $item['keterangan'] }}
-                    </td>
-                </tr>
-            @endforeach
         @endforeach
-    </tbody>
-</table>
+    </table>
 
-<table width="100%">
-    <tr>
-        <td width="75%"></td>
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
 
-        <td width="25%" align="right" style="font-style: italic;">
-            {{ $noDokumen }}
-        </td>
-    </tr>
-</table>
+    @if($loop->last)
+
+        <br>
+        <br>
+
+        <table width="100%" class="note small" nobr="true">
+            <tr>
+                <td width="60%">&nbsp;</td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        QC
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui && !empty($pages[0]))
+                        <i>Belum semua entry disetujui</i>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+    @else
+        <br pagebreak="true" />
+    @endif
+
+@endforeach
 
 </body>
 </html>

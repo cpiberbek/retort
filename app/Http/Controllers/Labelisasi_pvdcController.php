@@ -682,23 +682,22 @@ class Labelisasi_pvdcController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $search    = $request->input('search');
-        $date      = $request->input('date');
-        $shift     = $request->input('shift');
-        $userPlant = Auth::user()->plant;
+{
+    $search    = $request->input('search');
+    $date      = $request->input('date');
+    $shift     = $request->input('shift');
+    $userPlant = Auth::user()->plant;
 
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Kontrol Labelisasi PVDC')
-            ->value('no_dokumen');
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Kontrol Labelisasi PVDC')
+        ->value('no_dokumen');
 
-        // Ambil data (Get Collection)
-        $produks = Labelisasi_pvdc::query() 
+    $produks = Labelisasi_pvdc::query()
         ->where('plant', $userPlant)
         ->when($search, function ($query) use ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nama_produk', 'like', "%{$search}%")
-                ->orWhere('username', 'like', "%{$search}%");
+                    ->orWhere('username', 'like', "%{$search}%");
             });
         })
         ->when($date, function ($query) use ($date) {
@@ -710,28 +709,103 @@ class Labelisasi_pvdcController extends Controller
         ->orderBy('date', 'asc')
         ->get();
 
-        if (ob_get_length()) ob_end_clean();
+    $usernames = $produks
+        ->flatMap(fn($p) => [$p->username, $p->nama_spv])
+        ->filter()
+        ->unique()
+        ->values();
 
-        $pdf = new TCPDF('L', 'mm', [330, 210], true, 'UTF-8', false);
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetAuthor('PT. Charoen Pokphand Indonesia');
-        $pdf->SetTitle('Laporan Labelisasi PVDC');
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-        $pdf->SetDefaultMonospacedFont(PDF_FONT_MONOSPACED);
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(TRUE, 10);
-        $pdf->setImageScale(PDF_IMAGE_SCALE_RATIO);
-        $pdf->SetFont('helvetica', '', 10);
-        $pdf->AddPage();
+    $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+    $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
 
-        // Render View ke HTML
-        // Pastikan Anda membuat file view ini (kode ada di bawah)
-        $html = view('reports.labelisasi-pvdc', compact('produks', 'request', 'noDokumen'))->render();
+    $rows = [];
 
-        $pdf->writeHTMLCell(0, 0, '', '', $html, 0, 1, 0, true, '', true);
-        $pdf->Output('Labelisasi_PVDC_' . date('Ymd_His') . '.pdf', 'I');
-        exit();
+    foreach ($produks as $row) {
+        $operator = $row->nama_operator ?: '-';
+        $qc       = $namaUser($row->username) ?: '-';
+
+        foreach ($row->labelisasi_detail ?? [] as $item) {
+            $file     = $item['file'] ?? null;
+            $filePath = $file ? storage_path('app/public/' . $file) : '';
+
+            $rows[] = [
+                'mesin'      => $item['mesin'] ?? '-',
+                'kode'       => optional($item['mincing'] ?? null)->kode_produksi ?? '-',
+                'file'       => ($filePath && file_exists($filePath)) ? $filePath : '',
+                'operator'   => $operator,
+                'qc'         => $qc,
+                'keterangan' => $item['keterangan'] ?? '',
+            ];
+        }
     }
+
+    $pages = empty($rows) ? [[]] : array_chunk($rows, 8);
+
+    $first      = $produks->first();
+    $tanggal    = $first && $first->date
+        ? \Carbon\Carbon::parse($first->date)->format('d-m-Y')
+        : '';
+    $shiftText  = $first->shift ?? '';
+    $namaProduk = $first->nama_produk ?? '';
+
+    $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+    $tglPemeriksa = ($first && $first->created_at)
+        ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+        : '';
+
+    $semuaDisetujui = $produks->count() > 0
+        && $produks->every(fn($p) => (int) $p->status_spv === 1);
+
+    $spv    = '';
+    $tglSpv = '';
+
+    if ($semuaDisetujui) {
+        $spvRow = $produks->first(fn($p) => !empty($p->nama_spv));
+
+        if ($spvRow) {
+            $spv    = $namaUser(trim((string) $spvRow->nama_spv));
+            $tglSpv = $spvRow->tgl_update_spv
+                ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', 'mm', [330, 210], true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Laporan Labelisasi PVDC');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->AddPage();
+
+    $html = view('reports.labelisasi-pvdc', compact(
+        'pages',
+        'tanggal',
+        'shiftText',
+        'namaProduk',
+        'noDokumen',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Labelisasi_PVDC_' . date('Ymd_His') . '.pdf', 'I');
+
+    exit();
+}
 
 }
