@@ -319,11 +319,11 @@ class WashingController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $search = $request->input('search');
-        $date = $request->input('date');
-        $shift = $request->input('shift');
+        $search     = $request->input('search');
+        $date       = $request->input('date');
+        $shift      = $request->input('shift');
         $kode_batch = $request->input('kode_batch');
-        $userPlant = Auth::user()->plant;
+        $userPlant  = Auth::user()->plant;
 
         $items = Washing::with('mincing')
             ->where('plant', $userPlant)
@@ -351,30 +351,93 @@ class WashingController extends Controller
             ->orderBy('pukul', 'asc')
             ->get();
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
         $noDokumen = List_form::where('plant', $userPlant)
             ->where('laporan', 'Pemeriksaan Washing - Drying')
             ->value('no_dokumen');
 
+        $item = $items->first();
+
+        $rows = [
+            'Nama Produk'                    => $item->nama_produk ?? '-',
+            'Kode Produksi'                  => optional($item->mincing ?? null)->kode_produksi ?? '-',
+            'Waktu'                          => ($item && $item->pukul) ? \Carbon\Carbon::parse($item->pukul)->format('H:i') : '-',
+            'Panjang Produk Akhir'           => $item->panjang_produk ?? '-',
+            'Diameter Produk Akhir'          => $item->diameter_produk ?? '-',
+            'Airtrap'                        => $item->airtrap ?? '-',
+            'Lengket'                        => $item->lengket ?? '-',
+            'Sisa Adonan'                    => $item->sisa_adonan ?? '-',
+            'Cek Kebocoran/Vacuum'           => $item->kebocoran ?? '-',
+            'Kekuatan Seal'                  => $item->kekuatan_seal ?? '-',
+            'Print Kode Produksi'            => $item->print_kode ?? '-',
+            'Konsentrasi PC Kleer 1'         => $item->konsentrasi_pckleer ?? '-',
+            'Suhu PC Kleer 1'                => $item->suhu_pckleer_1 ?? '-',
+            'Suhu PC Kleer 2'                => $item->suhu_pckleer_2 ?? '-',
+            'pH PC Kleer'                    => $item->ph_pckleer ?? '-',
+            'Kondisi Air PC Kleer'           => $item->kondisi_air_pckleer ?? '-',
+            'Konsentrasi Pottasium Sorbate'  => $item->konsentrasi_pottasium ?? '-',
+            'Suhu Pottasium Sorbate'         => $item->suhu_pottasium ?? '-',
+            'pH Pottasium Sorbate'           => $item->ph_pottasium ?? '-',
+            'Kondisi Air Pottasium Sorbate'  => $item->kondisi_pottasium ?? '-',
+            'Suhu Heater'                    => $item->suhu_heater ?? '-',
+            'Speed Conv. Drying 1'           => $item->speed_1 ?? '-',
+            'Speed Conv. Drying 2'           => $item->speed_2 ?? '-',
+            'Speed Conv. Drying 3'           => $item->speed_3 ?? '-',
+            'Speed Conv. Drying 4'           => $item->speed_4 ?? '-',
+        ];
+
+        $catatan = $item->catatan ?? '';
+
+        $usernames = collect([
+            $item->username_updated ?? null,
+            $item->username ?? null,
+            $item->nama_spv ?? null,
+        ])->filter()->unique()->values();
+
+        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+        $pemeriksa    = $item ? $namaUser(trim((string) ($item->username_updated ?? $item->username))) : '';
+        $tglPemeriksa = ($item && $item->created_at)
+            ? \Carbon\Carbon::parse($item->created_at)->format('d-m-Y')
+            : '';
+
+        $spv    = ($item && !empty($item->nama_spv)) ? $namaUser(trim((string) $item->nama_spv)) : '';
+        $tglSpv = ($item && !empty($item->nama_spv) && $item->tgl_update_spv)
+            ? \Carbon\Carbon::parse($item->tgl_update_spv)->format('d-m-Y')
+            : '';
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
         $pdf = new \TCPDF('P', PDF_UNIT, 'F4', true, 'UTF-8', false);
+
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Pemeriksaan Washing - Drying');
 
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
-        $pdf->SetMargins(3, 5, 3);
-        $pdf->SetAutoPageBreak(TRUE, 5);
-        $pdf->SetFont('helvetica', '', 6);
 
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
+
+        $pdf->SetFont('helvetica', '', 6);
         $pdf->AddPage();
 
-        $html = view('reports.washing', compact('items', 'request', 'noDokumen'))->render();
+        $html = view('reports.washing', compact(
+            'rows',
+            'catatan',
+            'noDokumen',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv'
+        ))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
+
         $pdf->Output('Laporan_Washing_' . date('d-m-Y_His') . '.pdf', 'I');
+
         exit();
     }
 
