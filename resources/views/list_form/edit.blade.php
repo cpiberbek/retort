@@ -415,6 +415,7 @@
                                         ['kecepatan_stuffing', 'Kecepatan Stuffing (/mnt)', 'range'],
                                         ['panjang_pcs', 'Panjang per PCS (cm)', 'range'],
                                         ['berat_pcs', 'Berat per PCS (gr)', 'range'],
+                                        ['cek_vakum', 'Cek Vakum', 'select'],
                                         ['diameter_klip', 'Diameter Klip (mm)', 'range'],
                                         ['lebar_cassing', 'Lebar Cassing (mm)', 'range'],
                                         ['kebersihan_seal', 'Kebersihan Ujung Seal', 'select'],
@@ -424,6 +425,7 @@
                                     ];
 
                                     $stuffingOptions = ['OK', 'Tidak OK'];
+                                    $cekVakumOptions = ['Ok', 'Tidak Ok'];
                                 @endphp
 
                                 <div class="card mb-3 border">
@@ -483,12 +485,16 @@
                                                                     value="{{ $current }}"
                                                                 >
                                                             @else
+                                                                @php
+                                                                    $options = $key === 'cek_vakum' ? $cekVakumOptions : $stuffingOptions;
+                                                                @endphp
+
                                                                 <select
                                                                     name="standar_ref[{{ $key }}]"
                                                                     class="form-control form-control-sm"
                                                                 >
                                                                     <option value="">— Tidak Diubah —</option>
-                                                                    @foreach ($stuffingOptions as $option)
+                                                                    @foreach ($options as $option)
                                                                         <option
                                                                             value="{{ $option }}"
                                                                             {{ $current === $option ? 'selected' : '' }}
@@ -505,7 +511,7 @@
                                         </table>
                                     </div>
                                 </div>
-                            @break                
+                            @break               
 
                             @case('Pemeriksaan Washing - Drying')
                                 @php

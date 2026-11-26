@@ -35,7 +35,7 @@
                 return "diacak {$rule['min']} s/d {$rule['max']} (maks 2 desimal)";
             }
 
-            if ($rule === 'OK' || $rule === 'Tidak OK') {
+            if (in_array($rule, ['OK', 'Tidak OK', 'Ok', 'Tidak Ok'], true)) {
                 return "diisi otomatis: {$rule}";
             }
 
@@ -47,7 +47,7 @@
                 return "Diacak antara {$rule['min']} s/d {$rule['max']} (maks 2 desimal)";
             }
 
-            if ($rule === 'OK' || $rule === 'Tidak OK') {
+            if (in_array($rule, ['OK', 'Tidak OK', 'Ok', 'Tidak Ok'], true)) {
                 return "Diisi otomatis: {$rule}";
             }
 
@@ -258,6 +258,7 @@
                                             <li>Kecepatan Stuffing: {{ $bulkDesc($bulkStd['kecepatan_stuffing'] ?? null) }}</li>
                                             <li>Panjang/pcs: {{ $bulkDesc($bulkStd['panjang_pcs'] ?? null) }}</li>
                                             <li>Berat/pcs: {{ $bulkDesc($bulkStd['berat_pcs'] ?? null) }}</li>
+                                            <li>Cek Vakum: {{ $bulkDesc($bulkStd['cek_vakum'] ?? null) }}</li>
                                             <li>Kebersihan Seal: {{ $bulkDesc($bulkStd['kebersihan_seal'] ?? null) }}</li>
                                             <li>Kekuatan Seal: {{ $bulkDesc($bulkStd['kekuatan_seal'] ?? null) }}</li>
                                             <li>Diameter Klip: {{ $bulkDesc($bulkStd['diameter_klip'] ?? null) }}</li>
@@ -583,78 +584,69 @@
                                                 Details
                                             </button>
 
-                                            <div class="modal fade" id="stuffingModal{{ $dep->uuid }}" tabindex="-1"
-                                                aria-hidden="true">
+                                            <div class="modal fade" id="stuffingModal{{ $dep->uuid }}" tabindex="-1" aria-hidden="true">
                                                 <div class="modal-dialog modal-lg modal-dialog-scrollable">
                                                     <div class="modal-content">
                                                         <div class="modal-header">
                                                             <h5 class="modal-title">Detail Pemeriksaan</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                aria-label="Close"></button>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                         </div>
-
                                                         <div class="modal-body">
                                                             <div class="table-responsive p-2">
-                                                                @if (is_array($stuffingItems))
-                                                                    @foreach ($stuffingItems as $index => $item)
+                                                                @if(is_array($dep->data_stuffing))
+                                                                    @foreach($dep->data_stuffing as $index => $item)
                                                                         <div class="border p-2 mb-2 bg-light rounded shadow-sm">
-                                                                            <strong class="text-primary d-block mb-1 text-start"
-                                                                                style="font-size: 0.8rem;">
-                                                                                Stuffing #{{ $index + 1 }}
-                                                                                (Mesin: {{ $item['kode_mesin'] ?? '-' }})
+                                                                            <strong class="text-primary d-block mb-1 text-start" style="font-size: 0.8rem;">
+                                                                                Stuffing #{{ $index + 1 }} (Mesin: {{ $item['kode_mesin'] ?? '-' }})
                                                                             </strong>
 
                                                                             <table class="table table-bordered table-striped table-sm text-center align-middle mb-0">
                                                                                 <tbody>
-                                                                                    <tr class="table-secondary">
-                                                                                        <td class="text-start fw-bold" colspan="2"
-                                                                                            style="font-size: 0.75rem;">Parameter Adonan</td>
-                                                                                    </tr>
+                                                                                    @php
+                                                                                        $fields = [
+                                                                                            ['type' => 'title', 'label' => 'Parameter Adonan'],
+                                                                                            ['type' => 'field', 'label' => 'Suhu (°C)', 'key' => 'suhu'],
+                                                                                            ['type' => 'field', 'label' => 'Sensori', 'key' => 'sensori'],
+                                                                                            ['type' => 'title', 'label' => 'Parameter Stuffing'],
+                                                                                            ['type' => 'field', 'label' => 'Kecepatan Stuffing', 'key' => 'kecepatan_stuffing'],
+                                                                                            ['type' => 'field', 'label' => 'Panjang/pcs (cm)', 'key' => 'panjang_pcs'],
+                                                                                            ['type' => 'field', 'label' => 'Berat/pcs (gr)', 'key' => 'berat_pcs'],
+                                                                                            ['type' => 'field', 'label' => 'Cek Vakum', 'key' => 'cek_vakum'],
+                                                                                            ['type' => 'field', 'label' => 'Kebersihan Seal', 'key' => 'kebersihan_seal'],
+                                                                                            ['type' => 'field', 'label' => 'Kekuatan Seal', 'key' => 'kekuatan_seal'],
+                                                                                            ['type' => 'field', 'label' => 'Diameter Klip (mm)', 'key' => 'diameter_klip'],
+                                                                                            ['type' => 'field', 'label' => 'Print Kode', 'key' => 'print_kode'],
+                                                                                            ['type' => 'field', 'label' => 'Lebar Cassing (mm)', 'key' => 'lebar_cassing'],
+                                                                                            ['type' => 'field', 'label' => 'Catatan', 'key' => 'catatan'],
+                                                                                        ];
+                                                                                    @endphp
 
-                                                                                    @foreach ([
-                                                                                        ['label' => 'Suhu (°C)', 'key' => 'suhu'],
-                                                                                        ['label' => 'Sensori', 'key' => 'sensori'],
-                                                                                    ] as $f)
-                                                                                        @php $value = $item[$f['key']] ?? null; @endphp
-                                                                                        <tr>
-                                                                                            <td class="text-start" style="font-size: 0.75rem;">{{ $f['label'] }}</td>
-                                                                                            <td style="font-size: 0.75rem;">
-                                                                                                @if ($f['key'] === 'sensori')
-                                                                                                    {{ $value === 'OK' ? '✔' : ($value === 'Tidak OK' ? '❌' : '-') }}
-                                                                                                @else
-                                                                                                    {{ $value ?? '-' }}
-                                                                                                @endif
-                                                                                            </td>
-                                                                                        </tr>
-                                                                                    @endforeach
+                                                                                    @foreach($fields as $f)
+                                                                                        @if($f['type'] === 'title')
+                                                                                            <tr class="table-secondary">
+                                                                                                <td class="text-start fw-bold" colspan="2" style="font-size: 0.75rem;">
+                                                                                                    {{ $f['label'] }}
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        @else
+                                                                                            <tr>
+                                                                                                <td class="text-start" style="font-size: 0.75rem;">
+                                                                                                    {{ $f['label'] }}
+                                                                                                </td>
+                                                                                                @php
+                                                                                                    $value = $item[$f['key']] ?? null;
 
-                                                                                    <tr class="table-secondary">
-                                                                                        <td class="text-start fw-bold" colspan="2"
-                                                                                            style="font-size: 0.75rem;">Parameter Stuffing</td>
-                                                                                    </tr>
-
-                                                                                    @foreach ([
-                                                                                        ['label' => 'Kecepatan Stuffing', 'key' => 'kecepatan_stuffing'],
-                                                                                        ['label' => 'Panjang/pcs (cm)', 'key' => 'panjang_pcs'],
-                                                                                        ['label' => 'Berat/pcs (gr)', 'key' => 'berat_pcs'],
-                                                                                        ['label' => 'Kebersihan Seal', 'key' => 'kebersihan_seal'],
-                                                                                        ['label' => 'Kekuatan Seal', 'key' => 'kekuatan_seal'],
-                                                                                        ['label' => 'Diameter Klip (mm)', 'key' => 'diameter_klip'],
-                                                                                        ['label' => 'Print Kode', 'key' => 'print_kode'],
-                                                                                        ['label' => 'Lebar Cassing (mm)', 'key' => 'lebar_cassing'],
-                                                                                        ['label' => 'Catatan', 'key' => 'catatan'],
-                                                                                    ] as $f)
-                                                                                        @php $value = $item[$f['key']] ?? null; @endphp
-                                                                                        <tr>
-                                                                                            <td class="text-start" style="font-size: 0.75rem;">{{ $f['label'] }}</td>
-                                                                                            <td style="font-size: 0.75rem;">
-                                                                                                @if (in_array($f['key'], ['kebersihan_seal', 'kekuatan_seal', 'print_kode']))
-                                                                                                    {{ $value === 'OK' ? '✔' : ($value === 'Tidak OK' ? '❌' : '-') }}
-                                                                                                @else
-                                                                                                    {{ $value ?? '-' }}
-                                                                                                @endif
-                                                                                            </td>
-                                                                                        </tr>
+                                                                                                    $display = in_array($f['key'], ['sensori', 'kebersihan_seal', 'kekuatan_seal', 'print_kode'])
+                                                                                                        ? (!empty($value) && $value === 'OK' ? '✔' : ($value === 'Tidak OK' ? '❌' : '-'))
+                                                                                                        : ($f['key'] === 'cek_vakum'
+                                                                                                            ? ($value === 'Ok' ? '✔' : ($value === 'Tidak Ok' ? '❌' : '-'))
+                                                                                                            : ($value ?? '-'));
+                                                                                                @endphp
+                                                                                                <td style="font-size: 0.75rem;">
+                                                                                                    {{ $display }}
+                                                                                                </td>
+                                                                                            </tr>
+                                                                                        @endif
                                                                                     @endforeach
                                                                                 </tbody>
                                                                             </table>
@@ -665,10 +657,8 @@
                                                                 @endif
                                                             </div>
                                                         </div>
-
                                                         <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary btn-sm"
-                                                                data-bs-dismiss="modal">Tutup</button>
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
                                                         </div>
                                                     </div>
                                                 </div>

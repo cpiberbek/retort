@@ -10,8 +10,9 @@
 
                 @if ($errors->any())
                     <div class="alert alert-danger mb-4 shadow-sm" role="alert">
-                        <strong class="d-block mb-2"><i class="bi bi-exclamation-triangle-fill"></i> Terjadi
-                            Kesalahan!</strong>
+                        <strong class="d-block mb-2">
+                            <i class="bi bi-exclamation-triangle-fill"></i> Terjadi Kesalahan!
+                        </strong>
                         Terdapat input yang tidak valid atau terlewat. Silakan periksa kembali:
                         <ul class="mb-0 mt-1">
                             @foreach ($errors->all() as $error)
@@ -24,7 +25,6 @@
                 <form id="stuffingForm" action="{{ route('stuffing.store') }}" method="POST">
                     @csrf
 
-                    {{-- ===================== IDENTITAS ===================== --}}
                     <div class="card mb-4">
                         <div class="card-header bg-primary text-white">
                             <strong>Identitas Data Stuffing</strong>
@@ -34,8 +34,8 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Tanggal</label>
                                     <input type="date" name="date" id="dateInput"
-                                        class="form-control @error('date') is-invalid @enderror" value="{{ old('date') }}"
-                                        required>
+                                        class="form-control @error('date') is-invalid @enderror"
+                                        value="{{ old('date') }}" required>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Shift</label>
@@ -85,7 +85,6 @@
                         </div>
                     </div>
 
-                    {{-- ===================== DATA STUFFING ===================== --}}
                     <div class="card mb-4">
                         <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
                             <strong>Data Stuffing</strong>
@@ -96,17 +95,13 @@
 
                         <div class="card-body">
                             <div class="accordion" id="accordionStuffing">
-
-                                {{-- LOGIKA LOOPING OLD VALUE --}}
                                 @php
-                                    // Ambil data stuffing sebelumnya jika ada error, jika tidak ada, beri 1 array kosong sebagai default
                                     $oldStuffing = old('stuffing', [[]]);
                                 @endphp
 
                                 @foreach ($oldStuffing as $index => $item)
                                     <div class="accordion-item stuffing-item">
                                         <h5 class="accordion-header" id="heading{{ $index }}">
-                                            {{-- Buka accordion pertama otomatis, sisanya tutup --}}
                                             <button class="accordion-button {{ $index == 0 ? '' : 'collapsed' }}"
                                                 type="button" data-bs-toggle="collapse"
                                                 data-bs-target="#collapse{{ $index }}">
@@ -119,14 +114,12 @@
                                             class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}"
                                             data-bs-parent="#accordionStuffing">
                                             <div class="accordion-body">
-
                                                 <div class="text-end mb-3">
                                                     <button type="button" class="btn btn-outline-danger btn-sm btnHapus">
                                                         <i class="bi bi-trash"></i>
                                                     </button>
                                                 </div>
 
-                                                {{-- ================= FORM ================= --}}
                                                 <div class="mb-3">
                                                     <label class="form-label fw-bold">Nama Mesin</label>
                                                     <select name="stuffing[{{ $index }}][kode_mesin]"
@@ -144,7 +137,6 @@
 
                                                 <div class="mb-3">
                                                     <label class="form-label">Jam Mulai</label>
-                                                    {{-- Gunakan id="jamMulaiInput" hanya pada index 0 untuk auto-fill script JS --}}
                                                     <input type="time" name="stuffing[{{ $index }}][jam_mulai]"
                                                         {{ $index == 0 ? 'id=jamMulaiInput' : '' }}
                                                         class="form-control @error("stuffing.$index.jam_mulai") is-invalid @enderror"
@@ -157,7 +149,8 @@
                                                 <div class="mb-3">
                                                     <label class="form-label">Suhu (°C)</label>
                                                     <input type="number" step="0.01"
-                                                        name="stuffing[{{ $index }}][suhu]" class="form-control"
+                                                        name="stuffing[{{ $index }}][suhu]"
+                                                        class="form-control"
                                                         value="{{ old("stuffing.$index.suhu") }}">
                                                 </div>
 
@@ -168,10 +161,12 @@
                                                         <option value="">-- Pilih --</option>
                                                         <option value="OK"
                                                             {{ old("stuffing.$index.sensori") == 'OK' ? 'selected' : '' }}>
-                                                            OK</option>
+                                                            OK
+                                                        </option>
                                                         <option value="Tidak OK"
                                                             {{ old("stuffing.$index.sensori") == 'Tidak OK' ? 'selected' : '' }}>
-                                                            Tidak OK</option>
+                                                            Tidak OK
+                                                        </option>
                                                     </select>
                                                 </div>
 
@@ -203,16 +198,34 @@
                                                 </div>
 
                                                 <div class="mb-3">
+                                                    <label class="form-label">Cek Vakum</label>
+                                                    <select name="stuffing[{{ $index }}][cek_vakum]"
+                                                        class="form-control">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="Ok"
+                                                            {{ old("stuffing.$index.cek_vakum") == 'Ok' ? 'selected' : '' }}>
+                                                            Ok
+                                                        </option>
+                                                        <option value="Tidak Ok"
+                                                            {{ old("stuffing.$index.cek_vakum") == 'Tidak Ok' ? 'selected' : '' }}>
+                                                            Tidak Ok
+                                                        </option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="mb-3">
                                                     <label class="form-label">Kebersihan Ujung Seal</label>
                                                     <select name="stuffing[{{ $index }}][kebersihan_seal]"
                                                         class="form-control">
                                                         <option value="">-- Pilih --</option>
                                                         <option value="OK"
                                                             {{ old("stuffing.$index.kebersihan_seal") == 'OK' ? 'selected' : '' }}>
-                                                            OK</option>
+                                                            OK
+                                                        </option>
                                                         <option value="Tidak OK"
                                                             {{ old("stuffing.$index.kebersihan_seal") == 'Tidak OK' ? 'selected' : '' }}>
-                                                            Tidak OK</option>
+                                                            Tidak OK
+                                                        </option>
                                                     </select>
                                                 </div>
 
@@ -223,10 +236,12 @@
                                                         <option value="">-- Pilih --</option>
                                                         <option value="OK"
                                                             {{ old("stuffing.$index.kekuatan_seal") == 'OK' ? 'selected' : '' }}>
-                                                            OK</option>
+                                                            OK
+                                                        </option>
                                                         <option value="Tidak OK"
                                                             {{ old("stuffing.$index.kekuatan_seal") == 'Tidak OK' ? 'selected' : '' }}>
-                                                            Tidak OK</option>
+                                                            Tidak OK
+                                                        </option>
                                                     </select>
                                                 </div>
 
@@ -245,10 +260,12 @@
                                                         <option value="">-- Pilih --</option>
                                                         <option value="OK"
                                                             {{ old("stuffing.$index.print_kode") == 'OK' ? 'selected' : '' }}>
-                                                            OK</option>
+                                                            OK
+                                                        </option>
                                                         <option value="Tidak OK"
                                                             {{ old("stuffing.$index.print_kode") == 'Tidak OK' ? 'selected' : '' }}>
-                                                            Tidak OK</option>
+                                                            Tidak OK
+                                                        </option>
                                                     </select>
                                                 </div>
 
@@ -260,7 +277,6 @@
                                                         value="{{ old("stuffing.$index.lebar_cassing") }}">
                                                 </div>
 
-                                                {{-- CATATAN --}}
                                                 <div class="card mt-4">
                                                     <div class="card-header bg-light">
                                                         <strong>Catatan</strong>
@@ -269,12 +285,10 @@
                                                         <textarea name="stuffing[{{ $index }}][catatan]" class="form-control" rows="3">{{ old("stuffing.$index.catatan") }}</textarea>
                                                     </div>
                                                 </div>
-
                                             </div>
                                         </div>
                                     </div>
                                 @endforeach
-
                             </div>
                         </div>
                     </div>
@@ -288,12 +302,9 @@
                         </a>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>
-
-    {{-- SCRIPTS --}}
 @endsection
 
 @push('scripts')
@@ -302,7 +313,6 @@
         href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
 
-    {{-- Select2 CSS & JS --}}
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" />
@@ -310,7 +320,6 @@
 
     <script>
         $(document).ready(function() {
-            // 1. AUTO-FILL TANGGAL & WAKTU (Aman dari Crash)
             try {
                 const dateInput = document.getElementById("dateInput");
                 const shiftInput = document.getElementById("shiftInput");
@@ -329,18 +338,17 @@
                     else shiftInput.value = "3";
                 }
             } catch (err) {
-                console.error("⚠️ Error Auto-Fill:", err);
+                console.error("Error Auto-Fill:", err);
             }
 
-            // 2. INIT SELECTPICKER DENGAN TRY-CATCH
             try {
                 if ($.fn.selectpicker) {
                     $('.selectpicker').selectpicker();
                 } else {
-                    console.warn("⚠️ Selectpicker plugin tidak terdeteksi!");
+                    console.warn("Selectpicker plugin tidak terdeteksi!");
                 }
             } catch (err) {
-                console.error("⚠️ Error saat memuat Selectpicker:", err);
+                console.error("Error saat memuat Selectpicker:", err);
             }
 
             const batchSelect = $('#kode_produksi');
@@ -350,7 +358,6 @@
                 batchSelect.prop('disabled', true);
             }
 
-            // 3. EVENT DELEGATION UNTUK NAMA VARIAN (SELECT2 AJAX)
             $(document).on('change', '#nama_produk', function() {
                 let namaProduk = $(this).val();
 
@@ -377,8 +384,7 @@
                     placeholder: "-- Pilih Batch --",
                     allowClear: true,
                     ajax: {
-                        url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(
-                            namaProduk),
+                        url: "{{ url('/lookup/batch-packing') }}/" + encodeURIComponent(namaProduk),
                         dataType: 'json',
                         delay: 250,
                         data: function(params) {
@@ -396,12 +402,8 @@
                 });
             });
 
-            // 4. EVENT KETIKA BATCH DIUBAH (HITUNG EXP DATE)
             $(document).on('change', '#kode_produksi', function() {
-
                 let selectedText = $(this).find("option:selected").text().trim();
-
-                // Ambil kode batch sebelum " - "
                 let kodeProduksi = selectedText.split(" - ")[0].trim();
 
                 if (
@@ -415,9 +417,6 @@
 
                 kodeProduksi = kodeProduksi.toUpperCase();
 
-                // ==============================
-                // KODE TAHUN
-                // ==============================
                 const tahunMap = {
                     Q: 2026,
                     R: 2027,
@@ -426,9 +425,6 @@
                     U: 2030
                 };
 
-                // ==============================
-                // KODE BULAN
-                // ==============================
                 const bulanMap = {
                     A: 1,
                     B: 2,
@@ -444,9 +440,6 @@
                     L: 12
                 };
 
-                // ==============================
-                // AMBIL DATA DARI KODE BATCH
-                // ==============================
                 const kodeTahun = kodeProduksi.charAt(0);
                 const kodeBulan = kodeProduksi.charAt(1);
                 const kodeTanggal = kodeProduksi.substring(2, 4);
@@ -455,9 +448,6 @@
                 const bulanProduksi = bulanMap[kodeBulan];
                 const tanggalProduksi = parseInt(kodeTanggal, 10);
 
-                // ==============================
-                // VALIDASI
-                // ==============================
                 if (
                     !tahunProduksi ||
                     !bulanProduksi ||
@@ -469,9 +459,6 @@
                     return;
                 }
 
-                // ==============================
-                // TAMBAH 7 BULAN
-                // ==============================
                 let bulanExp = bulanProduksi + 7;
                 let tahunExp = tahunProduksi;
 
@@ -480,26 +467,17 @@
                     tahunExp++;
                 }
 
-                // ==============================
-                // CARI JUMLAH HARI BULAN EXP
-                // ==============================
                 const jumlahHariDalamBulan = new Date(
                     tahunExp,
                     bulanExp,
                     0
                 ).getDate();
 
-                // Jika tanggal produksi tidak tersedia
-                // pada bulan EXP, gunakan hari terakhir bulan tersebut
                 const tanggalExp = Math.min(
                     tanggalProduksi,
                     jumlahHariDalamBulan
                 );
 
-                // ==============================
-                // FORMAT YYYY-MM-DD
-                // TANPA toISOString()
-                // ==============================
                 const hasilExp =
                     tahunExp +
                     '-' +
@@ -510,19 +488,16 @@
                 expDateInput.val(hasilExp);
             });
 
-            // 5. VALIDASI WARNA INPUT SUHU
             $(document).on('input', 'input[name$="[suhu]"]', function() {
                 if ($(this).val().trim() !== '') $(this).addClass('is-valid');
                 else $(this).removeClass('is-valid');
             });
 
-            // JALANKAN OTOMATIS JIKA HALAMAN RE-LOAD ADA ISINYA
             if ($('#nama_produk').val()) {
                 $('#nama_produk').trigger('change');
             }
         });
 
-        //nama mesin stuffing dinamis
         $(document).on('change', 'select[name$="[kode_mesin]"]', function() {
             const namaMesin = $(this).find('option:selected').text().trim();
             const accordionButton = $(this)
@@ -541,12 +516,9 @@
     </script>
 
     <script>
-        // LOGIC TAMBAH FORM ACCORDION
-        // Sesuaikan index awal dengan jumlah form yang dirender dari PHP (jika ada old data)
         let stuffingIndex = {{ count($oldStuffing) }};
 
         document.getElementById('btnTambahStuffing').addEventListener('click', function() {
-
             const accordion = document.getElementById('accordionStuffing');
             const items = accordion.querySelectorAll('.stuffing-item');
 
@@ -554,14 +526,8 @@
                 return;
             }
 
-            // Ambil item terakhir sebagai template
             const template = items[items.length - 1];
-
             const clone = template.cloneNode(true);
-
-            // ==========================
-            // ID ACCORDION BARU
-            // ==========================
 
             const newHeadingId = `heading${stuffingIndex}`;
             const newCollapseId = `collapse${stuffingIndex}`;
@@ -572,49 +538,28 @@
 
             header.id = newHeadingId;
 
-            button.setAttribute(
-                'data-bs-target',
-                `#${newCollapseId}`
-            );
-
-            button.setAttribute(
-                'aria-controls',
-                newCollapseId
-            );
-
+            button.setAttribute('data-bs-target', `#${newCollapseId}`);
+            button.setAttribute('aria-controls', newCollapseId);
             button.classList.add('collapsed');
 
             button.innerHTML = `
-        <i class="bi bi-clipboard-check me-2 text-warning"></i>
-        Stuffing ${stuffingIndex + 1}
-    `;
+                <i class="bi bi-clipboard-check me-2 text-warning"></i>
+                Stuffing ${stuffingIndex + 1}
+            `;
 
             collapse.id = newCollapseId;
             collapse.classList.remove('show');
-
-            // Hapus atribut yang mengarah ke accordion lama
             collapse.removeAttribute('aria-labelledby');
 
-            // ==========================
-            // BERSIHKAN INPUT
-            // ==========================
-
             clone.querySelectorAll('input, select, textarea').forEach(el => {
-
-                // Hapus status validasi
                 el.classList.remove('is-invalid');
                 el.classList.remove('is-valid');
 
-                // Bersihkan value
                 if (el.tagName === 'SELECT') {
                     el.selectedIndex = 0;
                 } else {
                     el.value = '';
                 }
-
-                // ==========================
-                // UPDATE NAME INDEX
-                // ==========================
 
                 const name = el.getAttribute('name');
 
@@ -628,44 +573,44 @@
                     );
                 }
 
-                // Hanya Stuffing pertama yang punya ID jamMulaiInput
                 if (el.id === 'jamMulaiInput') {
                     el.removeAttribute('id');
                 }
             });
 
-            // ==========================
-            // TAMBAHKAN KE DOM
-            // ==========================
-
             accordion.appendChild(clone);
-
             stuffingIndex++;
         });
 
         document.addEventListener('click', function(e) {
             if (e.target.closest('.btnHapus')) {
                 let items = document.querySelectorAll('.stuffing-item');
-                if (items.length > 1) e.target.closest('.stuffing-item').remove();
+
+                if (items.length > 1) {
+                    e.target.closest('.stuffing-item').remove();
+                }
             }
         });
     </script>
 
     <script>
-        // --------------------------------------------------------
-        // FIX: AUTO-OPEN ACCORDION SAAT ADA INPUT YANG INVALID
-        // --------------------------------------------------------
         document.addEventListener('invalid', function(e) {
             let invalidInput = e.target;
             let accordionPane = invalidInput.closest('.accordion-collapse');
 
             if (accordionPane && !accordionPane.classList.contains('show')) {
-                let accordionButton = document.querySelector(`[data-bs-target="#${accordionPane.id}"]`);
-                if (accordionButton) accordionButton.classList.remove('collapsed');
+                let accordionButton = document.querySelector(
+                    `[data-bs-target="#${accordionPane.id}"]`
+                );
+
+                if (accordionButton) {
+                    accordionButton.classList.remove('collapsed');
+                }
 
                 let bsCollapse = new bootstrap.Collapse(accordionPane, {
                     toggle: false
                 });
+
                 bsCollapse.show();
 
                 setTimeout(() => {
@@ -712,7 +657,6 @@
             min-height: 42px;
         }
 
-        /* Select2 bootstrap 5 styling override untuk form ini */
         .select2-container--bootstrap-5 .select2-selection {
             min-height: calc(2.25rem + 2px) !important;
             border-radius: 10px !important;

@@ -343,41 +343,52 @@
                                                                 <strong class="text-primary d-block mb-1 text-start" style="font-size: 0.8rem;">
                                                                     Stuffing #{{ $index + 1 }} (Mesin: {{ $item['kode_mesin'] ?? '-' }})
                                                                 </strong>
+
                                                                 <table class="table table-bordered table-striped table-sm text-center align-middle mb-0">
                                                                     <tbody>
                                                                         @php
-                                                                        $fields = [
-                                                                            ['type'=>'title', 'label'=>'Parameter Adonan'],
-                                                                            ['type'=>'field', 'label'=>'Suhu (°C)', 'key'=>'suhu'],
-                                                                            ['type'=>'field', 'label'=>'Sensori', 'key'=>'sensori'],
-                                                                            ['type'=>'title', 'label'=>'Parameter Stuffing'],
-                                                                            ['type'=>'field', 'label'=>'Kecepatan Stuffing', 'key'=>'kecepatan_stuffing'],
-                                                                            ['type'=>'field', 'label'=>'Panjang/pcs (cm)', 'key'=>'panjang_pcs'],
-                                                                            ['type'=>'field', 'label'=>'Berat/pcs (gr)', 'key'=>'berat_pcs'],
-                                                                            ['type'=>'field', 'label'=>'Kebersihan Seal', 'key'=>'kebersihan_seal'],
-                                                                            ['type'=>'field', 'label'=>'Kekuatan Seal', 'key'=>'kekuatan_seal'],
-                                                                            ['type'=>'field', 'label'=>'Diameter Klip (mm)', 'key'=>'diameter_klip'],
-                                                                            ['type'=>'field', 'label'=>'Print Kode', 'key'=>'print_kode'],
-                                                                            ['type'=>'field', 'label'=>'Lebar Cassing (mm)', 'key'=>'lebar_cassing'],
-                                                                            ['type'=>'field', 'label'=>'Catatan', 'key'=>'catatan'],
-                                                                        ];
+                                                                            $fields = [
+                                                                                ['type' => 'title', 'label' => 'Parameter Adonan'],
+                                                                                ['type' => 'field', 'label' => 'Suhu (°C)', 'key' => 'suhu'],
+                                                                                ['type' => 'field', 'label' => 'Sensori', 'key' => 'sensori'],
+                                                                                ['type' => 'title', 'label' => 'Parameter Stuffing'],
+                                                                                ['type' => 'field', 'label' => 'Kecepatan Stuffing', 'key' => 'kecepatan_stuffing'],
+                                                                                ['type' => 'field', 'label' => 'Panjang/pcs (cm)', 'key' => 'panjang_pcs'],
+                                                                                ['type' => 'field', 'label' => 'Berat/pcs (gr)', 'key' => 'berat_pcs'],
+                                                                                ['type' => 'field', 'label' => 'Cek Vakum', 'key' => 'cek_vakum'],
+                                                                                ['type' => 'field', 'label' => 'Kebersihan Seal', 'key' => 'kebersihan_seal'],
+                                                                                ['type' => 'field', 'label' => 'Kekuatan Seal', 'key' => 'kekuatan_seal'],
+                                                                                ['type' => 'field', 'label' => 'Diameter Klip (mm)', 'key' => 'diameter_klip'],
+                                                                                ['type' => 'field', 'label' => 'Print Kode', 'key' => 'print_kode'],
+                                                                                ['type' => 'field', 'label' => 'Lebar Cassing (mm)', 'key' => 'lebar_cassing'],
+                                                                                ['type' => 'field', 'label' => 'Catatan', 'key' => 'catatan'],
+                                                                            ];
                                                                         @endphp
 
                                                                         @foreach($fields as $f)
                                                                             @if($f['type'] === 'title')
                                                                                 <tr class="table-secondary">
-                                                                                    <td class="text-start fw-bold" colspan="2" style="font-size: 0.75rem;">{{ $f['label'] }}</td>
+                                                                                    <td class="text-start fw-bold" colspan="2" style="font-size: 0.75rem;">
+                                                                                        {{ $f['label'] }}
+                                                                                    </td>
                                                                                 </tr>
                                                                             @else
                                                                                 <tr>
-                                                                                    <td class="text-start" style="font-size: 0.75rem;">{{ $f['label'] }}</td>
+                                                                                    <td class="text-start" style="font-size: 0.75rem;">
+                                                                                        {{ $f['label'] }}
+                                                                                    </td>
                                                                                     @php
-                                                                                    $value = $item[$f['key']] ?? null;
-                                                                                    $display = in_array($f['key'], ['sensori','kebersihan_seal','kekuatan_seal','print_kode'])
-                                                                                        ? (!empty($value) && $value === 'OK' ? '✔' : ($value === 'Tidak OK' ? '❌' : '-'))
-                                                                                        : ($value ?? '-');
+                                                                                        $value = $item[$f['key']] ?? null;
+
+                                                                                        $display = in_array($f['key'], ['sensori', 'kebersihan_seal', 'kekuatan_seal', 'print_kode'])
+                                                                                            ? (!empty($value) && $value === 'OK' ? '✔' : ($value === 'Tidak OK' ? '❌' : '-'))
+                                                                                            : ($f['key'] === 'cek_vakum'
+                                                                                                ? ($value === 'Ok' ? '✔' : ($value === 'Tidak Ok' ? '❌' : '-'))
+                                                                                                : ($value ?? '-'));
                                                                                     @endphp
-                                                                                    <td style="font-size: 0.75rem;">{{ $display }}</td>
+                                                                                    <td style="font-size: 0.75rem;">
+                                                                                        {{ $display }}
+                                                                                    </td>
                                                                                 </tr>
                                                                             @endif
                                                                         @endforeach

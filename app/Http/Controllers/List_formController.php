@@ -178,6 +178,11 @@ class List_formController extends Controller
                             : null;
                     }
 
+                    $cekVakum = $standarRef['cek_vakum'] ?? null;
+                    $stuffingRef['cek_vakum'] = in_array($cekVakum, ['Ok', 'Tidak Ok'], true)
+                        ? $cekVakum
+                        : null;
+
                     $catatan = $standarRef['catatan'] ?? null;
                     $stuffingRef['catatan'] = $catatan !== '' ? $catatan : null;
 

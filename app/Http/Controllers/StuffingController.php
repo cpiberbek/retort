@@ -320,6 +320,12 @@ class StuffingController extends Controller
                 }
             }
 
+            $cekVakum = $std['cek_vakum'] ?? null;
+
+            if (in_array($cekVakum, ['Ok', 'Tidak Ok'], true)) {
+                $row['cek_vakum'] = $cekVakum;
+            }
+
             $catatan = $std['catatan'] ?? null;
 
             if ($catatan !== null && trim((string) $catatan) !== '') {
@@ -379,11 +385,11 @@ class StuffingController extends Controller
 
         return round(mt_rand($minInt + 1, $minInt + 100) / 100, 2);
     }
-
+    
     public function exportPdf(Request $request)
     {
-        $date = $request->input('date');
-        $shift = $request->input('shift');
+        $date      = $request->input('date');
+        $shift     = $request->input('shift');
         $kodeBatch = $request->input('kode_batch');
         $userPlant = Auth::user()->plant;
 
@@ -402,12 +408,38 @@ class StuffingController extends Controller
             return back()->with('error', 'Data tidak ditemukan');
         }
 
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Stuffing Sosis Retort')
+            ->value('no_dokumen');
+
+        $tanggal = $date
+            ? \Carbon\Carbon::parse($date)->format('d-m-Y')
+            : '';
+
+        $usernames = $data
+            ->flatMap(fn($d) => [
+                $d->username_updated,
+                $d->username,
+                $d->nama_produksi,
+                $d->nama_spv
+            ])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap = \App\Models\User::whereIn('username', $usernames)
+            ->pluck('name', 'username');
+
+        $namaUser = fn($username) => $username
+            ? ($userMap[$username] ?? $username)
+            : '';
+
         $batchCodes = $data->map(function ($item) {
             return optional($item->mincing)->kode_produksi ?? $item->kode_produksi;
         })
-        ->filter()
-        ->unique()
-        ->implode(', ');
+            ->filter()
+            ->unique()
+            ->implode(', ');
 
         $namaProduk = $data->pluck('nama_produk')
             ->filter()
@@ -420,10 +452,28 @@ class StuffingController extends Controller
             ->unique()
             ->implode(', ');
 
-        $namaSpv = $data->pluck('nama_spv')
-            ->filter()
-            ->unique()
-            ->first();
+        $rows = [
+            ['type' => 'field', 'label' => 'Nama Mesin', 'key' => 'Nama Mesin'],
+            ['type' => 'field', 'label' => 'Jam Mulai', 'key' => 'Jam Mulai'],
+
+            ['type' => 'group', 'label' => 'PARAMETER ADONAN'],
+            ['type' => 'field', 'label' => 'Suhu (°C)', 'key' => 'Suhu'],
+            ['type' => 'field', 'label' => 'Sensori', 'key' => 'Sensori'],
+
+            ['type' => 'group', 'label' => 'PARAMETER STUFFING'],
+            ['type' => 'field', 'label' => 'Kecepatan Stuffing (/mnt)', 'key' => 'Kecepatan Stuffing (/mnt)'],
+            ['type' => 'field', 'label' => 'Panjang/pcs (cm)', 'key' => 'Panjang/pcs (cm)'],
+            ['type' => 'field', 'label' => 'Berat per pcs (gr)', 'key' => 'Berat per pcs (gr)'],
+            ['type' => 'field', 'label' => 'Cek vakum', 'key' => 'Cek vakum'],
+            ['type' => 'field', 'label' => 'Kebersihan Seal', 'key' => 'Kebersihan Seal'],
+            ['type' => 'field', 'label' => 'Kekuatan Seal', 'key' => 'Kekuatan Seal'],
+            ['type' => 'field', 'label' => 'Diameter Klip (mm)', 'key' => 'Diameter Klip (mm)'],
+            ['type' => 'field', 'label' => 'Print Kode Prod.', 'key' => 'Print Kode Prod.'],
+            ['type' => 'field', 'label' => 'Lebar Cassing (mm)', 'key' => 'Lebar Cassing (mm)'],
+            ['type' => 'field', 'label' => 'Catatan', 'key' => 'Catatan'],
+            ['type' => 'field', 'label' => 'Paraf QC', 'key' => 'Paraf QC'],
+            ['type' => 'field', 'label' => 'Paraf Produksi', 'key' => 'Paraf Produksi'],
+        ];
 
         $columns = [];
 
@@ -438,48 +488,55 @@ class StuffingController extends Controller
                 continue;
             }
 
+            $operator = $namaUser(
+                $stuffing->username_updated ?? $stuffing->username
+            ) ?: '-';
+
+            $produksi = $namaUser($stuffing->nama_produksi) ?: '-';
+
             foreach ($items as $item) {
                 $columns[] = [
-                    'Nama Mesin' => $item['kode_mesin'] ?? '-',
-                    'Jam Mulai' => $item['jam_mulai'] ?? '-',
-                    'Suhu (Celcius)' => $item['suhu'] ?? '-',
-                    'Sensori' => $item['sensori'] ?? '-',
+                    'Nama Mesin'                => $item['kode_mesin'] ?? '-',
+                    'Jam Mulai'                 => $item['jam_mulai'] ?? '-',
+                    'Suhu'                      => $item['suhu'] ?? '-',
+                    'Sensori'                   => $item['sensori'] ?? '-',
                     'Kecepatan Stuffing (/mnt)' => $item['kecepatan_stuffing'] ?? '-',
-                    'Panjang/pcs (cm)' => $item['panjang_pcs'] ?? '-',
-                    'Berat/pcs (gr)' => $item['berat_pcs'] ?? '-',
-                    'Kebersihan Seal' => $item['kebersihan_seal'] ?? '-',
-                    'Kekuatan Seal' => $item['kekuatan_seal'] ?? '-',
-                    'Diameter Klip (mm)' => $item['diameter_klip'] ?? '-',
-                    'Print Kode' => $item['print_kode'] ?? '-',
-                    'Lebar Cassing (mm)' => $item['lebar_cassing'] ?? '-',
-                    'Catatan' => $item['catatan'] ?? '-',
-                    'Operator' => $stuffing->username_updated ?? $stuffing->username ?? '-',
-                    'Produksi' => $stuffing->nama_produksi ?? '-',
+                    'Panjang/pcs (cm)'          => $item['panjang_pcs'] ?? '-',
+                    'Berat per pcs (gr)'        => $item['berat_pcs'] ?? '-',
+                    'Cek vakum'                 => $item['cek_vakum'] ?? '-',
+                    'Kebersihan Seal'           => $item['kebersihan_seal'] ?? '-',
+                    'Kekuatan Seal'             => $item['kekuatan_seal'] ?? '-',
+                    'Diameter Klip (mm)'        => $item['diameter_klip'] ?? '-',
+                    'Print Kode Prod.'          => $item['print_kode'] ?? '-',
+                    'Lebar Cassing (mm)'        => $item['lebar_cassing'] ?? '-',
+                    'Catatan'                   => $item['catatan'] ?? '-',
+                    'Paraf QC'                  => $operator,
+                    'Paraf Produksi'            => $produksi,
                 ];
             }
         }
 
-        $rows = [
-            'Nama Mesin',
-            'Jam Mulai',
-            'Suhu (Celcius)',
-            'Sensori',
-            'Kecepatan Stuffing (/mnt)',
-            'Panjang/pcs (cm)',
-            'Berat/pcs (gr)',
-            'Kebersihan Seal',
-            'Kekuatan Seal',
-            'Diameter Klip (mm)',
-            'Print Kode',
-            'Lebar Cassing (mm)',
-            'Catatan',
-            'Operator',
-            'Produksi',
-        ];
+        $pages = empty($columns) ? [[]] : array_chunk($columns, 9);
 
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Pemeriksaan Stuffing Sosis Retort')
-            ->value('no_dokumen');
+        $first = $data->first();
+
+        $pemeriksa = $namaUser(
+            $first->username_updated ?? $first->username
+        );
+
+        $tglPemeriksa = $first->created_at
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
+
+        $spvRow = $data->first(fn($d) => !empty($d->nama_spv));
+
+        $spv = $spvRow
+            ? $namaUser(trim((string) $spvRow->nama_spv))
+            : '';
+
+        $tglSpv = ($spvRow && $spvRow->tgl_update_spv)
+            ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+            : '';
 
         if (ob_get_length()) {
             ob_end_clean();
@@ -489,34 +546,43 @@ class StuffingController extends Controller
 
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Stuffing');
+
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
+
         $pdf->SetMargins(5, 5, 5);
         $pdf->SetAutoPageBreak(true, 5);
-        $pdf->SetFont('helvetica', '', 8);
+
+        $pdf->SetFont('helvetica', '', 6);
         $pdf->AddPage();
 
-        $html = view('reports.stuffing', [
-            'date' => $date,
-            'shift' => $shift,
-            'batchCodes' => $batchCodes,
-            'namaProduk' => $namaProduk,
-            'expDate' => $expDate,
-            'namaSpv' => $namaSpv,
-            'noDokumen' => $noDokumen ?? '-',
-            'rows' => $rows,
-            'columns' => $columns,
-        ])->render();
+        $html = view('reports.stuffing', compact(
+            'tanggal',
+            'shift',
+            'batchCodes',
+            'namaProduk',
+            'expDate',
+            'noDokumen',
+            'rows',
+            'pages',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv'
+        ))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
 
         $filename = 'Laporan_Stuffing_' .
-            \Carbon\Carbon::parse($date)->format('d-m-Y') .
-            '_Shift' . $shift .
+            ($date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : now()->format('d-m-Y')) .
+            ($shift ? '_Shift' . $shift : '') .
             '.pdf';
+
         $pdf->Output($filename, 'I');
+
         exit();
     }
+
 
     public function exportExcel(Request $request)
     {
@@ -623,6 +689,7 @@ class StuffingController extends Controller
                         15 => $item['kecepatan_stuffing'] ?? '-',
                         16 => $item['panjang_pcs'] ?? '-',
                         17 => $item['berat_pcs'] ?? '-',
+                        18 => $item['cek_vakum'] ?? '-',
                         19 => $item['kebersihan_seal'] ?? '-',
                         20 => $item['kekuatan_seal'] ?? '-',
                         21 => $item['diameter_klip'] ?? '-',
@@ -698,8 +765,8 @@ class StuffingController extends Controller
 
     public function store(Request $request)
     {
-        $username   = Auth::user()->username ?? 'User RTM';
-        $userPlant  = Auth::user()->plant;
+        $username  = Auth::user()->username ?? 'User RTM';
+        $userPlant = Auth::user()->plant;
 
         $nama_produksi = 'Produksi RTT';
         if (session()->has('selected_produksi')) {
@@ -713,7 +780,7 @@ class StuffingController extends Controller
             'nama_produk'   => 'required',
             'kode_produksi' => 'required|exists:mincings,uuid',
             'exp_date'      => 'required|date',
-            
+
             'stuffing'                      => 'required|array|min:1',
             'stuffing.*.kode_mesin'         => 'required|string',
             'stuffing.*.jam_mulai'          => 'required',
@@ -722,6 +789,7 @@ class StuffingController extends Controller
             'stuffing.*.kecepatan_stuffing' => 'nullable|numeric',
             'stuffing.*.panjang_pcs'        => 'nullable|numeric',
             'stuffing.*.berat_pcs'          => 'nullable|numeric',
+            'stuffing.*.cek_vakum'          => 'nullable|in:Ok,Tidak Ok',
             'stuffing.*.kebersihan_seal'    => 'nullable|string',
             'stuffing.*.kekuatan_seal'      => 'nullable|string',
             'stuffing.*.diameter_klip'      => 'nullable|numeric',
@@ -733,20 +801,19 @@ class StuffingController extends Controller
             'stuffing.*.jam_mulai.required'  => 'Jam Mulai pada salah satu form belum diisi.',
         ]);
 
-        // SIMPAN SEBAGAI SATU BARIS DATA UTUH
         Stuffing::create([
-            'date'               => $request->date,
-            'shift'              => $request->shift,
-            'nama_produk'        => $request->nama_produk,
-            'kode_produksi'      => $request->kode_produksi,
-            'exp_date'           => $request->exp_date,
-            'data_stuffing'      => $request->stuffing, // Array masuk langsung ke kolom JSON
-            'username'           => $username,
-            'plant'              => $userPlant,
-            'nama_produksi'      => $nama_produksi,
-            'status_produksi'    => "1",
-            'tgl_update_produksi'=> now()->addHour(),
-            'status_spv'         => "0",
+            'date'                => $request->date,
+            'shift'               => $request->shift,
+            'nama_produk'         => $request->nama_produk,
+            'kode_produksi'       => $request->kode_produksi,
+            'exp_date'            => $request->exp_date,
+            'data_stuffing'       => $validated['stuffing'],
+            'username'            => $username,
+            'plant'               => $userPlant,
+            'nama_produksi'       => $nama_produksi,
+            'status_produksi'     => "1",
+            'tgl_update_produksi' => now()->addHour(),
+            'status_spv'           => "0",
         ]);
 
         return redirect()->route('stuffing.index')->with('success', 'Pemeriksaan Stuffing Sosis Retort berhasil disimpan');
@@ -786,6 +853,7 @@ class StuffingController extends Controller
             'stuffing.*.kecepatan_stuffing' => 'nullable|numeric',
             'stuffing.*.panjang_pcs'        => 'nullable|numeric',
             'stuffing.*.berat_pcs'          => 'nullable|numeric',
+            'stuffing.*.cek_vakum' => 'nullable|in:Ok,Tidak Ok',
             'stuffing.*.kebersihan_seal'    => 'nullable|string',
             'stuffing.*.kekuatan_seal'      => 'nullable|string',
             'stuffing.*.diameter_klip'      => 'nullable|numeric',
@@ -845,6 +913,7 @@ class StuffingController extends Controller
             'stuffing.*.kecepatan_stuffing' => 'nullable|numeric',
             'stuffing.*.panjang_pcs'        => 'nullable|numeric',
             'stuffing.*.berat_pcs'          => 'nullable|numeric',
+            'stuffing.*.cek_vakum'          => 'nullable|in:Ok,Tidak Ok',
             'stuffing.*.kebersihan_seal'    => 'nullable|string',
             'stuffing.*.kekuatan_seal'      => 'nullable|string',
             'stuffing.*.diameter_klip'      => 'nullable|numeric',
@@ -900,32 +969,32 @@ class StuffingController extends Controller
     public function updateVerification(Request $request, $uuid)
     {
         $request->validate([
-            'status_spv'   => 'required|in:1,2', 
-            'catatan_spv'  => 'nullable|string|max:255',
+            'status_spv'  => 'required|in:1,2',
+            'catatan_spv' => 'nullable|string|max:255',
         ]);
 
         $stuffing = Stuffing::where('uuid', $uuid)->firstOrFail();
 
         $username_spv = Auth::user()->username ?? 'SPV';
 
-        // Mencegah status_spv double update
         if ($stuffing->status_spv != 0) {
             return back()->with('error', 'Data sudah diverifikasi sebelumnya!');
         }
 
         $stuffing->update([
-            'status_spv' => $request->status_spv,
-            'catatan_spv' => $request->catatan_spv,
-            'username_spv' => $username_spv,
+            'status_spv'     => $request->status_spv,
+            'catatan_spv'    => $request->catatan_spv,
+            'nama_spv'       => $username_spv,
+            'username_spv'   => $username_spv,
             'tgl_update_spv' => now(),
         ]);
 
         return redirect()->route('stuffing.index', [
-            'page' => $request->input('page', 1),
-            'date' => $request->input('date'),
-            'shift' => $request->input('shift'),
+            'page'       => $request->input('page', 1),
+            'date'       => $request->input('date'),
+            'shift'      => $request->input('shift'),
             'kode_batch' => $request->input('kode_batch'),
-            'search' => $request->input('search'),
+            'search'     => $request->input('search'),
         ])->with('success', 'Verifikasi berhasil disimpan.');
     }
 
