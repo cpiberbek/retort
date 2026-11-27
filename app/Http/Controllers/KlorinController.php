@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Klorin;
+use App\Models\List_form;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -302,55 +303,124 @@ class KlorinController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        // 1. Ambil Data
-        $date = $request->input('date');
-        $userPlant = Auth::user()->plant;
+{
+    $date      = $request->input('date');
+    $userPlant = Auth::user()->plant;
 
-        $query = Klorin::query();
-        if (Auth::check() && !empty($userPlant)) {
-            $query->where('plant', $userPlant);
-        }
-
-        // Filter tanggal
-        $query->when($date, function ($q) use ($date) {
+    $klorins = Klorin::query()
+        ->when(!empty($userPlant), function ($q) use ($userPlant) {
+            $q->where('plant', $userPlant);
+        })
+        ->when($date, function ($q) use ($date) {
             $q->whereDate('date', $date);
-        });
+        })
+        ->orderBy('date', 'asc')
+        ->orderBy('pukul', 'asc')
+        ->get();
 
-        $klorins = $query->orderBy('date', 'asc')->orderBy('pukul', 'asc')->get();
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Pengecekan Klorin')
+        ->value('no_dokumen') ?: 'QT 25 / 00';
 
-        if (ob_get_length()) {
-            ob_end_clean();
+    $tanggal = $date
+        ? \Carbon\Carbon::parse($date)->format('d-m-Y')
+        : '';
+
+    $usernames = $klorins
+        ->flatMap(fn($k) => [$k->username, $k->nama_produksi, $k->nama_spv])
+        ->filter()
+        ->unique()
+        ->values();
+
+    $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+    $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+    $imagePath = function ($path) {
+        if (empty($path)) {
+            return '';
         }
+        $full = storage_path('app/public/klorin/' . basename($path));
+        return file_exists($full) ? $full : '';
+    };
 
-        // 2. Setup PDF (Landscape, A4)
-        $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+    $rows = [];
 
-        // Metadata
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Pengecekan Klorin');
-
-        // Hilangkan Header/Footer Bawaan
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-
-        // Set Margin
-        $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
-
-        // Set Font Default
-        $pdf->SetFont('helvetica', '', 6);
-
-        $pdf->AddPage();
-
-        // 3. Render
-        $html = view('reports.pengecekan-klorin', compact('klorins', 'request'))->render();
-        $pdf->writeHTML($html, true, false, true, false, '');
-
-        $filename = 'Pengecekan_Klorin_' . date('d-m-Y_His') . '.pdf';
-        $pdf->Output($filename, 'I');
-        exit();
+    foreach ($klorins as $k) {
+        $rows[] = [
+            'pukul'    => $k->pukul ? \Carbon\Carbon::parse($k->pukul)->format('H:i') : '-',
+            'foot'     => $imagePath($k->footbasin),
+            'hand'     => $imagePath($k->handbasin),
+            'qc'       => $namaUser($k->username) ?: '-',
+            'produksi' => $namaUser($k->nama_produksi) ?: '-',
+        ];
     }
+
+    $pages = empty($rows) ? [[]] : array_chunk($rows, 8);
+
+    $catatan = $klorins->pluck('catatan')
+        ->filter()
+        ->unique()
+        ->implode(', ');
+
+    $first        = $klorins->first();
+    $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+    $tglPemeriksa = ($first && $first->created_at)
+        ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+        : '';
+
+    $semuaDisetujui = $klorins->isNotEmpty()
+        && $klorins->every(fn($k) => (string) $k->status_spv === '1');
+
+    $spv    = '';
+    $tglSpv = '';
+
+    if ($semuaDisetujui) {
+        $spvRow = $klorins->first(fn($k) => !empty($k->nama_spv));
+
+        if ($spvRow) {
+            $spv    = $namaUser(trim((string) $spvRow->nama_spv));
+            $tglSpv = $spvRow->tgl_update_spv
+                ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
+    }
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Pengecekan Klorin');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 6);
+    $pdf->AddPage();
+
+    $html = view('reports.pengecekan-klorin', compact(
+        'pages',
+        'tanggal',
+        'catatan',
+        'noDokumen',
+        'pemeriksa',
+        'tglPemeriksa',
+        'spv',
+        'tglSpv',
+        'semuaDisetujui'
+    ))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Pengecekan_Klorin_' . date('d-m-Y_His') . '.pdf', 'I');
+
+    exit();
+}
 
     /**
      * 🔧 Helper untuk kompres dan simpan gambar

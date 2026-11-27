@@ -2,131 +2,184 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title>Pengecekan Klorin</title>
     <style>
-        body { font-size: 8px; }
-        table { border-collapse: collapse; }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
 
         .title {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: bold;
             text-align: center;
         }
 
-        .small { font-size: 7px; }
-        .center { text-align: center; }
-        .right { text-align: right; }
-        .sign { text-align: center; }
-
-        .tbl-main, .tbl-main th, .tbl-main td {
-            border: 0.3px solid #000;
-        }
-
-        .tbl-main th {
-            text-align: center;
-            vertical-align: middle;
+        .small {
             font-size: 7px;
         }
 
-        .tbl-header td {
-            padding: 2px;
-            font-size: 8px;
+        .center {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .tbl-main,
+        .tbl-main th,
+        .tbl-main td {
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
+        }
+
+        .tbl-main th {
+            background: #d9e2f3;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
+            line-height: 1.15;
+        }
+
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
+        }
+
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
 
 <body>
 
-{{-- HEADER --}}
-<table width="100%">
-    <tr>
-        <td class="small" width="40%">
-            PT Charoen Pokphand Indonesia<br>
-            Food Division
-        </td>
-        
-    </tr>
-</table>
-<h2 class="title">PENGECEKAN KLORIN</h2>
-<br>
-<br>
+@php
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
 
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
 
-{{-- TABEL UTAMA --}}
-<table width="100%" class="tbl-main small">
-    @php
-    $date = $request->input('date');
-    $formattedDate = $date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : '';
-    @endphp
-    <tr>
-        <th colspan="3">Hari / Tanggal : {{ $formattedDate }}</th>
-        <th colspan="2" class="center">Paraf</th>
-    </tr>
-    <tr>
-        <th class="center">Pukul</th>
-        <th class="center">Foot Basin</th>
-        <th class="center">Hand Basin</th>
-        <th class="center">QC</th>
-        <th class="center">Produksi</th>
-    </tr>
-    @if($klorins->count() > 0)
-        @foreach($klorins as $klorin)
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
+@endphp
+
+@foreach($pages as $page)
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
         <tr>
-            <td class="center">{{ \Carbon\Carbon::parse($klorin->pukul)->format('H:i') }}</td>
-            <td class="center">
-                @if($klorin->footbasin)
-                    <img src="{{ storage_path('app/public/klorin/' . basename($klorin->footbasin)) }}" width="120">
-                @endif
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
+                <span style="font-size:12pt;"><b>Food Division</b></span>
             </td>
-
-            <td class="center">
-                @if($klorin->handbasin)
-                    <img src="{{ storage_path('app/public/klorin/' . basename($klorin->handbasin)) }}" width="120">
-                @endif
-            </td>
-            <td class="center">
-                {{ \App\Models\User::where('username', $klorin->username)->value('name') ?? $klorin->username ?? '' }}
-            </td>
-            <td class="center">{{ $klorin->nama_produksi ?? '' }}</td>
         </tr>
+    </table>
+
+    <h2 class="title" style="margin:0; padding:0;">
+        PENGECEKAN KLORIN
+    </h2>
+    <br>
+    <br>
+
+    <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
+        <tr>
+            <th colspan="3" width="68%"><b>Hari / Tanggal : {{ $tanggal }}</b></th>
+            <th colspan="2" width="32%"><b>Paraf</b></th>
+        </tr>
+        <tr>
+            <th width="12%"><b>Pukul</b></th>
+            <th width="28%"><b>Foot Basin</b></th>
+            <th width="28%"><b>Hand Basin</b></th>
+            <th width="16%"><b>QC</b></th>
+            <th width="16%"><b>Produksi</b></th>
+        </tr>
+
+        @foreach($page as $row)
+            <tr>
+                <td width="12%">{{ $row['pukul'] }}</td>
+                <td width="28%">
+                    @if($row['foot'])
+                        <img src="{{ $row['foot'] }}" width="120">
+                    @endif
+                </td>
+                <td width="28%">
+                    @if($row['hand'])
+                        <img src="{{ $row['hand'] }}" width="120">
+                    @endif
+                </td>
+                <td width="16%">{{ $row['qc'] }}</td>
+                <td width="16%">{{ $row['produksi'] }}</td>
+            </tr>
         @endforeach
+    </table>
+
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
+
+    @if($loop->last)
+
+        <br>
+        <br>
+
+        <table width="100%" class="note small" nobr="true">
+            <tr>
+                <td width="60%">
+                    Keterangan : V Sesuai Standar<br>
+                    Catatan :
+                    @if(!empty($catatan))
+                        {{ $catatan }}
+                    @else
+                        -
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        QC
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui && !empty($pages[0]))
+                        <i>Belum semua entry disetujui</i>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
     @else
-        <tr>
-            <td class="center">-</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-            <td class="center">-</td>
-        </tr>
+        <br pagebreak="true" />
     @endif
-</table>
-<div style="text-align:right; font-size:8px;font-style:italic;">QT 25 / 00</div>
-<br>
 
-<table width="100%" class="small">
-    <tr>
-        <td style="padding-bottom: 5px;">
-            Keterangan : V Sesuai Standar
-        </td>
-    </tr>
-    <tr>
-        <td style="padding-top: 5px;">
-            Catatan : {{ $klorins->pluck('catatan')->filter()->implode(', ') }}
-        </td>
-    </tr>
-</table>
-
-<br><br>
-
-<table width="100%" class="small">
-    <tr>
-        <td width="60%"></td>
-        <td width="40%" class="sign">
-            Disetujui Oleh,<br><br><br>
-            ( ___________________ )<br>
-            QC SPV
-        </td>
-    </tr>
-</table>
+@endforeach
 
 </body>
 </html>
