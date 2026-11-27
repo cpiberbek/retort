@@ -334,52 +334,111 @@ class BeritaAcaraController extends Controller
     }
 
     public function exportPdf(Request $request)
-    {
-        $date = $request->input('date');
-        $nomorBa = $request->input('nomor_ba');
-        $userPlant = Auth::user()->plant;
+{
+    $date      = $request->input('date');
+    $nomorBa   = $request->input('nomor_ba');
+    $userPlant = Auth::user()->plant;
 
-        $query = BeritaAcara::query();
-
-        if (Auth::check() && !empty($userPlant)) {
-            $query->where('plant_uuid', $userPlant);
-        }
-
-        $query->when($date, function ($q) use ($date) {
+    $beritaAcaras = BeritaAcara::query()
+        ->when(!empty($userPlant), function ($q) use ($userPlant) {
+            $q->where('plant_uuid', $userPlant);
+        })
+        ->when($date, function ($q) use ($date) {
             $q->whereDate('tanggal_kedatangan', $date);
-        });
-
-        $query->when($nomorBa, function ($q) use ($nomorBa) {
+        })
+        ->when($nomorBa, function ($q) use ($nomorBa) {
             $q->where('nomor', 'like', '%' . $nomorBa . '%');
-        });
+        })
+        ->orderBy('tanggal_kedatangan', 'asc')
+        ->get();
 
-        $beritaAcaras = $query->orderBy('tanggal_kedatangan', 'asc')->get();
-
-        $noDokumen = List_form::where('plant', $userPlant)
-            ->where('laporan', 'Berita Acara')
-            ->value('no_dokumen');
-
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
-        $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
-
-        $pdf->SetCreator(PDF_CREATOR);
-        $pdf->SetTitle('Form Berita Acara');
-        $pdf->SetPrintHeader(false);
-        $pdf->SetPrintFooter(false);
-        $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(true, 5);
-        $pdf->SetFont('helvetica', '', 8);
-
-        $pdf->AddPage();
-
-        $html = view('reports.form-berita-acara', compact('beritaAcaras', 'request', 'noDokumen'))->render();
-        $pdf->writeHTML($html, true, false, true, false, '');
-
-        $filename = 'Form_Berita_Acara_' . date('d-m-Y_His') . '.pdf';
-        $pdf->Output($filename, 'I');
-        exit();
+    if ($beritaAcaras->isEmpty()) {
+        return back()->with('error', 'Data tidak ditemukan');
     }
+
+    $noDokumen = List_form::where('plant', $userPlant)
+        ->where('laporan', 'Berita Acara')
+        ->value('no_dokumen');
+
+    $ba = $beritaAcaras->first();
+
+    $userMap = \App\Models\User::whereIn('uuid', array_filter([
+        $ba->created_by,
+        $ba->ppic_verified_by,
+        $ba->spv_verified_by,
+    ]))->pluck('name', 'uuid');
+
+    $fmt = fn($d) => $d ? \Carbon\Carbon::parse($d)->format('d-m-Y') : '';
+
+    $signers = [
+        [
+            'label'   => 'Dibuat Oleh',
+            'jabatan' => 'QC Warehouse',
+            'nama'    => $ba->created_by ? ($userMap[$ba->created_by] ?? '') : '',
+            'tanggal' => $fmt($ba->created_at),
+        ],
+        [
+            'label'   => 'Mengetahui',
+            'jabatan' => 'PPIC',
+            'nama'    => $ba->ppic_verified_by ? ($userMap[$ba->ppic_verified_by] ?? '') : '',
+            'tanggal' => $fmt($ba->ppic_verified_at),
+        ],
+        [
+            'label'   => 'Disetujui Oleh',
+            'jabatan' => 'QC Supervisor',
+            'nama'    => $ba->spv_verified_by ? ($userMap[$ba->spv_verified_by] ?? '') : '',
+            'tanggal' => $fmt($ba->spv_verified_at),
+        ],
+    ];
+
+    $data = [
+        'nomor'             => $ba->nomor,
+        'namaBarang'        => $ba->nama_barang,
+        'jumlahBarang'      => $ba->jumlah_barang,
+        'supplier'          => $ba->supplier,
+        'uraianMasalah'     => $ba->uraian_masalah,
+        'noSuratJalan'      => $ba->no_surat_jalan,
+        'doPo'              => $ba->dd_po,
+        'tanggalKedatangan' => $fmt($ba->tanggal_kedatangan),
+        'tanggalKeputusan'  => $fmt($ba->tanggal_keputusan),
+        'lainLain'          => $ba->keputusan_lain_lain,
+        'analisa'           => $ba->analisa_penyebab,
+        'tindakLanjut'      => $ba->tindak_lanjut_perbaikan,
+        'lampiran'          => $ba->lampiran,
+        'keputusan'         => [
+            'pengembalian' => $ba->keputusan_pengembalian ? 'V' : '',
+            'potongan'     => $ba->keputusan_potongan_harga ? 'V' : '',
+            'sortir'       => $ba->keputusan_sortir ? 'V' : '',
+            'penukaran'    => $ba->keputusan_penukaran_barang ? 'V' : '',
+            'penggantian'  => $ba->keputusan_penggantian_biaya ? 'V' : '',
+            'lain'         => $ba->keputusan_lain_lain ? 'V' : '',
+        ],
+    ];
+
+    if (ob_get_length()) {
+        ob_end_clean();
+    }
+
+    $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
+
+    $pdf->SetCreator(PDF_CREATOR);
+    $pdf->SetTitle('Form Berita Acara');
+
+    $pdf->SetPrintHeader(false);
+    $pdf->SetPrintFooter(false);
+
+    $pdf->SetMargins(5, 5, 5);
+    $pdf->SetAutoPageBreak(true, 5);
+
+    $pdf->SetFont('helvetica', '', 8);
+    $pdf->AddPage();
+
+    $html = view('reports.form-berita-acara', compact('data', 'signers', 'noDokumen'))->render();
+
+    $pdf->writeHTML($html, true, false, true, false, '');
+
+    $pdf->Output('Form_Berita_Acara_' . date('d-m-Y_His') . '.pdf', 'I');
+
+    exit();
+}
 }
