@@ -759,7 +759,6 @@ class SuhuController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
         $date      = $request->input('date');
         $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
@@ -775,36 +774,150 @@ class SuhuController extends Controller
             ->orderBy('pukul', 'asc')
             ->get();
 
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Pemeriksaan Suhu dan RH Ruangan')
+            ->value('no_dokumen');
+
+        $first = $items->first();
+
+        $tanggal = $first
+            ? \Carbon\Carbon::parse($first->date)->format('d-m-Y')
+            : ($date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : '');
+
+        $shifts    = $items->pluck('shift')->filter()->map(fn($s) => (string) $s)->unique()->sort()->values()->all();
+        $shiftText = $shifts === ['1', '2', '3'] ? 'Semua Shift' : implode(',', $shifts);
+
+        $usernames = $items
+            ->flatMap(fn($i) => [$i->username, $i->nama_produksi, $i->nama_spv])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+        $toArray = function ($value) {
+            if (is_array($value)) {
+                return $value;
+            }
+            if (is_string($value) && $value !== '') {
+                $decoded = json_decode($value, true);
+                return is_array($decoded) ? $decoded : [];
+            }
+            return [];
+        };
+
+        $columns = [
+            ['Chill Room (Ruang)', 'suhu'],
+            ['Chill Room (Meat)', 'suhu'],
+            ['Cold Storage (Ruang)', 'suhu'],
+            ['Cold Storage (Meat)', 'suhu'],
+            ['Seasoning', 'suhu'],
+            ['Meat Preparation', 'suhu'],
+            ['Hopper', 'suhu'],
+            ['Stuffer', 'suhu'],
+            ['Susun', 'suhu'],
+            ['Retort Chamber', 'suhu'],
+            ['PVDC', 'suhu'],
+            ['Drying', 'suhu'],
+            ['Drying', 'rh'],
+            ['Packing', 'suhu'],
+            ['Packing', 'rh'],
+            ['Dry Store', 'suhu'],
+            ['Finish Good', 'suhu'],
+            ['Finish Good', 'rh'],
+        ];
+
+        $std = [
+            '0 - 4', '< 10', '-18 sd. -22', '-18 sd. -22', '25 - 30', '9 - 15',
+            '8 - 12', '16 - 20', '12 - 18', '30 - 40', '27 - 33', '22 - 50',
+            '20 - 60', '20 - 30', '40 - 70', '25 - 36', '28 - 36', '35 - 70',
+        ];
+
+        $dataByHour = [];
+
+        foreach ($items as $item) {
+            $dataByHour[\Carbon\Carbon::parse($item->pukul)->format('H')] = $item;
+        }
+
+        $rows = [];
+
+        for ($i = 0; $i <= 23; $i++) {
+            $hourStr = str_pad($i, 2, '0', STR_PAD_LEFT);
+            $item    = $dataByHour[$hourStr] ?? null;
+
+            $byArea = $item
+                ? collect($toArray($item->hasil_suhu))->keyBy('area')
+                : collect();
+
+            $values = [];
+            foreach ($columns as [$area, $key]) {
+                $values[] = $byArea[$area][$key] ?? '';
+            }
+
+            $rows[] = [
+                'pukul'      => $hourStr . ':00',
+                'values'     => $values,
+                'keterangan' => $item->keterangan ?? '',
+                'qc'         => $item ? $namaUser($item->username) : '',
+                'produksi'   => $item ? $namaUser($item->nama_produksi) : '',
+            ];
+        }
+
+        $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+        $tglPemeriksa = ($first && $first->created_at)
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
+
+        $semuaDisetujui = $items->isNotEmpty()
+            && $items->every(fn($i) => !empty($i->nama_spv));
+
+        $spv    = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $spv    = $namaUser(trim((string) $first->nama_spv));
+            $spvRow = $items->first(fn($i) => !empty($i->tgl_update_spv));
+            $tglSpv = $spvRow
+                ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Landscape, A4)
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
-        // Metadata
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Pemeriksaan Suhu dan RH');
 
-        // Hilangkan Header/Footer Bawaan
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margin
         $pdf->SetMargins(5, 5, 5);
-        $pdf->SetAutoPageBreak(TRUE, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set Font Default
-        $pdf->SetFont('helvetica', '', 7);
-
+        $pdf->SetFont('helvetica', '', 6);
         $pdf->AddPage();
 
-        // 3. Render
-        $html = view('reports.pemeriksaan-suhu-rh', compact('items', 'request'))->render();
+        $html = view('reports.pemeriksaan-suhu-rh', compact(
+            'rows',
+            'std',
+            'tanggal',
+            'shiftText',
+            'noDokumen',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
+
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = 'Pemeriksaan_Suhu_RH_' . date('d-m-Y_His') . '.pdf';
-        $pdf->Output($filename, 'I');
+        $pdf->Output('Pemeriksaan_Suhu_RH_' . date('d-m-Y_His') . '.pdf', 'I');
+
         exit();
     }
 
