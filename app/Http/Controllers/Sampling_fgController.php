@@ -292,12 +292,82 @@ class Sampling_fgController extends Controller
             ->where('laporan', 'Pemeriksaan Proses Sampling Finish Good')
             ->value('no_dokumen');
 
+        $tanggal = $date
+            ? \Carbon\Carbon::parse($date)->locale('id')->translatedFormat('l, d-m-Y')
+            : '';
+        $shiftText = $shift ?: 'Semua Shift';
+
+        $kodeMap = Mincing::whereIn('uuid', $items->pluck('kode_produksi')->filter()->unique())
+            ->pluck('kode_produksi', 'uuid');
+
+        $usernames = $items
+            ->flatMap(fn($i) => [$i->username, $i->nama_spv])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+        $dash = fn($v) => ($v === null || $v === '') ? '-' : $v;
+
+        $rows = [];
+
+        foreach ($items as $item) {
+            $rows[] = [
+                'palet'      => $dash($item->palet),
+                'nama'       => $dash($item->nama_produk),
+                'kode'       => $dash($kodeMap[$item->kode_produksi] ?? $item->kode_produksi),
+                'exp'        => $item->exp_date ? \Carbon\Carbon::parse($item->exp_date)->format('d-m-y') : '-',
+                'waktu'      => $item->pukul ? \Carbon\Carbon::parse($item->pukul)->format('H:i') : '-',
+                'kalibrasi'  => $item->kalibrasi === null || $item->kalibrasi === ''
+                    ? ''
+                    : ($item->kalibrasi == 'Sesuai' ? '4' : '8'),
+                'berat'      => $dash($item->berat_produk),
+                'keterangan' => $dash($item->keterangan),
+                'isi'        => $dash($item->isi_per_box),
+                'jumlah'     => $dash($item->jumlah_box),
+                'release'    => $dash($item->release),
+                'reject'     => $dash($item->reject),
+                'hold'       => $dash($item->hold),
+                'catatan'    => $dash($item->catatan),
+            ];
+        }
+
+        $pages = empty($rows) ? [[]] : array_chunk($rows, 20);
+
+        $catatan = $items
+            ->filter(fn($i) => !empty(trim((string) $i->catatan)))
+            ->map(fn($i) => ($kodeMap[$i->kode_produksi] ?? $i->kode_produksi ?? '-') . ' : ' . trim($i->catatan))
+            ->values()
+            ->all();
+
+        $first        = $items->first();
+        $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+        $tglPemeriksa = ($first && $first->created_at)
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
+
+        $semuaDisetujui = $items->isNotEmpty()
+            && $items->every(fn($i) => !empty($i->nama_spv));
+
+        $spv    = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $spv    = $namaUser(trim((string) $first->nama_spv));
+            $spvRow = $items->first(fn($i) => !empty($i->tgl_update_spv));
+            $tglSpv = $spvRow
+                ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
 
         if (ob_get_length()) {
             ob_end_clean();
         }
 
         $pdf = new \TCPDF('L', PDF_UNIT, 'F4', true, 'UTF-8', false);
+
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Laporan Sampling Finish Good');
 
@@ -306,14 +376,27 @@ class Sampling_fgController extends Controller
 
         $pdf->SetMargins(5, 5, 5);
         $pdf->SetAutoPageBreak(true, 5);
-        $pdf->SetFont('helvetica', '', 7);
 
+        $pdf->SetFont('helvetica', '', 6);
         $pdf->AddPage();
 
-        $html = view('reports.sampling_fg', compact('items', 'request', 'noDokumen'))->render();
+        $html = view('reports.sampling_fg', compact(
+            'pages',
+            'tanggal',
+            'shiftText',
+            'catatan',
+            'noDokumen',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
 
         $pdf->writeHTML($html, true, false, true, false, '');
+
         $pdf->Output('Laporan_Sampling_FG_' . date('d-m-Y_His') . '.pdf', 'I');
+
         exit();
     }
 
