@@ -1,3 +1,4 @@
+
 @extends('layouts.app')
 
 @section('content')
@@ -23,7 +24,6 @@
                 @csrf
                 @method('PUT')
 
-                {{-- ===================== IDENTITAS (READONLY) ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
                         <strong>Identitas Data Stuffing</strong>
@@ -62,7 +62,6 @@
                     </div>
                 </div>
 
-                {{-- ===================== DATA STUFFING ACCORDION ===================== --}}
                 <div class="card mb-4">
                     <div class="card-header bg-warning text-white d-flex justify-content-between align-items-center">
                         <strong>Data Stuffing</strong>
@@ -72,19 +71,37 @@
                     </div>
                     <div class="card-body">
                         <div class="accordion" id="accordionStuffing">
-                            
+
                             @php
-                                // Ambil old input jika ada error validasi, jika tidak ambil dari array JSON database
                                 $oldStuffing = old('stuffing', is_array($stuffing->data_stuffing) ? $stuffing->data_stuffing : [[]]);
-                                $originalCount = is_array($stuffing->data_stuffing) ? count($stuffing->data_stuffing) : 0;
+                                $originalStuffing = is_array($stuffing->data_stuffing) ? $stuffing->data_stuffing : [];
+                                $originalCount = count($originalStuffing);
+
+                                $fields = [
+                                    'kecepatan_stuffing' => 'Kecepatan Stuffing (/mnt)',
+                                    'panjang_pcs' => 'Panjang per pcs (cm)',
+                                    'berat_pcs' => 'Berat per pcs (gr)',
+                                    'diameter_klip' => 'Diameter Klip (mm)',
+                                    'lebar_cassing' => 'Lebar Cassing (mm)'
+                                ];
+
+                                $selects = [
+                                    'kebersihan_seal' => 'Kebersihan Ujung Seal',
+                                    'kekuatan_seal' => 'Kekuatan Seal',
+                                    'print_kode' => 'Print Kode Production'
+                                ];
                             @endphp
 
                             @foreach ($oldStuffing as $index => $item)
-                                @php 
-                                    // Hitung index untuk menentukan apakah ini data lama yang harus di-readonly
-                                    $isReadonly = $index < $originalCount; 
+                                @php
+                                    $isReadonly = $index < $originalCount;
+                                    $originalItem = $originalStuffing[$index] ?? [];
+                                    $originalCekVakum = $originalItem['cek_vakum'] ?? '';
+                                    $cekVakumValue = $isReadonly && !empty($originalCekVakum)
+                                        ? $originalCekVakum
+                                        : ($item['cek_vakum'] ?? '');
                                 @endphp
-                                
+
                                 <div class="accordion-item stuffing-item">
                                     <h5 class="accordion-header" id="heading{{ $index }}">
                                         <button class="accordion-button {{ $index == 0 ? '' : 'collapsed' }}"
@@ -92,7 +109,6 @@
                                             data-bs-toggle="collapse"
                                             data-bs-target="#collapse{{ $index }}">
                                             <i class="bi bi-clipboard-check me-2 text-warning"></i>
-
                                             {{ !empty($item['kode_mesin']) ? $item['kode_mesin'] : 'Stuffing ' . ($index + 1) }}
 
                                             @if ($isReadonly)
@@ -102,12 +118,15 @@
                                             @endif
                                         </button>
                                     </h5>
+
                                     <div id="collapse{{ $index }}" class="accordion-collapse collapse {{ $index == 0 ? 'show' : '' }}" data-bs-parent="#accordionStuffing">
                                         <div class="accordion-body">
-                                            
+
                                             @if(!$isReadonly)
                                                 <div class="text-end mb-3">
-                                                    <button type="button" class="btn btn-outline-danger btn-sm btnHapus"><i class="bi bi-trash"></i></button>
+                                                    <button type="button" class="btn btn-outline-danger btn-sm btnHapus">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
                                                 </div>
                                             @endif
 
@@ -120,7 +139,9 @@
                                                     <select name="stuffing[{{ $index }}][kode_mesin]" class="form-control" required>
                                                         <option value="">-- Pilih Mesin --</option>
                                                         @foreach($mesins as $m)
-                                                            <option value="{{ $m->nama_mesin }}" {{ ($item['kode_mesin'] ?? '') == $m->nama_mesin ? 'selected' : '' }}>{{ $m->nama_mesin }}</option>
+                                                            <option value="{{ $m->nama_mesin }}" {{ ($item['kode_mesin'] ?? '') == $m->nama_mesin ? 'selected' : '' }}>
+                                                                {{ $m->nama_mesin }}
+                                                            </option>
                                                         @endforeach
                                                     </select>
                                                 @endif
@@ -131,11 +152,14 @@
                                                 <input type="time" name="stuffing[{{ $index }}][jam_mulai]" class="form-control" value="{{ $item['jam_mulai'] ?? '' }}" {{ $isReadonly ? 'readonly' : '' }} required>
                                             </div>
 
-                                            <hr><h6 class="fw-bold text-primary">Parameter Adonan</h6>
+                                            <hr>
+                                            <h6 class="fw-bold text-primary">Parameter Adonan</h6>
+
                                             <div class="mb-3">
                                                 <label class="form-label">Suhu (°C)</label>
                                                 <input type="number" step="0.01" name="stuffing[{{ $index }}][suhu]" class="form-control" value="{{ $item['suhu'] ?? '' }}" {{ $isReadonly ? 'readonly' : '' }}>
                                             </div>
+
                                             <div class="mb-3">
                                                 <label class="form-label">Sensori</label>
                                                 @if($isReadonly)
@@ -150,11 +174,23 @@
                                                 @endif
                                             </div>
 
-                                            <hr><h6 class="fw-bold text-primary">Parameter Stuffing</h6>
-                                            @php
-                                                $fields = ['kecepatan_stuffing' => 'Kecepatan Stuffing (/mnt)', 'panjang_pcs' => 'Panjang per pcs (cm)', 'berat_pcs' => 'Berat per pcs (gr)', 'diameter_klip' => 'Diameter Klip (mm)', 'lebar_cassing' => 'Lebar Cassing (mm)'];
-                                                $selects = ['kebersihan_seal' => 'Kebersihan Ujung Seal', 'kekuatan_seal' => 'Kekuatan Seal', 'print_kode' => 'Print Kode Production'];
-                                            @endphp
+                                            <hr>
+                                            <h6 class="fw-bold text-primary">Parameter Stuffing</h6>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Cek Vakum</label>
+
+                                                @if($isReadonly && !empty($originalCekVakum))
+                                                    <input type="text" class="form-control" value="{{ $originalCekVakum }}" readonly>
+                                                    <input type="hidden" name="stuffing[{{ $index }}][cek_vakum]" value="{{ $originalCekVakum }}">
+                                                @else
+                                                    <select name="stuffing[{{ $index }}][cek_vakum]" class="form-control">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="Ok" {{ $cekVakumValue == 'Ok' ? 'selected' : '' }}>Ok</option>
+                                                        <option value="Tidak Ok" {{ $cekVakumValue == 'Tidak Ok' ? 'selected' : '' }}>Tidak Ok</option>
+                                                    </select>
+                                                @endif
+                                            </div>
 
                                             @foreach($fields as $key => $label)
                                                 <div class="mb-3">
@@ -180,7 +216,9 @@
                                             @endforeach
 
                                             <div class="card mt-4">
-                                                <div class="card-header bg-light"><strong>Catatan</strong></div>
+                                                <div class="card-header bg-light">
+                                                    <strong>Catatan</strong>
+                                                </div>
                                                 <div class="card-body">
                                                     <textarea name="stuffing[{{ $index }}][catatan]" class="form-control" rows="3">{{ $item['catatan'] ?? '' }}</textarea>
                                                 </div>
@@ -196,26 +234,34 @@
                 </div>
 
                 <div class="d-flex justify-content-between mt-3">
-                    <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Update & Simpan</button>
-                    <a href="{{ route('stuffing.index') }}" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Kembali</a>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Update & Simpan
+                    </button>
+                    <a href="{{ route('stuffing.index') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Kembali
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-{{-- ===================== BLANK TEMPLATE UNTUK DINAMIS DATA BARU ===================== --}}
 <template id="stuffingTemplate">
     <div class="accordion-item stuffing-item">
         <h5 class="accordion-header">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{INDEX}">
-                <i class="bi bi-clipboard-check me-2 text-warning"></i> Stuffing {NOMOR} <span class="badge bg-success ms-2">Baru</span>
+                <i class="bi bi-clipboard-check me-2 text-warning"></i>
+                Stuffing {NOMOR}
+                <span class="badge bg-success ms-2">Baru</span>
             </button>
         </h5>
+
         <div id="collapse{INDEX}" class="accordion-collapse collapse show" data-bs-parent="#accordionStuffing">
             <div class="accordion-body">
                 <div class="text-end mb-3">
-                    <button type="button" class="btn btn-outline-danger btn-sm btnHapus"><i class="bi bi-trash"></i></button>
+                    <button type="button" class="btn btn-outline-danger btn-sm btnHapus">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 </div>
 
                 <div class="mb-3">
@@ -233,11 +279,14 @@
                     <input type="time" name="stuffing[{INDEX}][jam_mulai]" class="form-control" required>
                 </div>
 
-                <hr><h6 class="fw-bold text-primary">Parameter Adonan</h6>
+                <hr>
+                <h6 class="fw-bold text-primary">Parameter Adonan</h6>
+
                 <div class="mb-3">
                     <label class="form-label">Suhu (°C)</label>
                     <input type="number" step="0.01" name="stuffing[{INDEX}][suhu]" class="form-control">
                 </div>
+
                 <div class="mb-3">
                     <label class="form-label">Sensori</label>
                     <select name="stuffing[{INDEX}][sensori]" class="form-control">
@@ -247,7 +296,18 @@
                     </select>
                 </div>
 
-                <hr><h6 class="fw-bold text-primary">Parameter Stuffing</h6>
+                <hr>
+                <h6 class="fw-bold text-primary">Parameter Stuffing</h6>
+
+                <div class="mb-3">
+                    <label class="form-label">Cek Vakum</label>
+                    <select name="stuffing[{INDEX}][cek_vakum]" class="form-control">
+                        <option value="">-- Pilih --</option>
+                        <option value="Ok">Ok</option>
+                        <option value="Tidak Ok">Tidak Ok</option>
+                    </select>
+                </div>
+
                 @foreach($fields as $key => $label)
                     <div class="mb-3">
                         <label class="form-label">{{ $label }}</label>
@@ -267,7 +327,9 @@
                 @endforeach
 
                 <div class="card mt-4">
-                    <div class="card-header bg-light"><strong>Catatan</strong></div>
+                    <div class="card-header bg-light">
+                        <strong>Catatan</strong>
+                    </div>
                     <div class="card-body">
                         <textarea name="stuffing[{INDEX}][catatan]" class="form-control" rows="3"></textarea>
                     </div>
@@ -284,10 +346,10 @@
     document.getElementById('btnTambahStuffing').addEventListener('click', function() {
         let template = document.getElementById('stuffingTemplate').innerHTML;
         let html = template.replace(/{INDEX}/g, stuffingIndex).replace(/{NOMOR}/g, stuffingIndex + 1);
-        
+
         let container = document.createElement('div');
         container.innerHTML = html;
-        
+
         document.getElementById('accordionStuffing').appendChild(container.firstElementChild);
         stuffingIndex++;
     });
@@ -301,12 +363,19 @@
     document.addEventListener('invalid', function(e) {
         let invalidInput = e.target;
         let accordionPane = invalidInput.closest('.accordion-collapse');
+
         if (accordionPane && !accordionPane.classList.contains('show')) {
             let accordionButton = document.querySelector(`[data-bs-target="#${accordionPane.id}"]`);
-            if(accordionButton) accordionButton.classList.remove('collapsed');
+
+            if (accordionButton) accordionButton.classList.remove('collapsed');
+
             let bsCollapse = new bootstrap.Collapse(accordionPane, { toggle: false });
             bsCollapse.show();
-            setTimeout(() => { invalidInput.focus(); invalidInput.classList.add('is-invalid'); }, 350); 
+
+            setTimeout(() => {
+                invalidInput.focus();
+                invalidInput.classList.add('is-invalid');
+            }, 350);
         }
     }, true);
 
@@ -331,12 +400,42 @@
 </script>
 
 <style>
-    .accordion-item { border-radius: 12px !important; overflow: hidden; margin-bottom: 12px; border: 1px solid #e9ecef; }
-    .accordion-button { font-weight: 600; background: #f8f9fa; box-shadow: none !important; }
-    .accordion-button:not(.collapsed) { background: #fff3cd; color: #000; }
-    .accordion-body { background: #fff; padding: 20px; }
-    .form-label { font-weight: 600; margin-bottom: 6px; }
-    .form-control { border-radius: 10px; min-height: 42px; }
-    .card { border-radius: 14px; overflow: hidden; }
+    .accordion-item {
+        border-radius: 12px !important;
+        overflow: hidden;
+        margin-bottom: 12px;
+        border: 1px solid #e9ecef;
+    }
+
+    .accordion-button {
+        font-weight: 600;
+        background: #f8f9fa;
+        box-shadow: none !important;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: #fff3cd;
+        color: #000;
+    }
+
+    .accordion-body {
+        background: #fff;
+        padding: 20px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        min-height: 42px;
+    }
+
+    .card {
+        border-radius: 14px;
+        overflow: hidden;
+    }
 </style>
 @endsection

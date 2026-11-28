@@ -190,6 +190,15 @@
                                                     ];
                                                 @endphp
 
+                                                <div class="mb-3">
+                                                    <label class="form-label">Cek Vakum</label>
+                                                    <select name="stuffing[{{ $index }}][cek_vakum]" class="form-control">
+                                                        <option value="">-- Pilih --</option>
+                                                        <option value="Ok" {{ ($item['cek_vakum'] ?? '') == 'Ok' ? 'selected' : '' }}>Ok</option>
+                                                        <option value="Tidak Ok" {{ ($item['cek_vakum'] ?? '') == 'Tidak Ok' ? 'selected' : '' }}>Tidak Ok</option>
+                                                    </select>
+                                                </div>
+
                                                 @foreach ($fields as $key => $label)
                                                     <div class="mb-3">
                                                         <label class="form-label">{{ $label }}</label>
@@ -291,6 +300,14 @@
 
                     <hr>
                     <h6 class="fw-bold text-primary">Parameter Stuffing</h6>
+                    <div class="mb-3">
+                        <label class="form-label">Cek Vakum</label>
+                        <select name="stuffing[{INDEX}][cek_vakum]" class="form-control">
+                            <option value="">-- Pilih --</option>
+                            <option value="Ok">Ok</option>
+                            <option value="Tidak Ok">Tidak Ok</option>
+                        </select>
+                    </div>
                     @foreach ($fields as $key => $label)
                         <div class="mb-3">
                             <label class="form-label">{{ $label }}</label>
