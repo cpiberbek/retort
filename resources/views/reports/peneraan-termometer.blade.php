@@ -2,9 +2,17 @@
 <html>
 <head>
     <meta charset="utf-8">
+    <title>Peneraan Termometer</title>
     <style>
-        body { font-size: 9px; }
-        table { border-collapse: collapse; }
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 7px;
+            color: #000;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
 
         .title {
             font-size: 13px;
@@ -12,166 +20,177 @@
             text-align: center;
         }
 
-        .small { font-size: 8px; }
-        .center { text-align: center; }
-        .sign { text-align: center; }
-
-        .tbl-main, .tbl-main th, .tbl-main td {
-            border: 0.4px solid #000;
+        .small {
+            font-size: 7px;
         }
 
-        .tbl-main th {
-            font-size: 8px;
+        .center {
             text-align: center;
             vertical-align: middle;
         }
 
         .tbl-header td {
-            padding: 2px;
-            font-size: 9px;
+            padding: 0;
+            font-size: 8px;
+            line-height: 1;
         }
-        /* tnr */
-        body,
-        table,
-        tr,
-        td,
-        th {
-            font-family: times;
-            font-size: 9pt;
+
+        .tbl-main,
+        .tbl-main th,
+        .tbl-main td {
+            padding: 3px 2px;
+            text-align: center;
+            vertical-align: middle;
+            border: 0.8px solid #000;
+        }
+
+        .tbl-main th {
+            background: #d9e2f3;
+            font-weight: bold;
+            text-align: center;
+            vertical-align: middle;
+            padding: 3px 2px;
+            line-height: 1.15;
+        }
+
+        .tbl-main td {
+            padding: 3px 2px;
+            vertical-align: middle;
+        }
+
+        .note td {
+            vertical-align: top;
+            line-height: 1.4;
         }
     </style>
 </head>
 
 <body>
 
-{{-- HEADER --}}
+@php
+    $namaPemeriksa = (!empty($pemeriksa) && $pemeriksa !== '-') ? $pemeriksa : '';
+    $namaSpv       = (!empty($spv) && $spv !== '-') ? $spv : '';
 
-<div style="margin-left:-30px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    $makeQr = function ($nama, $tanggal) {
+        if (empty($nama)) {
+            return '';
+        }
+        $teks = 'Ditandatangani secara digital oleh ' . $nama;
+        if (!empty($tanggal)) {
+            $teks .= ' pada ' . $tanggal;
+        }
+        $barcode = new \TCPDF2DBarcode($teks, 'QRCODE,H');
+        return base64_encode($barcode->getBarcodePngData(4, 4, [0, 0, 0]));
+    };
+
+    $qrPemeriksa = $makeQr($namaPemeriksa, $tglPemeriksa ?? '');
+    $qrSpv       = $makeQr($namaSpv, $tglSpv ?? '');
+@endphp
+
+@foreach($pages as $page)
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0;">
         <tr>
-            <td width="55">
-                <img src="{{ public_path('assets/img/Logo CPI.png') }}" width="50">
-            </td>
-            <td>
-                <span style="font-size:12pt;"><b>PT Charoen </b></span><br>
-                <span style="font-size:12pt;"><b>Pokphand Indonesia</b></span><br>
+            <td style="padding:0; line-height:1;">
+                <span style="font-size:12pt;"><b>PT Charoen Pokphand Indonesia</b></span><br>
                 <span style="font-size:12pt;"><b>Food Division</b></span>
             </td>
         </tr>
     </table>
-</div>
-<h2 class="title">PENERAAN TERMOMETER</h2>
 
+    <h2 class="title" style="margin:0; padding:0;">
+        PENERAAN TERMOMETER
+    </h2>
+    <br>
+    <br>
 
-{{-- INFO --}}
-@php
-$firstItem = $items->first();
-$date = $firstItem ? \Carbon\Carbon::parse($firstItem->date)->format('d-m-Y') : '';
-$shift = $firstItem ? $firstItem->shift : '';
-@endphp
-<table width="100%" class="tbl-header">
-    <tr>
-        <td>Hari / Tanggal : {{ $date }}</td>
-        {{-- <td>Shift : {{ $shift }}</td> --}}
-    </tr>
-</table>
+    <table width="100%" class="tbl-header" cellpadding="0" cellspacing="0">
+        <tr>
+            <td width="100%">Hari / Tanggal : {{ $tanggal }}</td>
+        </tr>
+    </table>
 
-<br>
+    <br>
 
-{{-- TABEL UTAMA --}}
-<table width="100%" class="tbl-main small">
-    <tr>
-        <th class="center" rowspan="2"><strong>KODE TERMOMETER / AREA</strong></th>
-        <th class="center" rowspan="2"><strong>STANDAR</strong></th>
-        <th colspan="2" class="center"><strong>PENERAAN</strong></th>
-        <th class="center" rowspan="2"><strong>TINDAKAN PERBAIKAN</strong></th>
-        <th class="center" rowspan="2"><strong>DIBUAT<br>QC</strong></th>
-        <th class="center" rowspan="2"><strong>DIKETAHUI<br>SPV QC</strong></th>
-    </tr>
-    <tr>
-        <th class="center"><strong>PUKUL</strong></th>
-        <th class="center"><strong>HASIL TERA</strong></th>
-    </tr>
+    <table width="100%" class="tbl-main small" cellpadding="0" cellspacing="0">
+        <tr>
+            <th rowspan="2" width="22%"><b>KODE TERMOMETER / AREA</b></th>
+            <th rowspan="2" width="12%"><b>STANDAR</b></th>
+            <th colspan="2" width="20%"><b>PENERAAN</b></th>
+            <th rowspan="2" width="22%"><b>TINDAKAN PERBAIKAN</b></th>
+            <th rowspan="2" width="12%"><b>DIBUAT<br>QC</b></th>
+            <th rowspan="2" width="12%"><b>DIKETAHUI<br>SPV QC</b></th>
+        </tr>
+        <tr>
+            <th width="8%"><b>PUKUL</b></th>
+            <th width="12%"><b>HASIL TERA</b></th>
+        </tr>
 
-    @php
-    $allPeneraan = [];
+        @foreach($page as $row)
+            <tr>
+                <td width="22%" style="height:28px;">
+                    @if($row['kode'] !== '' || $row['area'] !== '')
+                        {{ $row['kode'] }} /<br>{{ $row['area'] }}
+                    @endif
+                </td>
+                <td width="12%">{{ $row['standar'] }}</td>
+                <td width="8%">{{ $row['pukul'] }}</td>
+                <td width="12%">{{ $row['hasil'] }}</td>
+                <td width="22%">{{ $row['tindakan'] }}</td>
+                <td width="12%">{{ $row['qc'] }}</td>
+                <td width="12%">{{ $row['spv'] }}</td>
+            </tr>
+        @endforeach
+    </table>
 
-    foreach($items as $item) {
-        $peneraan = $item->peneraan;
+    <div style="margin-top:5px; text-align:right;">
+        <i>{{ $noDokumen ?? '-' }}</i>
+    </div>
 
-        if(is_array($peneraan)) {
-            foreach($peneraan as $data) {
-                $allPeneraan[] = [
-                    'peneraan' => $data,
-                    'username' => $item->username,
-                    'nama_spv' => $item->nama_spv,
-                ];
-            }
-        }
-    }
-    @endphp
+    @if($loop->last)
 
-    @foreach($allPeneraan as $itemPeneraan)
-    <tr>
-        <td style="height:35px;">
-            {{ $itemPeneraan['peneraan']['kode_thermometer'] ?? '' }} /<br>
-            {{ $itemPeneraan['peneraan']['area'] ?? '' }}
-        </td>
-        <td class="center">{{ $itemPeneraan['peneraan']['standar'] ?? '' }}</td>
-        <td>{{ $itemPeneraan['peneraan']['pukul'] ?? '' }}</td>
-        <td>{{ $itemPeneraan['peneraan']['hasil_tera'] ?? '' }}</td>
-        <td>{{ $itemPeneraan['peneraan']['tindakan_perbaikan'] ?? '' }}</td>
-        <td>{{ $itemPeneraan['username'] ?? '' }}</td>
-        <td>{{ $itemPeneraan['nama_spv'] ?? '-' }}</td>
-    </tr>
-    @endforeach
+        <br>
+        <br>
 
-    @if(count($allPeneraan) < 8)
-    @for($i = count($allPeneraan); $i < 8; $i++)
-    <tr>
-        <td style="height:35px;"></td>
-        <td class="center"></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
-    </tr>
-    @endfor
+        <table width="100%" class="note small" nobr="true">
+            <tr>
+                <td width="60%">
+                    <strong>Keterangan :</strong><br>
+                    - Tera termometer dilakukan di setiap awal shift<br>
+                    - Termometer ditera dengan memasukkan sensor (probe) ke es (0 °C)<br>
+                    - Jika ada selisih angka display suhu dengan suhu standar, beri keterangan (+) atau (–) angka selisih (faktor koreksi)<br>
+                    - Jika faktor koreksi &lt; 0,5 °C, termometer perlu perbaikan
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Dibuat oleh :<br>
+                    @if($namaPemeriksa)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrPemeriksa }}" width="60" height="60"><br>
+                        <u>{{ $namaPemeriksa }}</u><br>
+                        QC
+                    @endif
+                </td>
+
+                <td width="20%" align="center" style="vertical-align: top;">
+                    Diverifikasi oleh :<br>
+                    @if($namaSpv)
+                        <br>
+                        <img src="data:image/png;base64,{{ $qrSpv }}" width="60" height="60"><br>
+                        <u>{{ $namaSpv }}</u><br>
+                        SPV QC
+                    @elseif(!$semuaDisetujui && $tanggal !== '')
+                        <i>Belum semua entry disetujui</i>
+                    @endif
+                </td>
+            </tr>
+        </table>
+
+    @else
+        <br pagebreak="true" />
     @endif
-</table>
 
-@php
-    $noDokumen = \App\Models\List_form::where('plant', $items->first()->plant ?? null)
-        ->where('laporan', 'Verifikasi Termometer')
-        ->value('no_dokumen');
-@endphp
-
-<table width="100%" style="font-size:7px;">
-    <tr>
-        <td width="80%"></td>
-        <td width="20%" style="text-align:right;">
-            <i>{{ $noDokumen ?? '' }}</i>
-        </td>
-    </tr>
-</table>
-
-
-{{-- KETERANGAN --}}
-<table width="100%" class="small">
-    <tr>
-        <td>
-            <strong>Keterangan :</strong><br>
-            - Tera termometer dilakukan di setiap awal shift<br>
-            - Termometer ditera dengan memasukkan sensor (probe) ke es (0 °C)<br>
-            - Jika ada selisih angka display suhu dengan suhu standar,
-              beri keterangan (+) atau (–) angka selisih (faktor koreksi)<br>
-            - Jika faktor koreksi &lt; 0,5 °C, termometer perlu perbaikan
-        </td>
-    </tr>
-</table>
-
-
+@endforeach
 
 </body>
 </html>

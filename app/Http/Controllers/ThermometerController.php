@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Thermometer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\List_form;
 use Illuminate\Support\Str;
 
 class ThermometerController extends Controller
@@ -268,7 +269,6 @@ class ThermometerController extends Controller
 
     public function exportPdf(Request $request)
     {
-        // 1. Ambil Data
         $date      = $request->input('date');
         $shift     = $request->input('shift');
         $userPlant = Auth::user()->plant;
@@ -285,36 +285,119 @@ class ThermometerController extends Controller
             ->orderBy('shift', 'asc')
             ->get();
 
+        $noDokumen = List_form::where('plant', $userPlant)
+            ->where('laporan', 'Verifikasi Termometer')
+            ->value('no_dokumen');
+
+        $first = $items->first();
+
+        $tanggal = $first
+            ? \Carbon\Carbon::parse($first->date)->format('d-m-Y')
+            : ($date ? \Carbon\Carbon::parse($date)->format('d-m-Y') : '');
+
+        $usernames = $items
+            ->flatMap(fn($i) => [$i->username, $i->nama_spv])
+            ->filter()
+            ->unique()
+            ->values();
+
+        $userMap  = \App\Models\User::whereIn('username', $usernames)->pluck('name', 'username');
+        $namaUser = fn($username) => $username ? ($userMap[$username] ?? $username) : '';
+
+        $toArray = function ($value) {
+            if (is_array($value)) {
+                return $value;
+            }
+            if (is_string($value) && $value !== '') {
+                $decoded = json_decode($value, true);
+                return is_array($decoded) ? $decoded : [];
+            }
+            return [];
+        };
+
+        $rows = [];
+
+        foreach ($items as $item) {
+            $qc  = $namaUser($item->username) ?: '-';
+            $spv = $namaUser($item->nama_spv) ?: '-';
+
+            foreach ($toArray($item->peneraan) as $p) {
+                $p = (array) $p;
+
+                $rows[] = [
+                    'kode'     => $p['kode_thermometer'] ?? '',
+                    'area'     => $p['area'] ?? '',
+                    'standar'  => $p['standar'] ?? '',
+                    'pukul'    => $p['pukul'] ?? '',
+                    'hasil'    => $p['hasil_tera'] ?? '',
+                    'tindakan' => $p['tindakan_perbaikan'] ?? '',
+                    'qc'       => $qc,
+                    'spv'      => $spv,
+                ];
+            }
+        }
+
+        while (count($rows) < 8) {
+            $rows[] = [
+                'kode' => '', 'area' => '', 'standar' => '', 'pukul' => '',
+                'hasil' => '', 'tindakan' => '', 'qc' => '', 'spv' => '',
+            ];
+        }
+
+        $pages = array_chunk($rows, 8);
+
+        $pemeriksa    = $first ? $namaUser(trim((string) $first->username)) : '';
+        $tglPemeriksa = ($first && $first->created_at)
+            ? \Carbon\Carbon::parse($first->created_at)->format('d-m-Y')
+            : '';
+
+        $semuaDisetujui = $items->isNotEmpty()
+            && $items->every(fn($i) => !empty($i->nama_spv));
+
+        $spv    = '';
+        $tglSpv = '';
+
+        if ($semuaDisetujui) {
+            $spv    = $namaUser(trim((string) $first->nama_spv));
+            $spvRow = $items->first(fn($i) => !empty($i->tgl_update_spv));
+            $tglSpv = $spvRow
+                ? \Carbon\Carbon::parse($spvRow->tgl_update_spv)->format('d-m-Y')
+                : '';
+        }
+
         if (ob_get_length()) {
             ob_end_clean();
         }
 
-        // 2. Setup PDF (Portrait, A4)
         $pdf = new \TCPDF('L', PDF_UNIT, 'A4', true, 'UTF-8', false);
 
-        // Metadata
         $pdf->SetCreator(PDF_CREATOR);
         $pdf->SetTitle('Peneraan Thermometer');
 
-        // Hilangkan Header/Footer Bawaan
         $pdf->SetPrintHeader(false);
         $pdf->SetPrintFooter(false);
 
-        // Set Margin
-        $pdf->SetMargins(10, 10, 10);
-        $pdf->SetAutoPageBreak(TRUE, 10);
+        $pdf->SetMargins(5, 5, 5);
+        $pdf->SetAutoPageBreak(true, 5);
 
-        // Set Font Default
-        $pdf->SetFont('helvetica', '', 9);
-
+        $pdf->SetFont('helvetica', '', 6);
         $pdf->AddPage();
 
-        // 3. Render
-        $html = view('reports.peneraan-termometer', compact('items', 'request'))->render();
+        $html = view('reports.peneraan-termometer', compact(
+            'pages',
+            'tanggal',
+            'noDokumen',
+            'pemeriksa',
+            'tglPemeriksa',
+            'spv',
+            'tglSpv',
+            'semuaDisetujui'
+        ))->render();
+
         $pdf->writeHTML($html, true, false, true, false, '');
 
-        $filename = 'Peneraan_Thermometer_' . date('d-m-Y_His') . '.pdf';
-        $pdf->Output($filename, 'I');
+        $pdf->Output('Peneraan_Thermometer_' . date('d-m-Y_His') . '.pdf', 'I');
+
         exit();
     }
 }
